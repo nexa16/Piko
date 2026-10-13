@@ -24,6 +24,8 @@ These are accepted implementation decisions, not evidence that storage, scheduli
 
 Every row starts pending. Record the commit, relevant test or runtime evidence, and any remaining limitation before marking a row verified. A later overlapping requirement needs its own specific behavior or acceptance evidence; do not claim its expanded scope from a narrower predecessor.
 
+The whole-interface translation audit (UX-I18N-001) follows screen implementation so that it can inspect real controls, errors and navigation. Locale infrastructure tests alone do not prove product-wide coverage.
+
 | Order | Spec ID | Implementation focus | Status | Commit | Verification evidence |
 | --- | --- | --- | --- | --- | --- |
 | 1 | FOUNDATION-001 | Flutter scaffold, application identity and toolchain | Verified | 050c361 | Analysis clean; startup widget test; debug APK built, installed and cold-launched on Android API 36. |
@@ -34,93 +36,93 @@ Every row starts pending. Record the commit, relevant test or runtime evidence, 
 | 6 | UX-SYSTEM-001 | Shared components and explicit states | Verified | fc11fb5 | Reusable token-backed primitives; 392px/200% German layout, semantic icon activation, focus, disabled, grading colors and reduced motion tests; Flutter analyze/test and catalog generation checks. Product-screen integration remains with owning specs. |
 | 7 | UX-I18N-002 | Shared editable catalog consumption | Verified | UX-I18N-002 commit | Application title reads canonical app.name; widget scope lookup and locale-change consumer rebuild tests; Flutter analyze/test and generator check. |
 | 8 | I18N-001 | English default and German support | Verified | I18N-001 commit | App locale injection aligns canonical copy and Flutter native labels; German-device English default, explicit German and unsupported fallback widget tests. Analyze clean; all 20 Flutter tests and generator check passed. Persisted selection belongs to SETTINGS-001. |
-| 9 | I18N-002 | Localized interface independent of collection languages | Pending | — | — |
-| 10 | UX-I18N-001 | Localized visible and accessible text | Pending | — | — |
-| 11 | UX-ICON-002 | Lucide icons and notices | Pending | — | — |
-| 12 | UX-DIALOG-001 | Shared safe dismissible popup | Pending | — | — |
-| 13 | UX-HEADER-001 | Single clear page title | Pending | — | — |
-| 14 | UX-HEADER-002 | Consistent compact header spacing | Pending | — | — |
-| 15 | COLL-001 | Create collections with language pairs | Pending | — | — |
-| 16 | COLL-017 | Required name defaults to localized target language | Pending | — | — |
-| 17 | UX-COLL-010 | Creation field order and name interaction | Pending | — | — |
-| 18 | COLL-013 | List and open collections | Pending | — | — |
-| 19 | COLL-015 | Honest empty collection state | Pending | — | — |
-| 20 | UX-HOME-002 | Empty-state creation invitation | Pending | — | — |
-| 21 | UX-HOME-001 | Collection-specific review entry points | Pending | — | — |
-| 22 | UX-COLL-005 | Consistent language-code badges | Pending | — | — |
-| 23 | COLL-003 | Target-language-first vocabulary order | Pending | — | — |
-| 24 | COLL-012 | Rename without changing entries or progress | Pending | — | — |
-| 25 | UX-COLL-007 | Inline collection rename and deletion presentation | Pending | — | — |
-| 26 | COLL-014 | Confirm collection deletion and cascade data removal | Pending | — | — |
-| 27 | DATA-005 | Minimal necessary stored data | Pending | — | — |
-| 28 | VOCAB-001 | Separate meanings may share one language text | Pending | — | — |
-| 29 | VOCAB-012 | Accepted normalization and duplicate-comparison decision | Pending | — | — |
-| 30 | VOCAB-002 | Block normalized duplicate pairs in a collection | Pending | — | — |
-| 31 | VOCAB-003 | Allow identical pairs across collections | Pending | — | — |
-| 32 | OFFLINE-001 | Durable offline manual vocabulary | Pending | — | — |
-| 33 | ENTRY-003 | Temporary unconfirmed drafts | Pending | — | — |
-| 34 | ENTRY-006 | Retain drafts while navigating entry session | Pending | — | — |
-| 35 | ENTRY-002 | Confirm and next | Pending | — | — |
-| 36 | ENTRY-008 | Confirmed entry durability after termination | Pending | — | — |
-| 37 | ENTRY-005 | Automatic valid edits to saved stack entries | Pending | — | — |
-| 38 | ENTRY-001 | Scroll-focused expanding card stack | Pending | — | — |
-| 39 | UX-ENTRY-001 | Focused stack presentation | Pending | — | — |
-| 40 | ENTRY-007 | Back and nonempty-draft discard confirmation | Pending | — | — |
-| 41 | ENTRY-011 | Global completion validates, saves and exits | Pending | — | — |
-| 42 | UX-ENTRY-002 | Distinct global and card checkmarks | Pending | — | — |
-| 43 | ENTRY-009 | Delete with eight-second progress-preserving Undo | Pending | — | — |
-| 44 | ENTRY-004 | Revisit, edit and delete saved session entries | Pending | — | — |
-| 45 | UX-VOCAB-DELETE-001 | Swipe reveals explicit delete; accessible alternative | Pending | — | — |
-| 46 | UX-COLL-003 | Accessible inline Add Entry action | Pending | — | — |
-| 47 | VOCAB-EDIT-001 | Validated inline vocabulary auto-save | Pending | — | — |
-| 48 | UX-COLL-009 | Expand vocabulary in place | Pending | — | — |
-| 49 | UX-COLL-011 | Compact fields and red deletion | Pending | — | — |
-| 50 | VOCAB-EDIT-002 | Restore opening values on discard | Pending | — | — |
-| 51 | UX-COLL-012 | Separate finish and discard controls | Pending | — | — |
-| 52 | LEARN-002 | Independent directional learning items | Pending | — | — |
-| 53 | LEARN-001 | Real offline FSRS scheduling | Pending | — | — |
-| 54 | LEARN-003 | Continuous FSRS memory state | Pending | — | — |
-| 55 | DATA-004 | Regular review retention and generation discriminator | Pending | — | — |
-| 56 | DATA-001 | No complete retry-attempt history | Pending | — | — |
-| 57 | CARD-UI-016 | Again, Hard and Good grade mapping | Pending | — | — |
-| 58 | ANSWER-004 | Optional Hard modifier | Pending | — | — |
-| 59 | SESSION-017 | Single-collection session boundary | Pending | — | — |
-| 60 | SESSION-018 | All due items, with voluntary exit | Pending | — | — |
-| 61 | REVIEW-001 | Explicit fixed direction before launch | Pending | — | — |
-| 62 | REVIEW-002 | Honest no-due state | Pending | — | — |
-| 63 | CARD-UI-001 | Exit separate from previous-review correction | Pending | — | — |
-| 64 | CARD-UI-004 | No redundant headings or tags | Pending | — | — |
-| 65 | CARD-004 | No default category tags on cards | Pending | — | — |
-| 66 | CARD-UI-007 | Card reveal and subordinate cue | Pending | — | — |
-| 67 | UX-CARD-005 | Bottom-right reveal icon and cue | Pending | — | — |
-| 68 | CARD-UI-026 | Both languages and direction/progress context | Pending | — | — |
-| 69 | CARD-UI-025 | Equal-width semantic grading actions | Pending | — | — |
-| 70 | CARD-UI-015 | Hard checkbox aligned above Correct | Pending | — | — |
-| 71 | RETRY-001 | Incorrect items enter pending retry queue | Pending | — | — |
-| 72 | RETRY-002 | Decreasing presentation gaps | Pending | — | — |
-| 73 | RETRY-004 | Local 04:00 retry expiry | Pending | — | — |
-| 74 | RETRY-005 | Ten-second insufficient-pool wait | Pending | — | — |
-| 75 | RETRY-006 | FSRS review separated from reinforcement retries | Pending | — | — |
-| 76 | RETRY-003 | Resume same-day retries after leaving | Pending | — | — |
-| 77 | SESSION-019 | Regenerate resumed order with early retry priority | Pending | — | — |
-| 78 | CARD-UI-023 | Pending until success or learning-day expiry | Pending | — | — |
-| 79 | CARD-UI-024 | Do not expose per-question prior error count | Pending | — | — |
-| 80 | CARD-UI-002 | Unique completion and first-try counts | Pending | — | — |
-| 81 | UX-CARD-012 | Readable session counters | Pending | — | — |
-| 82 | UNDO-001 | Replace previous review and recalculate transactionally | Pending | — | — |
-| 83 | CARD-UI-020 | Consistent scheduler and retry correction | Pending | — | — |
-| 84 | CARD-UI-019 | Only immediately preceding grade is correctable | Pending | — | — |
-| 85 | UX-CARD-010 | Distinct previous-review navigation | Pending | — | — |
-| 86 | UX-REVIEW-003 | Hide correction after reveal | Pending | — | — |
-| 87 | UX-REVIEW-001 | Integrated self-assessment layout | Pending | — | — |
-| 88 | UX-REVIEW-002 | Answer emphasis and accessible Hard target | Pending | — | — |
-| 89 | UX-COLL-008 | Actual due-count card and compact vocabulary rows | Pending | — | — |
-| 90 | UX-COLL-004 | Consistent localized quick-review sizing | Pending | — | — |
-| 91 | UX-ICON-001 | Circular review icon | Pending | — | — |
-| 92 | REVIEW-003 | Dismissible learned/first-try summary | Pending | — | — |
-| 93 | UX-REVIEW-004 | Readable motivational summary popup | Pending | — | — |
-| 94 | SETTINGS-001 | Persistent immediate interface language setting | Pending | — | — |
-| 95 | UX-SETTINGS-001 | Language-only Settings view | Pending | — | — |
+| 9 | I18N-002 | Localized interface independent of collection languages | Implemented | I18N-002 commit | Live locale controller and canonical label/native locale rebuild preserve Korean input, selection and focus in widget tests. Product-wide text and collection-language coverage remains pending until screens exist. |
+| 10 | UX-ICON-002 | Lucide icons and notices | Pending | — | — |
+| 11 | UX-DIALOG-001 | Shared safe dismissible popup | Pending | — | — |
+| 12 | UX-HEADER-001 | Single clear page title | Pending | — | — |
+| 13 | UX-HEADER-002 | Consistent compact header spacing | Pending | — | — |
+| 14 | COLL-001 | Create collections with language pairs | Pending | — | — |
+| 15 | COLL-017 | Required name defaults to localized target language | Pending | — | — |
+| 16 | UX-COLL-010 | Creation field order and name interaction | Pending | — | — |
+| 17 | COLL-013 | List and open collections | Pending | — | — |
+| 18 | COLL-015 | Honest empty collection state | Pending | — | — |
+| 19 | UX-HOME-002 | Empty-state creation invitation | Pending | — | — |
+| 20 | UX-HOME-001 | Collection-specific review entry points | Pending | — | — |
+| 21 | UX-COLL-005 | Consistent language-code badges | Pending | — | — |
+| 22 | COLL-003 | Target-language-first vocabulary order | Pending | — | — |
+| 23 | COLL-012 | Rename without changing entries or progress | Pending | — | — |
+| 24 | UX-COLL-007 | Inline collection rename and deletion presentation | Pending | — | — |
+| 25 | COLL-014 | Confirm collection deletion and cascade data removal | Pending | — | — |
+| 26 | DATA-005 | Minimal necessary stored data | Pending | — | — |
+| 27 | VOCAB-001 | Separate meanings may share one language text | Pending | — | — |
+| 28 | VOCAB-012 | Accepted normalization and duplicate-comparison decision | Pending | — | — |
+| 29 | VOCAB-002 | Block normalized duplicate pairs in a collection | Pending | — | — |
+| 30 | VOCAB-003 | Allow identical pairs across collections | Pending | — | — |
+| 31 | OFFLINE-001 | Durable offline manual vocabulary | Pending | — | — |
+| 32 | ENTRY-003 | Temporary unconfirmed drafts | Pending | — | — |
+| 33 | ENTRY-006 | Retain drafts while navigating entry session | Pending | — | — |
+| 34 | ENTRY-002 | Confirm and next | Pending | — | — |
+| 35 | ENTRY-008 | Confirmed entry durability after termination | Pending | — | — |
+| 36 | ENTRY-005 | Automatic valid edits to saved stack entries | Pending | — | — |
+| 37 | ENTRY-001 | Scroll-focused expanding card stack | Pending | — | — |
+| 38 | UX-ENTRY-001 | Focused stack presentation | Pending | — | — |
+| 39 | ENTRY-007 | Back and nonempty-draft discard confirmation | Pending | — | — |
+| 40 | ENTRY-011 | Global completion validates, saves and exits | Pending | — | — |
+| 41 | UX-ENTRY-002 | Distinct global and card checkmarks | Pending | — | — |
+| 42 | ENTRY-009 | Delete with eight-second progress-preserving Undo | Pending | — | — |
+| 43 | ENTRY-004 | Revisit, edit and delete saved session entries | Pending | — | — |
+| 44 | UX-VOCAB-DELETE-001 | Swipe reveals explicit delete; accessible alternative | Pending | — | — |
+| 45 | UX-COLL-003 | Accessible inline Add Entry action | Pending | — | — |
+| 46 | VOCAB-EDIT-001 | Validated inline vocabulary auto-save | Pending | — | — |
+| 47 | UX-COLL-009 | Expand vocabulary in place | Pending | — | — |
+| 48 | UX-COLL-011 | Compact fields and red deletion | Pending | — | — |
+| 49 | VOCAB-EDIT-002 | Restore opening values on discard | Pending | — | — |
+| 50 | UX-COLL-012 | Separate finish and discard controls | Pending | — | — |
+| 51 | LEARN-002 | Independent directional learning items | Pending | — | — |
+| 52 | LEARN-001 | Real offline FSRS scheduling | Pending | — | — |
+| 53 | LEARN-003 | Continuous FSRS memory state | Pending | — | — |
+| 54 | DATA-004 | Regular review retention and generation discriminator | Pending | — | — |
+| 55 | DATA-001 | No complete retry-attempt history | Pending | — | — |
+| 56 | CARD-UI-016 | Again, Hard and Good grade mapping | Pending | — | — |
+| 57 | ANSWER-004 | Optional Hard modifier | Pending | — | — |
+| 58 | SESSION-017 | Single-collection session boundary | Pending | — | — |
+| 59 | SESSION-018 | All due items, with voluntary exit | Pending | — | — |
+| 60 | REVIEW-001 | Explicit fixed direction before launch | Pending | — | — |
+| 61 | REVIEW-002 | Honest no-due state | Pending | — | — |
+| 62 | CARD-UI-001 | Exit separate from previous-review correction | Pending | — | — |
+| 63 | CARD-UI-004 | No redundant headings or tags | Pending | — | — |
+| 64 | CARD-004 | No default category tags on cards | Pending | — | — |
+| 65 | CARD-UI-007 | Card reveal and subordinate cue | Pending | — | — |
+| 66 | UX-CARD-005 | Bottom-right reveal icon and cue | Pending | — | — |
+| 67 | CARD-UI-026 | Both languages and direction/progress context | Pending | — | — |
+| 68 | CARD-UI-025 | Equal-width semantic grading actions | Pending | — | — |
+| 69 | CARD-UI-015 | Hard checkbox aligned above Correct | Pending | — | — |
+| 70 | RETRY-001 | Incorrect items enter pending retry queue | Pending | — | — |
+| 71 | RETRY-002 | Decreasing presentation gaps | Pending | — | — |
+| 72 | RETRY-004 | Local 04:00 retry expiry | Pending | — | — |
+| 73 | RETRY-005 | Ten-second insufficient-pool wait | Pending | — | — |
+| 74 | RETRY-006 | FSRS review separated from reinforcement retries | Pending | — | — |
+| 75 | RETRY-003 | Resume same-day retries after leaving | Pending | — | — |
+| 76 | SESSION-019 | Regenerate resumed order with early retry priority | Pending | — | — |
+| 77 | CARD-UI-023 | Pending until success or learning-day expiry | Pending | — | — |
+| 78 | CARD-UI-024 | Do not expose per-question prior error count | Pending | — | — |
+| 79 | CARD-UI-002 | Unique completion and first-try counts | Pending | — | — |
+| 80 | UX-CARD-012 | Readable session counters | Pending | — | — |
+| 81 | UNDO-001 | Replace previous review and recalculate transactionally | Pending | — | — |
+| 82 | CARD-UI-020 | Consistent scheduler and retry correction | Pending | — | — |
+| 83 | CARD-UI-019 | Only immediately preceding grade is correctable | Pending | — | — |
+| 84 | UX-CARD-010 | Distinct previous-review navigation | Pending | — | — |
+| 85 | UX-REVIEW-003 | Hide correction after reveal | Pending | — | — |
+| 86 | UX-REVIEW-001 | Integrated self-assessment layout | Pending | — | — |
+| 87 | UX-REVIEW-002 | Answer emphasis and accessible Hard target | Pending | — | — |
+| 88 | UX-COLL-008 | Actual due-count card and compact vocabulary rows | Pending | — | — |
+| 89 | UX-COLL-004 | Consistent localized quick-review sizing | Pending | — | — |
+| 90 | UX-ICON-001 | Circular review icon | Pending | — | — |
+| 91 | REVIEW-003 | Dismissible learned/first-try summary | Pending | — | — |
+| 92 | UX-REVIEW-004 | Readable motivational summary popup | Pending | — | — |
+| 93 | SETTINGS-001 | Persistent immediate interface language setting | Pending | — | — |
+| 94 | UX-SETTINGS-001 | Language-only Settings view | Pending | — | — |
+| 95 | UX-I18N-001 | Localized visible and accessible text across implemented screens | Pending | — | — |
 
 Foundation rows 1–4 are defined in [implementation foundations](implementation-foundation.md). This file defines FOUNDATION-005: maintain an ordered, uniquely identified ledger, distinguish evidence from pending work, and audit all final gates before declaring completion. The ledger mechanism is established; the final product audit remains pending. Final acceptance evidence can reference several specifications, but implementation commits must still remain scoped to one ID.
 

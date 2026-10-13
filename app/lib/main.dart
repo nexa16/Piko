@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'shared/catalogs.dart';
 import 'shared/copy_scope.dart';
-import 'shared/generated_catalogs.dart';
+import 'shared/interface_locale.dart';
 import 'ui/piko_theme.dart';
 
 void main() {
@@ -10,18 +10,26 @@ void main() {
 }
 
 class PikoApp extends StatelessWidget {
-  const PikoApp({this.locale, super.key});
+  const PikoApp({this.locale, this.localeController, this.home, super.key});
 
   final Locale? locale;
-  static const supportedLocales = [Locale('en'), Locale('de')];
+  final InterfaceLocaleController? localeController;
+  final Widget? home;
+  static const supportedLocales = InterfaceLocaleController.supportedLocales;
 
   @override
   Widget build(BuildContext context) {
-    final defaultLanguage = copyCatalog['defaultLocale']! as String;
-    final selected = supportedLocales.firstWhere(
-      (supported) => supported.languageCode == locale?.languageCode,
-      orElse: () => Locale(defaultLanguage),
-    );
+    final controller = localeController;
+    if (controller != null) {
+      return ValueListenableBuilder<Locale>(
+        valueListenable: controller,
+        builder: (context, selected, child) => _localizedApp(selected),
+      );
+    }
+    return _localizedApp(InterfaceLocaleController.resolve(locale));
+  }
+
+  Widget _localizedApp(Locale selected) {
     return PikoCopyScope(
       copy: PikoCopy(selected.languageCode),
       child: Builder(
@@ -32,7 +40,7 @@ class PikoApp extends StatelessWidget {
           title: PikoCopyScope.of(context).text('app.name'),
           theme: PikoTheme.build(),
           debugShowCheckedModeBanner: false,
-          home: const Scaffold(body: SizedBox.expand()),
+          home: home ?? const Scaffold(body: SizedBox.expand()),
         ),
       ),
     );

@@ -1,5 +1,9 @@
 # Decision log
 
+## I18N-002 — independent interface language — 2026-10-13
+
+Classify I18N-002 from Undecided to First as a constraint on the accepted bilingual implementation. A dedicated interface locale controller updates copy and native control language without transforming user-entered vocabulary or replacing editing state. Storage and Settings selection remain separate. Product-wide localized text coverage must be audited as screens are implemented; the initial integration test proves live switching preserves input, selection and focus.
+
 ## I18N-001 — first-release interface locales — 2026-10-13
 
 Classify I18N-001 from Undecided to First as a dependency of the accepted bilingual release. English remains the initial interface language regardless of device language. Explicit German selection also localizes Flutter's native control labels. Unsupported interface locales fall back consistently to English. The application accepts locale injection now; persisted selection and its Settings control remain SETTINGS-001.
