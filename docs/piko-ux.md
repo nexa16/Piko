@@ -51,7 +51,7 @@ Inline `[Flow: collection]`, `[Flow: entry]`, `[Flow: review]`, and `[Flow: sett
 
 ## Localization
 
-- **UX-ICON-002 [Confirmed]:** [Release: First] [Flow: collection, entry, review, settings] Use Lucide as the common UI icon family. Keep size and stroke consistent, use accessible names for icon-only controls, and preserve upstream license notices.
+- **UX-ICON-002 [Confirmed]:** [Release: First] [Flow: collection, entry, review, settings] Use Lucide as the common UI icon family. Keep size and stroke consistent, use accessible names for icon-only controls, and preserve upstream license notices. Flutter's typed PikoIcon consumes the same pinned SVG originals under `mockups/assets/icons/lucide`, with canonical `components.icons.size`, original 2px view-box strokes and inherited control color (canonical ink fallback). Icons are decorative by default; an optional semantic label names meaningful standalone imagery, while PikoIconButton owns action names and activation. Bundle the full ISC and Feather MIT notice and register it once at application startup. Individual screens integrate these shared icons in their own specification commits.
 
 - **UX-SETTINGS-001 [Confirmed]:** [Release: First] [Flow: settings] First-release Settings shows a single App Language control with English and Deutsch. No learning, Hint, developer, or theme preferences appear in that release view. Keep one page title and usable Back navigation.
 

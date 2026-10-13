@@ -59,6 +59,23 @@ export function update(file, contents, check) {
   }
 }
 
+// Android packaging omits assets with ../ keys. These copies are generated
+// adapters: mockups/assets/icons/lucide remains the only editable SVG source.
+export function updateIcons(source, destination, check) {
+  const files = fs.readdirSync(source).sort();
+  if (files.some(file => !file.endsWith('.svg') && file !== 'LICENSE.txt')) {
+    throw Error('Unexpected canonical icon file');
+  }
+  if (fs.existsSync(destination)) {
+    const extra = fs.readdirSync(destination).filter(file => !files.includes(file));
+    if (extra.length) throw Error(`Unexpected generated icon files: ${extra.join(', ')}`);
+  }
+  for (const file of files) {
+    update(path.join(destination, file), fs.readFileSync(path.join(source, file), 'utf8'), check);
+  }
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   update(output, generate(readCatalog(path.join(root, 'shared/design-config.js'), 'PIKO_DESIGN'), readCatalog(path.join(root, 'shared/copy.js'), 'PIKO_COPY')), process.argv.includes('--check'));
+  updateIcons(path.join(root, 'mockups/assets/icons/lucide'), path.join(root, 'app/assets/generated/lucide'), process.argv.includes('--check'));
 }

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { generate, readCatalog, update } from './generate_shared.mjs';
+import { generate, readCatalog, update, updateIcons } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
 const copy = { schemaVersion: 1, defaultLocale: 'en', entries: { test: { en: '{count} $ "quote"', de: '{count} $ "Zitat"', note: 'preserved' } } };
@@ -45,6 +45,34 @@ test('source validation rejects values JSON would silently normalize', () => {
     assert.deepEqual(readCatalog(file, 'CATALOG'), { nested: { value: 24 } });
   } finally {
     fs.unlinkSync(file);
+    fs.rmdirSync(directory);
+  }
+});
+
+test('generated icon copies preserve bytes and reject missing, changed or extra output', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'piko-icons-'));
+  const source = path.join(directory, 'source');
+  const destination = path.join(directory, 'generated');
+  fs.mkdirSync(source);
+  fs.writeFileSync(path.join(source, 'x.svg'), '<svg stroke-width="2">\r\n</svg>\n');
+  fs.writeFileSync(path.join(source, 'LICENSE.txt'), 'ISC\r\nMIT\n');
+  try {
+    assert.throws(() => updateIcons(source, destination, true));
+    updateIcons(source, destination, false);
+    updateIcons(source, destination, true);
+    for (const name of ['x.svg', 'LICENSE.txt']) {
+      assert.deepEqual(fs.readFileSync(path.join(source, name)), fs.readFileSync(path.join(destination, name)));
+    }
+    fs.writeFileSync(path.join(destination, 'x.svg'), 'changed');
+    assert.throws(() => updateIcons(source, destination, true));
+    updateIcons(source, destination, false);
+    fs.writeFileSync(path.join(destination, 'extra.svg'), 'extra');
+    assert.throws(() => updateIcons(source, destination, true));
+  } finally {
+    for (const folder of [source, destination]) {
+      for (const name of fs.readdirSync(folder)) fs.unlinkSync(path.join(folder, name));
+      fs.rmdirSync(folder);
+    }
     fs.rmdirSync(directory);
   }
 });

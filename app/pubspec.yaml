@@ -14,8 +14,11 @@ dependencies:
   drift: ^2.35.0
   drift_flutter: ^0.3.1
   path_provider: ^2.1.6
+  flutter_svg: 2.3.0
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -24,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/generated/lucide/

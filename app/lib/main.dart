@@ -4,8 +4,10 @@ import 'shared/catalogs.dart';
 import 'shared/copy_scope.dart';
 import 'shared/interface_locale.dart';
 import 'ui/piko_theme.dart';
+import 'ui/components/piko_icon.dart';
 
 void main() {
+  registerPikoIconLicenses();
   runApp(const PikoApp());
 }
 

@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-ICON-002 — shared Lucide asset adapter — 2026-10-13
+
+Flutter uses the mockup's 17 pinned Lucide originals and complete ISC/Feather MIT notices. Direct parent-relative asset paths passed host tests but produced an Android APK without the icons; the installed emulator could not load them. The shared generator therefore creates byte-identical copies in `app/assets/generated/lucide`, checked for missing, changed and extra files. These are generated adapters, not another editable source. PikoIcon uses canonical size and inherited control color; standalone imagery can opt into semantics, and PikoIconButton supplies action names. Android integration verifies every icon renders and the full notice loads. Product-screen use remains scoped to each screen's requirement.
+
 ## I18N-002 — independent interface language — 2026-10-13
 
 Classify I18N-002 from Undecided to First as a constraint on the accepted bilingual implementation. A dedicated interface locale controller updates copy and native control language without transforming user-entered vocabulary or replacing editing state. Storage and Settings selection remain separate. Product-wide localized text coverage must be audited as screens are implemented; the initial integration test proves live switching preserves input, selection and focus.

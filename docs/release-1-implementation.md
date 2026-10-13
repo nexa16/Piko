@@ -37,7 +37,7 @@ The whole-interface translation audit (UX-I18N-001) follows screen implementatio
 | 7 | UX-I18N-002 | Shared editable catalog consumption | Verified | UX-I18N-002 commit | Application title reads canonical app.name; widget scope lookup and locale-change consumer rebuild tests; Flutter analyze/test and generator check. |
 | 8 | I18N-001 | English default and German support | Verified | I18N-001 commit | App locale injection aligns canonical copy and Flutter native labels; German-device English default, explicit German and unsupported fallback widget tests. Analyze clean; all 20 Flutter tests and generator check passed. Persisted selection belongs to SETTINGS-001. |
 | 9 | I18N-002 | Localized interface independent of collection languages | Implemented | I18N-002 commit | Live locale controller and canonical label/native locale rebuild preserve Korean input, selection and focus in widget tests. Product-wide text and collection-language coverage remains pending until screens exist. |
-| 10 | UX-ICON-002 | Lucide icons and notices | Pending | — | — |
+| 10 | UX-ICON-002 | Lucide icons and notices | Verified | UX-ICON-002 commit | All 17 pinned SVGs load/parse/rasterize; canonical size, inherited color pixels, decorative/labeled semantics and one-time full license registration tests. Five Node generator tests and --check enforce byte-identical adapters. Android API 36 emulator integration builds/installs and verifies every rendered outline and full notice. Production-screen integration remains with owning specs. |
 | 11 | UX-DIALOG-001 | Shared safe dismissible popup | Pending | — | — |
 | 12 | UX-HEADER-001 | Single clear page title | Pending | — | — |
 | 13 | UX-HEADER-002 | Consistent compact header spacing | Pending | — | — |
