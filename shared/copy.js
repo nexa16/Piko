@@ -3,6 +3,12 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+    "collection.loading": {"en":"Loading collections…","de":"Sammlungen werden geladen…"},
+    "collection.loadFailed": {"en":"Couldn't load collections. Please try again.","de":"Sammlungen konnten nicht geladen werden. Bitte versuche es erneut."},
+    "collection.notFound": {"en":"This collection is no longer available.","de":"Diese Sammlung ist nicht mehr verfügbar."},
+    "collection.open": {"en":"Open {name}, {languages}","de":"{name} öffnen, {languages}"},
+    "collection.languagePair": {"en":"{target} · {native}","de":"{target} · {native}"},
+    "action.retry": {"en":"Try again","de":"Erneut versuchen"},
     "collection.saveFailed": {"en":"Couldn't save the collection. Please try again.","de":"Die Sammlung konnte nicht gespeichert werden. Bitte versuche es erneut."},
     "collection.created": {"en":"Created {name}","de":"{name} erstellt"},
     "app.name": {

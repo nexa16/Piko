@@ -25,6 +25,8 @@ final class CollectionRecord {
 enum CollectionValidation { requiredName, sameLanguage }
 
 abstract interface class CollectionsRepository {
+  Stream<List<CollectionRecord>> watchAll();
+  Stream<CollectionRecord?> watchById(String id);
   Future<CollectionRecord> create({
     required String name,
     required VocabularyLanguage targetLanguage,

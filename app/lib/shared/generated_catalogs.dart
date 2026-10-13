@@ -154,6 +154,10 @@ const copyCatalog = <String, Object?>{
 "de": "Vorherige",
 "en": "Previous",
 },
+"action.retry": <String, Object?>{
+"de": "Erneut versuchen",
+"en": "Try again",
+},
 "action.review": <String, Object?>{
 "de": "Wiederholen",
 "en": "Review",
@@ -232,6 +236,18 @@ const copyCatalog = <String, Object?>{
 "de": "Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu.",
 "en": "No vocabulary yet. Add your first entry using the plus button.",
 },
+"collection.languagePair": <String, Object?>{
+"de": "{target} · {native}",
+"en": "{target} · {native}",
+},
+"collection.loadFailed": <String, Object?>{
+"de": "Sammlungen konnten nicht geladen werden. Bitte versuche es erneut.",
+"en": "Couldn't load collections. Please try again.",
+},
+"collection.loading": <String, Object?>{
+"de": "Sammlungen werden geladen…",
+"en": "Loading collections…",
+},
 "collection.name": <String, Object?>{
 "de": "Name der Sammlung",
 "en": "Collection name",
@@ -243,6 +259,14 @@ const copyCatalog = <String, Object?>{
 "collection.nativeLanguage": <String, Object?>{
 "de": "Muttersprache",
 "en": "Native language",
+},
+"collection.notFound": <String, Object?>{
+"de": "Diese Sammlung ist nicht mehr verfügbar.",
+"en": "This collection is no longer available.",
+},
+"collection.open": <String, Object?>{
+"de": "{name} öffnen, {languages}",
+"en": "Open {name}, {languages}",
 },
 "collection.rename": <String, Object?>{
 "de": "Sammlung umbenennen",

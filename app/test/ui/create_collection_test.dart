@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/collections_repository.dart';
@@ -9,6 +10,10 @@ import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/main.dart';
 
 class PendingRepository implements CollectionsRepository {
+  @override
+  Stream<List<CollectionRecord>> watchAll() => Stream.value([]);
+  @override
+  Stream<CollectionRecord?> watchById(String id) => Stream.value(null);
   var pending = Completer<CollectionRecord>();
   var calls = 0;
   String? name;
@@ -28,8 +33,17 @@ void main() {
   testWidgets(
     'blank name and same languages show localized errors without saving',
     (tester) async {
-      final db = PikoDatabase(NativeDatabase.memory());
+      final db = PikoDatabase(
+        DatabaseConnection(
+          NativeDatabase.memory(),
+          closeStreamsSynchronously: true,
+        ),
+      );
       addTearDown(db.close);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+      });
       await tester.pumpWidget(
         PikoApp(
           home: CollectionsHome(repository: SqliteCollectionsRepository(db)),
@@ -55,13 +69,26 @@ void main() {
         await tester.runAsync(() => db.select(db.collections).get()),
         isEmpty,
       );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      await tester.runAsync(db.close);
+      await tester.pump();
     },
   );
   testWidgets(
     'German UI creates trimmed collection with selected languages in SQLite',
     (tester) async {
-      final db = PikoDatabase(NativeDatabase.memory());
+      final db = PikoDatabase(
+        DatabaseConnection(
+          NativeDatabase.memory(),
+          closeStreamsSynchronously: true,
+        ),
+      );
       addTearDown(db.close);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+      });
       await tester.pumpWidget(
         PikoApp(
           locale: const Locale('de'),
@@ -86,6 +113,10 @@ void main() {
       expect(rows.single.nativeLanguage, 'de');
       expect(find.text('Meine Sammlung erstellt'), findsOneWidget);
       expect(find.byType(Dialog), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      await tester.runAsync(db.close);
+      await tester.pump();
     },
   );
   testWidgets('closing unsubmitted form does not write', (tester) async {
@@ -152,7 +183,10 @@ void main() {
       await tester.pump();
       final pendingField = tester.widget<TextField>(find.byType(TextField));
       expect(pendingField.enabled, isFalse);
-      expect(pendingField.decoration!.disabledBorder, isA<OutlineInputBorder>());
+      expect(
+        pendingField.decoration!.disabledBorder,
+        isA<OutlineInputBorder>(),
+      );
       await tester.tap(find.byTooltip('Close'));
       repository.pending.complete(
         const CollectionRecord(

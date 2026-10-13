@@ -8,7 +8,7 @@ void main() {
   testWidgets('app title and descendant scope consume canonical copy', (
     tester,
   ) async {
-    await tester.pumpWidget(const PikoApp());
+    await tester.pumpWidget(const PikoApp(home: Scaffold()));
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     final context = tester.element(find.byType(Scaffold));
     expect(app.title, PikoCopyScope.of(context).text('app.name'));

@@ -1,6 +1,6 @@
 # Piko application
 
-Flutter application for the local-first first release. Android is the release verification target. Collection creation now persists locally; remaining product features follow in individually traceable requirement commits. The New action opens a validated creation popup; collection listing and detail navigation are separate requirements.
+Flutter application for the local-first first release. Android is the release verification target. Collection creation persists locally; the overview lists stored Collections and opens their detail by stable identity. The New action opens a validated creation popup. Remaining product features follow in individually traceable requirement commits.
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 

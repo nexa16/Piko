@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-013 — reactive local collection navigation — 2026-10-13
+
+The overview now watches stored Collections and opens detail by UUID, so matching names remain distinct. SQLite rowid provides stable insertion order as a technical default; this adds neither a sorting preference nor stored timestamps. Detail watches its identity and shows the persisted name and localized language pair with Back navigation. Cached subscriptions survive interface-language rebuilds; explicit read retry starts a fresh subscription. Loading, read errors and a missing identity have separate canonical English/German copy. Whole-card touch, keyboard and semantic activation include the language pair, with a visible canonical focus border. Empty-state invitation, badges, vocabulary and review content retain their owning requirements. Host widget fixtures use Drift's documented synchronous stream cleanup option only in tests. Android verification uses an isolated temporary database and proves reopen/list/open/Back; final application force-stop durability remains an acceptance gate.
+
 ## UX-COLL-010 — binding creation-form presentation — 2026-10-13
 
 The Flutter creation form follows the binding mockup's target/native/required-name order, including target options Korean/French/English/German and native options German/English/French/Korean. Canonical localized labels name the actual controls for accessibility; Tab follows their reading order. Shared popup scrolling keeps the name and Create reachable at 392px width, doubled German text and simulated 300px keyboard inset. No new geometry defaults were needed. Default-name customization remains COLL-017; this commit verifies its preservation during form interaction rather than redefining it. These widget checks do not replace the final real-device entry/keyboard acceptance gate.

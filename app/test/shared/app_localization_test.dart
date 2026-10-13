@@ -9,7 +9,7 @@ void main() {
   ) async {
     tester.platformDispatcher.localeTestValue = const Locale('de');
     addTearDown(tester.platformDispatcher.clearLocaleTestValue);
-    await tester.pumpWidget(const PikoApp());
+    await tester.pumpWidget(const PikoApp(home: Scaffold()));
     await tester.pumpAndSettle();
     final context = tester.element(find.byType(Scaffold));
     expect(Localizations.localeOf(context), const Locale('en'));
@@ -20,7 +20,9 @@ void main() {
   testWidgets('explicit German aligns native controls and canonical copy', (
     tester,
   ) async {
-    await tester.pumpWidget(const PikoApp(locale: Locale('de', 'AT')));
+    await tester.pumpWidget(
+      const PikoApp(locale: Locale('de', 'AT'), home: Scaffold()),
+    );
     await tester.pumpAndSettle();
     final context = tester.element(find.byType(Scaffold));
     expect(Localizations.localeOf(context), const Locale('de'));
@@ -35,7 +37,9 @@ void main() {
   testWidgets(
     'unsupported locale falls back for both copy and native controls',
     (tester) async {
-      await tester.pumpWidget(const PikoApp(locale: Locale('fr')));
+      await tester.pumpWidget(
+        const PikoApp(locale: Locale('fr'), home: Scaffold()),
+      );
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(Scaffold));
       expect(Localizations.localeOf(context), const Locale('en'));

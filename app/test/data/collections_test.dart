@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
@@ -8,6 +9,42 @@ import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 
 void main() {
+  test(
+    'reactive listing preserves insertion order and watches exact identity',
+    () async {
+      final db = PikoDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final repository = SqliteCollectionsRepository(db);
+      final lists = <List<CollectionRecord>>[];
+      final inserted = Completer<void>();
+      final subscription = repository.watchAll().listen((rows) {
+        lists.add(rows);
+        if (rows.length == 2 && !inserted.isCompleted) inserted.complete();
+      });
+      addTearDown(subscription.cancel);
+      expect(await repository.watchAll().first, isEmpty);
+      final first = await repository.create(
+        name: 'Same',
+        targetLanguage: VocabularyLanguage.korean,
+        nativeLanguage: VocabularyLanguage.german,
+      );
+      final second = await repository.create(
+        name: 'Same',
+        targetLanguage: VocabularyLanguage.french,
+        nativeLanguage: VocabularyLanguage.english,
+      );
+      final rows = await repository.watchAll().first;
+      expect(rows.map((row) => row.id), [first.id, second.id]);
+      expect(
+        (await repository.watchById(second.id).first)!.targetLanguage,
+        VocabularyLanguage.french,
+      );
+      expect(await repository.watchById('missing').first, isNull);
+      // The existing listener must observe inserts, not merely a fresh query.
+      await inserted.future;
+      expect(lists.last.map((row) => row.id), [first.id, second.id]);
+    },
+  );
   test(
     'duplicates have distinct UUIDs and invalid collection never persists',
     () async {
@@ -70,11 +107,19 @@ void main() {
         );
         await db.close();
         db = PikoDatabase(NativeDatabase(file));
+        final reopened = await SqliteCollectionsRepository(db).watchAll().first;
+        expect(reopened.single.id, saved.id);
+        expect(
+          (await SqliteCollectionsRepository(
+            db,
+          ).watchById(saved.id).first)!.name,
+          '한국어',
+        );
         final row = await db.select(db.collections).getSingle();
         expect(row.id, saved.id);
         expect(row.name, '한국어');
         expect(row.targetLanguage, 'ko');
-      expect(row.nativeLanguage, 'de');
+        expect(row.nativeLanguage, 'de');
         expect(await SqliteSettingsRepository(db).read('locale'), 'de');
       } finally {
         await db.close();

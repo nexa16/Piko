@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/features/collections/collections_home.dart';
+import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/main.dart';
 
 void main() {
@@ -46,6 +47,25 @@ void main() {
         expect(row.name, 'Android verification');
         expect(row.targetLanguage, 'ko');
         expect(row.nativeLanguage, 'de');
+        await tester.pumpWidget(
+          PikoApp(
+            home: CollectionsHome(repository: SqliteCollectionsRepository(db)),
+          ),
+        );
+        await db.customSelect('SELECT 1').get();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(ValueKey('collection-${row.id}')));
+        await tester.pumpAndSettle();
+        await db.customSelect('SELECT 1').get();
+        await tester.pumpAndSettle();
+        expect(find.byType(CollectionDetail), findsOneWidget);
+        expect(find.text('Android verification'), findsOneWidget);
+        expect(find.text('Korean · German'), findsOneWidget);
+        await tester.tap(find.text('Back'));
+        await tester.pumpAndSettle();
+        expect(find.byType(CollectionDetail), findsNothing);
+        expect(find.byKey(ValueKey('collection-${row.id}')), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
       } finally {
         await db.close();
         await directory.delete(recursive: true);

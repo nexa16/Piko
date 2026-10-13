@@ -7,10 +7,12 @@ class PikoCard extends StatelessWidget {
     required this.child,
     this.padding,
     this.selected = false,
+    this.focused = false,
   });
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final bool selected;
+  final bool focused;
   @override
   Widget build(BuildContext context) => Container(
     padding:
@@ -20,8 +22,12 @@ class PikoCard extends StatelessWidget {
       color: pikoDesign.color('surface'),
       borderRadius: BorderRadius.circular(pikoDesign.dimension('radii.card')),
       border: Border.all(
-        color: selected ? pikoDesign.color('primary') : PikoTheme.border,
-        width: pikoDesign.dimension('states.borderWidth'),
+        color: selected || focused
+            ? pikoDesign.color('primary')
+            : PikoTheme.border,
+        width: pikoDesign.dimension(
+          focused ? 'states.focusWidth' : 'states.borderWidth',
+        ),
       ),
     ),
     child: child,

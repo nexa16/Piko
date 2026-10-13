@@ -1,10 +1,37 @@
 import 'package:uuid/uuid.dart';
+import 'package:drift/drift.dart';
 import '../collections_repository.dart';
 import 'piko_database.dart';
 
 final class SqliteCollectionsRepository implements CollectionsRepository {
   SqliteCollectionsRepository(this.database);
   final PikoDatabase database;
+
+  CollectionRecord _record(Collection row) => CollectionRecord(
+    id: row.id,
+    name: row.name,
+    targetLanguage: VocabularyLanguage.values.singleWhere(
+      (v) => v.code == row.targetLanguage,
+    ),
+    nativeLanguage: VocabularyLanguage.values.singleWhere(
+      (v) => v.code == row.nativeLanguage,
+    ),
+  );
+
+  @override
+  Stream<List<CollectionRecord>> watchAll() =>
+      (database.select(database.collections)..orderBy([
+            (_) =>
+                OrderingTerm(expression: const CustomExpression<int>('rowid')),
+          ]))
+          .watch()
+          .map((rows) => rows.map(_record).toList(growable: false));
+
+  @override
+  Stream<CollectionRecord?> watchById(String id) =>
+      (database.select(database.collections)..where((row) => row.id.equals(id)))
+          .watchSingleOrNull()
+          .map((row) => row == null ? null : _record(row));
 
   @override
   Future<CollectionRecord> create({
