@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-003 — target-first vocabulary display acceptance — 2026-10-14
+
+The existing Collection renderer already consumes target then native values; this specification adds focused acceptance, not a second ordering mechanism or persisted preference. Real SQLite fixtures use matching-name Collections with reversed German/English language roles and distinct entry identities. English/German interface checks verify compact position and accessible pair order, wide editor columns, narrow editor vertical order, correct localized labels/value/ID bindings and unchanged order across locale rebuilds. Deliberately divergent directional FSRS records, with native-to-target due earlier, remain byte-identical through rendering and locale changes; stored entry ownership/text remain unchanged. Vocabulary display does not derive order from due state or interface language. Actual review-direction selection/integration is separately pending; COLL-004/005 ordering controls/preferences are not introduced.
+
 ## UX-COLL-009 — repository-backed inline Collection editing — 2026-10-14
 
 Collection Detail injects a Vocabulary Repository and expands the same keyed card using a widget-owned standalone inline autosave controller. Stream snapshots update compact rows but never replace an open editor's raw buffers, selection or focus. Same-ID metadata errors/retries retain the last ready Collection and keyed vocabulary subtree; successful missing data or actual dependency/identity replacement retires it. Collapse and row switching await accepted writes, disable competing transitions while draining and reject invalid/duplicate/failed input without closing. Transition identity guards prevent late completions from closing a replacement editor or leaving controls permanently disabled after removal/retry. Storage retry remains explicit; no finish/discard or Delete placeholder is added.
