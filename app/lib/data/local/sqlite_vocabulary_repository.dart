@@ -73,18 +73,20 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
       )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
       if (collection == null) throw VocabularyValidation.collectionNotFound;
       final id = const Uuid().v4();
-      await database
-          .into(database.vocabularyEntries)
-          .insert(
-            VocabularyEntriesCompanion.insert(
-              id: id,
-              collectionId: collectionId,
-              targetText: target,
-              nativeText: native,
-              targetKey: vocabularyComparisonKey(target),
-              nativeKey: vocabularyComparisonKey(native),
-            ),
-          );
+      final rowId = await database.allocateVocabularyRowId();
+      await database.customInsert(
+        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        variables: [
+          Variable(rowId),
+          Variable(id),
+          Variable(collectionId),
+          Variable(target),
+          Variable(native),
+          Variable(vocabularyComparisonKey(target)),
+          Variable(vocabularyComparisonKey(native)),
+        ],
+        updates: {database.vocabularyEntries},
+      );
       await database.createLearningItems(id);
       return VocabularyRecord(
         id: id,

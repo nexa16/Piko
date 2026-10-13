@@ -74,6 +74,19 @@ class LearningIdentitySequence extends Table {
   ];
 }
 
+/// Prevents implicit SQLite rowid reuse while deleted rows await Undo.
+class VocabularyOrderSequence extends Table {
+  IntColumn get singleton => integer()();
+  IntColumn get nextRowId => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {singleton};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(singleton = 1)',
+    'CHECK(next_row_id > 0)',
+  ];
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -81,6 +94,7 @@ class LearningIdentitySequence extends Table {
     VocabularyEntries,
     LearningItems,
     LearningIdentitySequence,
+    VocabularyOrderSequence,
   ],
 )
 class PikoDatabase extends _$PikoDatabase {
@@ -88,13 +102,14 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
       await _initializeLearningSequence();
+      await _initializeVocabularyOrder();
     },
     onUpgrade: (m, from, to) async {
       await transaction(() async {
@@ -127,12 +142,34 @@ class PikoDatabase extends _$PikoDatabase {
             );
           }
         }
+        if (from < 6) {
+          await m.createTable(vocabularyOrderSequence);
+          await _initializeVocabularyOrder();
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _initializeVocabularyOrder() => customStatement(
+    'INSERT INTO vocabulary_order_sequence (singleton, next_row_id) SELECT 1, COALESCE(MAX(rowid), 0) + 1 FROM vocabulary_entries',
+  );
+
+  Future<int> allocateVocabularyRowId() => transaction(() async {
+    final sequence = await select(vocabularyOrderSequence).getSingle();
+    final highest = (await customSelect(
+      'SELECT COALESCE(MAX(rowid), 0) AS highest FROM vocabulary_entries',
+    ).getSingle()).read<int>('highest');
+    final next = sequence.nextRowId > highest
+        ? sequence.nextRowId
+        : highest + 1;
+    await (update(vocabularyOrderSequence)
+          ..where((row) => row.singleton.equals(1)))
+        .write(VocabularyOrderSequenceCompanion(nextRowId: Value(next + 1)));
+    return next;
+  });
 
   Future<void> _initializeLearningSequence() => customStatement(
     'INSERT INTO learning_identity_sequence (singleton, next_id) VALUES (1, 1)',

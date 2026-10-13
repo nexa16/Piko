@@ -1535,6 +1535,220 @@ class LearningIdentitySequenceCompanion
   }
 }
 
+class $VocabularyOrderSequenceTable extends VocabularyOrderSequence
+    with TableInfo<$VocabularyOrderSequenceTable, VocabularyOrderSequenceData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VocabularyOrderSequenceTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _singletonMeta = const VerificationMeta(
+    'singleton',
+  );
+  @override
+  late final GeneratedColumn<int> singleton = GeneratedColumn<int>(
+    'singleton',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextRowIdMeta = const VerificationMeta(
+    'nextRowId',
+  );
+  @override
+  late final GeneratedColumn<int> nextRowId = GeneratedColumn<int>(
+    'next_row_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [singleton, nextRowId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vocabulary_order_sequence';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VocabularyOrderSequenceData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('singleton')) {
+      context.handle(
+        _singletonMeta,
+        singleton.isAcceptableOrUnknown(data['singleton']!, _singletonMeta),
+      );
+    }
+    if (data.containsKey('next_row_id')) {
+      context.handle(
+        _nextRowIdMeta,
+        nextRowId.isAcceptableOrUnknown(data['next_row_id']!, _nextRowIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nextRowIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {singleton};
+  @override
+  VocabularyOrderSequenceData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VocabularyOrderSequenceData(
+      singleton: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}singleton'],
+      )!,
+      nextRowId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_row_id'],
+      )!,
+    );
+  }
+
+  @override
+  $VocabularyOrderSequenceTable createAlias(String alias) {
+    return $VocabularyOrderSequenceTable(attachedDatabase, alias);
+  }
+}
+
+class VocabularyOrderSequenceData extends DataClass
+    implements Insertable<VocabularyOrderSequenceData> {
+  final int singleton;
+  final int nextRowId;
+  const VocabularyOrderSequenceData({
+    required this.singleton,
+    required this.nextRowId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['singleton'] = Variable<int>(singleton);
+    map['next_row_id'] = Variable<int>(nextRowId);
+    return map;
+  }
+
+  VocabularyOrderSequenceCompanion toCompanion(bool nullToAbsent) {
+    return VocabularyOrderSequenceCompanion(
+      singleton: Value(singleton),
+      nextRowId: Value(nextRowId),
+    );
+  }
+
+  factory VocabularyOrderSequenceData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VocabularyOrderSequenceData(
+      singleton: serializer.fromJson<int>(json['singleton']),
+      nextRowId: serializer.fromJson<int>(json['nextRowId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'singleton': serializer.toJson<int>(singleton),
+      'nextRowId': serializer.toJson<int>(nextRowId),
+    };
+  }
+
+  VocabularyOrderSequenceData copyWith({int? singleton, int? nextRowId}) =>
+      VocabularyOrderSequenceData(
+        singleton: singleton ?? this.singleton,
+        nextRowId: nextRowId ?? this.nextRowId,
+      );
+  VocabularyOrderSequenceData copyWithCompanion(
+    VocabularyOrderSequenceCompanion data,
+  ) {
+    return VocabularyOrderSequenceData(
+      singleton: data.singleton.present ? data.singleton.value : this.singleton,
+      nextRowId: data.nextRowId.present ? data.nextRowId.value : this.nextRowId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyOrderSequenceData(')
+          ..write('singleton: $singleton, ')
+          ..write('nextRowId: $nextRowId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(singleton, nextRowId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VocabularyOrderSequenceData &&
+          other.singleton == this.singleton &&
+          other.nextRowId == this.nextRowId);
+}
+
+class VocabularyOrderSequenceCompanion
+    extends UpdateCompanion<VocabularyOrderSequenceData> {
+  final Value<int> singleton;
+  final Value<int> nextRowId;
+  const VocabularyOrderSequenceCompanion({
+    this.singleton = const Value.absent(),
+    this.nextRowId = const Value.absent(),
+  });
+  VocabularyOrderSequenceCompanion.insert({
+    this.singleton = const Value.absent(),
+    required int nextRowId,
+  }) : nextRowId = Value(nextRowId);
+  static Insertable<VocabularyOrderSequenceData> custom({
+    Expression<int>? singleton,
+    Expression<int>? nextRowId,
+  }) {
+    return RawValuesInsertable({
+      if (singleton != null) 'singleton': singleton,
+      if (nextRowId != null) 'next_row_id': nextRowId,
+    });
+  }
+
+  VocabularyOrderSequenceCompanion copyWith({
+    Value<int>? singleton,
+    Value<int>? nextRowId,
+  }) {
+    return VocabularyOrderSequenceCompanion(
+      singleton: singleton ?? this.singleton,
+      nextRowId: nextRowId ?? this.nextRowId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (singleton.present) {
+      map['singleton'] = Variable<int>(singleton.value);
+    }
+    if (nextRowId.present) {
+      map['next_row_id'] = Variable<int>(nextRowId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyOrderSequenceCompanion(')
+          ..write('singleton: $singleton, ')
+          ..write('nextRowId: $nextRowId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PikoDatabase extends GeneratedDatabase {
   _$PikoDatabase(QueryExecutor e) : super(e);
   $PikoDatabaseManager get managers => $PikoDatabaseManager(this);
@@ -1545,6 +1759,8 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $LearningItemsTable learningItems = $LearningItemsTable(this);
   late final $LearningIdentitySequenceTable learningIdentitySequence =
       $LearningIdentitySequenceTable(this);
+  late final $VocabularyOrderSequenceTable vocabularyOrderSequence =
+      $VocabularyOrderSequenceTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1555,6 +1771,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     vocabularyEntries,
     learningItems,
     learningIdentitySequence,
+    vocabularyOrderSequence,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2954,6 +3171,174 @@ typedef $$LearningIdentitySequenceTableProcessedTableManager =
       LearningIdentitySequenceData,
       PrefetchHooks Function()
     >;
+typedef $$VocabularyOrderSequenceTableCreateCompanionBuilder =
+    VocabularyOrderSequenceCompanion Function({
+      Value<int> singleton,
+      required int nextRowId,
+    });
+typedef $$VocabularyOrderSequenceTableUpdateCompanionBuilder =
+    VocabularyOrderSequenceCompanion Function({
+      Value<int> singleton,
+      Value<int> nextRowId,
+    });
+
+class $$VocabularyOrderSequenceTableFilterComposer
+    extends Composer<_$PikoDatabase, $VocabularyOrderSequenceTable> {
+  $$VocabularyOrderSequenceTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextRowId => $composableBuilder(
+    column: $table.nextRowId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VocabularyOrderSequenceTableOrderingComposer
+    extends Composer<_$PikoDatabase, $VocabularyOrderSequenceTable> {
+  $$VocabularyOrderSequenceTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextRowId => $composableBuilder(
+    column: $table.nextRowId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VocabularyOrderSequenceTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $VocabularyOrderSequenceTable> {
+  $$VocabularyOrderSequenceTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get singleton =>
+      $composableBuilder(column: $table.singleton, builder: (column) => column);
+
+  GeneratedColumn<int> get nextRowId =>
+      $composableBuilder(column: $table.nextRowId, builder: (column) => column);
+}
+
+class $$VocabularyOrderSequenceTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $VocabularyOrderSequenceTable,
+          VocabularyOrderSequenceData,
+          $$VocabularyOrderSequenceTableFilterComposer,
+          $$VocabularyOrderSequenceTableOrderingComposer,
+          $$VocabularyOrderSequenceTableAnnotationComposer,
+          $$VocabularyOrderSequenceTableCreateCompanionBuilder,
+          $$VocabularyOrderSequenceTableUpdateCompanionBuilder,
+          (
+            VocabularyOrderSequenceData,
+            BaseReferences<
+              _$PikoDatabase,
+              $VocabularyOrderSequenceTable,
+              VocabularyOrderSequenceData
+            >,
+          ),
+          VocabularyOrderSequenceData,
+          PrefetchHooks Function()
+        > {
+  $$VocabularyOrderSequenceTableTableManager(
+    _$PikoDatabase db,
+    $VocabularyOrderSequenceTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VocabularyOrderSequenceTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$VocabularyOrderSequenceTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VocabularyOrderSequenceTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                Value<int> nextRowId = const Value.absent(),
+              }) => VocabularyOrderSequenceCompanion(
+                singleton: singleton,
+                nextRowId: nextRowId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                required int nextRowId,
+              }) => VocabularyOrderSequenceCompanion.insert(
+                singleton: singleton,
+                nextRowId: nextRowId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $VocabularyOrderSequenceTable,
+                    VocabularyOrderSequenceData
+                  >(table),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $VocabularyOrderSequenceTable,
+                    VocabularyOrderSequenceData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VocabularyOrderSequenceTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyOrderSequenceTable,
+      VocabularyOrderSequenceData,
+      $$VocabularyOrderSequenceTableFilterComposer,
+      $$VocabularyOrderSequenceTableOrderingComposer,
+      $$VocabularyOrderSequenceTableAnnotationComposer,
+      $$VocabularyOrderSequenceTableCreateCompanionBuilder,
+      $$VocabularyOrderSequenceTableUpdateCompanionBuilder,
+      (
+        VocabularyOrderSequenceData,
+        BaseReferences<
+          _$PikoDatabase,
+          $VocabularyOrderSequenceTable,
+          VocabularyOrderSequenceData
+        >,
+      ),
+      VocabularyOrderSequenceData,
+      PrefetchHooks Function()
+    >;
 
 class $PikoDatabaseManager {
   final _$PikoDatabase _db;
@@ -2970,5 +3355,10 @@ class $PikoDatabaseManager {
       $$LearningIdentitySequenceTableTableManager(
         _db,
         _db.learningIdentitySequence,
+      );
+  $$VocabularyOrderSequenceTableTableManager get vocabularyOrderSequence =>
+      $$VocabularyOrderSequenceTableTableManager(
+        _db,
+        _db.vocabularyOrderSequence,
       );
 }

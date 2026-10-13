@@ -277,7 +277,7 @@ void main() {
           expect(
             (await db.customSelect('PRAGMA user_version').getSingle())
                 .read<int>('user_version'),
-            5,
+            db.schemaVersion,
           );
           expect(
             await db.customSelect('PRAGMA foreign_key_check').get(),
@@ -328,7 +328,7 @@ void main() {
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',
           ),
-          5,
+          db.schemaVersion,
         );
       } finally {
         await db.close();
