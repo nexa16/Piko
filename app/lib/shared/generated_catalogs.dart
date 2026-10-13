@@ -375,8 +375,8 @@ const copyCatalog = <String, Object?>{
 "en": "Target → Native",
 },
 "entry.autoSave": <String, Object?>{
-"de": "Änderungen automatisch in der Vorschau gespeichert",
-"en": "Edits saved in preview automatically",
+"de": "Gültige Änderungen werden automatisch gespeichert",
+"en": "Valid edits save automatically",
 },
 "entry.complete": <String, Object?>{
 "de": "Letzten Eintrag speichern & Eingabe beenden",
@@ -422,6 +422,10 @@ const copyCatalog = <String, Object?>{
 "de": "Neu",
 "en": "New",
 },
+"entry.notFound": <String, Object?>{
+"de": "Dieser Eintrag ist nicht mehr verfügbar.",
+"en": "This entry is no longer available.",
+},
 "entry.number": <String, Object?>{
 "de": "Eintrag {count}",
 "en": "Entry {count}",
@@ -434,9 +438,25 @@ const copyCatalog = <String, Object?>{
 "de": "Bitte beide Wörter vor dem Bestätigen eingeben.",
 "en": "Enter both words before confirming.",
 },
+"entry.requiredNative": <String, Object?>{
+"de": "Gib die Übersetzung ein.",
+"en": "Enter the translation.",
+},
+"entry.requiredTarget": <String, Object?>{
+"de": "Gib das Wort in der Zielsprache ein.",
+"en": "Enter the target word.",
+},
+"entry.saveFailed": <String, Object?>{
+"de": "Dieser Eintrag konnte nicht gespeichert werden. Bitte versuche es erneut.",
+"en": "Couldn't save this entry. Please try again.",
+},
 "entry.saved": <String, Object?>{
-"de": "Bestätigtes Beispiel",
-"en": "Confirmed sample",
+"de": "Gespeichert",
+"en": "Saved",
+},
+"entry.saving": <String, Object?>{
+"de": "Wird gespeichert…",
+"en": "Saving…",
 },
 "entry.stackLabel": <String, Object?>{
 "de": "Vokabelkarten · zum Bearbeiten scrollen",
@@ -449,6 +469,10 @@ const copyCatalog = <String, Object?>{
 "entry.title": <String, Object?>{
 "de": "Einträge hinzufügen",
 "en": "Add Entries",
+},
+"entry.unsaved": <String, Object?>{
+"de": "Änderungen nicht gespeichert",
+"en": "Changes not saved",
 },
 "home.collections": <String, Object?>{
 "de": "Meine Sammlungen",

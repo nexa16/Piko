@@ -1,5 +1,9 @@
 # Decision log
 
+## ENTRY-001 — production focused stack behavior — 2026-10-13
+
+The production EntrySessionScreen consumes real Collection metadata and a caller-owned EntrySessionController, preserving widget-owned text/focus/scroll state by stable card identity. No sample cards are seeded. User scrolling selects the nearest measured card center, while continuous expansion anchor correction preserves gesture movement; nested input scrolling and programmatic reflow do not select other cards. Only active fields participate in Tab traversal, and Up/Down applies to stack focus. Confirmation, saved autosave and explicit storage retry consume the established controller behavior; pending, invalid and failed states do not claim edits are saved. Shared Saved/autosave labels become truthful neutral wording; the mockup retains its explicit sample-session disclaimer. Keyboard-resized layouts preserve draft text, selection and focus, and reduced motion bypasses size animation. This establishes tested production screen behavior, not completed Android acceptance, exact UX-ENTRY-001 presentation, or future route/exit/global-completion/deletion actions.
+
 ## ENTRY-005 — serialized saved-entry auto-save — 2026-10-13
 
 Confirmed current-session Entries now have separate raw edit buffers, last committed records, saving state and error state. Valid edits start repository updates automatically; required-invalid input stays in the raw buffer and queues no new write. Per-Entry workers serialize writes and coalesce the latest waiting valid revision. A subsequent invalid edit does not cancel a valid revision already accepted for saving. Completion updates only the committed record, preserving identity, owner and session order; it never replaces raw input. Revision checks prevent older success/error results from clearing or replacing newer validation. Separate Entry queues operate independently.
