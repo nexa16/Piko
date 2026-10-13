@@ -1,5 +1,11 @@
 # Decision log
 
+## ENTRY-005 — serialized saved-entry auto-save — 2026-10-13
+
+Confirmed current-session Entries now have separate raw edit buffers, last committed records, saving state and error state. Valid edits start repository updates automatically; required-invalid input stays in the raw buffer and queues no new write. Per-Entry workers serialize writes and coalesce the latest waiting valid revision. A subsequent invalid edit does not cancel a valid revision already accepted for saving. Completion updates only the committed record, preserving identity, owner and session order; it never replaces raw input. Revision checks prevent older success/error results from clearing or replacing newer validation. Separate Entry queues operate independently.
+
+`retrySavedEntry` retries an unchanged valid buffer after failure without creating vocabulary or requiring another confirmation, and cannot duplicate an active save or save invalid input. Errors remain on saved-entry state for later canonical localized feedback. `awaitSavedEdits` resolves when all accepted queues are idle, including edits added while draining; it is coordination for tests and later exit handling, not a save button. Disposal clears exposed session state and rejects further edits, while already accepted valid writes finish without late notifications. Real SQLite tests verify committed values and continued queued-save persistence after disposal. This changes saved-entry editing only; unconfirmed new drafts remain ephemeral. Actual fields, feedback and focused-stack integration remain pending.
+
 ## ENTRY-002 — guarded confirmation before advancement — 2026-10-13
 
 The entry-session controller now receives its vocabulary repository and writes only through explicit Confirm & Next. It captures the raw draft, validates required normalized fields and guards one pending write. Repeated confirmation returns the same Future. To avoid losing edits made during a write, field mutations and card navigation are rejected while pending; the later UI must disable those controls using `isConfirming`. This is a temporary pending-write guard, not an automatic draft save.

@@ -7,6 +7,15 @@ class ControlledVocabularyRepository implements VocabularyRepository {
   String? targetText;
   String? nativeText;
   var pending = Completer<VocabularyRecord>();
+  final updates =
+      <
+        ({
+          String id,
+          String target,
+          String native,
+          Completer<VocabularyRecord> result,
+        })
+      >[];
   @override
   Future<VocabularyRecord> create({
     required String collectionId,
@@ -25,7 +34,17 @@ class ControlledVocabularyRepository implements VocabularyRepository {
     required String id,
     required String targetText,
     required String nativeText,
-  }) => throw UnsupportedError('Not used by entry confirmation tests.');
+  }) {
+    final result = Completer<VocabularyRecord>();
+    updates.add((
+      id: id,
+      target: targetText,
+      native: nativeText,
+      result: result,
+    ));
+    return result.future;
+  }
+
   @override
   Stream<List<VocabularyRecord>> watchByCollection(String collectionId) =>
       Stream.value([]);
