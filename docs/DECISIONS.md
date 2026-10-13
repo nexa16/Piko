@@ -1,5 +1,9 @@
 # Decision log
 
+## VOCAB-003 — cross-Collection vocabulary independence — 2026-10-13
+
+Dedicated acceptance tests confirm that the existing schema 4 collection-scoped uniqueness permits identical normalized vocabulary pairs in different Collections, even when their names and language pairs match. Entries retain distinct UUIDs and owner-scoped reads. Updating one Entry leaves the other intact and may match a pair in another Collection; attempts to create a second matching pair within either owner remain blocked. File reopen retains both Collection and Entry identities, texts and language metadata. This requirement needs no production change, schema migration or move API; it adds explicit evidence for the accepted ownership boundary. Manual-entry screens remain separately scoped.
+
 ## VOCAB-002 — durable normalized uniqueness and safe migration — 2026-10-13
 
 Schema 4 requires target/native comparison keys and enforces `UNIQUE(collection_id, target_key, native_key)`. Repository create and exact-ID update apply VOCAB-012 display normalization and key calculation; self-matching edits retain identity and ownership. Invalid or duplicate writes leave the saved Entry intact. SQLite extended error 2067 maps to typed duplicate-pair validation because this table currently has exactly one UNIQUE constraint, the comparison pair; primary-key, foreign-key, trigger and other errors propagate. The existing sqlite3 dependency is now direct rather than development-only for that typed error mapping. Future additional unique constraints must revisit this assumption.
