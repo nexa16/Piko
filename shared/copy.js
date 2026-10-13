@@ -222,6 +222,7 @@ globalThis.PIKO_COPY = {
     },
     "entry.end": {"en":"End entry session","de":"Eingabe beenden"},
     "entry.complete": {"en":"Save last entry & end session","de":"Letzten Eintrag speichern & Eingabe beenden"},
+    "entry.completed": {"en":"Entry session ended","de":"Eingabesitzung beendet"},
     "entry.prototype": {"en":"Sample session · changes stay in this preview only and are lost on reload.","de":"Beispielsitzung · Änderungen bleiben nur in dieser Vorschau und gehen beim Neuladen verloren."},
     "entry.stackLabel": {"en":"Vocabulary cards · scroll to edit","de":"Vokabelkarten · zum Bearbeiten scrollen"},
     "entry.number": {"en":"Entry {count}","de":"Eintrag {count}"},

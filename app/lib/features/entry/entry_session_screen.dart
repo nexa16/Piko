@@ -142,6 +142,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   }
 
   void scheduleLayout() {
+    if (session.isCompleted) return;
     if (scheduled) return;
     scheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -220,7 +221,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   }
 
   void select(String id, {bool centerCard = false}) {
-    if (session.isConfirming || exitDraining || id == activeId) return;
+    if (session.isBusy || exitDraining || id == activeId) return;
     anchorId = id;
     anchorCenter = center(id);
     adjusting = true;
@@ -237,7 +238,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   void nearest() {
     if (!mounted ||
         adjusting ||
-        session.isConfirming ||
+        session.isBusy ||
         exitDraining ||
         !userScrolling) {
       return;
@@ -284,7 +285,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
 
   KeyEventResult key(FocusNode node, KeyEvent event) {
     if (!stackFocus.hasPrimaryFocus ||
-        session.isConfirming ||
+        session.isBusy ||
         exitDraining ||
         event is! KeyDownEvent) {
       return KeyEventResult.ignored;
@@ -317,8 +318,31 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
   }
 
+  Future<void> complete() async {
+    if (exitRequest != null || session.isConfirming || exitDraining) return;
+    final initiatingSession = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    try {
+      await initiatingSession.completeSession();
+      if (!mounted ||
+          !identical(session, initiatingSession) ||
+          route?.isCurrent != true) {
+        return;
+      }
+      await requestExit();
+    } catch (error) {
+      if (!mounted || !identical(session, initiatingSession)) return;
+      setState(() {
+        if (error is! SavedEntryCompletionBlocked) confirmError = error;
+        centerRequested = true;
+      });
+      scheduleLayout();
+    }
+  }
+
   Future<void> requestExit() async {
-    if (exitRequest != null || session.isConfirming || allowPop) return;
+    if (exitRequest != null || session.isBusy || allowPop) return;
     final request = Object();
     final initiatingSession = session;
     final route = ModalRoute.of(context);
@@ -332,8 +356,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     exitRequest = request;
     try {
       final draft = initiatingSession.draft;
-      if (draft.targetText.trim().isNotEmpty ||
-          draft.nativeText.trim().isNotEmpty) {
+      if (!initiatingSession.isCompleted &&
+          (draft.targetText.trim().isNotEmpty ||
+              draft.nativeText.trim().isNotEmpty)) {
         final discard = await showPikoDialog<bool>(
           context,
           builder: (dialogContext) {
@@ -369,7 +394,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         );
         if (!current() || discard != true) return;
       }
-      if (!current() || initiatingSession.isConfirming) return;
+      if (!current() || initiatingSession.isBusy) return;
       setState(() => exitDraining = true);
       await initiatingSession.awaitSavedEdits();
       if (!current()) return;
@@ -449,7 +474,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       ),
       controller: target ? editor.target : editor.native,
       focusNode: target ? editor.targetFocus : editor.nativeFocus,
-      enabled: !session.isConfirming && !exitDraining,
+      enabled: !session.isBusy && !exitDraining,
       error:
           error ==
               (target
@@ -519,9 +544,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                   Text(
                     copy.text(
                       draft
-                          ? (session.isConfirming
-                                ? 'entry.saving'
-                                : 'entry.new')
+                          ? (session.isBusy ? 'entry.saving' : 'entry.new')
                           : saved!.isSaving
                           ? 'entry.saving'
                           : error != null
@@ -601,7 +624,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                             children: [
                               Text(
                                 copy.text(
-                                  session.isConfirming
+                                  session.isBusy
                                       ? 'entry.saving'
                                       : 'entry.draft',
                                 ),
@@ -612,7 +635,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 variant: PikoButtonVariant.primary,
                                 large: true,
                                 semanticLabel: copy.text('action.saveNext'),
-                                onPressed: session.isConfirming || exitDraining
+                                onPressed: session.isBusy || exitDraining
                                     ? null
                                     : confirm,
                               ),
@@ -646,7 +669,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                             error is! VocabularyValidation)
                           PikoButton(
                             label: copy.text('action.retry'),
-                            onPressed: session.isConfirming || exitDraining
+                            onPressed: session.isBusy || exitDraining
                                 ? null
                                 : () => session.retrySavedEntry(id),
                           ),
@@ -697,43 +720,63 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                             label: copy.text('common.back'),
                             icon: const PikoIcon(PikoIconName.arrowLeft),
                             variant: PikoButtonVariant.ghost,
-                            onPressed: session.isConfirming || exitDraining
+                            onPressed: session.isBusy || exitDraining
                                 ? null
                                 : requestExit,
                           ),
+                          actions: [
+                            PikoIconButton(
+                              icon: const PikoIcon(PikoIconName.check),
+                              semanticLabel: copy.text('entry.complete'),
+                              onPressed:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : complete,
+                            ),
+                          ],
                         ),
                         Expanded(
-                          child: SizedBox(
-                            key: viewport,
-                            child: Focus(
-                              focusNode: stackFocus,
-                              onKeyEvent: key,
-                              child: Semantics(
-                                label: copy.text('entry.stackLabel'),
-                                child: NotificationListener<ScrollNotification>(
-                                  onNotification: notification,
-                                  child: SingleChildScrollView(
-                                    key: const ValueKey('entry-stack'),
-                                    controller: scroll,
-                                    physics:
-                                        session.isConfirming || exitDraining
-                                        ? const NeverScrollableScrollPhysics()
-                                        : const ClampingScrollPhysics(),
-                                    padding: EdgeInsets.only(
-                                      top: topPadding,
-                                      bottom: bottomPadding,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        for (var i = 0; i < ids.length; i++)
-                                          card(ids[i], i, context),
-                                      ],
+                          child: session.isCompleted
+                              ? Center(
+                                  child: Text(copy.text('entry.completed')),
+                                )
+                              : SizedBox(
+                                  key: viewport,
+                                  child: Focus(
+                                    focusNode: stackFocus,
+                                    onKeyEvent: key,
+                                    child: Semantics(
+                                      label: copy.text('entry.stackLabel'),
+                                      child: NotificationListener<ScrollNotification>(
+                                        onNotification: notification,
+                                        child: SingleChildScrollView(
+                                          key: const ValueKey('entry-stack'),
+                                          controller: scroll,
+                                          physics:
+                                              session.isBusy || exitDraining
+                                              ? const NeverScrollableScrollPhysics()
+                                              : const ClampingScrollPhysics(),
+                                          padding: EdgeInsets.only(
+                                            top: topPadding,
+                                            bottom: bottomPadding,
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              for (
+                                                var i = 0;
+                                                i < ids.length;
+                                                i++
+                                              )
+                                                card(ids[i], i, context),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
                         ),
                       ],
                     ),

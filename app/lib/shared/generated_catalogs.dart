@@ -391,6 +391,10 @@ const copyCatalog = <String, Object?>{
 "de": "Letzten Eintrag speichern & Eingabe beenden",
 "en": "Save last entry & end session",
 },
+"entry.completed": <String, Object?>{
+"de": "Eingabesitzung beendet",
+"en": "Entry session ended",
+},
 "entry.continue": <String, Object?>{
 "de": "Weiter bearbeiten",
 "en": "Continue editing",

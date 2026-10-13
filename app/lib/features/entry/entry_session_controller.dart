@@ -38,6 +38,13 @@ final class _SavedEntryBuffer {
   (int, EntryDraft)? pending;
 }
 
+/// Completion preserves and activates a saved buffer that needs attention.
+final class SavedEntryCompletionBlocked implements Exception {
+  const SavedEntryCompletionBlocked(this.entryId, this.error);
+  final String entryId;
+  final Object error;
+}
+
 /// One Collection's ephemeral session: new drafts require confirmation, while
 /// valid edits of this session's confirmed records save automatically.
 /// Text, focus and scroll controllers belong to the consuming widgets.
@@ -55,9 +62,14 @@ final class EntrySessionController extends ChangeNotifier {
   final List<VocabularyRecord> _confirmedEntries = [];
   String? _activeEntryId;
   Future<VocabularyRecord>? _pendingConfirmation;
+  Future<void>? _completion;
+  bool _completed = false, _completing = false;
   final Map<String, _SavedEntryBuffer> _savedBuffers = {};
   final Map<String, Future<void>> _savedWorkers = {};
   bool get isConfirming => !_disposed && _pendingConfirmation != null;
+  bool get isCompleting => !_disposed && _completing;
+  bool get isBusy => isConfirming || isCompleting;
+  bool get isCompleted => !_disposed && _completed;
 
   EntryDraft get draft => _draft;
   List<VocabularyRecord> get confirmedEntries =>
@@ -183,6 +195,7 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureActive();
     final pending = _pendingConfirmation;
     if (pending != null) return pending;
+    _ensureEditable();
     final snapshot = _draft;
     if (normalizeVocabularyText(snapshot.targetText).isEmpty) {
       return Future.error(VocabularyValidation.requiredTarget);
@@ -195,6 +208,69 @@ final class EntrySessionController extends ChangeNotifier {
     notifyListeners();
     unawaited(_confirm(snapshot, result));
     return result.future;
+  }
+
+  /// Final confirmation ends this lifetime, without creating a fresh draft.
+  /// A successful result remains reusable when a covered route resumes exit.
+  Future<void> completeSession() {
+    _ensureActive();
+    if (_completion != null) return _completion!;
+    _ensureEditable();
+    final result = Completer<void>();
+    _completion = result.future;
+    _completing = true;
+    final snapshot = _draft;
+    notifyListeners();
+    unawaited(_completeSession(snapshot, result));
+    return result.future;
+  }
+
+  Future<void> _completeSession(
+    EntryDraft snapshot,
+    Completer<void> result,
+  ) async {
+    try {
+      await awaitSavedEdits();
+      // Disposal ends the lifetime; do not begin a new write after draining.
+      if (_disposed) throw StateError('The entry session has ended.');
+      for (final record in _confirmedEntries) {
+        final error = _savedBuffers[record.id]?.error;
+        if (error != null) {
+          _activeEntryId = record.id;
+          throw SavedEntryCompletionBlocked(record.id, error);
+        }
+      }
+      final target = normalizeVocabularyText(snapshot.targetText);
+      final native = normalizeVocabularyText(snapshot.nativeText);
+      if (target.isNotEmpty || native.isNotEmpty) {
+        _activeEntryId = null;
+        if (target.isEmpty) throw VocabularyValidation.requiredTarget;
+        if (native.isEmpty) throw VocabularyValidation.requiredNative;
+        final record = await _repository.create(
+          collectionId: collectionId,
+          targetText: snapshot.targetText,
+          nativeText: snapshot.nativeText,
+        );
+        if (record.collectionId != collectionId) {
+          throw StateError(
+            'Completion returned an entry from another Collection.',
+          );
+        }
+        if (!_disposed) {
+          _confirmedEntries.add(record);
+          _activeEntryId = record.id;
+        }
+      }
+      if (!_disposed) _completed = true;
+      _completing = false;
+      if (!_disposed) notifyListeners();
+      result.complete();
+    } catch (error, stack) {
+      _completion = null;
+      _completing = false;
+      if (!_disposed) notifyListeners();
+      result.completeError(error, stack);
+    }
   }
 
   Future<void> _confirm(
@@ -250,7 +326,8 @@ final class EntrySessionController extends ChangeNotifier {
 
   void _ensureEditable() {
     _ensureActive();
-    if (isConfirming) throw StateError('Confirmation is in progress.');
+    if (isBusy) throw StateError('Confirmation is in progress.');
+    if (_completed) throw StateError('The entry session has completed.');
   }
 
   void setTargetText(String text) => _setDraft(text, _draft.nativeText);

@@ -130,6 +130,212 @@ class ExitFixture {
 
 void main() {
   testWidgets(
+    'final storage failure retains raw text and selection, then correction completes',
+    (tester) async {
+      final f = ExitFixture();
+      await f.mount(tester);
+      final field = find.byType(TextField).first;
+      await tester.enterText(field, '  학교  ');
+      final editor = tester.widget<TextField>(field).controller!;
+      editor.selection = const TextSelection(baseOffset: 2, extentOffset: 3);
+      f.session.setNativeText(' Schule ');
+      f.repository.createGate = Completer<void>();
+      await tester.pumpAndSettle();
+      final action = tester.widget<TextButton>(
+        find.descendant(
+          of: find.byTooltip('Save last entry & end session'),
+          matching: find.byType(TextButton),
+        ),
+      );
+      action.onPressed!();
+      action.onPressed!();
+      await tester.pumpAndSettle();
+      expect(f.session.isCompleting, isTrue);
+      expect(
+        tester
+            .widget<TextButton>(find.widgetWithText(TextButton, 'Back'))
+            .onPressed,
+        isNull,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(PikoDialog), findsNothing);
+      f.repository.createGate!.completeError(StateError('Disk failed'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text("Couldn't save this entry. Please try again."),
+        findsOneWidget,
+      );
+      expect(editor.text, '  학교  ');
+      expect(
+        editor.selection,
+        const TextSelection(baseOffset: 2, extentOffset: 3),
+      );
+      expect(f.session.isCompleted, isFalse);
+      f.repository.createGate = null;
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await f.db.customSelect('SELECT 1').get();
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsNothing);
+      expect(await f.db.select(f.db.vocabularyEntries).get(), hasLength(1));
+    },
+  );
+  testWidgets(
+    'global completion saves a real final record once and exits without another draft',
+    (tester) async {
+      final f = ExitFixture();
+      await f.mount(tester);
+      f.session.setTargetText(' 학교 ');
+      f.session.setNativeText(' Schule ');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await f.db.customSelect('SELECT 1').get();
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsNothing);
+      expect(f.session.isCompleted, isTrue);
+      expect(f.session.draft.targetText, ' 학교 ');
+      final rows = await f.db.select(f.db.vocabularyEntries).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.targetText, '학교');
+      await f.session.completeSession();
+      expect(await f.db.select(f.db.vocabularyEntries).get(), hasLength(1));
+    },
+  );
+
+  testWidgets('empty final completion creates nothing and exits', (
+    tester,
+  ) async {
+    final f = ExitFixture();
+    await f.mount(tester);
+    f.session.setTargetText(' \n');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Save last entry & end session'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EntrySessionScreen), findsNothing);
+    expect(await f.db.select(f.db.vocabularyEntries).get(), isEmpty);
+  });
+
+  testWidgets(
+    'required and duplicate final input stays open with localized validation',
+    (tester) async {
+      final f = ExitFixture();
+      await f.mount(tester);
+      f.session.setTargetText('학교');
+      f.session.setNativeText('Schule');
+      await f.session.confirmAndNext();
+      f.session.setTargetText('학교');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsOneWidget);
+      expect(find.text('Enter the translation.'), findsOneWidget);
+      f.session.setNativeText('SCHULE');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await f.db.customSelect('SELECT 1').get();
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsOneWidget);
+      expect(f.session.draft.nativeText, 'SCHULE');
+      expect(
+        find.text('This vocabulary pair already exists in this collection.'),
+        findsOneWidget,
+      );
+      expect(f.session.isCompleted, isFalse);
+      expect(await f.db.select(f.db.vocabularyEntries).get(), hasLength(1));
+    },
+  );
+
+  testWidgets(
+    'failed saved edit activates its card; retry permits eventual final completion',
+    (tester) async {
+      final f = ExitFixture();
+      await f.mount(tester);
+      f.session.setTargetText('학교');
+      f.session.setNativeText('Schule');
+      final saved = await f.session.confirmAndNext();
+      f.repository.updateGate = Completer<void>();
+      f.session.editSavedEntry(saved.id, nativeText: 'School');
+      f.session.setTargetText('물');
+      f.session.setNativeText('Wasser');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.pumpAndSettle();
+      f.repository.updateGate!.completeError(StateError('Disk failed'));
+      await f.session.awaitSavedEdits();
+      await tester.pumpAndSettle();
+      expect(f.session.activeEntryId, saved.id);
+      expect(find.byType(EntrySessionScreen), findsOneWidget);
+      expect(f.session.draft.targetText, '물');
+      f.repository.updateGate = null;
+      await tester.ensureVisible(find.text('Try again'));
+      await tester.tap(find.text('Try again'));
+      await f.session.awaitSavedEdits();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await f.db.customSelect('SELECT 1').get();
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsNothing);
+      final rows = await f.db.select(f.db.vocabularyEntries).get();
+      expect(rows, hasLength(2));
+      expect(rows.firstWhere((r) => r.id == saved.id).nativeText, 'School');
+    },
+  );
+
+  testWidgets(
+    'covered terminal completion resumes exit without another write; replacement is not popped',
+    (tester) async {
+      final f = ExitFixture();
+      await f.mount(tester);
+      f.session.setTargetText('학교');
+      f.session.setNativeText('Schule');
+      f.repository.createGate = Completer<void>();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.pumpAndSettle();
+      final navigator = Navigator.of(
+        tester.element(find.byType(EntrySessionScreen)),
+      );
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('Covered completion')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      f.repository.createGate!.complete();
+      await f.session.completeSession();
+      await tester.pumpAndSettle();
+      expect(find.text('Covered completion'), findsOneWidget);
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Entry session ended'), findsOneWidget);
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsNothing);
+      expect(await f.db.select(f.db.vocabularyEntries).get(), hasLength(1));
+      // Reopen the caller-owned route with a new pending session.
+      final old = f.newSession()
+        ..setTargetText('물')
+        ..setNativeText('Wasser');
+      f.current.value = old;
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      f.repository.createGate = Completer<void>();
+      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.pumpAndSettle();
+      final replacement = f.newSession()..setTargetText('new');
+      f.current.value = replacement;
+      await tester.pumpAndSettle();
+      f.repository.createGate!.complete();
+      await old.completeSession();
+      await tester.pumpAndSettle();
+      expect(find.byType(EntrySessionScreen), findsOneWidget);
+      expect(replacement.isCompleted, isFalse);
+      expect(replacement.draft.targetText, 'new');
+    },
+  );
+  testWidgets(
     'screen removal before the warning first builds cannot orphan a dialog',
     (tester) async {
       final f = ExitFixture();

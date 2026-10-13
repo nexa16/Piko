@@ -148,7 +148,10 @@ void main() {
       );
       expect(current.selected, isTrue);
       expect(widget.selected, isFalse);
-      final confirm = find.byType(PikoIconButton);
+      final confirm = find.descendant(
+        of: find.byKey(const ValueKey('entry-card-draft')),
+        matching: find.byType(PikoIconButton),
+      );
       final confirmWidget = tester.widget<PikoIconButton>(confirm);
       expect(confirmWidget.variant, PikoButtonVariant.primary);
       expect(confirmWidget.large, isTrue);

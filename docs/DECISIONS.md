@@ -1,5 +1,11 @@
 # Decision log
 
+## ENTRY-011 — final confirmation without advancement — 2026-10-14
+
+Global completion uses a dedicated controller operation with one shared pending Future. It drains accepted saved edits, validates and writes the final meaningful draft exactly once, and enters a reusable terminal state without a fresh card. Empty/whitespace input writes nothing. Input and localized feedback survive required, duplicate or storage failures. Pending completion freezes conflicting entry actions. The screen captures route/session identity before awaiting; covered terminal sessions can resume exit without duplicate persistence, while replacements and unrelated routes are never popped. Disposal before draining finishes starts no new final write; an already accepted final write may finish without publishing late session state.
+
+The conservative implementation keeps a prior invalid/failed saved buffer open and activates the first affected saved card, rather than silently losing its edits during global completion. This implements the existing no-silent-discard constraint while the owner's optional policy clarification is pending; it is not labelled an explicit owner acceptance or a new release requirement. Explicit Back retains its distinct ENTRY-007 policy. Header geometry/accessibility audit and production route/Android completion acceptance remain with their owning integration work.
+
 ## ENTRY-007 — guarded Back and draft discard — 2026-10-14
 
 Visible Back and PopScope use one guarded production-screen exit request. Only meaningful text on either draft side requires the shared Continue Editing / Discard & Exit warning; whitespace-only drafts leave directly without confirmation. Safe dismissal preserves editing state. Confirmation blocks exit, while accepted saved-edit queues drain before an explicit exit; failures retain last persisted text. An empty draft does not acquire a warning merely because a prior saved buffer is invalid or failed. Session/route identity guards and owned-dialog cleanup prevent late work from exiting replacements or unrelated routes. The caller continues to own the session controller. Shared exit-warning copy now describes retained saved entries truthfully; the mockup dialog repeats its existing sample-session disclaimer. Global completion, route wiring and final header geometry remain separate requirements.
