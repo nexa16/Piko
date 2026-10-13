@@ -33,6 +33,24 @@ class _CollectionsHomeState extends State<CollectionsHome> {
     }
   }
 
+  Future<void> _createCollection() async {
+    final created = await showPikoDialog<CollectionRecord>(
+      context,
+      builder: (_) => CreateCollectionDialog(repository: widget.repository),
+    );
+    if (mounted && created != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            PikoCopyScope.of(
+              context,
+            ).text('collection.created', {'name': created.name}),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
@@ -47,24 +65,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
               child: PikoButton(
                 label: copy.text('action.new'),
                 icon: const PikoIcon(PikoIconName.plus),
-                onPressed: () async {
-                  final created = await showPikoDialog<CollectionRecord>(
-                    context,
-                    builder: (_) =>
-                        CreateCollectionDialog(repository: widget.repository),
-                  );
-                  if (context.mounted && created != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          PikoCopyScope.of(
-                            context,
-                          ).text('collection.created', {'name': created.name}),
-                        ),
-                      ),
-                    );
-                  }
-                },
+                onPressed: _createCollection,
               ),
             ),
             StreamBuilder<List<CollectionRecord>>(
@@ -77,8 +78,23 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                     }),
                   );
                 }
-                if (!snapshot.hasData) {
+                if (!snapshot.hasData ||
+                    snapshot.connectionState == ConnectionState.waiting ||
+                    snapshot.connectionState == ConnectionState.none) {
                   return Text(copy.text('collection.loading'));
+                }
+                if (snapshot.data!.isEmpty) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(copy.text('home.emptyDescription')),
+                      SizedBox(height: pikoDesign.dimension('spacing.3')),
+                      PikoButton(
+                        label: copy.text('action.firstCollection'),
+                        onPressed: _createCollection,
+                      ),
+                    ],
+                  );
                 }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

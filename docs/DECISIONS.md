@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-015 — truthful empty collection state — 2026-10-13
+
+An empty-state invitation represents a successful repository result containing no Collections, not a loading or read-failure assumption. The canonical explanation and Create first collection action appear alongside ordinary New; both launch the same validated creation dialog. Dismissal preserves the empty database, and a successful first creation removes the invitation through the existing live stream. No sample Collections or invented review counts appear. This establishes the functional state and action; UX-HOME-002 separately verifies its binding presentation.
+
 ## COLL-013 — reactive local collection navigation — 2026-10-13
 
 The overview now watches stored Collections and opens detail by UUID, so matching names remain distinct. SQLite rowid provides stable insertion order as a technical default; this adds neither a sorting preference nor stored timestamps. Detail watches its identity and shows the persisted name and localized language pair with Back navigation. Cached subscriptions survive interface-language rebuilds; explicit read retry starts a fresh subscription. Loading, read errors and a missing identity have separate canonical English/German copy. Whole-card touch, keyboard and semantic activation include the language pair, with a visible canonical focus border. Empty-state invitation, badges, vocabulary and review content retain their owning requirements. Host widget fixtures use Drift's documented synchronous stream cleanup option only in tests. Android verification uses an isolated temporary database and proves reopen/list/open/Back; final application force-stop durability remains an acceptance gate.
