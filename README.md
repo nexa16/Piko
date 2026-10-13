@@ -13,11 +13,15 @@ This repository contains Piko's product planning and future implementation.
 - [Decision log](docs/DECISIONS.md)
 - [Research plan](docs/RESEARCH.md)
 - [Functional requirements](docs/piko-functional.md) and [UX requirements](docs/piko-ux.md)
+- [Design foundations and open visual decisions](docs/DESIGN.md)
+- [Design studio](mockups/design-lab.html) — compare palettes and edit English/German labels in a live mockup preview
 - [Navigation mockup](mockups/piko-mockup.html) — download and open locally; sample data and placeholder interactions
 
 ## Development
 
 No technical stack has been selected yet. Discovery and documented decisions will guide the first implementation milestone. See [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md).
+
+Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly. The studio supports immediate draft previews and export; a future app will consume the same catalog through an adapter appropriate to its platform. See the design foundations document for persistence and synchronization limits.
 
 `main` is the default and release branch; `develop` is for development. The initial planning and mockup bootstrap on `main` does not represent a release. Substantive work uses short-lived branches from `develop`.
 

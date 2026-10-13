@@ -29,6 +29,19 @@ Planning documents are the initial source of truth. Record accepted changes here
 | 2026-10-13 | Consolidate the specification index into PRODUCT.md and integrate unique handoff decisions into the specifications. Retain original handoff materials locally, excluded from Git and published history. | Accepted | Overlapping documents complicated navigation. | Publish all overlapping transfer documents. | Owner approved cleanup and local-only handoff retention. | Public documentation stands alone; unpublished bootstrap history must exclude the originals. |
 | 2026-10-13 | Record five Collection Overview annotations without applying mockup changes yet. | Accepted | Owner supplied browser feedback and requested deferral. | Change the mockup immediately. | Owner wants the annotations remembered for a later UX pass. | UX specification holds the pending feedback; final wording and layout remain open. |
 
+## Shared naming — 2026-10-13
+
+| Date | Decision | Status | Context | Alternatives | Reason | Consequences |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Maintain one editable English/German naming catalog shared by the mockup and future app. | Accepted | Owner wants to try wording live and avoid diverging labels. | Duplicate strings in each consumer. | A single source keeps naming consistent. | Current prototype loads shared/copy.js; live studio edits are drafts until exported into that source. The future app needs a platform adapter. |
+| 2026-10-13 | Keep palette, icon family, typography, and visual principles as proposals pending agreement. | Proposed | Owner requested research and choices before polishing the mockup. | Select a design unilaterally. | Visual direction is an owner decision. | Design studio and DESIGN.md show options; no final design or stack chosen. |
+
+## Proposed requirement scope — 2026-10-13
+
+| Date | Decision | Status | Context | Alternatives | Reason | Consequences |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Label each functional requirement Base, Minimum, or Additional without changing its existing acceptance status. | Accepted | Owner requested a parallel scope overview. | Leave all requirements undifferentiated. | Make first-version tradeoffs reviewable. | All 214 IDs are labeled; the particular category assignments are proposals, not an accepted release scope. |
+
 ## Template for the next decision
 
 - **Date:** To be decided — when was this choice accepted?

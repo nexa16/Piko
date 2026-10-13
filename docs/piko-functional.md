@@ -1,43 +1,68 @@
 # Piko — Functional Specification
 
-**Version:** 0.4.2 · **Updated:** 2026-10-13
+**Version:** 0.4.3 · **Updated:** 2026-10-13
 
 This file is authoritative for behavior, data, validation, state transitions and algorithms. `piko-ux.md` is authoritative for presentation and interaction. Requirement IDs cross-reference the two documents. Earlier requirements remain traceable by their stable IDs. Newer explicit decisions supersede conflicting earlier statements; superseded rules are identified below. Presentation details are governed by the UX specification. The shared glossary is in [PRODUCT.md](PRODUCT.md).
 
+## Proposed scope classification — for owner review
+
+Every requirement ID below has one proposed scope label. The labels organize implementation priority; they do not change the requirement text, stable IDs, or existing Confirmed / Proposed / Open / Superseded status. A confirmed capability may be Additional and remain a confirmed product intention without being required for the first useful version. An open decision stays open regardless of its scope label. No first-version scope, release date, or implementation milestone has been accepted through this classification.
+
+| Scope label | Meaning | Requirement / decision IDs |
+| --- | --- | --- |
+| Base | Foundational correctness, data integrity, privacy, validation, and consistency constraints. For an optional capability, its Base constraints become mandatory only if that capability is included; they do not pull the capability into the minimum scope. | 46 |
+| Minimum | Proposed smallest useful flow: create a Collection, manually add/manage entries, save locally, and complete basic Long-term self-assessment learning with understandable feedback. | 44 |
+| Additional | Capabilities proposed for deferral from that smallest flow, including richer entry UX, categories/grouping, AI, import, Speed/minigames, typed answers, personal Difficulty, advanced preferences, statistics, and developer controls. | 124 |
+
+**Total:** 214 labeled requirement and decision IDs. Topic order is retained so cross-references remain easy to follow; use the labels to distinguish the three scopes.
+
+### Boundary decisions still requiring owner agreement
+
+- Is a basic Long-term self-assessment loop useful without Speed Learning, Typed Answer, category management, import, or AI? This classification proposes that boundary; it has not been accepted.
+- Offline manual saving is Minimum. Cross-device synchronization is Additional, but no-data-loss and conflict rules are Base if sync is implemented. OFFLINE-003 is Additional because it combines sync states; a minimum offline implementation still needs honest save/error feedback.
+- English and German UI support is proposed as Minimum because it is already confirmed for the initial UI. Localizable text architecture is Base; exact German wording remains proposed.
+- Hints and Example Pairs are Additional as capabilities. Example language pairing and Hint-default non-retroactivity remain Base constraints if those capabilities ship.
+- Undo/previous-grade correction is Additional as a capability; review-history consistency is Base if correction is offered. ENTRY-009 deletion with undo is proposed as Minimum for basic entry management.
+- Personal Piko Learning Difficulty and research-oriented incorrect-answer retention are Additional. FSRS-relevant review retention and data minimization are Base. If a feature collects extra data, its privacy purpose and retention must be decided first.
+- Labels apply to an entire requirement. Mixed requirements such as CARD-001 (Self Assessment and Typed Answer), ENTRY-001 (focused stack presentation), and PREF-005 (default and expanded direction options) cannot be partially implemented and claimed complete: the minimum flow uses the simple portion, while the full requirement remains pending until all its accepted behavior is present.
+- LEARN-005 and OPEN-FSRS-002 are provisionally Minimum for understandable status labels; Mastered controls and their entry/exit rules are Additional. Final status thresholds and the initial status subset need agreement.
+
+The four unnumbered Future / deferred ideas below are all Additional; no new requirement IDs are created for unconfirmed ideas. The experimental parameter table belongs to the Additional developer-parameter capability, while any implemented learning algorithm still needs explicit, validated parameters.
+
 ## New and clarified functional requirements
 
-- **MATCH-001 [Confirmed]:** Typed answers may be submitted empty and are then treated as an answer attempt; the learner retains final authority over the Correct/Incorrect grade.
-- **MATCH-002 [Confirmed]:** Typed answer matching detects character-level near matches and accepted language-specific orthographic variants. Similarity is a suggestion, not an automatic semantic synonym acceptance rule.
-- **MATCH-003 [Confirmed]:** A different meaning or wrong synonym is not automatically accepted as correct; the learner can override the suggested grade.
-- **MATCH-004 [Confirmed]:** Submitted incorrect typed answers are retained as learning events for potential future error-pattern analysis, separately from the final learner-confirmed grade.
-- **SPEED-RESET-001 [Confirmed]:** Completing Speed Learning without an incorrect answer leaves an existing direction-specific FSRS state unchanged.
-- **SPEED-RESET-002 [Confirmed]:** Completing Speed Learning after at least one incorrect answer restarts the corresponding direction's long-term learning state from its initial learning stage. Exact FSRS state initialization is to be specified with the scheduler integration.
-- **SPEED-RESET-003 [Confirmed]:** The user can explicitly reset the learning progress of a Learning Item; resetting one direction does not silently reset the other.
-- **SPEED-ELIG-001 [Confirmed]:** A long lapse alone does not automatically reset a Learning Item or force it into Speed Learning; users may deliberately select long-unreviewed items for Speed refresh.
-- **SPEED-ELIG-002 [Open]:** Define evidence-based automatic Speed recommendation for repeated failures under FSRS without introducing artificial phase regressions.
-- **UNDO-001 [Confirmed]:** Correcting the immediately previous grade must replace the corresponding review event and consistently recalculate its FSRS state and retry scheduling, rather than creating a second review.
-- **EXAMPLE-005 [Confirmed]:** All Example Pairs of an Entry remain available on its Learning Card, including when there are many.
-- **IMPORT-HINT-001 [Confirmed]:** An Entry has at most one Hint; a conflicting imported Hint is proposed for explicit review, while the existing Hint remains unchanged unless the user explicitly accepts replacement.
-- **DIFF-INIT-001 [Confirmed]:** A new direction-specific Piko Learning Difficulty begins as Unknown. The first completed round initializes it from the retry score (0 for first-try correct); subsequent completed rounds use EMA weight 0.40. Incomplete rounds can only raise an established value; exact first-incomplete-round handling follows the saturation rule.
+- **MATCH-001 [Confirmed]:** [Scope: Base] Typed answers may be submitted empty and are then treated as an answer attempt; the learner retains final authority over the Correct/Incorrect grade.
+- **MATCH-002 [Confirmed]:** [Scope: Additional] Typed answer matching detects character-level near matches and accepted language-specific orthographic variants. Similarity is a suggestion, not an automatic semantic synonym acceptance rule.
+- **MATCH-003 [Confirmed]:** [Scope: Base] A different meaning or wrong synonym is not automatically accepted as correct; the learner can override the suggested grade.
+- **MATCH-004 [Confirmed]:** [Scope: Additional] Submitted incorrect typed answers are retained as learning events for potential future error-pattern analysis, separately from the final learner-confirmed grade.
+- **SPEED-RESET-001 [Confirmed]:** [Scope: Additional] Completing Speed Learning without an incorrect answer leaves an existing direction-specific FSRS state unchanged.
+- **SPEED-RESET-002 [Confirmed]:** [Scope: Additional] Completing Speed Learning after at least one incorrect answer restarts the corresponding direction's long-term learning state from its initial learning stage. Exact FSRS state initialization is to be specified with the scheduler integration.
+- **SPEED-RESET-003 [Confirmed]:** [Scope: Additional] The user can explicitly reset the learning progress of a Learning Item; resetting one direction does not silently reset the other.
+- **SPEED-ELIG-001 [Confirmed]:** [Scope: Additional] A long lapse alone does not automatically reset a Learning Item or force it into Speed Learning; users may deliberately select long-unreviewed items for Speed refresh.
+- **SPEED-ELIG-002 [Open]:** [Scope: Additional] Define evidence-based automatic Speed recommendation for repeated failures under FSRS without introducing artificial phase regressions.
+- **UNDO-001 [Confirmed]:** [Scope: Base] Correcting the immediately previous grade must replace the corresponding review event and consistently recalculate its FSRS state and retry scheduling, rather than creating a second review.
+- **EXAMPLE-005 [Confirmed]:** [Scope: Additional] All Example Pairs of an Entry remain available on its Learning Card, including when there are many.
+- **IMPORT-HINT-001 [Confirmed]:** [Scope: Base] An Entry has at most one Hint; a conflicting imported Hint is proposed for explicit review, while the existing Hint remains unchanged unless the user explicitly accepts replacement.
+- **DIFF-INIT-001 [Confirmed]:** [Scope: Additional] A new direction-specific Piko Learning Difficulty begins as Unknown. The first completed round initializes it from the retry score (0 for first-try correct); subsequent completed rounds use EMA weight 0.40. Incomplete rounds can only raise an established value; exact first-incomplete-round handling follows the saturation rule.
 
 
 ## Learning statistics — confirmed 2026-10-13 (supersedes conflicting legacy defaults)
 
-- **STATS-005 [Confirmed]:** The Daily Average is calculated using **only active learning days** in the reporting window. A day with no qualifying learning activity is excluded from the divisor; a day with qualifying activity counts once. The metric is based on regular Long-term reviews, not Speed attempts or retries. A window with no active days shows no average rather than dividing by zero.
-- **STATS-006 [Confirmed]:** A Learning Streak day qualifies when the user completes **at least one regular Long-term review** during that learning day. Short-term retries and Speed Learning alone do not qualify.
-- **STATS-007 [Confirmed]:** Learning days follow the established local 04:00-to-04:00 boundary, including for Daily Average and Learning Streak. Streaks count consecutive qualifying learning days; the current still-open learning day does not break the streak before it ends.
-- **PARAM-STAT-001 [Confirmed]:** `stats.streakMinimumReviews` defaults to `1` and is available in Developer Settings; the counting unit is regular Long-term reviews per learning day.
-- **PARAM-STAT-002 [Proposed]:** `stats.dailyAverageWindowDays` defaults to `30` calendar days as the lookback window; only active days inside that window form the average divisor. The 30-day window is not yet user-confirmed.
+- **STATS-005 [Confirmed]:** [Scope: Additional] The Daily Average is calculated using **only active learning days** in the reporting window. A day with no qualifying learning activity is excluded from the divisor; a day with qualifying activity counts once. The metric is based on regular Long-term reviews, not Speed attempts or retries. A window with no active days shows no average rather than dividing by zero.
+- **STATS-006 [Confirmed]:** [Scope: Additional] A Learning Streak day qualifies when the user completes **at least one regular Long-term review** during that learning day. Short-term retries and Speed Learning alone do not qualify.
+- **STATS-007 [Confirmed]:** [Scope: Additional] Learning days follow the established local 04:00-to-04:00 boundary, including for Daily Average and Learning Streak. Streaks count consecutive qualifying learning days; the current still-open learning day does not break the streak before it ends.
+- **PARAM-STAT-001 [Confirmed]:** [Scope: Additional] `stats.streakMinimumReviews` defaults to `1` and is available in Developer Settings; the counting unit is regular Long-term reviews per learning day.
+- **PARAM-STAT-002 [Proposed]:** [Scope: Additional] `stats.dailyAverageWindowDays` defaults to `30` calendar days as the lookback window; only active days inside that window form the average divisor. The 30-day window is not yet user-confirmed.
 
 **Examples:** 60 regular Long-term reviews across 3 active days in a 30-day window yields a Daily Average of 20 reviews/active day, not 2 reviews/calendar day. One regular Long-term review qualifies a day for the streak; ten Speed reviews without a regular Long-term review do not.
 
 ## Functional decisions still open
 
-- **OPEN-FSRS-001:** Define reset and reinitialization mechanics for the chosen FSRS library, and interaction with relearning steps.
-- **OPEN-FSRS-002:** Define mapping from FSRS Stability to New / Just Started / Learning / Well Learned / Very Well Learned. Mastered is a separate, non-automatic-review state, not a 95–100% recall-probability threshold.
-- **OPEN-FSRS-003:** Define how the user marks an item Mastered and reactivates it; do not infer Mastered from transient Recall Probability.
-- **OPEN-RETRY-001:** Confirm precise retry-gap function and short wait duration.
-- **OPEN-MATCH-001:** Define language-specific accepted spelling transformations and thresholds for near matches; user override always wins.
+- **OPEN-FSRS-001:** [Scope: Minimum] Define reset and reinitialization mechanics for the chosen FSRS library, and interaction with relearning steps.
+- **OPEN-FSRS-002:** [Scope: Minimum] Define mapping from FSRS Stability to New / Just Started / Learning / Well Learned / Very Well Learned. Mastered is a separate, non-automatic-review state, not a 95–100% recall-probability threshold.
+- **OPEN-FSRS-003:** [Scope: Additional] Define how the user marks an item Mastered and reactivates it; do not infer Mastered from transient Recall Probability.
+- **OPEN-RETRY-001:** [Scope: Minimum] Confirm precise retry-gap function and short wait duration.
+- **OPEN-MATCH-001:** [Scope: Additional] Define language-specific accepted spelling transformations and thresholds for near matches; user override always wins.
 
 ## Conventions
 - **Confirmed:** Explicitly accepted by the product owner.
@@ -47,161 +72,161 @@ This file is authoritative for behavior, data, validation, state transitions and
 - Each requirement is written to stand alone. IDs remain stable across revisions; superseded requirements should be marked rather than silently reused.
 
 ## Collections and languages
-- **COLL-001 [Confirmed]** Users can create multiple Collections with the same language pair; each Collection has a name and two languages.
-- **COLL-002 [Confirmed]** Each Collection owns independent Category Dimensions and Category Values, optionally initialized by copying global templates; editing a copy does not modify the template or another Collection.
-- **COLL-003 [Confirmed]** The vocabulary view defaults to Target Language first and Native Language second.
-- **COLL-004 [Confirmed]** Users can change Display Order within the Collection view controls.
-- **COLL-005 [Confirmed]** View Mode and Display Order are persisted separately for each Collection across app restarts.
-- **COLL-006 [Confirmed]** Grouping is persisted per Collection across app restarts.
-- **COLL-007 [Confirmed]** Search and Filters remain intact while navigating within an app session, but reset when starting a new app session.
-- **COLL-008 [Proposed]** Sorting persists per Collection across app restarts; sorting details remain to be defined.
-- **COLL-009 [Confirmed]** A Collection vocabulary view offers Detailed and Compact modes; the last chosen mode is restored when reopening the Collection.
-- **COLL-010 [Confirmed]** Detailed mode stacks the two language entries vertically and displays optional example sentences and relevant Tags.
-- **COLL-011 [Confirmed]** Compact mode shows the two language entries side by side, truncating overflowing text rather than expanding to multiple lines.
+- **COLL-001 [Confirmed]** [Scope: Minimum] Users can create multiple Collections with the same language pair; each Collection has a name and two languages.
+- **COLL-002 [Confirmed]** [Scope: Additional] Each Collection owns independent Category Dimensions and Category Values, optionally initialized by copying global templates; editing a copy does not modify the template or another Collection.
+- **COLL-003 [Confirmed]** [Scope: Minimum] The vocabulary view defaults to Target Language first and Native Language second.
+- **COLL-004 [Confirmed]** [Scope: Additional] Users can change Display Order within the Collection view controls.
+- **COLL-005 [Confirmed]** [Scope: Additional] View Mode and Display Order are persisted separately for each Collection across app restarts.
+- **COLL-006 [Confirmed]** [Scope: Additional] Grouping is persisted per Collection across app restarts.
+- **COLL-007 [Confirmed]** [Scope: Additional] Search and Filters remain intact while navigating within an app session, but reset when starting a new app session.
+- **COLL-008 [Proposed]** [Scope: Additional] Sorting persists per Collection across app restarts; sorting details remain to be defined.
+- **COLL-009 [Confirmed]** [Scope: Additional] A Collection vocabulary view offers Detailed and Compact modes; the last chosen mode is restored when reopening the Collection.
+- **COLL-010 [Confirmed]** [Scope: Additional] Detailed mode stacks the two language entries vertically and displays optional example sentences and relevant Tags.
+- **COLL-011 [Confirmed]** [Scope: Additional] Compact mode shows the two language entries side by side, truncating overflowing text rather than expanding to multiple lines.
 
 ## Vocabulary Entries and examples
-- **VOCAB-001 [Confirmed]** Distinct meanings are stored as separate Vocabulary Entries, even if one language's entry is identical.
-- **VOCAB-002 [Confirmed]** An exact pair of language entries may occur only once within a Collection; attempts to save an exact duplicate are blocked.
-- **VOCAB-003 [Confirmed]** The same exact language pair may exist in different Collections.
-- **VOCAB-004 [Confirmed]** An entry may have an optional Hint, separate from category assignments.
-- **VOCAB-005 [Confirmed]** An entry may contain any number of Example Pairs, including none; the editor initially exposes space for one optional pair and provides an explicit Add Example action for more.
-- **VOCAB-006 [Confirmed]** Each Example Pair contains the sentence and its translation in the two Collection languages.
-- **VOCAB-007 [Confirmed]** An entry's Hint Visibility is either Always visible or Hidden until tapped during learning.
-- **VOCAB-008 [Confirmed]** The initial Hint Visibility default is Always visible and is stored globally per user.
-- **VOCAB-009 [Confirmed]** Users can override Hint Visibility for an individual entry during creation or editing, and can explicitly make that choice the new global default without repeated prompts.
-- **VOCAB-010 [Confirmed]** Changing the global Hint Visibility default affects newly created entries, not existing entries.
-- **VOCAB-011 [Confirmed]** When a hidden Hint is tapped during a learning question, it becomes visible for the rest of that question and cannot be hidden again; the next presentation starts from the entry's configured visibility.
-- **VOCAB-012 [Open]** Exact duplicate normalization rules (case, whitespace, Unicode, punctuation) are not defined.
+- **VOCAB-001 [Confirmed]** [Scope: Base] Distinct meanings are stored as separate Vocabulary Entries, even if one language's entry is identical.
+- **VOCAB-002 [Confirmed]** [Scope: Base] An exact pair of language entries may occur only once within a Collection; attempts to save an exact duplicate are blocked.
+- **VOCAB-003 [Confirmed]** [Scope: Base] The same exact language pair may exist in different Collections.
+- **VOCAB-004 [Confirmed]** [Scope: Additional] An entry may have an optional Hint, separate from category assignments.
+- **VOCAB-005 [Confirmed]** [Scope: Additional] An entry may contain any number of Example Pairs, including none; the editor initially exposes space for one optional pair and provides an explicit Add Example action for more.
+- **VOCAB-006 [Confirmed]** [Scope: Base] Each Example Pair contains the sentence and its translation in the two Collection languages.
+- **VOCAB-007 [Confirmed]** [Scope: Additional] An entry's Hint Visibility is either Always visible or Hidden until tapped during learning.
+- **VOCAB-008 [Confirmed]** [Scope: Additional] The initial Hint Visibility default is Always visible and is stored globally per user.
+- **VOCAB-009 [Confirmed]** [Scope: Additional] Users can override Hint Visibility for an individual entry during creation or editing, and can explicitly make that choice the new global default without repeated prompts.
+- **VOCAB-010 [Confirmed]** [Scope: Base] Changing the global Hint Visibility default affects newly created entries, not existing entries.
+- **VOCAB-011 [Confirmed]** [Scope: Additional] When a hidden Hint is tapped during a learning question, it becomes visible for the rest of that question and cannot be hidden again; the next presentation starts from the entry's configured visibility.
+- **VOCAB-012 [Open]** [Scope: Base] Exact duplicate normalization rules (case, whitespace, Unicode, punctuation) are not defined.
 
 ## Categories, filtering and grouping
-- **CAT-001 [Confirmed]** A Collection may have multiple independent Category Dimensions; a Vocabulary Entry can be assigned Values in several dimensions.
-- **CAT-002 [Confirmed]** Each Category Dimension can be configured as Single Value or Multiple Values; selecting another Value in Single mode replaces the previous selection.
-- **CAT-003 [Confirmed]** A Category Dimension can configure Carry-over independently of other dimensions.
-- **CAT-004 [Confirmed]** Users can create Category Values directly in the Vocabulary Entry editor.
-- **CAT-005 [Confirmed]** Users can create Category Dimensions directly in the Vocabulary Entry editor without leaving the workflow.
-- **CAT-006 [Confirmed]** Category Dimensions can be ordered for display in the editor; initial expanded/collapsed presentation can be configured.
-- **CAT-007 [Proposed]** The first two dimensions start expanded, others collapsed; users may expand several at once, and the editor resets expansion when moving to a new entry.
-- **CAT-008 [Proposed]** Show up to two lines of Values in a dimension by default; for approximately 3–5 lines offer Show All, and for more than five lines offer a searchable picker, avoiding nested scrollbars.
-- **CAT-009 [Confirmed]** Selected Values remain visible even when their dimension is collapsed.
-- **FILTER-001 [Confirmed]** Multiple selected Values in one dimension use OR; constraints from different dimensions use AND.
-- **FILTER-002 [Confirmed]** Unselected dimensions do not restrict results; a fully general Boolean expression editor is not part of the initial scope.
-- **FILTER-003 [Confirmed]** Vocabulary search matches text in either language.
-- **GROUP-001 [Confirmed]** Entries may be grouped by Category Dimension into independently expandable groups.
-- **GROUP-002 [Confirmed]** An entry assigned multiple Values in the grouping dimension appears in each corresponding group.
-- **GROUP-003 [Confirmed]** Tags already communicated by active filtering or grouping are omitted from the individual entry, while other Tags remain visible.
+- **CAT-001 [Confirmed]** [Scope: Additional] A Collection may have multiple independent Category Dimensions; a Vocabulary Entry can be assigned Values in several dimensions.
+- **CAT-002 [Confirmed]** [Scope: Base] Each Category Dimension can be configured as Single Value or Multiple Values; selecting another Value in Single mode replaces the previous selection.
+- **CAT-003 [Confirmed]** [Scope: Additional] A Category Dimension can configure Carry-over independently of other dimensions.
+- **CAT-004 [Confirmed]** [Scope: Additional] Users can create Category Values directly in the Vocabulary Entry editor.
+- **CAT-005 [Confirmed]** [Scope: Additional] Users can create Category Dimensions directly in the Vocabulary Entry editor without leaving the workflow.
+- **CAT-006 [Confirmed]** [Scope: Additional] Category Dimensions can be ordered for display in the editor; initial expanded/collapsed presentation can be configured.
+- **CAT-007 [Proposed]** [Scope: Additional] The first two dimensions start expanded, others collapsed; users may expand several at once, and the editor resets expansion when moving to a new entry.
+- **CAT-008 [Proposed]** [Scope: Additional] Show up to two lines of Values in a dimension by default; for approximately 3–5 lines offer Show All, and for more than five lines offer a searchable picker, avoiding nested scrollbars.
+- **CAT-009 [Confirmed]** [Scope: Additional] Selected Values remain visible even when their dimension is collapsed.
+- **FILTER-001 [Confirmed]** [Scope: Base] Multiple selected Values in one dimension use OR; constraints from different dimensions use AND.
+- **FILTER-002 [Confirmed]** [Scope: Base] Unselected dimensions do not restrict results; a fully general Boolean expression editor is not part of the initial scope.
+- **FILTER-003 [Confirmed]** [Scope: Additional] Vocabulary search matches text in either language.
+- **GROUP-001 [Confirmed]** [Scope: Additional] Entries may be grouped by Category Dimension into independently expandable groups.
+- **GROUP-002 [Confirmed]** [Scope: Base] An entry assigned multiple Values in the grouping dimension appears in each corresponding group.
+- **GROUP-003 [Confirmed]** [Scope: Additional] Tags already communicated by active filtering or grouping are omitted from the individual entry, while other Tags remain visible.
 
 ## Manual Entry Sessions
-- **ENTRY-001 [Confirmed]** Manual entry uses a vertically scroll-driven Focused Card Stack; the card moving into focus expands smoothly and adjacent cards appear compactly above/below it, without requiring a tap to focus.
-- **ENTRY-002 [Confirmed]** Confirm & Next saves a newly created entry immediately to the Collection and opens a fresh entry card.
-- **ENTRY-003 [Confirmed]** Unconfirmed new entries remain temporary drafts within the current Entry Session and are not saved to the Collection.
-- **ENTRY-004 [Confirmed]** A user can revisit, inspect, edit and delete previously confirmed entries within the same Entry Session.
-- **ENTRY-005 [Confirmed]** Changes to already saved entries are saved automatically when edited during the Entry Session, without an additional confirmation.
-- **ENTRY-006 [Confirmed]** Navigating within the Entry Session retains the in-progress draft.
-- **ENTRY-007 [Confirmed]** Leaving an Entry Session ends it; a nonempty unconfirmed draft triggers a Continue Editing / Discard & Exit warning, whereas an empty draft does not.
-- **ENTRY-008 [Confirmed]** Confirmed entries remain saved after an unexpected app termination; an unconfirmed draft may be lost and Entry Sessions do not need recovery.
-- **ENTRY-009 [Confirmed]** Deleting a saved entry removes it immediately and offers a time-limited Undo action.
-- **ENTRY-010 [Open]** Precise card animation, scrolling thresholds, Undo duration, and deletion behavior under offline sync remain to be designed.
+- **ENTRY-001 [Confirmed]** [Scope: Additional] Manual entry uses a vertically scroll-driven Focused Card Stack; the card moving into focus expands smoothly and adjacent cards appear compactly above/below it, without requiring a tap to focus.
+- **ENTRY-002 [Confirmed]** [Scope: Minimum] Confirm & Next saves a newly created entry immediately to the Collection and opens a fresh entry card.
+- **ENTRY-003 [Confirmed]** [Scope: Base] Unconfirmed new entries remain temporary drafts within the current Entry Session and are not saved to the Collection.
+- **ENTRY-004 [Confirmed]** [Scope: Minimum] A user can revisit, inspect, edit and delete previously confirmed entries within the same Entry Session.
+- **ENTRY-005 [Confirmed]** [Scope: Minimum] Changes to already saved entries are saved automatically when edited during the Entry Session, without an additional confirmation.
+- **ENTRY-006 [Confirmed]** [Scope: Base] Navigating within the Entry Session retains the in-progress draft.
+- **ENTRY-007 [Confirmed]** [Scope: Base] Leaving an Entry Session ends it; a nonempty unconfirmed draft triggers a Continue Editing / Discard & Exit warning, whereas an empty draft does not.
+- **ENTRY-008 [Confirmed]** [Scope: Base] Confirmed entries remain saved after an unexpected app termination; an unconfirmed draft may be lost and Entry Sessions do not need recovery.
+- **ENTRY-009 [Confirmed]** [Scope: Minimum] Deleting a saved entry removes it immediately and offers a time-limited Undo action.
+- **ENTRY-010 [Open]** [Scope: Additional] Precise card animation, scrolling thresholds, Undo duration, and deletion behavior under offline sync remain to be designed.
 
 ## Carry-over and AI at entry time
-- **CARRY-001 [Confirmed]** Carry-over is configurable separately for each Category Dimension and draws from the previous confirmed Vocabulary Entry in the current Entry Session.
-- **CARRY-002 [Confirmed]** AI receives carried-over assignments as context to assess whether they remain appropriate for a newly entered vocabulary pair.
-- **AI-001 [Confirmed]** AI category analysis is triggered during creation of a new Vocabulary Entry once both language fields are filled.
-- **AI-002 [Confirmed]** High-confidence AI suggestions may be preselected automatically, including replacing an inappropriate Carry-over Value.
-- **AI-003 [Confirmed]** AI may keep a matching carried-over Value; the user can modify or remove any automatic selection before confirming the entry.
-- **AI-004 [Confirmed]** AI-generated selections display a Sparkles marker, including in collapsed dimension headers, without a separate AI Assisted label.
-- **AI-005 [Confirmed]** AI must not override a dimension after the user manually changes that dimension in the current new-entry flow.
-- **AI-006 [Confirmed]** Editing an already saved Vocabulary Entry, including by scrolling back to it within an Entry Session, does not trigger automatic AI Category Suggestions.
-- **AI-007 [Open]** AI eligibility per dimension, exact confidence policy, and whether AI may propose new Values during entry remain undecided.
-- **AI-008 [Open]** Carry-over default settings for template dimensions and handling of ambiguous AI outcomes require final confirmation.
+- **CARRY-001 [Confirmed]** [Scope: Additional] Carry-over is configurable separately for each Category Dimension and draws from the previous confirmed Vocabulary Entry in the current Entry Session.
+- **CARRY-002 [Confirmed]** [Scope: Additional] AI receives carried-over assignments as context to assess whether they remain appropriate for a newly entered vocabulary pair.
+- **AI-001 [Confirmed]** [Scope: Additional] AI category analysis is triggered during creation of a new Vocabulary Entry once both language fields are filled.
+- **AI-002 [Confirmed]** [Scope: Additional] High-confidence AI suggestions may be preselected automatically, including replacing an inappropriate Carry-over Value.
+- **AI-003 [Confirmed]** [Scope: Base] AI may keep a matching carried-over Value; the user can modify or remove any automatic selection before confirming the entry.
+- **AI-004 [Confirmed]** [Scope: Additional] AI-generated selections display a Sparkles marker, including in collapsed dimension headers, without a separate AI Assisted label.
+- **AI-005 [Confirmed]** [Scope: Base] AI must not override a dimension after the user manually changes that dimension in the current new-entry flow.
+- **AI-006 [Confirmed]** [Scope: Base] Editing an already saved Vocabulary Entry, including by scrolling back to it within an Entry Session, does not trigger automatic AI Category Suggestions.
+- **AI-007 [Open]** [Scope: Additional] AI eligibility per dimension, exact confidence policy, and whether AI may propose new Values during entry remain undecided.
+- **AI-008 [Open]** [Scope: Additional] Carry-over default settings for template dimensions and handling of ambiguous AI outcomes require final confirmation.
 
 ## AI Bulk Categorization
-- **BULK-001 [Confirmed]** Bulk categorization is a distinct, explicitly user-initiated function for existing Vocabulary Entries and a selected Category Dimension.
-- **BULK-002 [Confirmed]** Fill Missing categorizes only entries missing assignments in the selected dimension and uses existing assignments as contextual examples.
-- **BULK-003 [Confirmed]** Review & Improve analyzes all entries, proposes targeted corrections, and generally preserves the existing categorization approach.
-- **BULK-004 [Confirmed]** Reclassify All analyzes all entries anew and may propose extensive reassignment.
-- **BULK-005 [Confirmed]** Review & Improve is the initially selected Bulk Categorization mode.
-- **BULK-006 [Confirmed]** Each bulk analysis can include optional natural-language instructions on desired classification granularity or criteria.
-- **BULK-007 [Confirmed]** AI results are presented for review before a single explicit bulk confirmation; individual suggestions may be edited or rejected.
-- **BULK-008 [Confirmed]** Potentially uncertain assignments are specially marked for review, without assuming AI confidence guarantees correctness.
-- **BULK-009 [Confirmed]** AI may suggest new Category Values, but the user must explicitly approve their creation.
-- **BULK-010 [Open]** Detailed review interface, treatment of suggested new dimensions, and rollback behavior are not yet defined.
+- **BULK-001 [Confirmed]** [Scope: Additional] Bulk categorization is a distinct, explicitly user-initiated function for existing Vocabulary Entries and a selected Category Dimension.
+- **BULK-002 [Confirmed]** [Scope: Additional] Fill Missing categorizes only entries missing assignments in the selected dimension and uses existing assignments as contextual examples.
+- **BULK-003 [Confirmed]** [Scope: Additional] Review & Improve analyzes all entries, proposes targeted corrections, and generally preserves the existing categorization approach.
+- **BULK-004 [Confirmed]** [Scope: Additional] Reclassify All analyzes all entries anew and may propose extensive reassignment.
+- **BULK-005 [Confirmed]** [Scope: Additional] Review & Improve is the initially selected Bulk Categorization mode.
+- **BULK-006 [Confirmed]** [Scope: Additional] Each bulk analysis can include optional natural-language instructions on desired classification granularity or criteria.
+- **BULK-007 [Confirmed]** [Scope: Base] AI results are presented for review before a single explicit bulk confirmation; individual suggestions may be edited or rejected.
+- **BULK-008 [Confirmed]** [Scope: Additional] Potentially uncertain assignments are specially marked for review, without assuming AI confidence guarantees correctness.
+- **BULK-009 [Confirmed]** [Scope: Base] AI may suggest new Category Values, but the user must explicitly approve their creation.
+- **BULK-010 [Open]** [Scope: Additional] Detailed review interface, treatment of suggested new dimensions, and rollback behavior are not yet defined.
 
 ## Offline, sync, and settings
-- **OFFLINE-001 [Confirmed]** Vocabulary Entries can be created and permanently saved locally without internet access.
-- **OFFLINE-002 [Confirmed]** Pending locally saved changes synchronize automatically when connectivity is available; failed sync attempts must not delete local changes.
-- **OFFLINE-003 [Confirmed]** The app visibly communicates offline, pending, syncing and synced states.
-- **OFFLINE-004 [Confirmed]** Manual entry and category selection work without AI or connectivity; configured Carry-over provides a non-AI fallback.
-- **OFFLINE-005 [Confirmed]** Users can independently enable or disable different AI-assisted features in settings.
-- **OFFLINE-006 [Open]** Cross-device synchronization conflict resolution is not yet specified; silent data loss is unacceptable.
-- **OFFLINE-007 [Open]** Whether offline entries are retrospectively analyzed by AI on reconnection remains undecided; entry-time AI and bulk AI are separate.
+- **OFFLINE-001 [Confirmed]** [Scope: Minimum] Vocabulary Entries can be created and permanently saved locally without internet access.
+- **OFFLINE-002 [Confirmed]** [Scope: Base] Pending locally saved changes synchronize automatically when connectivity is available; failed sync attempts must not delete local changes.
+- **OFFLINE-003 [Confirmed]** [Scope: Additional] The app visibly communicates offline, pending, syncing and synced states.
+- **OFFLINE-004 [Confirmed]** [Scope: Minimum] Manual entry and category selection work without AI or connectivity; configured Carry-over provides a non-AI fallback.
+- **OFFLINE-005 [Confirmed]** [Scope: Additional] Users can independently enable or disable different AI-assisted features in settings.
+- **OFFLINE-006 [Open]** [Scope: Base] Cross-device synchronization conflict resolution is not yet specified; silent data loss is unacceptable.
+- **OFFLINE-007 [Open]** [Scope: Additional] Whether offline entries are retrospectively analyzed by AI on reconnection remains undecided; entry-time AI and bulk AI are separate.
 
 ## Learning System
 ### Core model and localization
-- **LEARN-001 [Confirmed]** Piko uses FSRS for long-term review scheduling, preferably through an established offline-capable library rather than a custom scheduling formula.
-- **LEARN-002 [Confirmed]** Each Vocabulary Entry has two independent Learning Items, one for each translation direction, with separate FSRS states and review schedules.
-- **LEARN-003 [Confirmed]** Learning progress uses continuous FSRS memory estimates rather than hard advancement through fixed phases.
-- **LEARN-004 [Confirmed]** The vocabulary view displays the learning status of both translation directions separately.
-- **LEARN-005 [Confirmed]** The user-facing ordered learning status labels are New, Just Started, Learning, Well Learned, Very Well Learned, and Mastered; numeric levels are not required.
-- **LEARN-006 [Confirmed]** Individual learning views prioritize an understandable status label and optionally show the next review date; raw stability and recall probability are not displayed by default.
-- **LEARN-007 [Confirmed]** Piko offers an accessible explanation of the FSRS learning model through an information affordance.
-- **LEARN-008 [Confirmed]** Mastered Learning Items are exempt from automatic reviews but can be manually reviewed.
-- **LEARN-009 [Proposed]** Collection-level learning statistics visualize the distribution of estimated memory stability without exposing raw FSRS parameters on every entry.
-- **LEARN-010 [Open]** Exact status thresholds, Mastered entry/exit rules, and the relationship between Speed outcomes and FSRS scheduling need detailed specification.
-- **I18N-001 [Confirmed]** The app UI defaults to English and supports English and German localization initially, with additional UI languages extensible later.
-- **I18N-002 [Confirmed]** All user-visible interface text, including learning statuses, controls, help, and headings, is localized; the UI language is independent of Collection languages.
-- **I18N-003 [Proposed]** Initial German status translations are Neu, Gerade begonnen, Im Lernen, Gut gelernt, Sehr gut gelernt, and Gemeistert; final wording requires review.
+- **LEARN-001 [Confirmed]** [Scope: Minimum] Piko uses FSRS for long-term review scheduling, preferably through an established offline-capable library rather than a custom scheduling formula.
+- **LEARN-002 [Confirmed]** [Scope: Base] Each Vocabulary Entry has two independent Learning Items, one for each translation direction, with separate FSRS states and review schedules.
+- **LEARN-003 [Confirmed]** [Scope: Base] Learning progress uses continuous FSRS memory estimates rather than hard advancement through fixed phases.
+- **LEARN-004 [Confirmed]** [Scope: Minimum] The vocabulary view displays the learning status of both translation directions separately.
+- **LEARN-005 [Confirmed]** [Scope: Minimum] The user-facing ordered learning status labels are New, Just Started, Learning, Well Learned, Very Well Learned, and Mastered; numeric levels are not required.
+- **LEARN-006 [Confirmed]** [Scope: Minimum] Individual learning views prioritize an understandable status label and optionally show the next review date; raw stability and recall probability are not displayed by default.
+- **LEARN-007 [Confirmed]** [Scope: Minimum] Piko offers an accessible explanation of the FSRS learning model through an information affordance.
+- **LEARN-008 [Confirmed]** [Scope: Additional] Mastered Learning Items are exempt from automatic reviews but can be manually reviewed.
+- **LEARN-009 [Proposed]** [Scope: Additional] Collection-level learning statistics visualize the distribution of estimated memory stability without exposing raw FSRS parameters on every entry.
+- **LEARN-010 [Open]** [Scope: Additional] Exact status thresholds, Mastered entry/exit rules, and the relationship between Speed outcomes and FSRS scheduling need detailed specification.
+- **I18N-001 [Confirmed]** [Scope: Minimum] The app UI defaults to English and supports English and German localization initially, with additional UI languages extensible later.
+- **I18N-002 [Confirmed]** [Scope: Base] All user-visible interface text, including learning statuses, controls, help, and headings, is localized; the UI language is independent of Collection languages.
+- **I18N-003 [Proposed]** [Scope: Minimum] Initial German status translations are Neu, Gerade begonnen, Im Lernen, Gut gelernt, Sehr gut gelernt, and Gemeistert; final wording requires review.
 
 ### Speed Learning
-- **SPEED-001 [Confirmed]** Speed Learning rotates a small active pool of Learning Items, replacing a completed item with the next eligible item.
-- **SPEED-002 [Confirmed]** A Speed Session accepts any positive integer pool size selected at launch; five is the recommended default, and the effective pool cannot exceed available items.
-- **SPEED-003 [Confirmed]** The number of consecutive correct responses needed to finish an item rises with its errors during the Speed Session, capped at four: zero errors requires one correct, one error two, two errors three, and three or more errors four.
-- **SPEED-004 [Confirmed]** Items can be manually selected for Speed Learning regardless of automatic eligibility; if any manual selection exists, only manually selected items are studied; otherwise the currently filtered eligible items are studied.
-- **SPEED-005 [Confirmed]** New or repeatedly failed items can be eligible for Speed Learning; automatic re-entry thresholds after long absences or repeated errors remain undecided.
-- **SPEED-006 [Confirmed]** Merely entering Speed Learning does not reset long-term progress; completing a Speed round with zero errors preserves the previous long-term state, while completion after at least one error restarts the item at the beginning of long-term learning.
-- **SPEED-007 [Partly superseded]:** The proposed four-prompt recall gap remains provisional. Its short-wait/filler fallback is superseded for Speed Learning by SPEED-010–014. Exact spacing remains open.
-- **SPEED-008 [Open]** Handling of interrupted Speed rounds, selection priority, and minimum spacing when the pool is one require final rules.
+- **SPEED-001 [Confirmed]** [Scope: Additional] Speed Learning rotates a small active pool of Learning Items, replacing a completed item with the next eligible item.
+- **SPEED-002 [Confirmed]** [Scope: Additional] A Speed Session accepts any positive integer pool size selected at launch; five is the recommended default, and the effective pool cannot exceed available items.
+- **SPEED-003 [Confirmed]** [Scope: Additional] The number of consecutive correct responses needed to finish an item rises with its errors during the Speed Session, capped at four: zero errors requires one correct, one error two, two errors three, and three or more errors four.
+- **SPEED-004 [Confirmed]** [Scope: Additional] Items can be manually selected for Speed Learning regardless of automatic eligibility; if any manual selection exists, only manually selected items are studied; otherwise the currently filtered eligible items are studied.
+- **SPEED-005 [Confirmed]** [Scope: Additional] New or repeatedly failed items can be eligible for Speed Learning; automatic re-entry thresholds after long absences or repeated errors remain undecided.
+- **SPEED-006 [Confirmed]** [Scope: Additional] Merely entering Speed Learning does not reset long-term progress; completing a Speed round with zero errors preserves the previous long-term state, while completion after at least one error restarts the item at the beginning of long-term learning.
+- **SPEED-007 [Partly superseded]:** [Scope: Additional] The proposed four-prompt recall gap remains provisional. Its short-wait/filler fallback is superseded for Speed Learning by SPEED-010–014. Exact spacing remains open.
+- **SPEED-008 [Open]** [Scope: Additional] Handling of interrupted Speed rounds, selection priority, and minimum spacing when the pool is one require final rules.
 
 ### Learning cards and answer modes
-- **CARD-001 [Confirmed]** Learning cards support Self Assessment (mental or spoken recall followed by reveal) and Typed Answer; users can switch answer mode within a session.
-- **CARD-002 [Confirmed]** The question side shows an Example Pair sentence in the prompt language by default; this question-side display can be disabled through a global user preference.
-- **CARD-003 [Confirmed]** The answer side shows Example Pair sentences in both languages and the entry's Hint; question-side Hint visibility follows the entry-specific setting.
-- **CARD-004 [Confirmed]** Category Tags are not shown on learning cards by default.
-- **CARD-005 [Confirmed]** Sessions default to a single translation direction, with optional mixed-direction sessions; independent learning progress is retained for each direction.
-- **CARD-006 [Proposed]** Prompt order is shuffled to reduce contextual clues; mixed sessions avoid presenting opposite directions of the same entry too close together.
-- **CARD-007 [Confirmed]** Piko requests an appropriate system keyboard for typed answers where supported.
-- **CARD-008 [Open]** Detailed answer layout, multiple Example Pair presentation, and mixed-direction spacing require design decisions.
+- **CARD-001 [Confirmed]** [Scope: Additional] Learning cards support Self Assessment (mental or spoken recall followed by reveal) and Typed Answer; users can switch answer mode within a session.
+- **CARD-002 [Confirmed]** [Scope: Additional] The question side shows an Example Pair sentence in the prompt language by default; this question-side display can be disabled through a global user preference.
+- **CARD-003 [Confirmed]** [Scope: Additional] The answer side shows Example Pair sentences in both languages and the entry's Hint; question-side Hint visibility follows the entry-specific setting.
+- **CARD-004 [Confirmed]** [Scope: Minimum] Category Tags are not shown on learning cards by default.
+- **CARD-005 [Confirmed]** [Scope: Minimum] Sessions default to a single translation direction, with optional mixed-direction sessions; independent learning progress is retained for each direction.
+- **CARD-006 [Proposed]** [Scope: Minimum] Prompt order is shuffled to reduce contextual clues; mixed sessions avoid presenting opposite directions of the same entry too close together.
+- **CARD-007 [Confirmed]** [Scope: Additional] Piko requests an appropriate system keyboard for typed answers where supported.
+- **CARD-008 [Open]** [Scope: Additional] Detailed answer layout, multiple Example Pair presentation, and mixed-direction spacing require design decisions.
 
 ### Answer evaluation
-- **ANSWER-001 [Confirmed]** Automatic text matching and the user's final correctness rating are distinct; users can override every automatic evaluation.
-- **ANSWER-002 [Confirmed]** Typed answers never advance automatically after checking; the user sees the result and explicitly proceeds.
-- **ANSWER-003 [Confirmed]** Incorrect is always the left red action and Correct the right green action; their relative widths change to emphasize the automatically suggested rating, while Self Assessment gives equal weight.
-- **ANSWER-004 [Confirmed]** A correct answer can optionally be marked Hard; ordinary Correct maps provisionally to FSRS Good, Hard to FSRS Hard, and Incorrect to FSRS Again.
-- **ANSWER-005 [Confirmed]** Answer duration and spelling deviations are never inputs to Piko Learning Difficulty; neither is treated as evidence of how difficult recall felt.
-- **ANSWER-006 [Confirmed]** Typed-answer evaluation can distinguish exact matches, accepted orthographic variants, near matches, and incorrect answers, but the user always controls the final rating.
-- **ANSWER-007 [Open]** Language-specific accepted spellings, typo thresholds, valid alternative formulations, and whether FSRS Easy should ever be offered need further definition.
-- **VOCAB-013 [Confirmed]** During entry creation, Piko identifies other entries in the same Collection sharing either language text but differing in the other, displays those related entries, and recommends an optional distinguishing Hint.
+- **ANSWER-001 [Confirmed]** [Scope: Base] Automatic text matching and the user's final correctness rating are distinct; users can override every automatic evaluation.
+- **ANSWER-002 [Confirmed]** [Scope: Base] Typed answers never advance automatically after checking; the user sees the result and explicitly proceeds.
+- **ANSWER-003 [Confirmed]** [Scope: Minimum] Incorrect is always the left red action and Correct the right green action; their relative widths change to emphasize the automatically suggested rating, while Self Assessment gives equal weight.
+- **ANSWER-004 [Confirmed]** [Scope: Minimum] A correct answer can optionally be marked Hard; ordinary Correct maps provisionally to FSRS Good, Hard to FSRS Hard, and Incorrect to FSRS Again.
+- **ANSWER-005 [Confirmed]** [Scope: Base] Answer duration and spelling deviations are never inputs to Piko Learning Difficulty; neither is treated as evidence of how difficult recall felt.
+- **ANSWER-006 [Confirmed]** [Scope: Additional] Typed-answer evaluation can distinguish exact matches, accepted orthographic variants, near matches, and incorrect answers, but the user always controls the final rating.
+- **ANSWER-007 [Open]** [Scope: Additional] Language-specific accepted spellings, typo thresholds, valid alternative formulations, and whether FSRS Easy should ever be offered need further definition.
+- **VOCAB-013 [Confirmed]** [Scope: Additional] During entry creation, Piko identifies other entries in the same Collection sharing either language text but differing in the other, displays those related entries, and recommends an optional distinguishing Hint.
 
 ### Long-term retries and learning day
-- **RETRY-001 [Confirmed]** A Long-term Learning Item answered incorrectly enters a short-term Retry Queue until it is answered correctly at least once, unless the learning-day window expires.
-- **RETRY-002 [Confirmed]** The distance before retrying an item depends on its prior errors in the current round; repeated failures bring the next retry closer.
-- **RETRY-003 [Confirmed]** Pending retries can be resumed after leaving a Learning Session until the current learning day ends.
-- **RETRY-004 [Confirmed]** A learning day runs from 04:00 local time until 04:00 the following day; unfinished retry obligations expire at that boundary without being counted as successes.
-- **RETRY-005 [Confirmed]:** For Long-term retries, when insufficient other items are available, use a short wait rather than filler vocabulary. Speed Learning uses the later minigame decision (SPEED-010–014); exact Long-term wait duration remains open.
-- **RETRY-006 [Proposed]** The first regular long-term answer is submitted to FSRS; immediate retries serve reinforcement and do not independently advance the FSRS schedule. This must be coordinated with FSRS relearning steps.
-- **RETRY-007 [Open]** Exact retry distance formula, wait duration, and synchronization with FSRS relearning steps remain undecided.
+- **RETRY-001 [Confirmed]** [Scope: Minimum] A Long-term Learning Item answered incorrectly enters a short-term Retry Queue until it is answered correctly at least once, unless the learning-day window expires.
+- **RETRY-002 [Confirmed]** [Scope: Minimum] The distance before retrying an item depends on its prior errors in the current round; repeated failures bring the next retry closer.
+- **RETRY-003 [Confirmed]** [Scope: Minimum] Pending retries can be resumed after leaving a Learning Session until the current learning day ends.
+- **RETRY-004 [Confirmed]** [Scope: Minimum] A learning day runs from 04:00 local time until 04:00 the following day; unfinished retry obligations expire at that boundary without being counted as successes.
+- **RETRY-005 [Confirmed]:** [Scope: Minimum] For Long-term retries, when insufficient other items are available, use a short wait rather than filler vocabulary. Speed Learning uses the later minigame decision (SPEED-010–014); exact Long-term wait duration remains open.
+- **RETRY-006 [Proposed]** [Scope: Minimum] The first regular long-term answer is submitted to FSRS; immediate retries serve reinforcement and do not independently advance the FSRS schedule. This must be coordinated with FSRS relearning steps.
+- **RETRY-007 [Open]** [Scope: Minimum] Exact retry distance formula, wait duration, and synchronization with FSRS relearning steps remain undecided.
 
 ### Difficulty concepts and calculation
-- **DIFF-001 [Confirmed]** Category Difficulty is a user-managed Category Dimension (e.g. A1/B1), distinct from personal Piko Learning Difficulty and FSRS Difficulty.
-- **DIFF-002 [Confirmed]** Piko Learning Difficulty is a per-Learning-Item, per-direction value reflecting how many short-term retries the learner needs; FSRS Difficulty remains an independent internal scheduling parameter.
-- **DIFF-003 [Confirmed]** Piko Learning Difficulty uses a weighted incremental update from its previous value and the latest retry-round difficulty, without reprocessing all older rounds.
-- **DIFF-004 [Confirmed]** On completion of a retry round for an individual item, Piko immediately updates that item's Difficulty without waiting for the entire session to end.
-- **DIFF-005 [Confirmed]** At the end of a learning day, Piko evaluates unfinished retry rounds; their observed errors may increase but never decrease Difficulty, and insufficient evidence leaves it unchanged.
-- **DIFF-006 [Confirmed]** When the app was not running at the 04:00 boundary, outstanding learning-day evaluation can occur on the next launch using the original learning-day boundary.
-- **DIFF-007 [Proposed]** An example implementation uses difficulty in [0,100], roundDifficulty = min(100, 15 × retryCount), and an EMA weight alpha=0.4; the precise scale and alpha remain tunable.
-- **DIFF-008 [Confirmed]** New Learning Items begin with Piko Learning Difficulty Unknown. A correct first regular response initializes Difficulty to zero; otherwise the first completed retry round initializes Difficulty directly from roundDifficulty. Later rounds use the weighted update.
-- **DIFF-009 [Confirmed]** For a first incomplete round with Unknown Difficulty, keep Unknown unless observed errors reach the saturation threshold (seven errors with the current experimental parameters), at which point Difficulty can initialize at 100.
-- **DIFF-010 [Open]** Define precisely whether the initial regular incorrect response counts toward retryCount, and whether retryCount counts additional incorrect attempts or total retry attempts. This must be fixed before implementation.
-- **DIFF-011 [Open]** Decide where and how personal Difficulty is shown without conflating it with FSRS learning status.
+- **DIFF-001 [Confirmed]** [Scope: Additional] Category Difficulty is a user-managed Category Dimension (e.g. A1/B1), distinct from personal Piko Learning Difficulty and FSRS Difficulty.
+- **DIFF-002 [Confirmed]** [Scope: Additional] Piko Learning Difficulty is a per-Learning-Item, per-direction value reflecting how many short-term retries the learner needs; FSRS Difficulty remains an independent internal scheduling parameter.
+- **DIFF-003 [Confirmed]** [Scope: Additional] Piko Learning Difficulty uses a weighted incremental update from its previous value and the latest retry-round difficulty, without reprocessing all older rounds.
+- **DIFF-004 [Confirmed]** [Scope: Additional] On completion of a retry round for an individual item, Piko immediately updates that item's Difficulty without waiting for the entire session to end.
+- **DIFF-005 [Confirmed]** [Scope: Additional] At the end of a learning day, Piko evaluates unfinished retry rounds; their observed errors may increase but never decrease Difficulty, and insufficient evidence leaves it unchanged.
+- **DIFF-006 [Confirmed]** [Scope: Additional] When the app was not running at the 04:00 boundary, outstanding learning-day evaluation can occur on the next launch using the original learning-day boundary.
+- **DIFF-007 [Proposed]** [Scope: Additional] An example implementation uses difficulty in [0,100], roundDifficulty = min(100, 15 × retryCount), and an EMA weight alpha=0.4; the precise scale and alpha remain tunable.
+- **DIFF-008 [Confirmed]** [Scope: Additional] New Learning Items begin with Piko Learning Difficulty Unknown. A correct first regular response initializes Difficulty to zero; otherwise the first completed retry round initializes Difficulty directly from roundDifficulty. Later rounds use the weighted update.
+- **DIFF-009 [Confirmed]** [Scope: Additional] For a first incomplete round with Unknown Difficulty, keep Unknown unless observed errors reach the saturation threshold (seven errors with the current experimental parameters), at which point Difficulty can initialize at 100.
+- **DIFF-010 [Open]** [Scope: Additional] Define precisely whether the initial regular incorrect response counts toward retryCount, and whether retryCount counts additional incorrect attempts or total retry attempts. This must be fixed before implementation.
+- **DIFF-011 [Open]** [Scope: Additional] Decide where and how personal Difficulty is shown without conflating it with FSRS learning status.
 
 
 ## Learning Card Interaction — consolidated (2026-10-13)
@@ -209,60 +234,60 @@ This file is authoritative for behavior, data, validation, state transitions and
 The following requirements supersede earlier exploratory card layouts and the temporary three-button Hard design. Each requirement is standalone and describes the intended functional behavior; exact spacing, colors and animations are to be validated in the interactive mockup.
 
 ### Layout and card content
-- **CARD-UI-001 [Confirmed]:** A Learning Session screen provides an app-level Exit/Back control separate from a Previous Card control used to correct the immediately preceding answer.
-- **CARD-UI-002 [Confirmed]:** The Learning Session screen shows a completed/total counter and a separate first-try-correct counter. A Learning Item enters completed only after a correct initial response or successful retry; retry attempts do not increase the total unique item count.
-- **CARD-UI-003 [Confirmed]:** The question card shows the prompt-language entry and, by default, its prompt-language example sentence; question-side example visibility is a global user preference. The answer card shows the target answer and both example languages.
-- **CARD-UI-004 [Confirmed]:** The Learning Card does not show redundant Question or Answer headings, and it does not display Category Tags by default.
-- **CARD-UI-005 [Confirmed]:** An optional Hint appears centered inside the card, not in a toolbar outside it. An entry marked Hidden until tapped reveals its Hint with one action; it cannot be hidden again during that presentation. An Always visible Hint appears immediately.
-- **CARD-UI-006 [Confirmed]:** In Self Assessment, the entire question-card surface including the vocabulary text can reveal the answer; controls inside the card (e.g. Hint) perform only their own action and do not flip the card.
-- **CARD-UI-007 [Confirmed]:** The Self Assessment question card shows a small, visually subordinate Tap to reveal cue with an icon near the lower-right corner, clearly distinguished from the example sentence; an explicit Show Answer action may also be offered.
-- **CARD-UI-008 [Confirmed]:** The Answer Mode switch (Self / Typed) appears only on the question side, not the answer side; the mode may be changed during a Learning Session.
+- **CARD-UI-001 [Confirmed]:** [Scope: Minimum] A Learning Session screen provides an app-level Exit/Back control separate from a Previous Card control used to correct the immediately preceding answer.
+- **CARD-UI-002 [Confirmed]:** [Scope: Minimum] The Learning Session screen shows a completed/total counter and a separate first-try-correct counter. A Learning Item enters completed only after a correct initial response or successful retry; retry attempts do not increase the total unique item count.
+- **CARD-UI-003 [Confirmed]:** [Scope: Additional] The question card shows the prompt-language entry and, by default, its prompt-language example sentence; question-side example visibility is a global user preference. The answer card shows the target answer and both example languages.
+- **CARD-UI-004 [Confirmed]:** [Scope: Minimum] The Learning Card does not show redundant Question or Answer headings, and it does not display Category Tags by default.
+- **CARD-UI-005 [Confirmed]:** [Scope: Additional] An optional Hint appears centered inside the card, not in a toolbar outside it. An entry marked Hidden until tapped reveals its Hint with one action; it cannot be hidden again during that presentation. An Always visible Hint appears immediately.
+- **CARD-UI-006 [Confirmed]:** [Scope: Minimum] In Self Assessment, the entire question-card surface including the vocabulary text can reveal the answer; controls inside the card (e.g. Hint) perform only their own action and do not flip the card.
+- **CARD-UI-007 [Confirmed]:** [Scope: Minimum] The Self Assessment question card shows a small, visually subordinate Tap to reveal cue with an icon near the lower-right corner, clearly distinguished from the example sentence; an explicit Show Answer action may also be offered.
+- **CARD-UI-008 [Confirmed]:** [Scope: Additional] The Answer Mode switch (Self / Typed) appears only on the question side, not the answer side; the mode may be changed during a Learning Session.
 
 ### Typed answers and grading
-- **CARD-UI-009 [Confirmed]:** In Typed Answer mode, the input automatically receives focus and the supported system keyboard is requested on each new question, without requiring a tap in the input field.
-- **CARD-UI-010 [Confirmed]:** A typed answer can be submitted with the keyboard Enter action or a compact checkmark button immediately to the right of the input; the button and card remain usable above the on-screen keyboard.
-- **CARD-UI-011 [Confirmed]:** The Learning Card layout adjusts to the available viewport when the keyboard opens or closes; the card can recenter when the keyboard is dismissed. Exact mobile viewport behavior is to be tested in the mockup and later on devices.
-- **CARD-UI-012 [Confirmed]:** After submitting a typed answer, Piko shows the learner's submitted text and the expected answer if they differ; an exact match is shown once with a clear correct indication instead of duplicating the same word.
-- **CARD-UI-013 [Confirmed]:** Automatic matching suggests a grade but never commits or advances automatically; the learner must explicitly choose Incorrect or Correct and may override every suggestion.
-- **CARD-UI-014 [Confirmed]:** The primary grading actions always place red Incorrect on the left and green Correct on the right. Their widths change to emphasize the suggested result; in Self Assessment they have equal emphasis.
-- **CARD-UI-015 [Confirmed]:** Hard is a compact checkbox immediately above the Correct button, left-aligned with the Correct button's left edge; it moves with the Correct action when dynamic widths change. Hard is not a third grading button.
-- **CARD-UI-016 [Confirmed]:** Selecting Hard and then Correct records a successful but effortful FSRS Hard rating; Correct without Hard records FSRS Good, and Incorrect records FSRS Again regardless of Hard. The checkbox resets for the next card.
-- **CARD-UI-017 [Confirmed]:** Answer duration and spelling deviations do not affect Piko Learning Difficulty. Accepted orthographic variants and near matches may influence the visual suggestion, but not the user's authority to grade.
-- **CARD-UI-018 [Confirmed]:** Answer Mode switching is available while a session is in progress; behavior of a partially typed, not-yet-submitted answer when switching remains an open edge case.
+- **CARD-UI-009 [Confirmed]:** [Scope: Additional] In Typed Answer mode, the input automatically receives focus and the supported system keyboard is requested on each new question, without requiring a tap in the input field.
+- **CARD-UI-010 [Confirmed]:** [Scope: Additional] A typed answer can be submitted with the keyboard Enter action or a compact checkmark button immediately to the right of the input; the button and card remain usable above the on-screen keyboard.
+- **CARD-UI-011 [Confirmed]:** [Scope: Additional] The Learning Card layout adjusts to the available viewport when the keyboard opens or closes; the card can recenter when the keyboard is dismissed. Exact mobile viewport behavior is to be tested in the mockup and later on devices.
+- **CARD-UI-012 [Confirmed]:** [Scope: Additional] After submitting a typed answer, Piko shows the learner's submitted text and the expected answer if they differ; an exact match is shown once with a clear correct indication instead of duplicating the same word.
+- **CARD-UI-013 [Confirmed]:** [Scope: Base] Automatic matching suggests a grade but never commits or advances automatically; the learner must explicitly choose Incorrect or Correct and may override every suggestion.
+- **CARD-UI-014 [Confirmed]:** [Scope: Minimum] The primary grading actions always place red Incorrect on the left and green Correct on the right. Their widths change to emphasize the suggested result; in Self Assessment they have equal emphasis.
+- **CARD-UI-015 [Confirmed]:** [Scope: Minimum] Hard is a compact checkbox immediately above the Correct button, left-aligned with the Correct button's left edge; it moves with the Correct action when dynamic widths change. Hard is not a third grading button.
+- **CARD-UI-016 [Confirmed]:** [Scope: Base] Selecting Hard and then Correct records a successful but effortful FSRS Hard rating; Correct without Hard records FSRS Good, and Incorrect records FSRS Again regardless of Hard. The checkbox resets for the next card.
+- **CARD-UI-017 [Confirmed]:** [Scope: Base] Answer duration and spelling deviations do not affect Piko Learning Difficulty. Accepted orthographic variants and near matches may influence the visual suggestion, but not the user's authority to grade.
+- **CARD-UI-018 [Confirmed]:** [Scope: Additional] Answer Mode switching is available while a session is in progress; behavior of a partially typed, not-yet-submitted answer when switching remains an open edge case.
 
 ### Card navigation and queue behavior
-- **CARD-UI-019 [Confirmed]:** Previous Card is distinct from app-level Back/Exit and allows correction of only the immediately preceding card's submitted grade; the prior answer and grade are shown on return.
-- **CARD-UI-020 [Confirmed]:** Changing a previous grade must consistently update long-term FSRS state or Speed progress and any pending retry state; the implementation strategy for reversing a committed FSRS review is still open.
-- **CARD-UI-021 [Confirmed]:** Skip is an explicit action available on the question side, not an ambiguous swipe gesture. Each Learning Item may be skipped once per session without receiving a correct/incorrect grade.
-- **CARD-UI-022 [Proposed]:** A skipped item is reinserted after approximately five other questions; a short wait can substitute if too few questions remain. The exact spacing rule is not yet approved.
-- **CARD-UI-023 [Confirmed]:** During an ordinary Long-term Learning Session, a wrongly graded item remains pending until a correct retry or the end of the learning day. The card's first regular review is what affects FSRS; short-term retries are tracked separately pending final integration decisions.
-- **CARD-UI-024 [Confirmed]:** Session-wide error counts may be shown, but the current question should not expose its prior error count as a cue to the answer.
+- **CARD-UI-019 [Confirmed]:** [Scope: Additional] Previous Card is distinct from app-level Back/Exit and allows correction of only the immediately preceding card's submitted grade; the prior answer and grade are shown on return.
+- **CARD-UI-020 [Confirmed]:** [Scope: Base] Changing a previous grade must consistently update long-term FSRS state or Speed progress and any pending retry state; the implementation strategy for reversing a committed FSRS review is still open.
+- **CARD-UI-021 [Confirmed]:** [Scope: Additional] Skip is an explicit action available on the question side, not an ambiguous swipe gesture. Each Learning Item may be skipped once per session without receiving a correct/incorrect grade.
+- **CARD-UI-022 [Proposed]:** [Scope: Additional] A skipped item is reinserted after approximately five other questions; a short wait can substitute if too few questions remain. The exact spacing rule is not yet approved.
+- **CARD-UI-023 [Confirmed]:** [Scope: Minimum] During an ordinary Long-term Learning Session, a wrongly graded item remains pending until a correct retry or the end of the learning day. The card's first regular review is what affects FSRS; short-term retries are tracked separately pending final integration decisions.
+- **CARD-UI-024 [Confirmed]:** [Scope: Base] Session-wide error counts may be shown, but the current question should not expose its prior error count as a cue to the answer.
 
 ### Session scope and start behavior
-- **SESSION-017 [Confirmed]:** Each Learning Session is scoped to one Collection; cross-Collection study sessions are not supported, although cross-Collection daily statistics are permitted.
-- **SESSION-018 [Confirmed]:** A Long-term Learning Session normally includes all due items for its chosen Collection, direction and active filters, with no mandatory maximum batch size; the user may stop at any point.
-- **SESSION-019 [Confirmed]:** Long-term Sessions can resume pending same-day retries in a newly generated question order, prioritizing those retries relatively early instead of restoring the previous sequence.
-- **SESSION-020 [Confirmed]:** Only Long-term Learning shows an end-of-session summary by default. Speed Learning is excluded from the default Daily Summary and has separate statistics.
-- **PREF-005 [Confirmed]:** New users default to Target → Native. A global direction preference supports one direction, both directions separately, or both mixed; per-Collection settings and explicit launch parameters can further determine the current session.
-- **SETUP-008 [Confirmed]:** Learning actions pass any known launch parameters (Collection, mode, direction, selection, etc.). If required values are resolved through the action and defaults, Piko may start directly without a redundant setup screen; otherwise it presents only the missing decisions.
-- **SETUP-009 [Confirmed]:** Speed pool size defaults to five and is available under More Options when a setup screen is shown; mutable session options such as Answer Mode remain changeable during study.
+- **SESSION-017 [Confirmed]:** [Scope: Base] Each Learning Session is scoped to one Collection; cross-Collection study sessions are not supported, although cross-Collection daily statistics are permitted.
+- **SESSION-018 [Confirmed]:** [Scope: Minimum] A Long-term Learning Session normally includes all due items for its chosen Collection, direction and active filters, with no mandatory maximum batch size; the user may stop at any point.
+- **SESSION-019 [Confirmed]:** [Scope: Minimum] Long-term Sessions can resume pending same-day retries in a newly generated question order, prioritizing those retries relatively early instead of restoring the previous sequence.
+- **SESSION-020 [Confirmed]:** [Scope: Additional] Only Long-term Learning shows an end-of-session summary by default. Speed Learning is excluded from the default Daily Summary and has separate statistics.
+- **PREF-005 [Confirmed]:** [Scope: Minimum] New users default to Target → Native. A global direction preference supports one direction, both directions separately, or both mixed; per-Collection settings and explicit launch parameters can further determine the current session.
+- **SETUP-008 [Confirmed]:** [Scope: Minimum] Learning actions pass any known launch parameters (Collection, mode, direction, selection, etc.). If required values are resolved through the action and defaults, Piko may start directly without a redundant setup screen; otherwise it presents only the missing decisions.
+- **SETUP-009 [Confirmed]:** [Scope: Additional] Speed pool size defaults to five and is available under More Options when a setup screen is shown; mutable session options such as Answer Mode remain changeable during study.
 
 ### Import / source decisions relevant to the card model
-- **SOURCE-007 [Confirmed]:** Source is an ordinary, removable, multi-value Category Dimension, not a separate persisted Source entity; the template can offer Personal Notes and Online values.
-- **IMPORT-028 [Confirmed]:** Every import requires a review of new entries, additive updates and conflicts before any Collection changes are committed.
-- **IMPORT-029 [Confirmed]:** Import conflicts in single-value dimensions are displayed as compact suggestions alongside the ordinary editable Category Value control; the existing value stays selected unless the user explicitly changes it.
-- **IMPORT-030 [Confirmed]:** Conflict-free additive changes can be preselected for collective approval; unresolved conflicts are skipped, and the import never silently overwrites existing data.
+- **SOURCE-007 [Confirmed]:** [Scope: Additional] Source is an ordinary, removable, multi-value Category Dimension, not a separate persisted Source entity; the template can offer Personal Notes and Online values.
+- **IMPORT-028 [Confirmed]:** [Scope: Base] Every import requires a review of new entries, additive updates and conflicts before any Collection changes are committed.
+- **IMPORT-029 [Confirmed]:** [Scope: Base] Import conflicts in single-value dimensions are displayed as compact suggestions alongside the ordinary editable Category Value control; the existing value stays selected unless the user explicitly changes it.
+- **IMPORT-030 [Confirmed]:** [Scope: Base] Conflict-free additive changes can be preselected for collective approval; unresolved conflicts are skipped, and the import never silently overwrites existing data.
 
 ### Outstanding functional decisions before implementation
-- **OPEN-CARD-001:** Exact answer-matching rules per language, including accepted orthographic variants, near matches, and multiple valid phrasings.
-- **OPEN-CARD-002:** What happens when switching from Typed to Self Assessment after entering partial text.
-- **OPEN-CARD-003:** Whether the Hint is automatically revealed on the answer side if it was hidden on the question side (current general card rules suggest yes), and how to show multiple Example Pairs compactly.
-- **OPEN-CARD-004:** Exact undo semantics and consistency of FSRS review-history rollback when correcting the previous grade.
-- **OPEN-LEARN-001 [Partly resolved]:** SPEED-RESET-001–003 define when direction-specific state is preserved or reset. Exact FSRS initialization and interaction with relearning steps remain open (OPEN-FSRS-001).
-- **OPEN-LEARN-002:** Exact long-term retry-distance function, wait time, and whether the first incorrect regular answer is counted among retry attempts for personal Difficulty.
-- **OPEN-LEARN-003:** Criteria for automatically recommending Speed Learning and marking a Learning Item Mastered.
-- **OPEN-LEARN-004:** FSRS-to-user-facing status-label thresholds, and whether they change only after reviews or also with elapsed time.
-- **OPEN-IMPORT-001 [Resolved]:** IMPORT-HINT-001 confirms explicit review of a conflicting imported Hint while retaining the existing Hint until replacement is accepted.
+- **OPEN-CARD-001:** [Scope: Additional] Exact answer-matching rules per language, including accepted orthographic variants, near matches, and multiple valid phrasings.
+- **OPEN-CARD-002:** [Scope: Additional] What happens when switching from Typed to Self Assessment after entering partial text.
+- **OPEN-CARD-003:** [Scope: Additional] Whether the Hint is automatically revealed on the answer side if it was hidden on the question side (current general card rules suggest yes), and how to show multiple Example Pairs compactly.
+- **OPEN-CARD-004:** [Scope: Base] Exact undo semantics and consistency of FSRS review-history rollback when correcting the previous grade.
+- **OPEN-LEARN-001 [Partly resolved]:** [Scope: Additional] SPEED-RESET-001–003 define when direction-specific state is preserved or reset. Exact FSRS initialization and interaction with relearning steps remain open (OPEN-FSRS-001).
+- **OPEN-LEARN-002:** [Scope: Minimum] Exact long-term retry-distance function, wait time, and whether the first incorrect regular answer is counted among retry attempts for personal Difficulty.
+- **OPEN-LEARN-003:** [Scope: Additional] Criteria for automatically recommending Speed Learning and marking a Learning Item Mastered.
+- **OPEN-LEARN-004:** [Scope: Minimum] FSRS-to-user-facing status-label thresholds, and whether they change only after reviews or also with elapsed time.
+- **OPEN-IMPORT-001 [Resolved]:** [Scope: Base] IMPORT-HINT-001 confirms explicit review of a conflicting imported Hint while retaining the existing Hint until replacement is accepted.
 
 ## Future / deferred ideas
 - Import Vocabulary Entries from files, with duplicates checked against the destination Collection.
@@ -294,13 +319,13 @@ The following requirements supersede earlier exploratory card layouts and the te
 
 ### Requirements
 
-- **PARAM-001 [Confirmed]:** Piko maintains a centralized, versioned registry of configurable parameters that influence learning and review behavior.
-- **PARAM-002 [Confirmed]:** Internal algorithm parameters can be adjusted in a developer-only settings area without exposing them to ordinary users.
-- **PARAM-003 [Confirmed]:** The parameter registry documents each key, default, unit, allowed values, scope, and behavioral effect.
-- **PARAM-004 [Confirmed]:** Parameters added during future requirements discussions are incorporated into the same registry.
-- **PARAM-005 [Confirmed]:** The default Speed pool size may be overridden per Speed Session; this does not necessarily alter the configured default.
-- **PARAM-006 [Proposed]:** Developer settings support restoring defaults and distinguish pending changes from saved values.
-- **PARAM-007 [Proposed]:** Historical review events retain their original outcomes when learning parameters change; recalculation/migration behavior is specified separately.
+- **PARAM-001 [Confirmed]:** [Scope: Additional] Piko maintains a centralized, versioned registry of configurable parameters that influence learning and review behavior.
+- **PARAM-002 [Confirmed]:** [Scope: Additional] Internal algorithm parameters can be adjusted in a developer-only settings area without exposing them to ordinary users.
+- **PARAM-003 [Confirmed]:** [Scope: Additional] The parameter registry documents each key, default, unit, allowed values, scope, and behavioral effect.
+- **PARAM-004 [Confirmed]:** [Scope: Additional] Parameters added during future requirements discussions are incorporated into the same registry.
+- **PARAM-005 [Confirmed]:** [Scope: Additional] The default Speed pool size may be overridden per Speed Session; this does not necessarily alter the configured default.
+- **PARAM-006 [Proposed]:** [Scope: Additional] Developer settings support restoring defaults and distinguish pending changes from saved values.
+- **PARAM-007 [Proposed]:** [Scope: Base] Historical review events retain their original outcomes when learning parameters change; recalculation/migration behavior is specified separately.
 
 **Open:** Exact storage and scope of developer overrides (device, developer account, or build), validation bounds, versioning of FSRS parameters, effect of changes on currently running sessions, and precise retry-distance formula.
 
@@ -308,22 +333,25 @@ The following requirements supersede earlier exploratory card layouts and the te
 
 ## Minigame Break — confirmed decisions
 
-- **SPEED-010 [Confirmed]:** If Speed Learning lacks enough other Learning Items for the desired recall gap, use a Minigame Break as a distraction task.
-- **SPEED-011 [Confirmed]:** Previously completed Vocabulary Entries are not used as filler.
-- **SPEED-012 [Confirmed]:** The first minigame presents ten randomly arranged numbers, tapped in ascending order.
-- **SPEED-013 [Confirmed]:** Minigames should normally be solvable in under ten seconds. This is a design target, not a hard time limit, and the minigame does not affect learning progress.
-- **SPEED-014 [Confirmed]:** The minigame system should later allow other short tasks, for example tapping letters in order. Additional games are deferred.
+- **SPEED-010 [Confirmed]:** [Scope: Additional] If Speed Learning lacks enough other Learning Items for the desired recall gap, use a Minigame Break as a distraction task.
+- **SPEED-011 [Confirmed]:** [Scope: Additional] Previously completed Vocabulary Entries are not used as filler.
+- **SPEED-012 [Confirmed]:** [Scope: Additional] The first minigame presents ten randomly arranged numbers, tapped in ascending order.
+- **SPEED-013 [Confirmed]:** [Scope: Additional] Minigames should normally be solvable in under ten seconds. This is a design target, not a hard time limit, and the minigame does not affect learning progress.
+- **SPEED-014 [Confirmed]:** [Scope: Additional] The minigame system should later allow other short tasks, for example tapping letters in order. Additional games are deferred.
 
 ## Minimal learning data — confirmed decisions
 
-- **DATA-001 [Confirmed]:** Do not retain a complete event history for every short-term retry attempt.
-- **DATA-002 [Confirmed]:** Retain the number of retries required for each completed retry round.
-- **DATA-003 [Confirmed]:** Retain submitted incorrect Typed Answers for later error-pattern analysis.
-- **DATA-004 [Confirmed]:** Retain regular FSRS-relevant reviews, including review time, rating, and an FSRS generation/reset discriminator.
-- **DATA-005 [Confirmed]:** Store only learning data needed for product behavior and specifically intended analysis.
+- **DATA-001 [Confirmed]:** [Scope: Base] Do not retain a complete event history for every short-term retry attempt.
+- **DATA-002 [Confirmed]:** [Scope: Additional] Retain the number of retries required for each completed retry round.
+- **DATA-003 [Confirmed]:** [Scope: Additional] Retain submitted incorrect Typed Answers for later error-pattern analysis.
+- **DATA-004 [Confirmed]:** [Scope: Base] Retain regular FSRS-relevant reviews, including review time, rating, and an FSRS generation/reset discriminator.
+- **DATA-005 [Confirmed]:** [Scope: Base] Store only learning data needed for product behavior and specifically intended analysis.
 
 Active retry rounds retain the current retry count and expiry/day-boundary state; after completion or expiry they may be summarized. A timestamp for every short-term retry is not required. A timestamp on an incorrect Typed Answer remains optional unless time-based error analysis is approved. These rules refine MATCH-004 without requiring a full retry event log.
 
 ## Consolidation note
 
 - **0.4.2 — 2026-10-13:** Integrated later confirmed minigame and minimal-data decisions; clarified superseded fallback wording and resolved Hint merge questions. Removed the duplicate glossary and obsolete pre-mockup status. Remaining proposals and open questions stay unconfirmed.
+
+
+- **0.4.3 — 2026-10-13:** Added proposed Base / Minimum / Additional scope labels to all 214 functional requirement and decision IDs; preserved original text, status, IDs, and topic order. Initial implementation scope remains for owner agreement.

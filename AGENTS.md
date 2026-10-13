@@ -46,3 +46,5 @@
 - Continue UX work page by page in `mockups/piko-mockup.html`, updating the relevant UX documentation together.
 - The mockup uses sample data and placeholders. Do not represent its persistence, AI, import, or learning calculations as working application features.
 - Do not implement an application or select a stack until the user requests that work.
+- Use `shared/copy.js` as the single source for interface labels and English/German translations. Preserve stable keys and matching placeholders; do not duplicate UI wording in mockup templates or future app code.
+- Record proposed visual principles in `docs/DESIGN.md`. Update accepted design decisions, relevant UX requirements, shared tokens/copy, and mockup together. Keep the prototype aligned with the future product without treating proposals as accepted decisions.

@@ -38,6 +38,8 @@ This file defines screens, content hierarchy, controls, layouts, interaction aff
 
 ## Localization
 
+- **UX-I18N-002 [Confirmed]:** Maintain one shared editable catalog for UI naming and English/German translations, consumed by the mockup and the eventual application. The prototype supports live draft editing and export; the app adapter depends on the future platform.
+
 - **UX-I18N-001:** Every visible string, including status labels, tooltips, controls and feedback, is localizable. English is default, German is supported initially. (I18N-001–002)
 
 
@@ -79,3 +81,7 @@ The following five owner annotations were received on 2026-10-13. Preserve them 
 These annotations do not yet establish final wording, spacing, desktop navigation, or back-navigation behavior. Resolve those details with the owner when implementing the requested UX changes.
 
 - **0.4.2:** Repaired functional cross-references, recorded Minigame Break presentation, and retained five deferred owner annotations.
+
+## Design exploration
+
+The proposed principles, palette and icon options, and unresolved visual choices are in [DESIGN.md](DESIGN.md). The [design studio](../mockups/design-lab.html) compares four color directions and edits catalog values live. None of the palette, typography, or icon candidates is selected yet. The five navigation annotations remain deferred until the next requested visual refinement.
