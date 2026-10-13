@@ -257,7 +257,7 @@ void main() {
 
   for (final version in [1, 2]) {
     test(
-      'v$version upgrades directly to schema4 preserving existing records',
+      'v$version upgrades directly to current schema preserving existing records',
       () async {
         final directory = await Directory.systemTemp.createTemp(
           'piko-v$version-upgrade-',
@@ -277,7 +277,7 @@ void main() {
           expect(
             (await db.customSelect('PRAGMA user_version').getSingle())
                 .read<int>('user_version'),
-            4,
+            5,
           );
           expect(
             await db.customSelect('PRAGMA foreign_key_check').get(),
@@ -328,7 +328,7 @@ void main() {
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',
           ),
-          4,
+          5,
         );
       } finally {
         await db.close();

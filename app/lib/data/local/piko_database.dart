@@ -1,4 +1,7 @@
 import 'package:drift/drift.dart';
+import 'package:fsrs/fsrs.dart' as fsrs;
+import '../../core/clock.dart';
+import '../learning_item.dart';
 import '../vocabulary_normalization.dart';
 
 part 'piko_database.g.dart';
@@ -40,16 +43,59 @@ class VocabularyEntries extends Table {
   ];
 }
 
-@DriftDatabase(tables: [AppSettings, Collections, VocabularyEntries])
+class LearningItems extends Table {
+  IntColumn get id => integer()();
+  TextColumn get entryId =>
+      text().references(VocabularyEntries, #id, onDelete: KeyAction.cascade)();
+  TextColumn get direction => text()();
+  IntColumn get formatVersion => integer()();
+  TextColumn get cardJson => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(id > 0)',
+    "CHECK(direction IN ('targetToNative', 'nativeToTarget'))",
+    'CHECK(format_version = 1)',
+    'UNIQUE(entry_id, direction)',
+  ];
+}
+
+/// High-water mark survives deletion and future Undo restoration.
+class LearningIdentitySequence extends Table {
+  IntColumn get singleton => integer()();
+  IntColumn get nextId => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {singleton};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(singleton = 1)',
+    'CHECK(next_id > 0)',
+  ];
+}
+
+@DriftDatabase(
+  tables: [
+    AppSettings,
+    Collections,
+    VocabularyEntries,
+    LearningItems,
+    LearningIdentitySequence,
+  ],
+)
 class PikoDatabase extends _$PikoDatabase {
-  PikoDatabase(super.executor);
+  PikoDatabase(super.executor, {this.clock = const SystemPikoClock()});
+  final PikoClock clock;
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
+    onCreate: (m) async {
+      await m.createAll();
+      await _initializeLearningSequence();
+    },
     onUpgrade: (m, from, to) async {
       await transaction(() async {
         if (from < 2) await m.createTable(collections);
@@ -58,12 +104,62 @@ class PikoDatabase extends _$PikoDatabase {
         } else if (from < 4) {
           await _upgradeVocabularyKeys(m);
         }
+        if (from < 5) {
+          await m.createTable(learningItems);
+          await m.createTable(learningIdentitySequence);
+          await _initializeLearningSequence();
+          final instant = clock.now().toUtc();
+          final entries =
+              await (select(vocabularyEntries)..orderBy([
+                    (_) => OrderingTerm(
+                      expression: const CustomExpression<int>('rowid'),
+                    ),
+                  ]))
+                  .get();
+          for (final entry in entries) {
+            await createLearningItems(entry.id, at: instant);
+          }
+          if ((await customSelect(
+            'PRAGMA foreign_key_check',
+          ).get()).isNotEmpty) {
+            throw StateError(
+              'Learning migration failed foreign-key validation',
+            );
+          }
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _initializeLearningSequence() => customStatement(
+    'INSERT INTO learning_identity_sequence (singleton, next_id) VALUES (1, 1)',
+  );
+
+  /// Nested callers retain their vocabulary/migration transaction boundary.
+  Future<void> createLearningItems(String entryId, {DateTime? at}) =>
+      transaction(() async {
+        final instant = (at ?? clock.now()).toUtc();
+        for (final direction in LearningDirection.values) {
+          final sequence = await select(learningIdentitySequence).getSingle();
+          final id = sequence.nextId;
+          await (update(learningIdentitySequence)
+                ..where((row) => row.singleton.equals(1)))
+              .write(LearningIdentitySequenceCompanion(nextId: Value(id + 1)));
+          final card = fsrs.Card(cardId: id, due: instant);
+          await into(learningItems).insert(
+            LearningItemsCompanion.insert(
+              id: Value(id),
+              entryId: entryId,
+              direction: direction.name,
+              formatVersion: LearningCardCodec.version,
+              cardJson: LearningCardCodec.encode(card),
+            ),
+          );
+        }
+      });
 
   Future<void> _upgradeVocabularyKeys(Migrator migrator) async {
     // Read the old structure explicitly: the v4 generated mapper needs keys.

@@ -1,5 +1,11 @@
 # Decision log
 
+## LEARN-002 — independent directional storage — 2026-10-14
+
+Classify LEARN-002 as First, a dependency of the accepted bidirectional choice and progress-preserving deletion. Schema 5 gives each vocabulary entry two unique direction records with cascading ownership, stable positive integer FSRS identities and complete versioned JSON. A persistent high-water allocator prevents deleted identities being reused while Undo may restore them. Creation and migration backfill are transactional; migration uses one injected UTC instant and preserves existing records. Vocabulary edits do not recreate learning items.
+
+The exact pinned `fsrs` 2.0.1 package source (`lib/fsrs.dart`, MIT license) was inspected: its Card constructor initializes learning/step zero with null memory parameters and last review; explicit IDs and due time avoid its wall-clock-based factory. The adapter retains all seven library serialization fields, validates identity/version/coherent memory state and yields fresh mutable Card objects. This introduces authentic storage and serialization, not scheduling, review history or retry calculations. Mathematical integration remains LEARN-001. Source: https://pub.dev/packages/fsrs/versions/2.0.1
+
 ## UX-ENTRY-002 — binding entry header and distinct actions — 2026-10-14
 
 Use the binding three-track entry header with intrinsic Back, a middle-track-centered title and the primary global completion checkmark outside the cards. Canonicalize its gap, title sizes, responsive viewport breakpoint, Back weight and action padding; generate the CSS media rule from the same source as Flutter so a breakpoint change cannot diverge. Reuse shared page-top/title-margin and 48px large-control tokens. Keep localized tooltips/accessibility names distinct between global final completion and card-level Save & Next, preserving the established controller and guarded Back behavior. Large German text can wrap the title without clipping actions. This is header presentation and isolated production-route verification, not Collection route wiring, release completion or an owner decision on the separately pending saved-error policy.

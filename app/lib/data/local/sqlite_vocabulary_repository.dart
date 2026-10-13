@@ -15,8 +15,11 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
     try {
       return await database.transaction(action);
     } on SqliteException catch (error) {
-      // SQLITE_CONSTRAINT_UNIQUE: only the normalized pair is a UNIQUE key.
-      if (error.extendedResultCode == 2067) {
+      // Other tables also have unique keys; only translate this exact constraint.
+      if (error.extendedResultCode == 2067 &&
+          error.message.contains(
+            'vocabulary_entries.collection_id, vocabulary_entries.target_key, vocabulary_entries.native_key',
+          )) {
         throw VocabularyValidation.duplicatePair;
       }
       rethrow;
@@ -82,6 +85,7 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
               nativeKey: vocabularyComparisonKey(native),
             ),
           );
+      await database.createLearningItems(id);
       return VocabularyRecord(
         id: id,
         collectionId: collectionId,

@@ -190,7 +190,7 @@ The four unnumbered Future / deferred ideas below are all Additional; no new req
 ## Learning System
 ### Core model and localization
 - **LEARN-001 [Confirmed]** [Scope: Minimum] [Release: Undecided] [Flow: collection, review] Piko uses FSRS for long-term review scheduling, preferably through an established offline-capable library rather than a custom scheduling formula.
-- **LEARN-002 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, review] Each Vocabulary Entry has two independent Learning Items, one for each translation direction, with separate FSRS states and review schedules.
+- **LEARN-002 [Confirmed]** [Scope: Base] [Release: First] [Flow: collection, review] Each Vocabulary Entry has two independent Learning Items, one for each translation direction, with separate FSRS states and review schedules. Persist each item's stable identity and complete versioned FSRS card state. New vocabulary and its two items are created atomically; vocabulary text edits retain both learning identities and states. Existing entries receive both initial items during migration. Scheduling calculations remain LEARN-001.
 - **LEARN-003 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, review] Learning progress uses continuous FSRS memory estimates rather than hard advancement through fixed phases.
 - **LEARN-004 [Confirmed]** [Scope: Minimum] [Release: Undecided] [Flow: collection, review] The vocabulary view displays the learning status of both translation directions separately.
 - **LEARN-005 [Confirmed]** [Scope: Minimum] [Release: Undecided] [Flow: collection, review] The user-facing ordered learning status labels are New, Just Started, Learning, Well Learned, Very Well Learned, and Mastered; numeric levels are not required.

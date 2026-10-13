@@ -962,6 +962,579 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
   }
 }
 
+class $LearningItemsTable extends LearningItems
+    with TableInfo<$LearningItemsTable, LearningItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LearningItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vocabulary_entries (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _formatVersionMeta = const VerificationMeta(
+    'formatVersion',
+  );
+  @override
+  late final GeneratedColumn<int> formatVersion = GeneratedColumn<int>(
+    'format_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cardJsonMeta = const VerificationMeta(
+    'cardJson',
+  );
+  @override
+  late final GeneratedColumn<String> cardJson = GeneratedColumn<String>(
+    'card_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    entryId,
+    direction,
+    formatVersion,
+    cardJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'learning_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LearningItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('format_version')) {
+      context.handle(
+        _formatVersionMeta,
+        formatVersion.isAcceptableOrUnknown(
+          data['format_version']!,
+          _formatVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_formatVersionMeta);
+    }
+    if (data.containsKey('card_json')) {
+      context.handle(
+        _cardJsonMeta,
+        cardJson.isAcceptableOrUnknown(data['card_json']!, _cardJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cardJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LearningItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LearningItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      formatVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}format_version'],
+      )!,
+      cardJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}card_json'],
+      )!,
+    );
+  }
+
+  @override
+  $LearningItemsTable createAlias(String alias) {
+    return $LearningItemsTable(attachedDatabase, alias);
+  }
+}
+
+class LearningItem extends DataClass implements Insertable<LearningItem> {
+  final int id;
+  final String entryId;
+  final String direction;
+  final int formatVersion;
+  final String cardJson;
+  const LearningItem({
+    required this.id,
+    required this.entryId,
+    required this.direction,
+    required this.formatVersion,
+    required this.cardJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['entry_id'] = Variable<String>(entryId);
+    map['direction'] = Variable<String>(direction);
+    map['format_version'] = Variable<int>(formatVersion);
+    map['card_json'] = Variable<String>(cardJson);
+    return map;
+  }
+
+  LearningItemsCompanion toCompanion(bool nullToAbsent) {
+    return LearningItemsCompanion(
+      id: Value(id),
+      entryId: Value(entryId),
+      direction: Value(direction),
+      formatVersion: Value(formatVersion),
+      cardJson: Value(cardJson),
+    );
+  }
+
+  factory LearningItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LearningItem(
+      id: serializer.fromJson<int>(json['id']),
+      entryId: serializer.fromJson<String>(json['entryId']),
+      direction: serializer.fromJson<String>(json['direction']),
+      formatVersion: serializer.fromJson<int>(json['formatVersion']),
+      cardJson: serializer.fromJson<String>(json['cardJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'entryId': serializer.toJson<String>(entryId),
+      'direction': serializer.toJson<String>(direction),
+      'formatVersion': serializer.toJson<int>(formatVersion),
+      'cardJson': serializer.toJson<String>(cardJson),
+    };
+  }
+
+  LearningItem copyWith({
+    int? id,
+    String? entryId,
+    String? direction,
+    int? formatVersion,
+    String? cardJson,
+  }) => LearningItem(
+    id: id ?? this.id,
+    entryId: entryId ?? this.entryId,
+    direction: direction ?? this.direction,
+    formatVersion: formatVersion ?? this.formatVersion,
+    cardJson: cardJson ?? this.cardJson,
+  );
+  LearningItem copyWithCompanion(LearningItemsCompanion data) {
+    return LearningItem(
+      id: data.id.present ? data.id.value : this.id,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      formatVersion: data.formatVersion.present
+          ? data.formatVersion.value
+          : this.formatVersion,
+      cardJson: data.cardJson.present ? data.cardJson.value : this.cardJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningItem(')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('direction: $direction, ')
+          ..write('formatVersion: $formatVersion, ')
+          ..write('cardJson: $cardJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, entryId, direction, formatVersion, cardJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LearningItem &&
+          other.id == this.id &&
+          other.entryId == this.entryId &&
+          other.direction == this.direction &&
+          other.formatVersion == this.formatVersion &&
+          other.cardJson == this.cardJson);
+}
+
+class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
+  final Value<int> id;
+  final Value<String> entryId;
+  final Value<String> direction;
+  final Value<int> formatVersion;
+  final Value<String> cardJson;
+  const LearningItemsCompanion({
+    this.id = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.formatVersion = const Value.absent(),
+    this.cardJson = const Value.absent(),
+  });
+  LearningItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String entryId,
+    required String direction,
+    required int formatVersion,
+    required String cardJson,
+  }) : entryId = Value(entryId),
+       direction = Value(direction),
+       formatVersion = Value(formatVersion),
+       cardJson = Value(cardJson);
+  static Insertable<LearningItem> custom({
+    Expression<int>? id,
+    Expression<String>? entryId,
+    Expression<String>? direction,
+    Expression<int>? formatVersion,
+    Expression<String>? cardJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (entryId != null) 'entry_id': entryId,
+      if (direction != null) 'direction': direction,
+      if (formatVersion != null) 'format_version': formatVersion,
+      if (cardJson != null) 'card_json': cardJson,
+    });
+  }
+
+  LearningItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? entryId,
+    Value<String>? direction,
+    Value<int>? formatVersion,
+    Value<String>? cardJson,
+  }) {
+    return LearningItemsCompanion(
+      id: id ?? this.id,
+      entryId: entryId ?? this.entryId,
+      direction: direction ?? this.direction,
+      formatVersion: formatVersion ?? this.formatVersion,
+      cardJson: cardJson ?? this.cardJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (formatVersion.present) {
+      map['format_version'] = Variable<int>(formatVersion.value);
+    }
+    if (cardJson.present) {
+      map['card_json'] = Variable<String>(cardJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('entryId: $entryId, ')
+          ..write('direction: $direction, ')
+          ..write('formatVersion: $formatVersion, ')
+          ..write('cardJson: $cardJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LearningIdentitySequenceTable extends LearningIdentitySequence
+    with
+        TableInfo<
+          $LearningIdentitySequenceTable,
+          LearningIdentitySequenceData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LearningIdentitySequenceTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _singletonMeta = const VerificationMeta(
+    'singleton',
+  );
+  @override
+  late final GeneratedColumn<int> singleton = GeneratedColumn<int>(
+    'singleton',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextIdMeta = const VerificationMeta('nextId');
+  @override
+  late final GeneratedColumn<int> nextId = GeneratedColumn<int>(
+    'next_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [singleton, nextId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'learning_identity_sequence';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LearningIdentitySequenceData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('singleton')) {
+      context.handle(
+        _singletonMeta,
+        singleton.isAcceptableOrUnknown(data['singleton']!, _singletonMeta),
+      );
+    }
+    if (data.containsKey('next_id')) {
+      context.handle(
+        _nextIdMeta,
+        nextId.isAcceptableOrUnknown(data['next_id']!, _nextIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nextIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {singleton};
+  @override
+  LearningIdentitySequenceData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LearningIdentitySequenceData(
+      singleton: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}singleton'],
+      )!,
+      nextId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_id'],
+      )!,
+    );
+  }
+
+  @override
+  $LearningIdentitySequenceTable createAlias(String alias) {
+    return $LearningIdentitySequenceTable(attachedDatabase, alias);
+  }
+}
+
+class LearningIdentitySequenceData extends DataClass
+    implements Insertable<LearningIdentitySequenceData> {
+  final int singleton;
+  final int nextId;
+  const LearningIdentitySequenceData({
+    required this.singleton,
+    required this.nextId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['singleton'] = Variable<int>(singleton);
+    map['next_id'] = Variable<int>(nextId);
+    return map;
+  }
+
+  LearningIdentitySequenceCompanion toCompanion(bool nullToAbsent) {
+    return LearningIdentitySequenceCompanion(
+      singleton: Value(singleton),
+      nextId: Value(nextId),
+    );
+  }
+
+  factory LearningIdentitySequenceData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LearningIdentitySequenceData(
+      singleton: serializer.fromJson<int>(json['singleton']),
+      nextId: serializer.fromJson<int>(json['nextId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'singleton': serializer.toJson<int>(singleton),
+      'nextId': serializer.toJson<int>(nextId),
+    };
+  }
+
+  LearningIdentitySequenceData copyWith({int? singleton, int? nextId}) =>
+      LearningIdentitySequenceData(
+        singleton: singleton ?? this.singleton,
+        nextId: nextId ?? this.nextId,
+      );
+  LearningIdentitySequenceData copyWithCompanion(
+    LearningIdentitySequenceCompanion data,
+  ) {
+    return LearningIdentitySequenceData(
+      singleton: data.singleton.present ? data.singleton.value : this.singleton,
+      nextId: data.nextId.present ? data.nextId.value : this.nextId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningIdentitySequenceData(')
+          ..write('singleton: $singleton, ')
+          ..write('nextId: $nextId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(singleton, nextId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LearningIdentitySequenceData &&
+          other.singleton == this.singleton &&
+          other.nextId == this.nextId);
+}
+
+class LearningIdentitySequenceCompanion
+    extends UpdateCompanion<LearningIdentitySequenceData> {
+  final Value<int> singleton;
+  final Value<int> nextId;
+  const LearningIdentitySequenceCompanion({
+    this.singleton = const Value.absent(),
+    this.nextId = const Value.absent(),
+  });
+  LearningIdentitySequenceCompanion.insert({
+    this.singleton = const Value.absent(),
+    required int nextId,
+  }) : nextId = Value(nextId);
+  static Insertable<LearningIdentitySequenceData> custom({
+    Expression<int>? singleton,
+    Expression<int>? nextId,
+  }) {
+    return RawValuesInsertable({
+      if (singleton != null) 'singleton': singleton,
+      if (nextId != null) 'next_id': nextId,
+    });
+  }
+
+  LearningIdentitySequenceCompanion copyWith({
+    Value<int>? singleton,
+    Value<int>? nextId,
+  }) {
+    return LearningIdentitySequenceCompanion(
+      singleton: singleton ?? this.singleton,
+      nextId: nextId ?? this.nextId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (singleton.present) {
+      map['singleton'] = Variable<int>(singleton.value);
+    }
+    if (nextId.present) {
+      map['next_id'] = Variable<int>(nextId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningIdentitySequenceCompanion(')
+          ..write('singleton: $singleton, ')
+          ..write('nextId: $nextId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PikoDatabase extends GeneratedDatabase {
   _$PikoDatabase(QueryExecutor e) : super(e);
   $PikoDatabaseManager get managers => $PikoDatabaseManager(this);
@@ -969,6 +1542,9 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $CollectionsTable collections = $CollectionsTable(this);
   late final $VocabularyEntriesTable vocabularyEntries =
       $VocabularyEntriesTable(this);
+  late final $LearningItemsTable learningItems = $LearningItemsTable(this);
+  late final $LearningIdentitySequenceTable learningIdentitySequence =
+      $LearningIdentitySequenceTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -977,6 +1553,8 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     appSettings,
     collections,
     vocabularyEntries,
+    learningItems,
+    learningIdentitySequence,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -986,6 +1564,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('vocabulary_entries', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'vocabulary_entries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('learning_items', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -1483,6 +2068,24 @@ final class $$VocabularyEntriesTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$LearningItemsTable, List<LearningItem>>
+  _learningItemsRefsTable(_$PikoDatabase db) => MultiTypedResultKey.fromTable(
+    db.learningItems,
+    aliasName: 'vocabulary_entries__id__learning_items__entry_id',
+  );
+
+  $$LearningItemsTableProcessedTableManager get learningItemsRefs {
+    final manager = $$LearningItemsTableTableManager(
+      $_db,
+      $_db.learningItems,
+    ).filter((f) => f.entryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_learningItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$VocabularyEntriesTableFilterComposer
@@ -1540,6 +2143,31 @@ class $$VocabularyEntriesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> learningItemsRefs(
+    Expression<bool> Function($$LearningItemsTableFilterComposer f) f,
+  ) {
+    final $$LearningItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.entryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -1651,6 +2279,31 @@ class $$VocabularyEntriesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> learningItemsRefs<T extends Object>(
+    Expression<T> Function($$LearningItemsTableAnnotationComposer a) f,
+  ) {
+    final $$LearningItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.entryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$VocabularyEntriesTableTableManager
@@ -1666,7 +2319,7 @@ class $$VocabularyEntriesTableTableManager
           $$VocabularyEntriesTableUpdateCompanionBuilder,
           (VocabularyEntry, $$VocabularyEntriesTableReferences),
           VocabularyEntry,
-          PrefetchHooks Function({bool collectionId})
+          PrefetchHooks Function({bool collectionId, bool learningItemsRefs})
         > {
   $$VocabularyEntriesTableTableManager(
     _$PikoDatabase db,
@@ -1728,7 +2381,353 @@ class $$VocabularyEntriesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({collectionId = false}) {
+          prefetchHooksCallback:
+              ({collectionId = false, learningItemsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (learningItemsRefs) db.learningItems,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (collectionId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.collectionId,
+                                    referencedTable:
+                                        $$VocabularyEntriesTableReferences
+                                            ._collectionIdTable(db),
+                                    referencedColumn:
+                                        $$VocabularyEntriesTableReferences
+                                            ._collectionIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (learningItemsRefs)
+                        await $_getPrefetchedData<
+                          VocabularyEntry,
+                          $VocabularyEntriesTable,
+                          LearningItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VocabularyEntriesTableReferences
+                              ._learningItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VocabularyEntriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).learningItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.entryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$VocabularyEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyEntriesTable,
+      VocabularyEntry,
+      $$VocabularyEntriesTableFilterComposer,
+      $$VocabularyEntriesTableOrderingComposer,
+      $$VocabularyEntriesTableAnnotationComposer,
+      $$VocabularyEntriesTableCreateCompanionBuilder,
+      $$VocabularyEntriesTableUpdateCompanionBuilder,
+      (VocabularyEntry, $$VocabularyEntriesTableReferences),
+      VocabularyEntry,
+      PrefetchHooks Function({bool collectionId, bool learningItemsRefs})
+    >;
+typedef $$LearningItemsTableCreateCompanionBuilder =
+    LearningItemsCompanion Function({
+      Value<int> id,
+      required String entryId,
+      required String direction,
+      required int formatVersion,
+      required String cardJson,
+    });
+typedef $$LearningItemsTableUpdateCompanionBuilder =
+    LearningItemsCompanion Function({
+      Value<int> id,
+      Value<String> entryId,
+      Value<String> direction,
+      Value<int> formatVersion,
+      Value<String> cardJson,
+    });
+
+final class $$LearningItemsTableReferences
+    extends BaseReferences<_$PikoDatabase, $LearningItemsTable, LearningItem> {
+  $$LearningItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $VocabularyEntriesTable _entryIdTable(_$PikoDatabase db) => db
+      .vocabularyEntries
+      .createAlias('learning_items__entry_id__vocabulary_entries__id');
+
+  $$VocabularyEntriesTableProcessedTableManager get entryId {
+    final $_column = $_itemColumn<String>('entry_id')!;
+
+    final manager = $$VocabularyEntriesTableTableManager(
+      $_db,
+      $_db.vocabularyEntries,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_entryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$LearningItemsTableFilterComposer
+    extends Composer<_$PikoDatabase, $LearningItemsTable> {
+  $$LearningItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get formatVersion => $composableBuilder(
+    column: $table.formatVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cardJson => $composableBuilder(
+    column: $table.cardJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VocabularyEntriesTableFilterComposer get entryId {
+    final $$VocabularyEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.entryId,
+      referencedTable: $db.vocabularyEntries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LearningItemsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $LearningItemsTable> {
+  $$LearningItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get formatVersion => $composableBuilder(
+    column: $table.formatVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cardJson => $composableBuilder(
+    column: $table.cardJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VocabularyEntriesTableOrderingComposer get entryId {
+    final $$VocabularyEntriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.entryId,
+      referencedTable: $db.vocabularyEntries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyEntriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LearningItemsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $LearningItemsTable> {
+  $$LearningItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<int> get formatVersion => $composableBuilder(
+    column: $table.formatVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cardJson =>
+      $composableBuilder(column: $table.cardJson, builder: (column) => column);
+
+  $$VocabularyEntriesTableAnnotationComposer get entryId {
+    final $$VocabularyEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.entryId,
+          referencedTable: $db.vocabularyEntries,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$VocabularyEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.vocabularyEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$LearningItemsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $LearningItemsTable,
+          LearningItem,
+          $$LearningItemsTableFilterComposer,
+          $$LearningItemsTableOrderingComposer,
+          $$LearningItemsTableAnnotationComposer,
+          $$LearningItemsTableCreateCompanionBuilder,
+          $$LearningItemsTableUpdateCompanionBuilder,
+          (LearningItem, $$LearningItemsTableReferences),
+          LearningItem,
+          PrefetchHooks Function({bool entryId})
+        > {
+  $$LearningItemsTableTableManager(_$PikoDatabase db, $LearningItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LearningItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LearningItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LearningItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> entryId = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<int> formatVersion = const Value.absent(),
+                Value<String> cardJson = const Value.absent(),
+              }) => LearningItemsCompanion(
+                id: id,
+                entryId: entryId,
+                direction: direction,
+                formatVersion: formatVersion,
+                cardJson: cardJson,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String entryId,
+                required String direction,
+                required int formatVersion,
+                required String cardJson,
+              }) => LearningItemsCompanion.insert(
+                id: id,
+                entryId: entryId,
+                direction: direction,
+                formatVersion: formatVersion,
+                cardJson: cardJson,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LearningItemsTable, LearningItem>(table),
+                  $$LearningItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({entryId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -1748,18 +2747,16 @@ class $$VocabularyEntriesTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (collectionId) {
+                    if (entryId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.collectionId,
-                                referencedTable:
-                                    $$VocabularyEntriesTableReferences
-                                        ._collectionIdTable(db),
-                                referencedColumn:
-                                    $$VocabularyEntriesTableReferences
-                                        ._collectionIdTable(db)
-                                        .id,
+                                currentColumn: table.entryId,
+                                referencedTable: $$LearningItemsTableReferences
+                                    ._entryIdTable(db),
+                                referencedColumn: $$LearningItemsTableReferences
+                                    ._entryIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -1775,19 +2772,187 @@ class $$VocabularyEntriesTableTableManager
       );
 }
 
-typedef $$VocabularyEntriesTableProcessedTableManager =
+typedef $$LearningItemsTableProcessedTableManager =
     ProcessedTableManager<
       _$PikoDatabase,
-      $VocabularyEntriesTable,
-      VocabularyEntry,
-      $$VocabularyEntriesTableFilterComposer,
-      $$VocabularyEntriesTableOrderingComposer,
-      $$VocabularyEntriesTableAnnotationComposer,
-      $$VocabularyEntriesTableCreateCompanionBuilder,
-      $$VocabularyEntriesTableUpdateCompanionBuilder,
-      (VocabularyEntry, $$VocabularyEntriesTableReferences),
-      VocabularyEntry,
-      PrefetchHooks Function({bool collectionId})
+      $LearningItemsTable,
+      LearningItem,
+      $$LearningItemsTableFilterComposer,
+      $$LearningItemsTableOrderingComposer,
+      $$LearningItemsTableAnnotationComposer,
+      $$LearningItemsTableCreateCompanionBuilder,
+      $$LearningItemsTableUpdateCompanionBuilder,
+      (LearningItem, $$LearningItemsTableReferences),
+      LearningItem,
+      PrefetchHooks Function({bool entryId})
+    >;
+typedef $$LearningIdentitySequenceTableCreateCompanionBuilder =
+    LearningIdentitySequenceCompanion Function({
+      Value<int> singleton,
+      required int nextId,
+    });
+typedef $$LearningIdentitySequenceTableUpdateCompanionBuilder =
+    LearningIdentitySequenceCompanion Function({
+      Value<int> singleton,
+      Value<int> nextId,
+    });
+
+class $$LearningIdentitySequenceTableFilterComposer
+    extends Composer<_$PikoDatabase, $LearningIdentitySequenceTable> {
+  $$LearningIdentitySequenceTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextId => $composableBuilder(
+    column: $table.nextId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LearningIdentitySequenceTableOrderingComposer
+    extends Composer<_$PikoDatabase, $LearningIdentitySequenceTable> {
+  $$LearningIdentitySequenceTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextId => $composableBuilder(
+    column: $table.nextId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LearningIdentitySequenceTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $LearningIdentitySequenceTable> {
+  $$LearningIdentitySequenceTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get singleton =>
+      $composableBuilder(column: $table.singleton, builder: (column) => column);
+
+  GeneratedColumn<int> get nextId =>
+      $composableBuilder(column: $table.nextId, builder: (column) => column);
+}
+
+class $$LearningIdentitySequenceTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $LearningIdentitySequenceTable,
+          LearningIdentitySequenceData,
+          $$LearningIdentitySequenceTableFilterComposer,
+          $$LearningIdentitySequenceTableOrderingComposer,
+          $$LearningIdentitySequenceTableAnnotationComposer,
+          $$LearningIdentitySequenceTableCreateCompanionBuilder,
+          $$LearningIdentitySequenceTableUpdateCompanionBuilder,
+          (
+            LearningIdentitySequenceData,
+            BaseReferences<
+              _$PikoDatabase,
+              $LearningIdentitySequenceTable,
+              LearningIdentitySequenceData
+            >,
+          ),
+          LearningIdentitySequenceData,
+          PrefetchHooks Function()
+        > {
+  $$LearningIdentitySequenceTableTableManager(
+    _$PikoDatabase db,
+    $LearningIdentitySequenceTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LearningIdentitySequenceTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$LearningIdentitySequenceTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LearningIdentitySequenceTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                Value<int> nextId = const Value.absent(),
+              }) => LearningIdentitySequenceCompanion(
+                singleton: singleton,
+                nextId: nextId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                required int nextId,
+              }) => LearningIdentitySequenceCompanion.insert(
+                singleton: singleton,
+                nextId: nextId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $LearningIdentitySequenceTable,
+                    LearningIdentitySequenceData
+                  >(table),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $LearningIdentitySequenceTable,
+                    LearningIdentitySequenceData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LearningIdentitySequenceTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $LearningIdentitySequenceTable,
+      LearningIdentitySequenceData,
+      $$LearningIdentitySequenceTableFilterComposer,
+      $$LearningIdentitySequenceTableOrderingComposer,
+      $$LearningIdentitySequenceTableAnnotationComposer,
+      $$LearningIdentitySequenceTableCreateCompanionBuilder,
+      $$LearningIdentitySequenceTableUpdateCompanionBuilder,
+      (
+        LearningIdentitySequenceData,
+        BaseReferences<
+          _$PikoDatabase,
+          $LearningIdentitySequenceTable,
+          LearningIdentitySequenceData
+        >,
+      ),
+      LearningIdentitySequenceData,
+      PrefetchHooks Function()
     >;
 
 class $PikoDatabaseManager {
@@ -1799,4 +2964,11 @@ class $PikoDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$VocabularyEntriesTableTableManager get vocabularyEntries =>
       $$VocabularyEntriesTableTableManager(_db, _db.vocabularyEntries);
+  $$LearningItemsTableTableManager get learningItems =>
+      $$LearningItemsTableTableManager(_db, _db.learningItems);
+  $$LearningIdentitySequenceTableTableManager get learningIdentitySequence =>
+      $$LearningIdentitySequenceTableTableManager(
+        _db,
+        _db.learningIdentitySequence,
+      );
 }
