@@ -34,3 +34,22 @@ Acceptance:
 - The existing Flutter test suite and static analysis pass.
 
 This establishes time injection and test support only; it does not implement retry intervals, timers, FSRS or session behavior. Asynchronous widget timers may use Flutter's test binding virtual time; domain deadlines use the injected clock.
+
+## FOUNDATION-003 — Versioned local storage infrastructure
+
+**Status:** Accepted for First release implementation.
+
+The application uses Drift with SQLite in its private application support directory. `PikoDatabase` accepts an injected executor for tests; `openPikoDatabase()` opens the production connection lazily. A settings repository exposes read, write and remove operations without exposing SQL to feature code. The composition root owns database lifetime. Domain tables and setting semantics are introduced under their corresponding feature requirements.
+
+Acceptance:
+
+- Schema version 1 contains an empty key/value settings table with unique keys and enabled foreign-key enforcement.
+- Settings persist across database closure and reopening.
+- A failed transaction rolls back all its writes.
+- The version 1 schema is exported for subsequent migration verification; future schema changes require incremental migrations and retained-data tests.
+- No sample records or product defaults are seeded by the storage infrastructure.
+- Dependencies are resolved in the application lockfile and static analysis and tests pass.
+
+Storage requires no Piko cloud service. Device or operating-system backup may include application data according to the device's backup settings; local-first does not imply that data can never leave the device through those facilities.
+
+Regenerate database code from `app/` with `dart run build_runner build`. Export the schema with `dart run drift_dev schema dump lib/data/local/piko_database.dart drift_schemas/`. Generated schemas contain structure, not user data. Version 1 is the initial baseline, so there is no fabricated earlier migration.
