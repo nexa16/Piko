@@ -1,5 +1,9 @@
 # Decision log
 
+## I18N-001 — first-release interface locales — 2026-10-13
+
+Classify I18N-001 from Undecided to First as a dependency of the accepted bilingual release. English remains the initial interface language regardless of device language. Explicit German selection also localizes Flutter's native control labels. Unsupported interface locales fall back consistently to English. The application accepts locale injection now; persisted selection and its Settings control remain SETTINGS-001.
+
 ## UX-I18N-002 — shared app catalog consumption — 2026-10-13
 
 Classify the previously unassigned shared-catalog requirement as First, as an explicit dependency of the accepted English/German app. Flutter widget consumers use one inherited catalog context; the application title comes from `app.name`. Shared JS remains the editable source, and generated Dart data remains an adapter. Material localization and persisted language selection are separate requirements.

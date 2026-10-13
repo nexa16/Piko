@@ -33,7 +33,7 @@ Every row starts pending. Record the commit, relevant test or runtime evidence, 
 | 5 | FOUNDATION-005 | This traceability ledger and completion audit | Verified | FOUNDATION-005 commit | 95 unique rows; every product ID exists in canonical specs; gates remain pending until full verification. |
 | 6 | UX-SYSTEM-001 | Shared components and explicit states | Verified | fc11fb5 | Reusable token-backed primitives; 392px/200% German layout, semantic icon activation, focus, disabled, grading colors and reduced motion tests; Flutter analyze/test and catalog generation checks. Product-screen integration remains with owning specs. |
 | 7 | UX-I18N-002 | Shared editable catalog consumption | Verified | UX-I18N-002 commit | Application title reads canonical app.name; widget scope lookup and locale-change consumer rebuild tests; Flutter analyze/test and generator check. |
-| 8 | I18N-001 | English default and German support | Pending | — | — |
+| 8 | I18N-001 | English default and German support | Verified | I18N-001 commit | App locale injection aligns canonical copy and Flutter native labels; German-device English default, explicit German and unsupported fallback widget tests. Analyze clean; all 20 Flutter tests and generator check passed. Persisted selection belongs to SETTINGS-001. |
 | 9 | I18N-002 | Localized interface independent of collection languages | Pending | — | — |
 | 10 | UX-I18N-001 | Localized visible and accessible text | Pending | — | — |
 | 11 | UX-ICON-002 | Lucide icons and notices | Pending | — | — |
