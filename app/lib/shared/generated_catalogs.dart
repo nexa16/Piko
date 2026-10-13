@@ -216,6 +216,10 @@ const copyCatalog = <String, Object?>{
 "de": "Einheit",
 "en": "Unit",
 },
+"collection.created": <String, Object?>{
+"de": "{name} erstellt",
+"en": "Created {name}",
+},
 "collection.delete": <String, Object?>{
 "de": "Sammlung löschen",
 "en": "Delete collection",
@@ -255,6 +259,10 @@ const copyCatalog = <String, Object?>{
 "collection.sameLanguage": <String, Object?>{
 "de": "Wähle zwei unterschiedliche Sprachen.",
 "en": "Choose two different languages.",
+},
+"collection.saveFailed": <String, Object?>{
+"de": "Die Sammlung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+"en": "Couldn't save the collection. Please try again.",
 },
 "collection.search": <String, Object?>{
 "de": "In beiden Sprachen suchen…",

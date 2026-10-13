@@ -15,6 +15,7 @@ InputDecoration pikoInputDecoration({String? error}) {
     fillColor: d.color('surface'),
     contentPadding: EdgeInsets.all(d.dimension('components.fields.padding')),
     enabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
+    disabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
     focusedBorder: border(d.color('primary'), d.dimension('states.focusWidth')),
     errorBorder: border(d.color('danger'), d.dimension('states.borderWidth')),
     focusedErrorBorder: border(
@@ -54,18 +55,21 @@ class PikoTextField extends StatelessWidget {
     this.error,
     this.onChanged,
     this.focusNode,
+    this.enabled = true,
   });
   final String label;
   final TextEditingController controller;
   final String? error;
   final ValueChanged<String>? onChanged;
   final FocusNode? focusNode;
+  final bool enabled;
   @override
   Widget build(BuildContext context) => PikoField(
     label: label,
     child: Semantics(
       label: label,
       child: TextField(
+        enabled: enabled,
         controller: controller,
         onChanged: onChanged,
         focusNode: focusNode,

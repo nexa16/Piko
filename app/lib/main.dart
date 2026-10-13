@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'piko_runtime.dart';
 import 'shared/catalogs.dart';
 import 'shared/copy_scope.dart';
 import 'shared/interface_locale.dart';
@@ -42,7 +43,7 @@ class PikoApp extends StatelessWidget {
           title: PikoCopyScope.of(context).text('app.name'),
           theme: PikoTheme.build(),
           debugShowCheckedModeBanner: false,
-          home: home ?? const Scaffold(body: SizedBox.expand()),
+          home: home ?? const PikoRuntime(),
         ),
       ),
     );

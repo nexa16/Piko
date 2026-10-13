@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-001 — local collection creation — 2026-10-13
+
+Collection creation now uses local SQLite storage with UUID identities, a required trimmed name and two distinct language codes. Matching names and language pairs remain allowed. The initial language choices follow the binding mockup (Korean, French, English and German). Schema 2 adds collections while preserving existing settings. Explicit Create starts one guarded write; dismissing an unsubmitted form does not write, and dismissing during a previously initiated write cannot close another route when that write completes. Failures preserve inputs for retry. Listing, default names and detail navigation retain their separate requirement commits.
+
 ## UX-HEADER-002 — first-release compact header geometry — 2026-10-13
 
 Classify UX-HEADER-002 as First. Extract the binding mockup's existing 7px title block margin into `components.headings.titleMargin`; browser CSS and generated Flutter data consume this canonical value. Flutter headings use existing 4px spacing below navigation and 8px subtitle inset, retaining one Back control at wider widths. Tests compare layout boxes at normal and doubled text sizes; font baselines do not imply identical visible glyph gaps between platforms. Broader tablet/desktop layout and actual screen integration remain separately scoped.

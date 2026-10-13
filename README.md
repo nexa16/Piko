@@ -21,7 +21,7 @@ This repository contains Piko's product planning and future implementation.
 
 ## Development
 
-The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). Implementation begins with an empty Android scaffold; feature completion requires its own tests and verification.
+The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The initial Android scaffold now supports local collection creation; each feature requires its own tests and verification.
 
 Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly. The studio supports immediate draft previews and export; a future app will consume the same catalog through an adapter appropriate to its platform. See the design foundations document for persistence and synchronization limits.
 

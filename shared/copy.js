@@ -3,6 +3,8 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+    "collection.saveFailed": {"en":"Couldn't save the collection. Please try again.","de":"Die Sammlung konnte nicht gespeichert werden. Bitte versuche es erneut."},
+    "collection.created": {"en":"Created {name}","de":"{name} erstellt"},
     "app.name": {
       "en": "Piko",
       "de": "Piko"

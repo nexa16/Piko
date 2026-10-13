@@ -8,7 +8,8 @@ void main() {
   ) async {
     await tester.pumpWidget(const PikoApp());
     expect(find.byType(Scaffold), findsOneWidget);
-    expect(find.byType(Text), findsNothing);
+    expect(find.text('My collections'), findsOneWidget);
+    expect(find.text('Korean Basics'), findsNothing);
     expect(find.byType(FloatingActionButton), findsNothing);
     expect(tester.takeException(), isNull);
   });
