@@ -104,6 +104,25 @@ test('browser empty description adapts only its canonical line-height token', ()
   assert.ok(fs.readFileSync(new URL('../../mockups/mockup.js', import.meta.url), 'utf8').includes('class="meta empty-description"'));
 });
 
+test('normal-flow section headings adapt canonical binding geometry', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  assert.deepEqual(JSON.parse(JSON.stringify(config.components.sectionHeading)), {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12});
+  config.components.sectionHeading.size = 19;
+  config.components.sectionHeading.topMargin = 30;
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--section-heading-size'), '19px');
+  assert.equal(properties.get('--section-heading-top-margin'), '30px');
+  assert.equal(properties.get('--section-heading-bottom-margin'), '14px');
+  assert.equal(properties.get('--section-heading-gap'), '12px');
+  assert.equal(properties.get('--section-heading-weight'), '700');
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('.head:has(>h2){margin:var(--section-heading-top-margin) 0 var(--section-heading-bottom-margin);gap:var(--section-heading-gap)}'));
+  assert.ok(css.includes('.head>h2{font-size:var(--section-heading-size);font-weight:var(--section-heading-weight)}'));
+});
+
 test('browser cover adapts effective language badge geometry and font tokens', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.languageBadge = {size:46,radius:10,fontSize:17,weight:700,letterSpacingEm:0.05};

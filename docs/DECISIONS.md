@@ -1,5 +1,11 @@
 # Decision log
 
+## UX-COLL-003 — production Collection entry route — 2026-10-14
+
+The normal-flow Vocabulary heading uses the binding 17px bold title, 27px top/14px bottom margins and 12px gap through `components.sectionHeading`, consumed by browser and generated Flutter adapters. The localized icon-only plus uses a canonical 44px square with shared padding, semantics, tooltip and keyboard activation. Only a current successful Collection snapshot exposes the action; opening is guarded against duplicate activation. No vocabulary count, sample rows or review actions are introduced.
+
+The runtime owns the vocabulary repository and database. A feature-level dependency factory creates a new route-owned Entry Session controller and temporary deletion service using the same database clock, without exposing SQLite to feature UI. Allocation happens once per route, not during locale-dependent builds. Route cleanup ends the controller before the service and never closes caller-owned storage. Reopening starts an empty draft/session history, while confirmed vocabulary remains stored. Real SQLite widget tests cover Collection creation, correct identity/languages, confirmation, global completion, Back, fresh reopening, file reopen and lifetime cleanup; Android force-stop acceptance remains ENTRY-008.
+
 ## UX-VOCAB-DELETE-001 — explicit swipe reveal — 2026-10-14
 
 Saved Entry Session previews use a reusable touch-reveal component; a swipe never invokes deletion. Expanded editors retain their labeled red Delete action rather than intercepting horizontal text selection. The component observes touch displacement without competing in the vertical scroll gesture arena. The binding prototype's 60px distance and 1.5 horizontal-dominance thresholds now live in canonical design configuration; both adapters measure the localized action width instead of using a fixed 168px translation. Motion uses the existing canonical duration and respects reduced motion. Hidden actions do not enter focus or accessibility traversal, revealed actions support keyboard activation, and Escape closes the reveal. Browser resize observation is disconnected before redraw/navigation. Existing ENTRY-004 deletion/Undo lifecycle is reused, including ENTRY-009's accepted eight-second deadline. Collection renderer integration and Android end-to-end acceptance remain separately pending.

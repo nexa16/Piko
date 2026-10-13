@@ -12,6 +12,7 @@ globalThis.PIKO_DESIGN = {
     dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
     icons: {size:20},
     headings: {titleMargin:7},
+    sectionHeading: {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12},
     emptyState: {descriptionLineHeight:1.6},
     languageBadge: {size:42,radius:12,fontSize:15,weight:800,letterSpacingEm:0.03},
     entryStack: {previewGap:5,previewTop:14,numberSize:12,statusSize:11,compactMinHeight:100,metaLineHeight:1.5,stateMotionMs:200},

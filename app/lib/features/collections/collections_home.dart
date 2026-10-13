@@ -10,10 +10,16 @@ import '../../ui/components/piko_language_badge.dart';
 import '../../ui/piko_theme.dart';
 import 'collection_detail.dart';
 import 'create_collection.dart';
+import '../entry/entry_session_route.dart';
 
 class CollectionsHome extends StatefulWidget {
-  const CollectionsHome({required this.repository, super.key});
+  const CollectionsHome({
+    required this.repository,
+    this.entrySessionFactory,
+    super.key,
+  });
   final CollectionsRepository repository;
+  final EntrySessionFactory? entrySessionFactory;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -132,6 +138,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                               builder: (_) => CollectionDetail(
                                 repository: widget.repository,
                                 collectionId: collection.id,
+                                entrySessionFactory: widget.entrySessionFactory,
                               ),
                             ),
                           ),

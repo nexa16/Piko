@@ -62,3 +62,5 @@ main{padding-top:var(--page-top);padding-inline:var(--page-padding)}
 /* Generated entry header responsive adapter; edit shared/design-config.js only. */
 @media(max-width:400px){.entry-header h1{font-size:var(--entry-header-compact-title-size)}.entry-header .back{font-size:var(--font-small)}.entry-header .entry-complete{padding:var(--entry-header-action-padding)}}
 /* End generated entry header responsive adapter. */
+/* Canonical normal-flow section headings; retain narrower inline-editor rules. */
+.head:has(>h2){margin:var(--section-heading-top-margin) 0 var(--section-heading-bottom-margin);gap:var(--section-heading-gap)}.head>h2{font-size:var(--section-heading-size);font-weight:var(--section-heading-weight)}

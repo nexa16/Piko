@@ -77,6 +77,13 @@ const designCatalog = <String, Object?>{
 "size": 42,
 "weight": 800,
 },
+"sectionHeading": <String, Object?>{
+"bottomMargin": 14,
+"gap": 12,
+"size": 17,
+"topMargin": 27,
+"weight": 700,
+},
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
 "revealDistance": 60,

@@ -4,6 +4,8 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
+import '../../ui/piko_theme.dart';
+import '../entry/entry_session_route.dart';
 
 String collectionLanguagePair(BuildContext context, CollectionRecord record) {
   final copy = PikoCopyScope.of(context);
@@ -32,16 +34,38 @@ class CollectionDetail extends StatefulWidget {
   const CollectionDetail({
     required this.repository,
     required this.collectionId,
+    this.entrySessionFactory,
     super.key,
   });
   final CollectionsRepository repository;
   final String collectionId;
+  final EntrySessionFactory? entrySessionFactory;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
 
 class _CollectionDetailState extends State<CollectionDetail> {
   late Stream<CollectionRecord?> _collection;
+  bool _openingEntry = false;
+  CollectionRecord? _currentCollection;
+
+  Future<void> _openEntry() async {
+    final record = _currentCollection;
+    final factory = widget.entrySessionFactory;
+    if (_openingEntry || record == null || factory == null) return;
+    setState(() => _openingEntry = true);
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) =>
+              EntrySessionRoute(collection: record, factory: factory),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _openingEntry = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +73,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   }
 
   void _watch() {
+    _currentCollection = null;
     _collection = widget.repository.watchById(widget.collectionId);
   }
 
@@ -70,6 +95,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
           stream: _collection,
           builder: (context, snapshot) {
             final record = snapshot.data;
+            final ready =
+                !snapshot.hasError &&
+                snapshot.connectionState != ConnectionState.waiting &&
+                snapshot.connectionState != ConnectionState.none &&
+                record != null;
+            _currentCollection = ready ? record : null;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -91,6 +122,58 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   Text(copy.text('collection.loading'))
                 else if (record == null)
                   Text(copy.text('collection.notFound')),
+                if (ready && widget.entrySessionFactory != null)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: pikoDesign.dimension(
+                        'components.sectionHeading.topMargin',
+                      ),
+                      bottom: pikoDesign.dimension(
+                        'components.sectionHeading.bottomMargin',
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            headingLevel: 2,
+                            child: Text(
+                              copy.text('collection.vocabulary'),
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'components.sectionHeading.size',
+                                ),
+                                fontWeight: pikoDesign.weight(
+                                  'components.sectionHeading.weight',
+                                ),
+                                color: pikoDesign.color('ink'),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: pikoDesign.dimension(
+                            'components.sectionHeading.gap',
+                          ),
+                        ),
+                        SizedBox.square(
+                          dimension: pikoDesign.dimension(
+                            'components.buttons.height',
+                          ),
+                          child: PikoIconButton(
+                            icon: const PikoIcon(PikoIconName.plus),
+                            semanticLabel: copy.text('action.addEntry'),
+                            variant: PikoButtonVariant.primary,
+                            padding: EdgeInsets.all(
+                              pikoDesign.dimension('spacing.2'),
+                            ),
+                            onPressed: _openingEntry ? null : _openEntry,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             );
           },

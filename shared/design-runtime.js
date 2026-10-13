@@ -18,6 +18,9 @@
  dimension('--dialog-max-width',dialog.maxWidth,280,2000);
  dimension('--dialog-title-size',dialog.titleSize,8,100);
  dimension('--heading-title-margin',config.components.headings.titleMargin,0,100);
+ const section=config.components.sectionHeading;
+ for(const [name,key] of [['size','size'],['top-margin','topMargin'],['bottom-margin','bottomMargin'],['gap','gap']])dimension('--section-heading-'+name,section[key],0,100);
+ dimension('--section-heading-weight',section.weight,100,900,'');
  dimension('--empty-description-line-height',config.components.emptyState.descriptionLineHeight,1,3,'');
  const badge=config.components.languageBadge;
  dimension('--language-badge-size',badge.size,0,100);
