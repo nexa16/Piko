@@ -1,5 +1,15 @@
 # Implementation foundation requirements
 
+## FOUNDATION-004 — Canonical Flutter design and copy adapters
+
+**Status:** Accepted for First release implementation.
+
+Generate Flutter catalogs from `shared/design-config.js` and `shared/copy.js` without hand-maintained duplicate defaults. Preserve every field, including schema metadata, notes and future nested configuration. Use CSS pixel dimensions as Flutter logical pixel values; platform font-family selection belongs to the shared widget implementation. Canonical numeric font weights map to the nearest Flutter hundred-weight.
+
+Acceptance: deterministic generation; EN/DE placeholder parity checks; byte-for-byte stale-output check; localized lookup and literal argument interpolation; design token numeric, color and font-weight adapters; generated catalog coverage tests. Unknown keys and invalid placeholder arguments fail explicitly.
+
+Regenerate with `node app/tool/generate_shared.mjs`; verify with `node app/tool/generate_shared.mjs --check`, `node --test app/tool/generate_shared.test.mjs`, and the Flutter test suite. Edit canonical shared sources only, never generated catalogs. This requirement does not implement product UI or select new design defaults.
+
 ## FOUNDATION-001 — Flutter Android application scaffold
 
 **Status:** Accepted for First release implementation.
