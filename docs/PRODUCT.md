@@ -20,6 +20,8 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 
 ## Specifications and current phase
 
+First-release scope is being agreed block by block through inline Release tags. Collections and the scroll-focused manual entry stack (ENTRY-001–008, UX-ENTRY-001–002) are accepted; precise animation/deletion details and the review block still require decisions. The prototype demonstrates those interactions without production storage or persistence guarantees.
+
 - [Functional specification](piko-functional.md): behavior, data, validation, learning rules, and open functional decisions.
 - [UX specification](piko-ux.md): screens, controls, interaction, and pending browser feedback.
 - [Navigation mockup](../mockups/piko-mockup.html): existing mobile-first, English prototype using sample data.
@@ -27,6 +29,8 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 The current product work is gradual UX refinement, beginning with Collection Overview. The prototype covers Collection Overview, Collection Detail, Learning, Entry Editor, Import Review, Statistics, Settings, and category management. Placeholder actions remain intentionally incomplete; there is no production persistence, AI, extraction, FSRS integration, or real statistics.
 
 Requirement IDs remain stable. Confirmed requirements, proposals, and open questions are distinct. Newer explicit accepted decisions supersede older conflicting statements; superseded IDs remain documented for traceability. Functional behavior and UX presentation have separate specifications. The original handoff is retained locally and excluded from publication.
+
+The accepted visible Minimum flow is create/open a collection → manually enter vocabulary → Long-term self-assessment review, with basic settings. Relevant requirement texts carry Flow tags (collection, entry, review, settings). Scope labels remain an independent proposal. The [requirements view](../mockups/requirements.html) reads both original specifications at runtime and filters those tags without maintaining duplicate lists. Use its reload action after editing a source file; bookmarked filters are preserved. UX requirements without scope labels remain explicitly unclassified.
 
 ## Glossary
 

@@ -13,6 +13,8 @@ This is a discovery sequence, not a release commitment. No implementation milest
 - [ ] Define the first implementation milestone only after those decisions exist.
 - [ ] Review the five deferred Collection Overview annotations in the UX specification when the owner resumes UX work.
 - [ ] Refine Collection Overview, then Collection Detail, Learning, Entry Editor/categories, Import Review, Statistics, and Settings, one page at a time.
+- [ ] Agree on proposed design principles, palette, typography, icon family, and public learning names using the design studio.
+- [ ] Review the proposed Base / Minimum / Additional scope labels before defining any implementation milestone; labels do not revoke confirmed requirements.
 - [ ] Resolve remaining functional and UX questions only as needed; do not promote open questions to requirements.
 
 ## Next — work likely to follow after discovery

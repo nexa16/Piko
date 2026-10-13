@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Piko — Anforderungen</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1e293b;background:#f5f7fb;color-scheme:light}*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:1100px;margin:auto}h1{font-size:26px;margin:0 0 8px}p{line-height:1.55;color:#526177}a{color:#2956b8;text-underline-offset:3px}.filters{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:12px;background:white;padding:18px;border:1px solid #dce3ee;border-radius:16px;position:sticky;top:0;z-index:1}label{display:grid;gap:6px;font-size:13px;font-weight:600}input,select,button{font:inherit;border:1px solid #c7d2e4;border-radius:8px;padding:11px;background:white;color:#1e293b;min-width:0}button{cursor:pointer}input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #2956b8;outline-offset:3px}#count{font-size:14px;margin:16px 0}article{background:white;padding:18px;border:1px solid #dce3ee;border-radius:14px;margin:10px 0}h2{font-size:16px;margin:0}.tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tag{font-size:12px;background:#e7eefc;color:#244ca1;padding:4px 8px;border-radius:6px}.body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.6;color:#34445c;margin:8px 0 0}.source{font-size:12px;color:#526177}.error{padding:18px;border:1px solid #c66a64;border-radius:12px;background:#fff}#retry{margin-top:10px}@media(max-width:700px){body{padding:14px}.filters{grid-template-columns:1fr 1fr;position:static}.query{grid-column:1/-1}}@media(max-width:360px){.filters{grid-template-columns:1fr}.query{grid-column:auto}}
+</style>
+</head>
+<body><main>
+<h1>Anforderungen im Überblick</h1>
+<p>Diese schreibgeschützte Ansicht liest die aktuellen Spezifikationen direkt ein. Änderungen erfolgen in <a href="../docs/piko-functional.md">piko-functional.md</a> und <a href="../docs/piko-ux.md">piko-ux.md</a>; hier wird keine zweite Anforderungsliste gepflegt. Umfangszuordnungen bleiben Vorschläge, sofern die Spezifikation nichts anderes festlegt.</p>
+<form class="filters" id="filters" role="search">
+<label class="query">Suche nach ID oder Text<input id="q" type="search" placeholder="z. B. CARD-UI oder collection"></label>
+<label>Quelle<select id="source"><option value="All">Alle</option><option value="Functional">Functional</option><option value="UX">UX</option></select></label>
+<label>Umfang<select id="scope"><option value="All">Alle</option><option value="Base">Base</option><option value="Minimum">Minimum</option><option value="Base+Minimum">Base + Minimum</option><option value="Additional">Additional</option><option value="Unclassified">Ohne Zuordnung</option></select></label>
+<label>Ablauf<select id="flow"><option value="All">Alle</option><option value="collection">Sammlungen</option><option value="entry">Eintragen</option><option value="review">Wiederholen</option><option value="settings">Einstellungen</option></select></label>
+</form>
+<label>Release<select id="release"><option value="All">Alle</option><option value="First">Erstes Release</option><option value="Later">Später</option><option value="Undecided">Offen</option><option value="Superseded">Überholt</option></select></label>
+<p>Release ist unabhängig von Base/Minimum/Additional. Offene Zuordnungen sind noch keine Release-Zusage.</p>
+<button id="refresh" type="button">Aus Originaldateien neu laden</button><p id="count" role="status" aria-live="polite">Spezifikationen werden geladen …</p>
+<div id="error" class="error" hidden><div id="errorText"></div><button id="retry" type="button">Erneut laden</button></div>
+<section id="results" aria-label="Gefilterte Anforderungen"></section>
+</main>
+<script>
+const controls = Object.fromEntries(['q','source','scope','flow','release'].map(id => [id,document.getElementById(id)]));
+const results = document.getElementById('results');
+const count = document.getElementById('count');
+let requirements = [];
+function parse(text, source, path) {
+  const rows=[];let current=null;let context='';
+  for (const [index,line] of text.split(/\r?\n/).entries()) {
+    if (/^#{1,6}\s/.test(line)) {context=line;current=null;continue;}
+    const match=line.match(/^- \*\*([A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3})(.*?)\*\*(.*)$/);
+    if (match) {
+      const metadata=match[2]+match[3];
+      const explicit=metadata.match(/\[(Confirmed|Proposed|Open|Partly resolved|Partly superseded|Resolved|Superseded)\]/i);
+      const scope=metadata.match(/\[Scope:\s*(Base|Minimum|Additional)\]/i);
+      const release=metadata.match(/\[Release:\s*(First|Later|Undecided|Superseded)\]/i);
+      const flows=[...metadata.matchAll(/\[Flow:\s*([^\]]+)\]/gi)].flatMap(item=>item[1].split(',').map(value=>value.trim().toLowerCase()));
+      const status=explicit ? explicit[1] : match[1].startsWith('OPEN-') ? 'Open' : /confirmed/i.test(context) ? 'Confirmed' : /open/i.test(context) ? 'Open' : 'Nicht angegeben';
+      current={id:match[1],source,path,line:index+1,status,release:release ? release[1] : 'Undecided',scope:scope ? scope[1] : 'Unclassified',flows,body:match[3].replace(/\[(?:Scope|Flow|Release):[^\]]*\]/gi,'').replace(/^\s*:\s*/,'').trim()};
+      rows.push(current);
+    } else if (current && line.trim() && !/^[-*]\s|^\|/.test(line)) {current.body+='\n'+line.trim();}
+    else if (!line.trim()) {current=null;}
+  }
+  return rows;
+}
+function restore() {
+ const params=new URLSearchParams(location.hash.slice(1));
+ for(const [key,control] of Object.entries(controls)) {
+   const value=params.get(key)|| (key==='q'?'':'All');
+   control.value=key==='q'||[...control.options].some(option=>option.value===value)?value:'All';
+ }
+}
+function render(updateURL=true) {
+ const state=Object.fromEntries(Object.entries(controls).map(([key,control])=>[key,control.value]));
+ if(updateURL){const params=new URLSearchParams();for(const [key,value]of Object.entries(state)){if(value&&value!=='All')params.set(key,value);}history.replaceState(null,'',location.pathname+location.search+(params.size?'#'+params:''));}
+ const query=state.q.trim().toLowerCase();
+ const filtered=requirements.filter(row=>(state.source==='All'||row.source===state.source)&&(state.scope==='All'||row.scope===state.scope||(state.scope==='Base+Minimum'&&['Base','Minimum'].includes(row.scope)))&&(state.release==='All'||row.release===state.release)&&(state.flow==='All'||row.flows.includes(state.flow))&&(!query||(row.id+' '+row.body).toLowerCase().includes(query)));
+ results.replaceChildren();
+ count.textContent=filtered.length+' von '+requirements.length+' Anforderungen';
+ const fragment=document.createDocumentFragment();
+ for(const row of filtered){
+   const article=document.createElement('article');const heading=document.createElement('h2');heading.textContent=row.id;article.append(heading);
+   const tags=document.createElement('div');tags.className='tags';
+   for(const value of [row.source,row.status,'Release: '+({First:'Erstes Release',Later:'Später',Undecided:'Offen',Superseded:'Überholt'}[row.release]),row.scope==='Unclassified'?'Ohne Umfangszuordnung':row.scope,...row.flows]){const tag=document.createElement('span');tag.className='tag';tag.textContent=value;tags.append(tag);}article.append(tags);
+   const link=document.createElement('a');link.className='source';link.href=row.path;link.textContent='Original: '+row.path.split('/').pop()+' · Zeile '+row.line;article.append(link);
+   const body=document.createElement('p');body.className='body';body.textContent=row.body;article.append(body);fragment.append(article);
+ }results.append(fragment);
+ if(!filtered.length){const empty=document.createElement('p');empty.textContent='Keine Anforderungen für diese Filter. Ohne Flow-Tags erscheinen Anforderungen nur unter „Alle“. UX-Anforderungen ohne Scope-Tag bleiben ausdrücklich ohne Zuordnung.';results.append(empty);}
+}
+async function load(){
+ document.getElementById('error').hidden=true;count.textContent='Spezifikationen werden geladen …';
+ try{
+  if(location.protocol==='file:')throw new Error('Bitte über den lokalen Vorschau-Server öffnen. Direkt als file:// geöffnete Dateien können die Markdown-Spezifikationen nicht zuverlässig einlesen.');
+  const sources=[['Functional','../docs/piko-functional.md'],['UX','../docs/piko-ux.md']];
+  requirements=(await Promise.all(sources.map(async([source,path])=>{const response=await fetch(path,{cache:'no-store'});if(!response.ok)throw new Error('Spezifikation nicht erreichbar: '+path+' ('+response.status+')');return parse(await response.text(),source,path);}))).flat();render(false);
+ }catch(error){count.textContent='Anforderungen konnten nicht geladen werden.';results.replaceChildren();document.getElementById('errorText').textContent=error.message;document.getElementById('error').hidden=false;}
+}
+document.getElementById('filters').addEventListener('submit',event=>event.preventDefault());
+for(const control of Object.values(controls))control.addEventListener(control.id==='q'?'input':'change',()=>render());
+window.addEventListener('hashchange',()=>{restore();render(false);});
+document.getElementById('retry').addEventListener('click',load);document.getElementById('refresh').addEventListener('click',load);restore();load();
+</script>
+</body>
+</html>
