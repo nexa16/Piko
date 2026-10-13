@@ -1,5 +1,9 @@
 # Decision log
 
+## FOUNDATION-001 — implementation start — 2026-10-13
+
+The owner authorizes first-release implementation in Flutter, using a local-first approach. Android is the first-release verification target. The application lives under `app/`, with Android application ID `io.github.nexa16.piko` and the installed Flutter 3.44.7 / Dart 3.12.2 baseline. This supersedes earlier statements that Flutter was only preferred and no stack had been selected. FOUNDATION-001 establishes an empty application host; it does not claim persistence or product features are complete. The HTML/CSS mockup and canonical shared design/copy sources remain authoritative. Implementation uses one branch, with one requirement ID per commit and owner-controlled merge/release.
+
 ## Button default — 2026-10-13
 
 Accepted: Soft filled buttons with 24px corner radius. Canonical tokens define this default for standalone mockup and studio reset. Red Incorrect and green Correct grading remain semantic and equal-width. Other height, padding and font-weight experiments are not approved by this decision.

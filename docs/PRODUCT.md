@@ -1,6 +1,8 @@
 # Product brief
 
-**Status: Discovery. Product definition is still being developed.**
+**Status: First-release implementation started. Product research and later scope remain open.**
+
+The owner has authorized Flutter implementation with a local-first approach and Android verification for the first release. FOUNDATION-001 establishes the empty application host under `app/`; it does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
 
 | Area | Current answer | Question to answer |
 | --- | --- | --- |
