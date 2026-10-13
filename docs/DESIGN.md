@@ -16,6 +16,8 @@ The runtime validates colors, numeric ranges and minimum 44px controls. Recurrin
 
 Accepted compact header geometry (UX-HEADER-002): `components.headings.titleMargin` extracts the existing 7px h1 block margin into the canonical source. Browser h1 and Flutter page-title boxes consume it. Flutter adds existing `spacing.1` (4px) below navigation and `spacing.2` (8px) subtitle inset, keeping one Back at wide widths. These are box measurements; font metrics and CSS layout can produce different visible glyph gaps. Meaningful subtitles wrap, and actual product-screen integration remains separate.
 
+Empty invitation presentation (UX-HOME-002) uses the shared card, canonical muted body text and `spacing.5` (20px) before the primary creation action. The existing binding description-only 1.6 line-height is now `components.emptyState.descriptionLineHeight`; its browser and Flutter adapters share that value without changing global body line-height. The ordinary New action stays available, and enlarged localized text wraps in normal page scroll flow.
+
 ## What needs refinement
 
 The mockup repeats its identity through an eyebrow, title, subtitle, and collection heading. Activity is below collections, and Statistics has two entry points. Secondary text is faint, heavy headings compete, cards and buttons share similar emphasis, and Unicode symbols substitute for a coherent icon family. A different color alone will not solve hierarchy.

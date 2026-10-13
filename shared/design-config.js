@@ -12,6 +12,7 @@ globalThis.PIKO_DESIGN = {
     dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
     icons: {size:20},
     headings: {titleMargin:7},
+    emptyState: {descriptionLineHeight:1.6},
     cards: {padding:19},
     fields: {padding:13,radius:12,labelSize:12,labelWeight:750},
     buttons: {variant:'soft',radius:24,height:44,weight:700,padding:14},

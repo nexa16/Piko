@@ -84,16 +84,35 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                   return Text(copy.text('collection.loading'));
                 }
                 if (snapshot.data!.isEmpty) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(copy.text('home.emptyDescription')),
-                      SizedBox(height: pikoDesign.dimension('spacing.3')),
-                      PikoButton(
-                        label: copy.text('action.firstCollection'),
-                        onPressed: _createCollection,
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      top: pikoDesign.dimension('spacing.3'),
+                    ),
+                    child: PikoCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            copy.text('home.emptyDescription'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension('typography.body'),
+                              height: pikoDesign.dimension(
+                                'components.emptyState.descriptionLineHeight',
+                              ),
+                              color: pikoDesign.color('muted'),
+                            ),
+                          ),
+                          SizedBox(height: pikoDesign.dimension('spacing.5')),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: PikoButton(
+                              label: copy.text('action.firstCollection'),
+                              onPressed: _createCollection,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   );
                 }
                 return Column(

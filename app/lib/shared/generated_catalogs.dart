@@ -37,6 +37,9 @@ const designCatalog = <String, Object?>{
 "radius": 11,
 "weight": 400,
 },
+"emptyState": <String, Object?>{
+"descriptionLineHeight": 1.6,
+},
 "fields": <String, Object?>{
 "labelSize": 12,
 "labelWeight": 750,

@@ -84,7 +84,7 @@ Inline `[Flow: collection]`, `[Flow: entry]`, `[Flow: review]`, and `[Flow: sett
 
 ## Open UX decisions
 
-- **UX-HOME-002 [Confirmed]:** [Release: First] [Flow: collection] For an empty collection overview, show a short friendly explanation of Collections and a Create first collection action, alongside the existing New action. Use shared English/German copy; do not show sample Collections or review statistics in this state.
+- **UX-HOME-002 [Confirmed]:** [Release: First] [Flow: collection] For an empty collection overview, show a short friendly explanation of Collections and a Create first collection action, alongside the existing New action. Use shared English/German copy; do not show sample Collections or review statistics in this state. Present the invitation in the shared card with canonical body-size muted description, the binding 1.6 line-height and a 20px gap before the primary creation action. The card and actions remain in normal scroll flow, wrap enlarged German text, and support keyboard and semantic activation. Live interface-language changes update the invitation without restarting the collection watch. COLL-015 owns successful-empty state gating and creation behavior.
 
 - **UX-COLL-004 [Confirmed]:** [Flow: collection, review] Collection quick-review buttons share a consistent width and height across cards, independent of due-count digit length. Allow space for localized labels and counts; preserve readable content at larger text sizes rather than clipping it.
 - **UX-COLL-005 [Confirmed]:** [Flow: collection] Use consistent uppercase Latin language-code badges such as KO, FR, and EN instead of mixing a Korean glyph with Latin abbreviations. These identify the Collection's target language, not the interface language.

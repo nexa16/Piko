@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-HOME-002 — binding empty invitation presentation — 2026-10-13
+
+The successful-empty invitation uses the binding card with readable muted body text and the primary Create first collection action, while New remains available. Existing canonical body size, card properties and 20px spacing are reused; the mockup's description-only 1.6 line-height is extracted into `components.emptyState.descriptionLineHeight`, consumed by browser and Flutter adapters. English/German semantic and keyboard actions, 392px doubled-text scroll reachability and live locale updates have focused widget coverage. Functional empty-result gating remains COLL-015; this does not claim future review counts or a completed Settings header.
+
 ## FOUNDATION-005 — execution order follows real data dependencies — 2026-10-13
 
 The coordinator refined the implementation sequence without changing the 95-requirement release scope. Review entry points wait for real due counts and working session launch; vocabulary order waits for persisted entries rendered in detail. Rename and deletion preservation/cascade tests follow vocabulary and directional learning storage, and combined collection controls follow their functional actions. Data minimization is audited after the complete release storage exists. Requirements remain individually committed and pending until their full acceptance evidence exists; mock data or a disabled placeholder cannot satisfy a missing dependency.

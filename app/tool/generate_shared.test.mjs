@@ -91,3 +91,15 @@ test('browser heading margin adapts the canonical token', () => {
   assert.ok(fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('margin:var(--heading-title-margin) 0'));
   assert.ok(!fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('margin:7px 0'));
 });
+
+test('browser empty description adapts only its canonical line-height token', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.emptyState.descriptionLineHeight = 1.9;
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--empty-description-line-height'), '1.9');
+  assert.ok(fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('line-height:var(--empty-description-line-height)'));
+  assert.ok(fs.readFileSync(new URL('../../mockups/mockup.js', import.meta.url), 'utf8').includes('class="meta empty-description"'));
+});
