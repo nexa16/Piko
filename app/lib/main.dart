@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ui/piko_theme.dart';
 
 void main() {
   runApp(const PikoApp());
@@ -9,9 +10,10 @@ class PikoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      theme: PikoTheme.build(),
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: SizedBox.expand()),
+      home: const Scaffold(body: SizedBox.expand()),
     );
   }
 }

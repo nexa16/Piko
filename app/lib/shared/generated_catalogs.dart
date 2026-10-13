@@ -21,6 +21,9 @@ const designCatalog = <String, Object?>{
 "variant": "soft",
 "weight": 700,
 },
+"cards": <String, Object?>{
+"padding": 19,
+},
 "dropdowns": <String, Object?>{
 "gap": 8,
 "height": 44,
@@ -28,11 +31,26 @@ const designCatalog = <String, Object?>{
 "radius": 11,
 "weight": 400,
 },
+"fields": <String, Object?>{
+"labelSize": 12,
+"labelWeight": 750,
+"padding": 13,
+"radius": 12,
+},
+"icons": <String, Object?>{
+"size": 20,
+},
 },
 "controls": <String, Object?>{
 "contentWidth": 760,
 "largeHeight": 48,
 "motionFastMs": 180,
+},
+"layout": <String, Object?>{
+"mobileBreakpoint": 680,
+"mobilePadding": 18,
+"pagePadding": 24,
+"pageTop": 20,
 },
 "radii": <String, Object?>{
 "card": 16,
@@ -48,12 +66,20 @@ const designCatalog = <String, Object?>{
 "6": 24,
 "8": 32,
 },
+"states": <String, Object?>{
+"borderInkOpacity": 0.14,
+"borderWidth": 1,
+"disabledOpacity": 0.5,
+"focusOffset": 3,
+"focusWidth": 3,
+},
 "typography": <String, Object?>{
 "body": 16,
 "family": "system-ui,-apple-system,sans-serif",
 "label": 14,
 "small": 13,
 "title": 29,
+"titleWeight": 700,
 },
 };
 const copyCatalog = <String, Object?>{

@@ -10,9 +10,11 @@
  if(typeof config.typography.family!=='string'||!config.typography.family.trim())throw Error('Invalid font family');
  set('--font-family',config.typography.family);
  for(const key of ['body','small','label','title'])dimension('--font-'+key,config.typography[key],8,100);
+ dimension('--font-title-weight',config.typography.titleWeight,100,900,'');
  for(const[key,value]of Object.entries(config.radii))dimension('--radius-'+key,value,0,100);
  dimension('--control-large',config.controls.largeHeight,44,100);dimension('--content-width',config.controls.contentWidth,280,2000);dimension('--motion-fast',config.controls.motionFastMs,0,2000,'ms');
  const b=config.components.buttons,d=config.components.dropdowns;
+ for(const [name,value,unit] of [['--page-padding',config.layout.pagePadding,'px'],['--mobile-padding',config.layout.mobilePadding,'px'],['--page-top',config.layout.pageTop,'px'],['--border-width',config.states.borderWidth,'px'],['--border-ink-opacity',config.states.borderInkOpacity*100,'%'],['--disabled-opacity',config.states.disabledOpacity,''],['--focus-width',config.states.focusWidth,'px'],['--focus-offset',config.states.focusOffset,'px'],['--icon-size',config.components.icons.size,'px'],['--card-padding',config.components.cards.padding,'px'],['--input-padding',config.components.fields.padding,'px'],['--input-radius',config.components.fields.radius,'px'],['--field-label-size',config.components.fields.labelSize,'px'],['--field-label-weight',config.components.fields.labelWeight,'']])dimension(name,value,0,2000,unit);
  if(!['flat','soft','outline'].includes(b.variant))throw Error('Invalid button variant');
  set('--button-style',b.variant);root.dataset.buttonStyle=b.variant;
  for(const[name,value,min,max,unit]of [['--radius-control',b.radius,0,24,'px'],['--control-height',b.height,44,60,'px'],['--button-weight',b.weight,400,750,''],['--button-padding-x',b.padding,8,28,'px'],['--field-label-gap',d.gap,4,20,'px'],['--select-height',d.height,44,60,'px'],['--select-radius',d.radius,0,24,'px'],['--select-padding-x',d.padding,8,28,'px'],['--select-weight',d.weight,400,750,'']])dimension(name,value,min,max,unit);

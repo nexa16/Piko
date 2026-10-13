@@ -125,6 +125,14 @@ The owner accepted create/name/language pair, multiple Collections including mat
 | 2026-10-13 | Use Cobalt as the current color baseline with directly editable semantic color roles. | Accepted | Owner dislikes green and prefers Cobalt and Plum. | Keep green or choose a fixed palette. | Owner selected a cooler direction and wants live tuning. | shared/theme.js is canonical; studio offers color/hex editing, reset, and export. Final values may evolve. |
 | 2026-10-13 | Design the homepage for create/open collection → manual entry → Long-term self-assessment review. | Accepted | Owner agrees to begin with a visible Minimum flow. | Design every Additional feature first. | Establish a polished, extensible foundation. | Minimum is the default preview; Expanded permits comparison. Scope labels remain proposals except this explicit flow. |
 
+## Shared Flutter primitives — 2026-10-13
+
+- **Decision:** Include UX-SYSTEM-001 in First release as the reusable component dependency of the accepted Flutter implementation.
+- **Status:** Accepted implementation dependency.
+- **Context:** The owner requests one canonical configuration for recurring UI properties and implementation matching the binding mockup.
+- **Reason:** Shared buttons, fields, cards, headings and page layout keep accepted appearance and accessible states consistent across product screens.
+- **Consequences:** Existing recurring CSS measurements are promoted into `shared/design-config.js`; CSS and generated Flutter adapters consume them. Large text can grow controls and wrap validation messages. Product screens, Lucide integration and dialogs retain their own specification commits.
+
 ## Template for the next decision
 
 - **Date:** To be decided — when was this choice accepted?

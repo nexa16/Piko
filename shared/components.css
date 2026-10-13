@@ -43,3 +43,16 @@ h1{font-size:var(--font-title)}.btn{border-radius:var(--radius-control);min-heig
 .learning{position:relative;padding-bottom:58px}.learning .reveal-cue{position:absolute;right:18px;bottom:16px;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:400}.reveal-cue .icon{width:16px;height:16px}.review-direction{font-size:var(--font-label);font-weight:600}.learning.is-revealed .answer-prompt{font-size:22px;color:var(--piko-muted);font-weight:500}.learning.is-revealed .answer-translation{font-size:37px;font-weight:650}.review-hard{min-height:var(--control-height);width:100%;padding:10px 8px;cursor:pointer}.review-hard input{width:24px;height:24px;flex-shrink:0}.review-hard:focus-within{outline:3px solid var(--piko-primary);outline-offset:3px;border-radius:var(--radius-control)}.review-previous .btn.review-correct-previous{color:var(--piko-danger);border:1px solid currentColor;background:transparent;min-height:var(--control-height)}
 
 .overlay{z-index:1000}.modal{position:relative;z-index:1}
+
+/* Recurring primitive measurements are owned by design-config.js. */
+h1{font-weight:var(--font-title-weight)}
+.card:not(.collection-card):not(.word-row):not(.entry-card){padding:var(--card-padding)}
+.input{padding:var(--input-padding);border-radius:var(--input-radius)}
+.field label{font-size:var(--field-label-size);font-weight:var(--field-label-weight)}
+.card,.stat,.input,.btn{border-width:var(--border-width);border-color:color-mix(in srgb,var(--piko-ink) var(--border-ink-opacity),var(--piko-surface))}
+.btn.ghost,.btn.tint{border-color:transparent}.btn.primary{border-color:var(--piko-primary)}
+.btn:disabled{opacity:var(--disabled-opacity)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline-width:var(--focus-width);outline-offset:var(--focus-offset)}
+.icon{width:var(--icon-size);height:var(--icon-size)}
+main{padding-top:var(--page-top);padding-inline:var(--page-padding)}
+@media(max-width:680px){main{padding-inline:var(--mobile-padding)}}
