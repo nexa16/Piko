@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-COLL-010 — binding creation-form presentation — 2026-10-13
+
+The Flutter creation form follows the binding mockup's target/native/required-name order, including target options Korean/French/English/German and native options German/English/French/Korean. Canonical localized labels name the actual controls for accessibility; Tab follows their reading order. Shared popup scrolling keeps the name and Create reachable at 392px width, doubled German text and simulated 300px keyboard inset. No new geometry defaults were needed. Default-name customization remains COLL-017; this commit verifies its preservation during form interaction rather than redefining it. These widget checks do not replace the final real-device entry/keyboard acceptance gate.
+
 ## COLL-017 — localized defaults preserve explicit draft edits — 2026-10-13
 
 The creation form starts with the target-language name from the current canonical interface catalog. Target changes replace it only before an explicit user name edit or clear; returning the text to the original default remains customization. Native-language changes never rename it. Locale-only changes preserve name text, selection and focus consistently with I18N-002 rather than introducing an additional automatic rewrite; a later target change uses the current locale while the draft is still automatic. Required-name validation and existing support for duplicate names/language pairs remain in place. Field-order presentation is separately verified under UX-COLL-010.

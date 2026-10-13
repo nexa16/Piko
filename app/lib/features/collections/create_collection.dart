@@ -72,11 +72,12 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
     Widget language(
       String key,
       VocabularyLanguage value,
-      ValueChanged<VocabularyLanguage> changed,
-    ) => PikoDropdown<VocabularyLanguage>(
+      ValueChanged<VocabularyLanguage> changed, {
+      List<VocabularyLanguage> options = VocabularyLanguage.values,
+    }) => PikoDropdown<VocabularyLanguage>(
       label: copy.text(key),
       value: value,
-      items: VocabularyLanguage.values
+      items: options
           .map(
             (language) => DropdownMenuItem(
               value: language,
@@ -106,6 +107,12 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
             'collection.nativeLanguage',
             native,
             (value) => native = value,
+            options: const [
+              VocabularyLanguage.german,
+              VocabularyLanguage.english,
+              VocabularyLanguage.french,
+              VocabularyLanguage.korean,
+            ],
           ),
           SizedBox(height: pikoDesign.dimension('spacing.4')),
           PikoTextField(
