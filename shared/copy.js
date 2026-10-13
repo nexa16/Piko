@@ -36,7 +36,7 @@ globalThis.PIKO_COPY = {
       "de": "Neu"
     },
     "action.review": {
-      "en": "Learn",
+      "en": "Review",
       "de": "Wiederholen",
       "note": "Existing Learn label. Review / Repeat are candidates, not final decisions."
     },
@@ -444,6 +444,15 @@ globalThis.PIKO_COPY = {
     "dialog.developer": {
       "en": "Developer Learning Parameters",
       "de": "Lernparameter für Entwickler"
-    }
+    },
+    "home.reviewTitle": {"en":"Ready to review","de":"Bereit zum Wiederholen"},
+    "home.reviewSummary": {"en":"{count} words due across your collections","de":"{count} fällige Wörter in deinen Sammlungen"},
+    "home.reviewHint": {"en":"Choose a collection to begin.","de":"Wähle eine Sammlung zum Starten."},
+    "collection.name": {"en":"Collection name","de":"Name der Sammlung"},
+    "collection.namePlaceholder": {"en":"e.g. Travel vocabulary","de":"z. B. Vokabeln für die Reise"},
+    "collection.targetLanguage": {"en":"Target language","de":"Zielsprache"},
+    "collection.nativeLanguage": {"en":"Native language","de":"Muttersprache"},
+    "action.create": {"en":"Create collection","de":"Sammlung erstellen"},
+    "prototype.noSave": {"en":"Preview only · no data is saved","de":"Nur Vorschau · keine Daten werden gespeichert"}
   }
 };

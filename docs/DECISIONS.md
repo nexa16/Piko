@@ -42,6 +42,13 @@ Planning documents are the initial source of truth. Record accepted changes here
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-13 | Label each functional requirement Base, Minimum, or Additional without changing its existing acceptance status. | Accepted | Owner requested a parallel scope overview. | Leave all requirements undifferentiated. | Make first-version tradeoffs reviewable. | All 214 IDs are labeled; the particular category assignments are proposals, not an accepted release scope. |
 
+## Visual direction and Minimum flow — 2026-10-13
+
+| Date | Decision | Status | Context | Alternatives | Reason | Consequences |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Use Cobalt as the current color baseline with directly editable semantic color roles. | Accepted | Owner dislikes green and prefers Cobalt and Plum. | Keep green or choose a fixed palette. | Owner selected a cooler direction and wants live tuning. | shared/theme.js is canonical; studio offers color/hex editing, reset, and export. Final values may evolve. |
+| 2026-10-13 | Design the homepage for create/open collection → manual entry → Long-term self-assessment review. | Accepted | Owner agrees to begin with a visible Minimum flow. | Design every Additional feature first. | Establish a polished, extensible foundation. | Minimum is the default preview; Expanded permits comparison. Scope labels remain proposals except this explicit flow. |
+
 ## Template for the next decision
 
 - **Date:** To be decided — when was this choice accepted?

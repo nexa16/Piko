@@ -48,3 +48,4 @@
 - Do not implement an application or select a stack until the user requests that work.
 - Use `shared/copy.js` as the single source for interface labels and English/German translations. Preserve stable keys and matching placeholders; do not duplicate UI wording in mockup templates or future app code.
 - Record proposed visual principles in `docs/DESIGN.md`. Update accepted design decisions, relevant UX requirements, shared tokens/copy, and mockup together. Keep the prototype aligned with the future product without treating proposals as accepted decisions.
+- Use `shared/theme.js` for canonical semantic color roles; Cobalt is the current baseline. Keep direct color experiments in the studio as drafts until exported and accepted.

@@ -1,6 +1,6 @@
 # Design foundations and shared copy
 
-**Status:** Proposed visual principles; catalog and live preview support exploration. No final palette, icon family, font, or application platform selected.
+**Status:** Proposed visual principles; catalog and live preview support exploration. Cobalt is the current adjustable color baseline. No final icon family, font, or application platform selected.
 
 ## What needs refinement
 
@@ -76,3 +76,15 @@ Accepted wording updates the catalog; accepted visual decisions update this docu
 - [Tabler license](https://github.com/tabler/tabler-icons/blob/main/LICENSE)
 
 Accessibility thresholds and icon licensing come from these sources; Piko's proposed palettes and style are design judgments awaiting agreement.
+
+## Current direction — 2026-10-13
+
+The owner prefers cooler colors, rejects the green direction, and selects Cobalt as the current baseline. Primary, Tint, Background, Surface, Main text, Secondary text, and Text on primary are directly editable in the studio through color pickers and hex inputs. Plum remains an alternative. Export theme.js to persist experiments into shared/theme.js; the standalone mockup consumes those same visual roles.
+
+The visible Minimum flow is accepted: create/open a collection, manually enter vocabulary, and review through Long-term self-assessment. The homepage starts with a compact Piko identity and Settings top-right, then a due-review summary and collection list. Expanded scope adds secondary actions for extension stress-testing. It does not approve all 44 proposed Minimum labels or declare a release milestone.
+
+The icon board compares five real local SVG roles across Lucide, Phosphor Regular, and Tabler Outline, preserving source revisions and license files under mockups/assets/icons. No icon family is selected.
+
+## Requirements views
+
+Flow tags live directly on requirement texts in the canonical functional and UX specifications. The filterable requirements view fetches those documents on load and on explicit reload, supports source/scope/flow/text filters and bookmarkable filter links, and never stores a separate maintained list. Flow tags describe topic association; they do not promote Additional requirements into the accepted Minimum or change acceptance status. UX scope remains explicitly unclassified where no Scope tag is authored.

@@ -15,6 +15,7 @@ This repository contains Piko's product planning and future implementation.
 - [Functional requirements](docs/piko-functional.md) and [UX requirements](docs/piko-ux.md)
 - [Design foundations and open visual decisions](docs/DESIGN.md)
 - [Design studio](mockups/design-lab.html) — compare palettes and edit English/German labels in a live mockup preview
+- [Filterable requirements](mockups/requirements.html) — derives lists from the canonical specifications; use an HTTP preview for reading Markdown files
 - [Navigation mockup](mockups/piko-mockup.html) — download and open locally; sample data and placeholder interactions
 
 ## Development

@@ -28,6 +28,8 @@ The current product work is gradual UX refinement, beginning with Collection Ove
 
 Requirement IDs remain stable. Confirmed requirements, proposals, and open questions are distinct. Newer explicit accepted decisions supersede older conflicting statements; superseded IDs remain documented for traceability. Functional behavior and UX presentation have separate specifications. The original handoff is retained locally and excluded from publication.
 
+The accepted visible Minimum flow is create/open a collection → manually enter vocabulary → Long-term self-assessment review, with basic settings. Relevant requirement texts carry Flow tags (collection, entry, review, settings). Scope labels remain an independent proposal. The [requirements view](../mockups/requirements.html) reads both original specifications at runtime and filters those tags without maintaining duplicate lists. Use its reload action after editing a source file; bookmarked filters are preserved. UX requirements without scope labels remain explicitly unclassified.
+
 ## Glossary
 
 | Term | Definition |
