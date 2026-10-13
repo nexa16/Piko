@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+coverage/
+dist/
+build/
+node_modules/
+# Keep raw and identifying research in a separate private location.
+research-private/
+
+# Original handoff and local-only planning references
+/docs/HANDOFF.md
+/.local/
