@@ -110,7 +110,7 @@ The four unnumbered Future / deferred ideas below are all Additional; no new req
 - **COLL-011 [Confirmed]** [Scope: Additional] [Release: Undecided] [Flow: collection] Compact mode shows the two language entries side by side, truncating overflowing text rather than expanding to multiple lines.
 
 ## Vocabulary Entries and examples
-- **VOCAB-001 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, entry] Distinct meanings are stored as separate Vocabulary Entries, even if one language's entry is identical.
+- **VOCAB-001 [Confirmed]** [Scope: Base] [Release: First] [Flow: collection, entry] Distinct meanings are stored as separate Vocabulary Entries, even if one language's entry is identical. Each stored Entry has its own UUID, Collection identity and required target/native texts. Sharing either one text does not merge identities or meanings. Local schema 3 establishes this storage boundary; manual entry screens, normalized pair uniqueness and directional learning state remain their own requirements.
 - **VOCAB-002 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, entry] An exact pair of language entries may occur only once within a Collection; attempts to save an exact duplicate are blocked.
 - **VOCAB-003 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, entry] The same exact language pair may exist in different Collections.
 - **VOCAB-004 [Confirmed]** [Scope: Additional] [Release: Later] [Flow: entry, review] An entry may have an optional Hint, separate from category assignments.

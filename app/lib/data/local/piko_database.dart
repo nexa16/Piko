@@ -19,18 +19,36 @@ class Collections extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [AppSettings, Collections])
+class VocabularyEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get collectionId =>
+      text().references(Collections, #id, onDelete: KeyAction.cascade)();
+  TextColumn get targetText => text()();
+  TextColumn get nativeText => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(target_text)) > 0)',
+    'CHECK(length(trim(native_text)) > 0)',
+  ];
+}
+
+@DriftDatabase(tables: [AppSettings, Collections, VocabularyEntries])
 class PikoDatabase extends _$PikoDatabase {
   PikoDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(collections);
+      if (from < 3) await m.createTable(vocabularyEntries);
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');

@@ -1,5 +1,9 @@
 # Decision log
 
+## VOCAB-001 — distinct local vocabulary identities — 2026-10-13
+
+Schema 3 stores Vocabulary Entries as UUID identities owned by a Collection, with two required texts. Separate meanings sharing the target text or the native text remain separate records. Repository validation rejects whitespace-only text and missing Collection identities before committing, while SQLite foreign keys and nonempty-text checks protect direct writes. The ownership foreign key cascades vocabulary removal if its Collection is deleted; this establishes data integrity without claiming the later confirmed-deletion UI or learning-progress cascade. Reactive reads use stable insertion order and exact UUID lookup. Migration from the exported schema 2 preserves settings and Collections, and the existing schema 1 migration still passes through schema 3. Display text is preserved at this stage; normalization and comparison uniqueness are introduced under VOCAB-012 and VOCAB-002. No vocabulary, manual-entry or learning UI is introduced by this storage requirement.
+
 ## UX-COLL-005 — real target-language badges — 2026-10-13
 
 Classify UX-COLL-005 as First. Collection cards display uppercase Latin codes from the stored target language (KO/FR/EN/DE), independent of interface locale. Extract the binding cover's effective 42px size, 12px radius, 15px font, weight 800 and .03em tracking into `components.languageBadge`; replace the obsolete earlier 48px cover default rather than maintaining conflicting geometry. Flutter uses that baseline as a minimum with centered intrinsic text so enlarged glyphs can grow without clipping. Decorative code does not add another announcement to the existing whole-card name/full-pair action. No due counts or review actions are introduced by this badge requirement.

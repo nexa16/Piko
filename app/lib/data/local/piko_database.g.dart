@@ -534,11 +534,340 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   }
 }
 
+class $VocabularyEntriesTable extends VocabularyEntries
+    with TableInfo<$VocabularyEntriesTable, VocabularyEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VocabularyEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES collections (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _targetTextMeta = const VerificationMeta(
+    'targetText',
+  );
+  @override
+  late final GeneratedColumn<String> targetText = GeneratedColumn<String>(
+    'target_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nativeTextMeta = const VerificationMeta(
+    'nativeText',
+  );
+  @override
+  late final GeneratedColumn<String> nativeText = GeneratedColumn<String>(
+    'native_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    collectionId,
+    targetText,
+    nativeText,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vocabulary_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VocabularyEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    if (data.containsKey('target_text')) {
+      context.handle(
+        _targetTextMeta,
+        targetText.isAcceptableOrUnknown(data['target_text']!, _targetTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetTextMeta);
+    }
+    if (data.containsKey('native_text')) {
+      context.handle(
+        _nativeTextMeta,
+        nativeText.isAcceptableOrUnknown(data['native_text']!, _nativeTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nativeTextMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VocabularyEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VocabularyEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+      targetText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_text'],
+      )!,
+      nativeText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}native_text'],
+      )!,
+    );
+  }
+
+  @override
+  $VocabularyEntriesTable createAlias(String alias) {
+    return $VocabularyEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
+  final String id;
+  final String collectionId;
+  final String targetText;
+  final String nativeText;
+  const VocabularyEntry({
+    required this.id,
+    required this.collectionId,
+    required this.targetText,
+    required this.nativeText,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['collection_id'] = Variable<String>(collectionId);
+    map['target_text'] = Variable<String>(targetText);
+    map['native_text'] = Variable<String>(nativeText);
+    return map;
+  }
+
+  VocabularyEntriesCompanion toCompanion(bool nullToAbsent) {
+    return VocabularyEntriesCompanion(
+      id: Value(id),
+      collectionId: Value(collectionId),
+      targetText: Value(targetText),
+      nativeText: Value(nativeText),
+    );
+  }
+
+  factory VocabularyEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VocabularyEntry(
+      id: serializer.fromJson<String>(json['id']),
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+      targetText: serializer.fromJson<String>(json['targetText']),
+      nativeText: serializer.fromJson<String>(json['nativeText']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'collectionId': serializer.toJson<String>(collectionId),
+      'targetText': serializer.toJson<String>(targetText),
+      'nativeText': serializer.toJson<String>(nativeText),
+    };
+  }
+
+  VocabularyEntry copyWith({
+    String? id,
+    String? collectionId,
+    String? targetText,
+    String? nativeText,
+  }) => VocabularyEntry(
+    id: id ?? this.id,
+    collectionId: collectionId ?? this.collectionId,
+    targetText: targetText ?? this.targetText,
+    nativeText: nativeText ?? this.nativeText,
+  );
+  VocabularyEntry copyWithCompanion(VocabularyEntriesCompanion data) {
+    return VocabularyEntry(
+      id: data.id.present ? data.id.value : this.id,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      targetText: data.targetText.present
+          ? data.targetText.value
+          : this.targetText,
+      nativeText: data.nativeText.present
+          ? data.nativeText.value
+          : this.nativeText,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyEntry(')
+          ..write('id: $id, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('targetText: $targetText, ')
+          ..write('nativeText: $nativeText')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, collectionId, targetText, nativeText);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VocabularyEntry &&
+          other.id == this.id &&
+          other.collectionId == this.collectionId &&
+          other.targetText == this.targetText &&
+          other.nativeText == this.nativeText);
+}
+
+class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
+  final Value<String> id;
+  final Value<String> collectionId;
+  final Value<String> targetText;
+  final Value<String> nativeText;
+  final Value<int> rowid;
+  const VocabularyEntriesCompanion({
+    this.id = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.targetText = const Value.absent(),
+    this.nativeText = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VocabularyEntriesCompanion.insert({
+    required String id,
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       collectionId = Value(collectionId),
+       targetText = Value(targetText),
+       nativeText = Value(nativeText);
+  static Insertable<VocabularyEntry> custom({
+    Expression<String>? id,
+    Expression<String>? collectionId,
+    Expression<String>? targetText,
+    Expression<String>? nativeText,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (targetText != null) 'target_text': targetText,
+      if (nativeText != null) 'native_text': nativeText,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VocabularyEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? collectionId,
+    Value<String>? targetText,
+    Value<String>? nativeText,
+    Value<int>? rowid,
+  }) {
+    return VocabularyEntriesCompanion(
+      id: id ?? this.id,
+      collectionId: collectionId ?? this.collectionId,
+      targetText: targetText ?? this.targetText,
+      nativeText: nativeText ?? this.nativeText,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (targetText.present) {
+      map['target_text'] = Variable<String>(targetText.value);
+    }
+    if (nativeText.present) {
+      map['native_text'] = Variable<String>(nativeText.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('targetText: $targetText, ')
+          ..write('nativeText: $nativeText, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PikoDatabase extends GeneratedDatabase {
   _$PikoDatabase(QueryExecutor e) : super(e);
   $PikoDatabaseManager get managers => $PikoDatabaseManager(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $CollectionsTable collections = $CollectionsTable(this);
+  late final $VocabularyEntriesTable vocabularyEntries =
+      $VocabularyEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -546,7 +875,18 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     appSettings,
     collections,
+    vocabularyEntries,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'collections',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('vocabulary_entries', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$AppSettingsTableCreateCompanionBuilder =
@@ -714,6 +1054,32 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
+final class $$CollectionsTableReferences
+    extends BaseReferences<_$PikoDatabase, $CollectionsTable, Collection> {
+  $$CollectionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$VocabularyEntriesTable, List<VocabularyEntry>>
+  _vocabularyEntriesRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.vocabularyEntries,
+        aliasName: 'collections__id__vocabulary_entries__collection_id',
+      );
+
+  $$VocabularyEntriesTableProcessedTableManager get vocabularyEntriesRefs {
+    final manager = $$VocabularyEntriesTableTableManager(
+      $_db,
+      $_db.vocabularyEntries,
+    ).filter((f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _vocabularyEntriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$CollectionsTableFilterComposer
     extends Composer<_$PikoDatabase, $CollectionsTable> {
   $$CollectionsTableFilterComposer({
@@ -742,6 +1108,31 @@ class $$CollectionsTableFilterComposer
     column: $table.nativeLanguage,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> vocabularyEntriesRefs(
+    Expression<bool> Function($$VocabularyEntriesTableFilterComposer f) f,
+  ) {
+    final $$VocabularyEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.vocabularyEntries,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CollectionsTableOrderingComposer
@@ -798,6 +1189,32 @@ class $$CollectionsTableAnnotationComposer
     column: $table.nativeLanguage,
     builder: (column) => column,
   );
+
+  Expression<T> vocabularyEntriesRefs<T extends Object>(
+    Expression<T> Function($$VocabularyEntriesTableAnnotationComposer a) f,
+  ) {
+    final $$VocabularyEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.vocabularyEntries,
+          getReferencedColumn: (t) => t.collectionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$VocabularyEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.vocabularyEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CollectionsTableTableManager
@@ -811,12 +1228,9 @@ class $$CollectionsTableTableManager
           $$CollectionsTableAnnotationComposer,
           $$CollectionsTableCreateCompanionBuilder,
           $$CollectionsTableUpdateCompanionBuilder,
-          (
-            Collection,
-            BaseReferences<_$PikoDatabase, $CollectionsTable, Collection>,
-          ),
+          (Collection, $$CollectionsTableReferences),
           Collection,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool vocabularyEntriesRefs})
         > {
   $$CollectionsTableTableManager(_$PikoDatabase db, $CollectionsTable table)
     : super(
@@ -861,15 +1275,44 @@ class $$CollectionsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$CollectionsTable, Collection>(table),
-                  BaseReferences<_$PikoDatabase, $CollectionsTable, Collection>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  $$CollectionsTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({vocabularyEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (vocabularyEntriesRefs) db.vocabularyEntries,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (vocabularyEntriesRefs)
+                    await $_getPrefetchedData<
+                      Collection,
+                      $CollectionsTable,
+                      VocabularyEntry
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CollectionsTableReferences
+                          ._vocabularyEntriesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CollectionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).vocabularyEntriesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.collectionId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -884,12 +1327,328 @@ typedef $$CollectionsTableProcessedTableManager =
       $$CollectionsTableAnnotationComposer,
       $$CollectionsTableCreateCompanionBuilder,
       $$CollectionsTableUpdateCompanionBuilder,
-      (
-        Collection,
-        BaseReferences<_$PikoDatabase, $CollectionsTable, Collection>,
-      ),
+      (Collection, $$CollectionsTableReferences),
       Collection,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool vocabularyEntriesRefs})
+    >;
+typedef $$VocabularyEntriesTableCreateCompanionBuilder =
+    VocabularyEntriesCompanion Function({
+      required String id,
+      required String collectionId,
+      required String targetText,
+      required String nativeText,
+      Value<int> rowid,
+    });
+typedef $$VocabularyEntriesTableUpdateCompanionBuilder =
+    VocabularyEntriesCompanion Function({
+      Value<String> id,
+      Value<String> collectionId,
+      Value<String> targetText,
+      Value<String> nativeText,
+      Value<int> rowid,
+    });
+
+final class $$VocabularyEntriesTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $VocabularyEntriesTable,
+          VocabularyEntry
+        > {
+  $$VocabularyEntriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CollectionsTable _collectionIdTable(_$PikoDatabase db) => db
+      .collections
+      .createAlias('vocabulary_entries__collection_id__collections__id');
+
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
+    final manager = $$CollectionsTableTableManager(
+      $_db,
+      $_db.collections,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$VocabularyEntriesTableFilterComposer
+    extends Composer<_$PikoDatabase, $VocabularyEntriesTable> {
+  $$VocabularyEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CollectionsTableFilterComposer get collectionId {
+    final $$CollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyEntriesTableOrderingComposer
+    extends Composer<_$PikoDatabase, $VocabularyEntriesTable> {
+  $$VocabularyEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CollectionsTableOrderingComposer get collectionId {
+    final $$CollectionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyEntriesTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $VocabularyEntriesTable> {
+  $$VocabularyEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => column,
+  );
+
+  $$CollectionsTableAnnotationComposer get collectionId {
+    final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $VocabularyEntriesTable,
+          VocabularyEntry,
+          $$VocabularyEntriesTableFilterComposer,
+          $$VocabularyEntriesTableOrderingComposer,
+          $$VocabularyEntriesTableAnnotationComposer,
+          $$VocabularyEntriesTableCreateCompanionBuilder,
+          $$VocabularyEntriesTableUpdateCompanionBuilder,
+          (VocabularyEntry, $$VocabularyEntriesTableReferences),
+          VocabularyEntry,
+          PrefetchHooks Function({bool collectionId})
+        > {
+  $$VocabularyEntriesTableTableManager(
+    _$PikoDatabase db,
+    $VocabularyEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VocabularyEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VocabularyEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VocabularyEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> collectionId = const Value.absent(),
+                Value<String> targetText = const Value.absent(),
+                Value<String> nativeText = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyEntriesCompanion(
+                id: id,
+                collectionId: collectionId,
+                targetText: targetText,
+                nativeText: nativeText,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String collectionId,
+                required String targetText,
+                required String nativeText,
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyEntriesCompanion.insert(
+                id: id,
+                collectionId: collectionId,
+                targetText: targetText,
+                nativeText: nativeText,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VocabularyEntriesTable, VocabularyEntry>(table),
+                  $$VocabularyEntriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({collectionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (collectionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.collectionId,
+                                referencedTable:
+                                    $$VocabularyEntriesTableReferences
+                                        ._collectionIdTable(db),
+                                referencedColumn:
+                                    $$VocabularyEntriesTableReferences
+                                        ._collectionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$VocabularyEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyEntriesTable,
+      VocabularyEntry,
+      $$VocabularyEntriesTableFilterComposer,
+      $$VocabularyEntriesTableOrderingComposer,
+      $$VocabularyEntriesTableAnnotationComposer,
+      $$VocabularyEntriesTableCreateCompanionBuilder,
+      $$VocabularyEntriesTableUpdateCompanionBuilder,
+      (VocabularyEntry, $$VocabularyEntriesTableReferences),
+      VocabularyEntry,
+      PrefetchHooks Function({bool collectionId})
     >;
 
 class $PikoDatabaseManager {
@@ -899,4 +1658,6 @@ class $PikoDatabaseManager {
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$CollectionsTableTableManager get collections =>
       $$CollectionsTableTableManager(_db, _db.collections);
+  $$VocabularyEntriesTableTableManager get vocabularyEntries =>
+      $$VocabularyEntriesTableTableManager(_db, _db.vocabularyEntries);
 }
