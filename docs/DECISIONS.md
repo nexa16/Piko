@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-HEADER-001 — first-release page-heading hierarchy — 2026-10-13
+
+Classify UX-HEADER-001 as First, as the shared heading dependency for the accepted screens. PikoHeading presents one level-one semantic title and supports a meaningful Collection subtitle using canonical small/muted typography with natural wrapping. There is no decorative eyebrow or generic explanatory subtitle slot. Learning direction/progress, section headings and field instructions remain separate useful context. This establishes the shared primitive; full page integration belongs to each screen requirement and spacing belongs to UX-HEADER-002.
+
 ## UX-DIALOG-001 — reusable application popup — 2026-10-13
 
 Flutter now uses one shared popup component with the accepted title/close-X pattern. Safe X, Escape, backdrop and Android Back return no action result, preserve caller-owned drafts and restore opener focus. Only explicit positive or meaningful draft-choice actions return a result. Canonical dialog tokens preserve the binding mockup's 430px maximum width, 20px bold title and existing backdrop; Flutter maps the same values with keyboard-safe scrolling, closed-loop focus and reduced-motion transitions. Product-specific creation, deletion and review dialogs consume this component in their own requirements.

@@ -96,7 +96,7 @@ Inline `[Flow: collection]`, `[Flow: entry]`, `[Flow: review]`, and `[Flow: sett
 
 - **UX-COLL-003 [Confirmed]:** [Flow: collection, entry] Place an icon-only Add Entry plus beside the vocabulary heading, in normal flow rather than a floating overlay. Keep a localized accessible name and tooltip and a 44px touch target without obscuring entries.
 
-- **UX-HEADER-001 [Confirmed]:** [Flow: collection, entry, review, settings] Use one clear page title without a decorative eyebrow or redundant explanatory subtitle. Collection Detail retains its useful language-pair and entry-count subtitle. Learning retains session direction and progress context; field-specific instructions and meaningful section headings remain available.
+- **UX-HEADER-001 [Confirmed]:** [Release: First] [Flow: collection, entry, review, settings] Use one clear page title without a decorative eyebrow or redundant explanatory subtitle. Collection Detail retains its useful language-pair and entry-count subtitle. Learning retains session direction and progress context; field-specific instructions and meaningful section headings remain available. Flutter's PikoHeading exposes one level-one semantic page heading and an optional wrapping subtitle in canonical small/muted text for meaningful context. Review direction and progress remain separate session widgets, not duplicate page titles. Screen integration is verified with each owning requirement; compact Back/title spacing is UX-HEADER-002.
 
 - Exact mobile keyboard-safe-area and scrolling behavior; responsive layout breakpoints.
 - The final layout and discoverability of Previous, Skip and Exit, including swipe gestures.
