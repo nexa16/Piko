@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-VOCAB-DELETE-001 — explicit swipe reveal — 2026-10-14
+
+Saved Entry Session previews use a reusable touch-reveal component; a swipe never invokes deletion. Expanded editors retain their labeled red Delete action rather than intercepting horizontal text selection. The component observes touch displacement without competing in the vertical scroll gesture arena. The binding prototype's 60px distance and 1.5 horizontal-dominance thresholds now live in canonical design configuration; both adapters measure the localized action width instead of using a fixed 168px translation. Motion uses the existing canonical duration and respects reduced motion. Hidden actions do not enter focus or accessibility traversal, revealed actions support keyboard activation, and Escape closes the reveal. Browser resize observation is disconnected before redraw/navigation. Existing ENTRY-004 deletion/Undo lifecycle is reused, including ENTRY-009's accepted eight-second deadline. Collection renderer integration and Android end-to-end acceptance remain separately pending.
+
 ## ENTRY-004 — saved-session deletion and Undo integration — 2026-10-14
 
 Inject the existing vocabulary deletion service and the same deadline clock into the entry controller rather than constructing storage in the screen. Serialize delete/Undo with other session mutations and drain only the affected entry's accepted save queue. Maintain immutable original session ordinals so independent Undo receipts restore ordering after intervening creation/deletion. Restore committed vocabulary and directional state into a fresh saved buffer/editor; invalid discarded edits do not reappear. Untouched raw drafts, saved buffers, selections and active scroll anchors remain stable, including first/last viewport edges and autosave notifications between structural layout frames.

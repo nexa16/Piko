@@ -13,6 +13,7 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_entry_header.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
 import 'entry_session_controller.dart';
 
@@ -667,6 +668,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           : null,
       onChanged: (value) => edit(target, value),
     );
+    Widget reveal(Widget child) => draft
+        ? child
+        : PikoSwipeReveal(
+            label: copy.text('vocab.delete'),
+            enabled:
+                !active &&
+                !session.isBusy &&
+                !exitDraining &&
+                exitRequest == null,
+            onDelete: session.supportsDeletion ? () => deleteEntry(id) : null,
+            child: child,
+          );
     Widget animate(Widget child) => MediaQuery.disableAnimationsOf(context)
         ? child
         : NotificationListener<SizeChangedLayoutNotification>(
@@ -690,183 +703,98 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       padding: EdgeInsets.symmetric(
         vertical: pikoDesign.dimension('spacing.2'),
       ),
-      child: animate(
-        PikoCard(
-          key: ValueKey('entry-card-$id'),
-          selected: active,
-          constraints: BoxConstraints(
-            minHeight: pikoDesign.dimension(
-              'components.entryStack.compactMinHeight',
-            ),
-          ),
-          animationDuration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : Duration(
-                  milliseconds: pikoDesign
-                      .dimension('components.entryStack.stateMotionMs')
-                      .round(),
-                ),
-          padding: EdgeInsets.all(pikoDesign.dimension('spacing.4')),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                spacing: pikoDesign.dimension('spacing.3'),
-                runSpacing: pikoDesign.dimension('spacing.3'),
-                children: [
-                  Text(
-                    copy.text('entry.number', {'count': index + 1}),
-                    style: TextStyle(
-                      color: pikoDesign.color('muted'),
-                      fontSize: pikoDesign.dimension(
-                        'components.entryStack.numberSize',
-                      ),
-                    ),
-                  ),
-                  Text(
-                    copy.text(
-                      draft
-                          ? (session.isBusy ? 'entry.saving' : 'entry.new')
-                          : saved!.isSaving
-                          ? 'entry.saving'
-                          : error != null
-                          ? 'entry.unsaved'
-                          : 'entry.saved',
-                    ),
-                    style: metaStyle.copyWith(
-                      fontSize: pikoDesign.dimension(
-                        'components.entryStack.statusSize',
-                      ),
-                    ),
-                  ),
-                ],
+      child: reveal(
+        animate(
+          PikoCard(
+            key: ValueKey('entry-card-$id'),
+            selected: active,
+            constraints: BoxConstraints(
+              minHeight: pikoDesign.dimension(
+                'components.entryStack.compactMinHeight',
               ),
-              if (!active)
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: pikoDesign.dimension(
-                      'components.entryStack.previewTop',
+            ),
+            animationDuration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : Duration(
+                    milliseconds: pikoDesign
+                        .dimension('components.entryStack.stateMotionMs')
+                        .round(),
+                  ),
+            padding: EdgeInsets.all(pikoDesign.dimension('spacing.4')),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: pikoDesign.dimension('spacing.3'),
+                  runSpacing: pikoDesign.dimension('spacing.3'),
+                  children: [
+                    Text(
+                      copy.text('entry.number', {'count': index + 1}),
+                      style: TextStyle(
+                        color: pikoDesign.color('muted'),
+                        fontSize: pikoDesign.dimension(
+                          'components.entryStack.numberSize',
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        values.targetText.isEmpty
-                            ? copy.text('entry.targetPlaceholder')
-                            : values.targetText,
-                        style: TextStyle(
-                          fontSize: pikoDesign.dimension('typography.body'),
-                          fontWeight: pikoDesign.weight(
-                            'typography.titleWeight',
-                          ),
+                    Text(
+                      copy.text(
+                        draft
+                            ? (session.isBusy ? 'entry.saving' : 'entry.new')
+                            : saved!.isSaving
+                            ? 'entry.saving'
+                            : error != null
+                            ? 'entry.unsaved'
+                            : 'entry.saved',
+                      ),
+                      style: metaStyle.copyWith(
+                        fontSize: pikoDesign.dimension(
+                          'components.entryStack.statusSize',
                         ),
                       ),
-                      SizedBox(
-                        height: pikoDesign.dimension(
-                          'components.entryStack.previewGap',
-                        ),
-                      ),
-                      Text(
-                        values.nativeText.isEmpty
-                            ? copy.text('entry.nativePlaceholder')
-                            : values.nativeText,
-                        style: TextStyle(
-                          fontSize: pikoDesign.dimension('typography.body'),
-                          color: pikoDesign.color('muted'),
-                        ),
-                      ),
-                      if (error != null)
-                        Text(
-                          copy.text(errorKey(error)),
-                          style: TextStyle(color: pikoDesign.color('danger')),
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ExcludeFocus(
-                excluding: !active,
-                child: ExcludeSemantics(
-                  excluding: !active,
-                  child: Offstage(
-                    offstage: !active,
+                if (!active)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: pikoDesign.dimension(
+                        'components.entryStack.previewTop',
+                      ),
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: pikoDesign.dimension('spacing.4')),
-                        field(true),
-                        SizedBox(height: pikoDesign.dimension('spacing.4')),
-                        field(false),
-                        SizedBox(height: pikoDesign.dimension('spacing.3')),
-                        if (draft)
-                          Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            spacing: pikoDesign.dimension('spacing.3'),
-                            runSpacing: pikoDesign.dimension('spacing.3'),
-                            children: [
-                              Text(
-                                copy.text(
-                                  session.isBusy
-                                      ? 'entry.saving'
-                                      : 'entry.draft',
-                                ),
-                                style: metaStyle,
-                              ),
-                              PikoIconButton(
-                                icon: const PikoIcon(PikoIconName.check),
-                                variant: PikoButtonVariant.primary,
-                                large: true,
-                                semanticLabel: copy.text('action.saveNext'),
-                                onPressed: session.isBusy || exitDraining
-                                    ? null
-                                    : confirm,
-                              ),
-                            ],
-                          )
-                        else
+                        Text(
+                          values.targetText.isEmpty
+                              ? copy.text('entry.targetPlaceholder')
+                              : values.targetText,
+                          style: TextStyle(
+                            fontSize: pikoDesign.dimension('typography.body'),
+                            fontWeight: pikoDesign.weight(
+                              'typography.titleWeight',
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: pikoDesign.dimension(
+                            'components.entryStack.previewGap',
+                          ),
+                        ),
+                        Text(
+                          values.nativeText.isEmpty
+                              ? copy.text('entry.nativePlaceholder')
+                              : values.nativeText,
+                          style: TextStyle(
+                            fontSize: pikoDesign.dimension('typography.body'),
+                            color: pikoDesign.color('muted'),
+                          ),
+                        ),
+                        if (error != null)
                           Text(
-                            copy.text(
-                              saved!.isSaving
-                                  ? 'entry.saving'
-                                  : error != null
-                                  ? 'entry.unsaved'
-                                  : 'entry.autoSave',
-                            ),
-                            style: metaStyle,
-                          ),
-                        if (error != null &&
-                            error != VocabularyValidation.requiredTarget &&
-                            error != VocabularyValidation.requiredNative)
-                          Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              copy.text(errorKey(error)),
-                              style: TextStyle(
-                                color: pikoDesign.color('danger'),
-                              ),
-                            ),
-                          ),
-                        if (!draft &&
-                            error != null &&
-                            error is! VocabularyValidation)
-                          PikoButton(
-                            label: copy.text('action.retry'),
-                            onPressed: session.isBusy || exitDraining
-                                ? null
-                                : () => session.retrySavedEntry(id),
-                          ),
-                        if (!draft && session.supportsDeletion)
-                          PikoButton(
-                            label: copy.text('vocab.delete'),
-                            icon: const PikoIcon(PikoIconName.trash),
-                            variant: PikoButtonVariant.dangerGhost,
-                            onPressed:
-                                session.isBusy ||
-                                    exitDraining ||
-                                    exitRequest != null
-                                ? null
-                                : () => deleteEntry(id),
+                            copy.text(errorKey(error)),
+                            style: TextStyle(color: pikoDesign.color('danger')),
                           ),
                         if (deletionErrorId == id && deletionError != null)
                           Semantics(
@@ -881,9 +809,106 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                       ],
                     ),
                   ),
+                ExcludeFocus(
+                  excluding: !active,
+                  child: ExcludeSemantics(
+                    excluding: !active,
+                    child: Offstage(
+                      offstage: !active,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(height: pikoDesign.dimension('spacing.4')),
+                          field(true),
+                          SizedBox(height: pikoDesign.dimension('spacing.4')),
+                          field(false),
+                          SizedBox(height: pikoDesign.dimension('spacing.3')),
+                          if (draft)
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              spacing: pikoDesign.dimension('spacing.3'),
+                              runSpacing: pikoDesign.dimension('spacing.3'),
+                              children: [
+                                Text(
+                                  copy.text(
+                                    session.isBusy
+                                        ? 'entry.saving'
+                                        : 'entry.draft',
+                                  ),
+                                  style: metaStyle,
+                                ),
+                                PikoIconButton(
+                                  icon: const PikoIcon(PikoIconName.check),
+                                  variant: PikoButtonVariant.primary,
+                                  large: true,
+                                  semanticLabel: copy.text('action.saveNext'),
+                                  onPressed: session.isBusy || exitDraining
+                                      ? null
+                                      : confirm,
+                                ),
+                              ],
+                            )
+                          else
+                            Text(
+                              copy.text(
+                                saved!.isSaving
+                                    ? 'entry.saving'
+                                    : error != null
+                                    ? 'entry.unsaved'
+                                    : 'entry.autoSave',
+                              ),
+                              style: metaStyle,
+                            ),
+                          if (error != null &&
+                              error != VocabularyValidation.requiredTarget &&
+                              error != VocabularyValidation.requiredNative)
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                copy.text(errorKey(error)),
+                                style: TextStyle(
+                                  color: pikoDesign.color('danger'),
+                                ),
+                              ),
+                            ),
+                          if (!draft &&
+                              error != null &&
+                              error is! VocabularyValidation)
+                            PikoButton(
+                              label: copy.text('action.retry'),
+                              onPressed: session.isBusy || exitDraining
+                                  ? null
+                                  : () => session.retrySavedEntry(id),
+                            ),
+                          if (!draft && session.supportsDeletion)
+                            PikoButton(
+                              label: copy.text('vocab.delete'),
+                              icon: const PikoIcon(PikoIconName.trash),
+                              variant: PikoButtonVariant.dangerGhost,
+                              onPressed:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : () => deleteEntry(id),
+                            ),
+                          if (deletionErrorId == id && deletionError != null)
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                copy.text('vocab.deleteFailed'),
+                                style: TextStyle(
+                                  color: pikoDesign.color('danger'),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

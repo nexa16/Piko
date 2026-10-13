@@ -16,6 +16,7 @@ globalThis.PIKO_DESIGN = {
     languageBadge: {size:42,radius:12,fontSize:15,weight:800,letterSpacingEm:0.03},
     entryStack: {previewGap:5,previewTop:14,numberSize:12,statusSize:11,compactMinHeight:100,metaLineHeight:1.5,stateMotionMs:200},
     entryHeader: {gap:10,titleSize:22,compactTitleSize:18,actionPadding:10,compactBreakpoint:400,backWeight:750,titleLetterSpacing:-1},
+    swipe: {revealDistance:60,axisDominance:1.5},
     cards: {padding:19},
     fields: {padding:13,radius:12,labelSize:12,labelWeight:750},
     buttons: {variant:'soft',radius:24,height:44,weight:700,padding:14},

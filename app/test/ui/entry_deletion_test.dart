@@ -78,6 +78,44 @@ Future<void> flush(WidgetTester tester, EntryDeletionFixture f) async {
 
 void main() {
   testWidgets(
+    'collapsed saved card swipe reveals explicit deletion and real Undo',
+    (tester) async {
+      final f = EntryDeletionFixture();
+      await f.initialize();
+      final saved = await f.confirm('One', 'Eins');
+      await mount(tester, f, reduced: true);
+      // Saved preview immediately precedes the active draft in the visible stack.
+      await tester.drag(card(saved.id), const Offset(-110, 0));
+      await tester.pumpAndSettle();
+      expect(f.session.confirmedEntries.single.id, saved.id);
+      expect(find.text('Delete vocabulary'), findsOneWidget);
+      f.session.setTargetText('keep draft');
+      f.deletion.failDelete = true;
+      await tester.tap(find.text('Delete vocabulary'));
+      await flush(tester, f);
+      expect(
+        find.text(PikoCopy('en').text('vocab.deleteFailed')),
+        findsOneWidget,
+      );
+      expect(f.session.activeEntryId, isNull);
+      expect(f.session.draft.targetText, 'keep draft');
+      expect(f.session.confirmedEntries.single.id, saved.id);
+      f.deletion.failDelete = false;
+      await tester.drag(card(saved.id), const Offset(-110, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete vocabulary'));
+      await flush(tester, f);
+      expect(f.session.confirmedEntries, isEmpty);
+      await tester.tap(find.text('Undo'));
+      await flush(tester, f);
+      expect(f.session.confirmedEntries.single.id, saved.id);
+      expect(f.session.confirmedEntries.single.targetText, 'One');
+      await tester.drag(card('draft'), const Offset(-110, 0));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete vocabulary'), findsNothing);
+    },
+  );
+  testWidgets(
     'only expanded saved cards delete; pending Undo stays visible and failures retry without losing draft',
     (tester) async {
       final f = EntryDeletionFixture();
