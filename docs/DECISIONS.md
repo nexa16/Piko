@@ -1,5 +1,9 @@
 # Decision log
 
+## ENTRY-007 — guarded Back and draft discard — 2026-10-14
+
+Visible Back and PopScope use one guarded production-screen exit request. Only meaningful text on either draft side requires the shared Continue Editing / Discard & Exit warning; whitespace-only drafts leave directly without confirmation. Safe dismissal preserves editing state. Confirmation blocks exit, while accepted saved-edit queues drain before an explicit exit; failures retain last persisted text. An empty draft does not acquire a warning merely because a prior saved buffer is invalid or failed. Session/route identity guards and owned-dialog cleanup prevent late work from exiting replacements or unrelated routes. The caller continues to own the session controller. Shared exit-warning copy now describes retained saved entries truthfully; the mockup dialog repeats its existing sample-session disclaimer. Global completion, route wiring and final header geometry remain separate requirements.
+
 ## UX-ENTRY-001 — binding focused stack presentation — 2026-10-13
 
 Promote the effective mockup entry preview, metadata, compact minimum and state-transition measurements into `components.entryStack`, consumed by CSS/runtime and generated Flutter adapters. Reuse canonical card spacing, field geometry and the primary 48px card confirmation target. The compact minimum grows with content rather than fixing card height; measured centering continues to adapt to actual viewport, keyboard and text geometry. Reduced motion suppresses size and state transitions. Android verification exercises the actual EntrySessionScreen with isolated production repositories, real IME opening/resizing, swipe activation, raw draft/selection retention and persisted confirmation. No production database is cleared or replaced. This does not add the header actions, route wiring, exit behavior or deletion reserved for their own specifications.

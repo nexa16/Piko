@@ -237,7 +237,7 @@ globalThis.PIKO_COPY = {
     "entry.requiredNative": {"en":"Enter the translation.","de":"Gib die Übersetzung ein."},
     "entry.required": {"en":"Enter both words before confirming.","de":"Bitte beide Wörter vor dem Bestätigen eingeben."},
     "entry.exitTitle": {"en":"Leave this entry session?","de":"Eingabesitzung verlassen?"},
-    "entry.exitWarning": {"en":"Your unconfirmed entry will be discarded. Confirmed entries remain in this preview only.","de":"Dein unbestätigter Eintrag wird verworfen. Bestätigte Einträge bleiben nur in dieser Vorschau."},
+    "entry.exitWarning": {"en":"Your unconfirmed entry will be discarded. Saved entries are kept.","de":"Dein unbestätigter Eintrag wird verworfen. Gespeicherte Einträge bleiben erhalten."},
     "entry.continue": {"en":"Continue editing","de":"Weiter bearbeiten"},
     "entry.discard": {"en":"Discard & exit","de":"Verwerfen & beenden"},
     "entry.title": {

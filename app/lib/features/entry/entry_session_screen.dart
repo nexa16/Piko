@@ -8,14 +8,15 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
+import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 import 'entry_session_controller.dart';
 
-/// Production entry content. The caller owns the session; route exit,
-/// global completion and deletion are separate specifications.
+/// Production entry content. The caller owns the session; global completion,
+/// Collection route wiring and deletion are separate specifications.
 class EntrySessionScreen extends StatefulWidget {
   const EntrySessionScreen({
     required this.collection,
@@ -62,6 +63,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   String? anchorId;
   double? anchorCenter;
   Object? confirmError;
+  Object? exitRequest;
+  bool exitDraining = false, allowPop = false;
+  ModalRoute<dynamic>? exitDialog;
   int confirmedCount = 0;
   late EntryDraft lastDraft;
   EntrySessionController get session => widget.session;
@@ -91,6 +95,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       editors.clear();
       cards.clear();
       confirmError = null;
+      exitRequest = null;
+      exitDraining = false;
+      allowPop = false;
+      dismissOwnedExitDialog();
       topPadding = 0;
       bottomPadding = 0;
       userScrolling = false;
@@ -212,7 +220,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   }
 
   void select(String id, {bool centerCard = false}) {
-    if (session.isConfirming || id == activeId) return;
+    if (session.isConfirming || exitDraining || id == activeId) return;
     anchorId = id;
     anchorCenter = center(id);
     adjusting = true;
@@ -227,7 +235,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   }
 
   void nearest() {
-    if (!mounted || adjusting || session.isConfirming || !userScrolling) return;
+    if (!mounted ||
+        adjusting ||
+        session.isConfirming ||
+        exitDraining ||
+        !userScrolling) {
+      return;
+    }
     final box = viewport.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
     final middle = box.localToGlobal(Offset(0, box.size.height / 2)).dy;
@@ -271,6 +285,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   KeyEventResult key(FocusNode node, KeyEvent event) {
     if (!stackFocus.hasPrimaryFocus ||
         session.isConfirming ||
+        exitDraining ||
         event is! KeyDownEvent) {
       return KeyEventResult.ignored;
     }
@@ -286,6 +301,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   }
 
   Future<void> confirm() async {
+    if (exitDraining || exitRequest != null) return;
     final initiatingSession = session;
     setState(() {
       confirmError = null;
@@ -298,6 +314,90 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           confirmError = error;
         });
       }
+    }
+  }
+
+  Future<void> requestExit() async {
+    if (exitRequest != null || session.isConfirming || allowPop) return;
+    final request = Object();
+    final initiatingSession = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    final navigator = Navigator.of(context);
+    bool current() =>
+        mounted &&
+        identical(exitRequest, request) &&
+        identical(session, initiatingSession) &&
+        route?.isCurrent == true;
+    exitRequest = request;
+    try {
+      final draft = initiatingSession.draft;
+      if (draft.targetText.trim().isNotEmpty ||
+          draft.nativeText.trim().isNotEmpty) {
+        final discard = await showPikoDialog<bool>(
+          context,
+          builder: (dialogContext) {
+            final dialogRoute = ModalRoute.of(dialogContext);
+            if (!mounted ||
+                !identical(exitRequest, request) ||
+                !identical(session, initiatingSession)) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (dialogRoute?.isActive == true) {
+                  dialogRoute!.navigator?.removeRoute(dialogRoute);
+                }
+              });
+              return const SizedBox.shrink();
+            }
+            exitDialog = dialogRoute;
+            final copy = PikoCopyScope.of(dialogContext);
+            return PikoDialog(
+              title: copy.text('entry.exitTitle'),
+              body: Text(copy.text('entry.exitWarning')),
+              actions: [
+                PikoButton(
+                  label: copy.text('entry.continue'),
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                ),
+                PikoButton(
+                  label: copy.text('entry.discard'),
+                  variant: PikoButtonVariant.dangerOutline,
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                ),
+              ],
+            );
+          },
+        );
+        if (!current() || discard != true) return;
+      }
+      if (!current() || initiatingSession.isConfirming) return;
+      setState(() => exitDraining = true);
+      await initiatingSession.awaitSavedEdits();
+      if (!current()) return;
+      setState(() => allowPop = true);
+      // PopScope must receive the permitted state before the deliberate pop.
+      await WidgetsBinding.instance.endOfFrame;
+      if (current()) navigator.pop();
+    } finally {
+      if (mounted && identical(exitRequest, request)) {
+        setState(() {
+          exitRequest = null;
+          exitDialog = null;
+          exitDraining = false;
+          allowPop = false;
+        });
+      }
+    }
+  }
+
+  void dismissOwnedExitDialog() {
+    final staleDialog = exitDialog;
+    exitDialog = null;
+    if (staleDialog?.isActive == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (staleDialog!.isActive) {
+          staleDialog.navigator?.removeRoute(staleDialog);
+        }
+      });
     }
   }
 
@@ -349,7 +449,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       ),
       controller: target ? editor.target : editor.native,
       focusNode: target ? editor.targetFocus : editor.nativeFocus,
-      enabled: !session.isConfirming,
+      enabled: !session.isConfirming && !exitDraining,
       error:
           error ==
               (target
@@ -512,7 +612,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 variant: PikoButtonVariant.primary,
                                 large: true,
                                 semanticLabel: copy.text('action.saveNext'),
-                                onPressed: session.isConfirming
+                                onPressed: session.isConfirming || exitDraining
                                     ? null
                                     : confirm,
                               ),
@@ -546,7 +646,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                             error is! VocabularyValidation)
                           PikoButton(
                             label: copy.text('action.retry'),
-                            onPressed: session.isConfirming
+                            onPressed: session.isConfirming || exitDraining
                                 ? null
                                 : () => session.retrySavedEntry(id),
                           ),
@@ -566,65 +666,82 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     scheduleLayout();
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final horizontal = pikoDesign.dimension(
-              constraints.maxWidth <=
-                      pikoDesign.dimension('layout.mobileBreakpoint')
-                  ? 'layout.mobilePadding'
-                  : 'layout.pagePadding',
-            );
-            return Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: pikoDesign.dimension('controls.contentWidth'),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontal),
-                  child: Column(
-                    children: [
-                      PikoHeading(title: copy.text('entry.title')),
-                      Expanded(
-                        child: SizedBox(
-                          key: viewport,
-                          child: Focus(
-                            focusNode: stackFocus,
-                            onKeyEvent: key,
-                            child: Semantics(
-                              label: copy.text('entry.stackLabel'),
-                              child: NotificationListener<ScrollNotification>(
-                                onNotification: notification,
-                                child: SingleChildScrollView(
-                                  key: const ValueKey('entry-stack'),
-                                  controller: scroll,
-                                  physics: session.isConfirming
-                                      ? const NeverScrollableScrollPhysics()
-                                      : const ClampingScrollPhysics(),
-                                  padding: EdgeInsets.only(
-                                    top: topPadding,
-                                    bottom: bottomPadding,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      for (var i = 0; i < ids.length; i++)
-                                        card(ids[i], i, context),
-                                    ],
+    return PopScope(
+      canPop: allowPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) requestExit();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final horizontal = pikoDesign.dimension(
+                constraints.maxWidth <=
+                        pikoDesign.dimension('layout.mobileBreakpoint')
+                    ? 'layout.mobilePadding'
+                    : 'layout.pagePadding',
+              );
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: pikoDesign.dimension('controls.contentWidth'),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: horizontal),
+                    child: Column(
+                      children: [
+                        PikoHeading(
+                          title: copy.text('entry.title'),
+                          leading: PikoButton(
+                            label: copy.text('common.back'),
+                            icon: const PikoIcon(PikoIconName.arrowLeft),
+                            variant: PikoButtonVariant.ghost,
+                            onPressed: session.isConfirming || exitDraining
+                                ? null
+                                : requestExit,
+                          ),
+                        ),
+                        Expanded(
+                          child: SizedBox(
+                            key: viewport,
+                            child: Focus(
+                              focusNode: stackFocus,
+                              onKeyEvent: key,
+                              child: Semantics(
+                                label: copy.text('entry.stackLabel'),
+                                child: NotificationListener<ScrollNotification>(
+                                  onNotification: notification,
+                                  child: SingleChildScrollView(
+                                    key: const ValueKey('entry-stack'),
+                                    controller: scroll,
+                                    physics:
+                                        session.isConfirming || exitDraining
+                                        ? const NeverScrollableScrollPhysics()
+                                        : const ClampingScrollPhysics(),
+                                    padding: EdgeInsets.only(
+                                      top: topPadding,
+                                      bottom: bottomPadding,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        for (var i = 0; i < ids.length; i++)
+                                          card(ids[i], i, context),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -632,6 +749,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
 
   @override
   void dispose() {
+    dismissOwnedExitDialog();
     session.removeListener(changed);
     for (final editor in editors.values) {
       editor.dispose();

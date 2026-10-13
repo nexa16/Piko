@@ -420,8 +420,8 @@ const copyCatalog = <String, Object?>{
 "en": "Leave this entry session?",
 },
 "entry.exitWarning": <String, Object?>{
-"de": "Dein unbestätigter Eintrag wird verworfen. Bestätigte Einträge bleiben nur in dieser Vorschau.",
-"en": "Your unconfirmed entry will be discarded. Confirmed entries remain in this preview only.",
+"de": "Dein unbestätigter Eintrag wird verworfen. Gespeicherte Einträge bleiben erhalten.",
+"en": "Your unconfirmed entry will be discarded. Saved entries are kept.",
 },
 "entry.nativePlaceholder": <String, Object?>{
 "de": "Übersetzung in der Muttersprache",
