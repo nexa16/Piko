@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-DIALOG-001 — reusable application popup — 2026-10-13
+
+Flutter now uses one shared popup component with the accepted title/close-X pattern. Safe X, Escape, backdrop and Android Back return no action result, preserve caller-owned drafts and restore opener focus. Only explicit positive or meaningful draft-choice actions return a result. Canonical dialog tokens preserve the binding mockup's 430px maximum width, 20px bold title and existing backdrop; Flutter maps the same values with keyboard-safe scrolling, closed-loop focus and reduced-motion transitions. Product-specific creation, deletion and review dialogs consume this component in their own requirements.
+
 ## UX-ICON-002 — shared Lucide asset adapter — 2026-10-13
 
 Flutter uses the mockup's 17 pinned Lucide originals and complete ISC/Feather MIT notices. Direct parent-relative asset paths passed host tests but produced an Android APK without the icons; the installed emulator could not load them. The shared generator therefore creates byte-identical copies in `app/assets/generated/lucide`, checked for missing, changed and extra files. These are generated adapters, not another editable source. PikoIcon uses canonical size and inherited control color; standalone imagery can opt into semantics, and PikoIconButton supplies action names. Android integration verifies every icon renders and the full notice loads. Product-screen use remains scoped to each screen's requirement.

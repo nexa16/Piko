@@ -24,6 +24,12 @@ const designCatalog = <String, Object?>{
 "cards": <String, Object?>{
 "padding": 19,
 },
+"dialogs": <String, Object?>{
+"backdropColor": "#15251c",
+"backdropOpacity": 0.5333333333333333,
+"maxWidth": 430,
+"titleSize": 20,
+},
 "dropdowns": <String, Object?>{
 "gap": 8,
 "height": 44,

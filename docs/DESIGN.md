@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Shared popup implementation — UX-DIALOG-001
+
+`components.dialogs` centralizes the existing mockup maximum width (430px), title size (20px), backdrop color and opacity. Popup titles reuse the canonical 700 title weight; padding, header gap and radius reuse shared spacing/radius tokens. Both CSS and Flutter consume these values. Flutter popups have a flat, untinted surface and scroll within the available keyboard-safe height. A localized Lucide X, Escape, backdrop or Android Back dismiss safely and restore opener focus; Tab stays inside the dialog. Generic Cancel buttons are omitted. Explicit positive actions and meaningful Continue Editing / Discard & Exit choices belong to each consuming flow, with safe dismissal returning no action result. Reduced-motion settings suppress transitions.
+
 **Status:** Proposed visual principles; catalog and live preview support exploration. Cobalt is the current adjustable color baseline; Lucide is the selected UI icon family. Font and application platform remain undecided.
 
 ## Single design configuration — 2026-10-13

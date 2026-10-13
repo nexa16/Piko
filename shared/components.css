@@ -56,3 +56,5 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-width:var(
 .icon{width:var(--icon-size);height:var(--icon-size)}
 main{padding-top:var(--page-top);padding-inline:var(--page-padding)}
 @media(max-width:680px){main{padding-inline:var(--mobile-padding)}}
+.overlay{background:var(--dialog-backdrop)}.modal{width:min(var(--dialog-max-width),100%)}
+.modal .summary-header h2{font-size:var(--dialog-title-size);font-weight:var(--font-title-weight)}
