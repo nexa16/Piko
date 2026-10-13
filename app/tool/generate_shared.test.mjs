@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import { generate, readCatalog, update, updateIcons } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
@@ -75,4 +76,18 @@ test('generated icon copies preserve bytes and reject missing, changed or extra 
     }
     fs.rmdirSync(directory);
   }
+});
+
+test('browser heading margin adapts the canonical token', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.headings.titleMargin = 11;
+  const properties = new Map();
+  const context = vm.createContext({
+    PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}},
+  });
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--heading-title-margin'), '11px');
+  assert.ok(fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('margin:var(--heading-title-margin) 0'));
+  assert.ok(!fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('margin:7px 0'));
 });

@@ -14,6 +14,8 @@ The schema owns `colors`, `spacing`, `typography`, `radii`, `controls`, `compone
 
 The runtime validates colors, numeric ranges and minimum 44px controls. Recurring field, card, icon, border, focus, disabled and page-inset values are promoted from the binding CSS into component, state and layout configuration. Flutter uses minimum heights rather than clipping enlarged text. Semantic grading stays solid red/green; ghost deletion actions remain red. CSS media-query breakpoints and feature-specific geometry still remain in CSS; the matching mobile breakpoint is recorded in configuration for Flutter. Reduced motion disables component animations. This infrastructure does not claim completed product screens or icon/dialog integration.
 
+Accepted compact header geometry (UX-HEADER-002): `components.headings.titleMargin` extracts the existing 7px h1 block margin into the canonical source. Browser h1 and Flutter page-title boxes consume it. Flutter adds existing `spacing.1` (4px) below navigation and `spacing.2` (8px) subtitle inset, keeping one Back at wide widths. These are box measurements; font metrics and CSS layout can produce different visible glyph gaps. Meaningful subtitles wrap, and actual product-screen integration remains separate.
+
 ## What needs refinement
 
 The mockup repeats its identity through an eyebrow, title, subtitle, and collection heading. Activity is below collections, and Statistics has two entry points. Secondary text is faint, heavy headings compete, cards and buttons share similar emphasis, and Unicode symbols substitute for a coherent icon family. A different color alone will not solve hierarchy.

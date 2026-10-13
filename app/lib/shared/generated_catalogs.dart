@@ -43,6 +43,9 @@ const designCatalog = <String, Object?>{
 "padding": 13,
 "radius": 12,
 },
+"headings": <String, Object?>{
+"titleMargin": 7,
+},
 "icons": <String, Object?>{
 "size": 20,
 },

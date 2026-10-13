@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-HEADER-002 — first-release compact header geometry — 2026-10-13
+
+Classify UX-HEADER-002 as First. Extract the binding mockup's existing 7px title block margin into `components.headings.titleMargin`; browser CSS and generated Flutter data consume this canonical value. Flutter headings use existing 4px spacing below navigation and 8px subtitle inset, retaining one Back control at wider widths. Tests compare layout boxes at normal and doubled text sizes; font baselines do not imply identical visible glyph gaps between platforms. Broader tablet/desktop layout and actual screen integration remain separately scoped.
+
 ## UX-HEADER-001 — first-release page-heading hierarchy — 2026-10-13
 
 Classify UX-HEADER-001 as First, as the shared heading dependency for the accepted screens. PikoHeading presents one level-one semantic title and supports a meaningful Collection subtitle using canonical small/muted typography with natural wrapping. There is no decorative eyebrow or generic explanatory subtitle slot. Learning direction/progress, section headings and field instructions remain separate useful context. This establishes the shared primitive; full page integration belongs to each screen requirement and spacing belongs to UX-HEADER-002.

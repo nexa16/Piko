@@ -56,23 +56,34 @@ class PikoHeading extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       if (leading != null || actions.isNotEmpty)
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          spacing: pikoDesign.dimension('spacing.2'),
-          runSpacing: pikoDesign.dimension('spacing.2'),
-          children: [?leading, ...actions],
+        Padding(
+          padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.1')),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: pikoDesign.dimension('spacing.2'),
+            runSpacing: pikoDesign.dimension('spacing.2'),
+            children: [?leading, ...actions],
+          ),
         ),
-      Semantics(
-        header: true,
-        headingLevel: 1,
-        child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: pikoDesign.dimension('components.headings.titleMargin'),
+        ),
+        child: Semantics(
+          header: true,
+          headingLevel: 1,
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        ),
       ),
       if (subtitle != null)
-        Text(
-          subtitle!,
-          style: TextStyle(
-            fontSize: pikoDesign.dimension('typography.small'),
-            color: pikoDesign.color('muted'),
+        Padding(
+          padding: EdgeInsets.only(left: pikoDesign.dimension('spacing.2')),
+          child: Text(
+            subtitle!,
+            style: TextStyle(
+              fontSize: pikoDesign.dimension('typography.small'),
+              color: pikoDesign.color('muted'),
+            ),
           ),
         ),
     ],
