@@ -11,11 +11,22 @@ final class VocabularyRecord {
   final String nativeText;
 }
 
-enum VocabularyValidation { requiredTarget, requiredNative, collectionNotFound }
+enum VocabularyValidation {
+  requiredTarget,
+  requiredNative,
+  collectionNotFound,
+  entryNotFound,
+  duplicatePair,
+}
 
 abstract interface class VocabularyRepository {
   Future<VocabularyRecord> create({
     required String collectionId,
+    required String targetText,
+    required String nativeText,
+  });
+  Future<VocabularyRecord> update({
+    required String id,
     required String targetText,
     required String nativeText,
   });

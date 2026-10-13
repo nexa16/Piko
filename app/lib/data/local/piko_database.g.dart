@@ -585,12 +585,36 @@ class $VocabularyEntriesTable extends VocabularyEntries
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _targetKeyMeta = const VerificationMeta(
+    'targetKey',
+  );
+  @override
+  late final GeneratedColumn<String> targetKey = GeneratedColumn<String>(
+    'target_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nativeKeyMeta = const VerificationMeta(
+    'nativeKey',
+  );
+  @override
+  late final GeneratedColumn<String> nativeKey = GeneratedColumn<String>(
+    'native_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     collectionId,
     targetText,
     nativeText,
+    targetKey,
+    nativeKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -636,6 +660,22 @@ class $VocabularyEntriesTable extends VocabularyEntries
     } else if (isInserting) {
       context.missing(_nativeTextMeta);
     }
+    if (data.containsKey('target_key')) {
+      context.handle(
+        _targetKeyMeta,
+        targetKey.isAcceptableOrUnknown(data['target_key']!, _targetKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetKeyMeta);
+    }
+    if (data.containsKey('native_key')) {
+      context.handle(
+        _nativeKeyMeta,
+        nativeKey.isAcceptableOrUnknown(data['native_key']!, _nativeKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nativeKeyMeta);
+    }
     return context;
   }
 
@@ -661,6 +701,14 @@ class $VocabularyEntriesTable extends VocabularyEntries
         DriftSqlType.string,
         data['${effectivePrefix}native_text'],
       )!,
+      targetKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_key'],
+      )!,
+      nativeKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}native_key'],
+      )!,
     );
   }
 
@@ -675,11 +723,15 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
   final String collectionId;
   final String targetText;
   final String nativeText;
+  final String targetKey;
+  final String nativeKey;
   const VocabularyEntry({
     required this.id,
     required this.collectionId,
     required this.targetText,
     required this.nativeText,
+    required this.targetKey,
+    required this.nativeKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -688,6 +740,8 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     map['collection_id'] = Variable<String>(collectionId);
     map['target_text'] = Variable<String>(targetText);
     map['native_text'] = Variable<String>(nativeText);
+    map['target_key'] = Variable<String>(targetKey);
+    map['native_key'] = Variable<String>(nativeKey);
     return map;
   }
 
@@ -697,6 +751,8 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       collectionId: Value(collectionId),
       targetText: Value(targetText),
       nativeText: Value(nativeText),
+      targetKey: Value(targetKey),
+      nativeKey: Value(nativeKey),
     );
   }
 
@@ -710,6 +766,8 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       collectionId: serializer.fromJson<String>(json['collectionId']),
       targetText: serializer.fromJson<String>(json['targetText']),
       nativeText: serializer.fromJson<String>(json['nativeText']),
+      targetKey: serializer.fromJson<String>(json['targetKey']),
+      nativeKey: serializer.fromJson<String>(json['nativeKey']),
     );
   }
   @override
@@ -720,6 +778,8 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       'collectionId': serializer.toJson<String>(collectionId),
       'targetText': serializer.toJson<String>(targetText),
       'nativeText': serializer.toJson<String>(nativeText),
+      'targetKey': serializer.toJson<String>(targetKey),
+      'nativeKey': serializer.toJson<String>(nativeKey),
     };
   }
 
@@ -728,11 +788,15 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     String? collectionId,
     String? targetText,
     String? nativeText,
+    String? targetKey,
+    String? nativeKey,
   }) => VocabularyEntry(
     id: id ?? this.id,
     collectionId: collectionId ?? this.collectionId,
     targetText: targetText ?? this.targetText,
     nativeText: nativeText ?? this.nativeText,
+    targetKey: targetKey ?? this.targetKey,
+    nativeKey: nativeKey ?? this.nativeKey,
   );
   VocabularyEntry copyWithCompanion(VocabularyEntriesCompanion data) {
     return VocabularyEntry(
@@ -746,6 +810,8 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       nativeText: data.nativeText.present
           ? data.nativeText.value
           : this.nativeText,
+      targetKey: data.targetKey.present ? data.targetKey.value : this.targetKey,
+      nativeKey: data.nativeKey.present ? data.nativeKey.value : this.nativeKey,
     );
   }
 
@@ -755,13 +821,22 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           ..write('id: $id, ')
           ..write('collectionId: $collectionId, ')
           ..write('targetText: $targetText, ')
-          ..write('nativeText: $nativeText')
+          ..write('nativeText: $nativeText, ')
+          ..write('targetKey: $targetKey, ')
+          ..write('nativeKey: $nativeKey')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, collectionId, targetText, nativeText);
+  int get hashCode => Object.hash(
+    id,
+    collectionId,
+    targetText,
+    nativeText,
+    targetKey,
+    nativeKey,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -769,7 +844,9 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           other.id == this.id &&
           other.collectionId == this.collectionId &&
           other.targetText == this.targetText &&
-          other.nativeText == this.nativeText);
+          other.nativeText == this.nativeText &&
+          other.targetKey == this.targetKey &&
+          other.nativeKey == this.nativeKey);
 }
 
 class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
@@ -777,12 +854,16 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
   final Value<String> collectionId;
   final Value<String> targetText;
   final Value<String> nativeText;
+  final Value<String> targetKey;
+  final Value<String> nativeKey;
   final Value<int> rowid;
   const VocabularyEntriesCompanion({
     this.id = const Value.absent(),
     this.collectionId = const Value.absent(),
     this.targetText = const Value.absent(),
     this.nativeText = const Value.absent(),
+    this.targetKey = const Value.absent(),
+    this.nativeKey = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VocabularyEntriesCompanion.insert({
@@ -790,16 +871,22 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     required String collectionId,
     required String targetText,
     required String nativeText,
+    required String targetKey,
+    required String nativeKey,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        collectionId = Value(collectionId),
        targetText = Value(targetText),
-       nativeText = Value(nativeText);
+       nativeText = Value(nativeText),
+       targetKey = Value(targetKey),
+       nativeKey = Value(nativeKey);
   static Insertable<VocabularyEntry> custom({
     Expression<String>? id,
     Expression<String>? collectionId,
     Expression<String>? targetText,
     Expression<String>? nativeText,
+    Expression<String>? targetKey,
+    Expression<String>? nativeKey,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -807,6 +894,8 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       if (collectionId != null) 'collection_id': collectionId,
       if (targetText != null) 'target_text': targetText,
       if (nativeText != null) 'native_text': nativeText,
+      if (targetKey != null) 'target_key': targetKey,
+      if (nativeKey != null) 'native_key': nativeKey,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -816,6 +905,8 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     Value<String>? collectionId,
     Value<String>? targetText,
     Value<String>? nativeText,
+    Value<String>? targetKey,
+    Value<String>? nativeKey,
     Value<int>? rowid,
   }) {
     return VocabularyEntriesCompanion(
@@ -823,6 +914,8 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       collectionId: collectionId ?? this.collectionId,
       targetText: targetText ?? this.targetText,
       nativeText: nativeText ?? this.nativeText,
+      targetKey: targetKey ?? this.targetKey,
+      nativeKey: nativeKey ?? this.nativeKey,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -842,6 +935,12 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     if (nativeText.present) {
       map['native_text'] = Variable<String>(nativeText.value);
     }
+    if (targetKey.present) {
+      map['target_key'] = Variable<String>(targetKey.value);
+    }
+    if (nativeKey.present) {
+      map['native_key'] = Variable<String>(nativeKey.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -855,6 +954,8 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
           ..write('collectionId: $collectionId, ')
           ..write('targetText: $targetText, ')
           ..write('nativeText: $nativeText, ')
+          ..write('targetKey: $targetKey, ')
+          ..write('nativeKey: $nativeKey, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1337,6 +1438,8 @@ typedef $$VocabularyEntriesTableCreateCompanionBuilder =
       required String collectionId,
       required String targetText,
       required String nativeText,
+      required String targetKey,
+      required String nativeKey,
       Value<int> rowid,
     });
 typedef $$VocabularyEntriesTableUpdateCompanionBuilder =
@@ -1345,6 +1448,8 @@ typedef $$VocabularyEntriesTableUpdateCompanionBuilder =
       Value<String> collectionId,
       Value<String> targetText,
       Value<String> nativeText,
+      Value<String> targetKey,
+      Value<String> nativeKey,
       Value<int> rowid,
     });
 
@@ -1404,6 +1509,16 @@ class $$VocabularyEntriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get targetKey => $composableBuilder(
+    column: $table.targetKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nativeKey => $composableBuilder(
+    column: $table.nativeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$CollectionsTableFilterComposer get collectionId {
     final $$CollectionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -1452,6 +1567,16 @@ class $$VocabularyEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get targetKey => $composableBuilder(
+    column: $table.targetKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nativeKey => $composableBuilder(
+    column: $table.nativeKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CollectionsTableOrderingComposer get collectionId {
     final $$CollectionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -1497,6 +1622,12 @@ class $$VocabularyEntriesTableAnnotationComposer
     column: $table.nativeText,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get targetKey =>
+      $composableBuilder(column: $table.targetKey, builder: (column) => column);
+
+  GeneratedColumn<String> get nativeKey =>
+      $composableBuilder(column: $table.nativeKey, builder: (column) => column);
 
   $$CollectionsTableAnnotationComposer get collectionId {
     final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
@@ -1559,12 +1690,16 @@ class $$VocabularyEntriesTableTableManager
                 Value<String> collectionId = const Value.absent(),
                 Value<String> targetText = const Value.absent(),
                 Value<String> nativeText = const Value.absent(),
+                Value<String> targetKey = const Value.absent(),
+                Value<String> nativeKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VocabularyEntriesCompanion(
                 id: id,
                 collectionId: collectionId,
                 targetText: targetText,
                 nativeText: nativeText,
+                targetKey: targetKey,
+                nativeKey: nativeKey,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1573,12 +1708,16 @@ class $$VocabularyEntriesTableTableManager
                 required String collectionId,
                 required String targetText,
                 required String nativeText,
+                required String targetKey,
+                required String nativeKey,
                 Value<int> rowid = const Value.absent(),
               }) => VocabularyEntriesCompanion.insert(
                 id: id,
                 collectionId: collectionId,
                 targetText: targetText,
                 nativeText: nativeText,
+                targetKey: targetKey,
+                nativeKey: nativeKey,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

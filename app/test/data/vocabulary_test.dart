@@ -102,6 +102,8 @@ void main() {
                 collectionId: 'missing',
                 targetText: 'One',
                 nativeText: 'Two',
+                targetKey: 'one',
+                nativeKey: 'two',
               ),
             ),
         throwsA(isA<sqlite.SqliteException>()),
@@ -115,6 +117,8 @@ void main() {
                 collectionId: owner.id,
                 targetText: '',
                 nativeText: 'Two',
+                targetKey: '',
+                nativeKey: 'two',
               ),
             ),
         throwsA(isA<sqlite.SqliteException>()),
@@ -128,6 +132,8 @@ void main() {
                 collectionId: owner.id,
                 targetText: 'One',
                 nativeText: '   ',
+                targetKey: 'one',
+                nativeKey: '',
               ),
             ),
         throwsA(isA<sqlite.SqliteException>()),
@@ -158,9 +164,8 @@ void main() {
         nativeText: ' Schule ',
       );
       expect((await observed.future).single.id, saved.id);
-      // Display input is intact; normalization belongs to VOCAB-012/002.
-      expect(saved.targetText, '  학교  ');
-      expect(saved.nativeText, ' Schule ');
+      expect(saved.targetText, '학교');
+      expect(saved.nativeText, 'Schule');
       expect(await repository.watchByCollection(other.id).first, isEmpty);
       expect(await repository.watchById('missing').first, isNull);
     },
@@ -235,7 +240,7 @@ void main() {
         final version = await db
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.read<int>('user_version'), 3);
+        expect(version.read<int>('user_version'), 4);
         await db.close();
         db = PikoDatabase(NativeDatabase(file));
         final actual = await SqliteVocabularyRepository(
