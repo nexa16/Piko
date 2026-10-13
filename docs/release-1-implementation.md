@@ -150,6 +150,12 @@ The release tags in the original specifications predate the implementation agree
 
 ## Final acceptance evidence
 
+### Android runner cleanup correction — 2026-10-14
+
+The initial integration commands omitted `--no-uninstall`. Inspection of the installed Flutter 3.44.7 runner confirms that its default cleanup uninstalls the tested package without retaining app data. After the entry-header fixture, the emulator had neither the package nor its data directory. Earlier claims of preserving pre-existing emulator app data are therefore withdrawn; reinstalling and seeing a database is not preservation evidence. Repository files and mockups were unaffected, but prior emulator data and synthetic screenshots are not recoverable from available evidence. Fixture assertions still establish their scoped behavior during the run, not data survival across runner cleanup.
+
+Subsequent Android integration runs must explicitly disable uninstall, use isolated fixture storage and verify existing sentinel/database fingerprints after cleanup. Restoring the normal APK is a working-install repair, not recovery of the erased data. Production restart/termination acceptance remains pending.
+
 Completion remains unproven until evidence covers the full scope, including real Android runtime behavior. Record results here when available; no gate is currently passed.
 
 | Gate | Status | Evidence |
