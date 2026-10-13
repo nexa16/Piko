@@ -28,6 +28,8 @@ The whole-interface translation audit (UX-I18N-001) follows screen implementatio
 
 Execution dependencies refined after COLL-015: language badges can use existing Collection data immediately. Vocabulary display-order acceptance follows the real inline vocabulary renderer. Collection rename and deletion follow stored vocabulary and directional learning state so preservation and cascade checks use actual records; their combined presentation follows those working actions. Homepage review controls follow real due data and Collection review launch. The data-minimization audit follows the final Settings storage. After ENTRY-002, termination verification (ENTRY-008) follows the real entry screen and Collection Add Entry wiring so it can exercise production confirmation rather than a substitute form. These ordering corrections preserve all 95 requirements and one-spec commits; they do not substitute placeholders, reduce scope or mark pending work verified.
 
+Before deletion implementation, LEARN-002 precedes ENTRY-009 so Undo restores actual independent directional records rather than a placeholder progress snapshot. Later scheduling/history/retry requirements must extend preservation tests with the real state they introduce. This dependency refinement retains every included ID and does not claim future progress preservation before those records exist.
+
 | Order | Spec ID | Implementation focus | Status | Commit | Verification evidence |
 | --- | --- | --- | --- | --- | --- |
 | 1 | FOUNDATION-001 | Flutter scaffold, application identity and toolchain | Verified | 050c361 | Analysis clean; startup widget test; debug APK built, installed and cold-launched on Android API 36. |
@@ -64,18 +66,18 @@ Execution dependencies refined after COLL-015: language badges can use existing 
 | 32 | ENTRY-007 | Back and nonempty-draft discard confirmation | Pending | — | — |
 | 33 | ENTRY-011 | Global completion validates, saves and exits | Pending | — | — |
 | 34 | UX-ENTRY-002 | Distinct global and card checkmarks | Pending | — | — |
-| 35 | ENTRY-009 | Delete with eight-second progress-preserving Undo | Pending | — | — |
-| 36 | ENTRY-004 | Revisit, edit and delete saved session entries | Pending | — | — |
-| 37 | UX-VOCAB-DELETE-001 | Swipe reveals explicit delete; accessible alternative | Pending | — | — |
-| 38 | UX-COLL-003 | Accessible inline Add Entry action | Pending | — | — |
-| 39 | ENTRY-008 | Confirmed entry durability after termination | Pending | — | — |
-| 40 | VOCAB-EDIT-001 | Validated inline vocabulary auto-save | Pending | — | — |
-| 41 | UX-COLL-009 | Expand vocabulary in place | Pending | — | — |
-| 42 | COLL-003 | Target-language-first vocabulary order | Pending | — | — |
-| 43 | UX-COLL-011 | Compact fields and red deletion | Pending | — | — |
-| 44 | VOCAB-EDIT-002 | Restore opening values on discard | Pending | — | — |
-| 45 | UX-COLL-012 | Separate finish and discard controls | Pending | — | — |
-| 46 | LEARN-002 | Independent directional learning items | Pending | — | — |
+| 35 | LEARN-002 | Independent directional learning items | Pending | — | — |
+| 36 | ENTRY-009 | Delete with eight-second progress-preserving Undo | Pending | — | — |
+| 37 | ENTRY-004 | Revisit, edit and delete saved session entries | Pending | — | — |
+| 38 | UX-VOCAB-DELETE-001 | Swipe reveals explicit delete; accessible alternative | Pending | — | — |
+| 39 | UX-COLL-003 | Accessible inline Add Entry action | Pending | — | — |
+| 40 | ENTRY-008 | Confirmed entry durability after termination | Pending | — | — |
+| 41 | VOCAB-EDIT-001 | Validated inline vocabulary auto-save | Pending | — | — |
+| 42 | UX-COLL-009 | Expand vocabulary in place | Pending | — | — |
+| 43 | COLL-003 | Target-language-first vocabulary order | Pending | — | — |
+| 44 | UX-COLL-011 | Compact fields and red deletion | Pending | — | — |
+| 45 | VOCAB-EDIT-002 | Restore opening values on discard | Pending | — | — |
+| 46 | UX-COLL-012 | Separate finish and discard controls | Pending | — | — |
 | 47 | COLL-012 | Rename without changing entries or progress | Pending | — | — |
 | 48 | COLL-014 | Confirm collection deletion and cascade data removal | Pending | — | — |
 | 49 | UX-COLL-007 | Inline collection rename and deletion presentation | Pending | — | — |
