@@ -1,5 +1,9 @@
 # Decision log
 
+## FOUNDATION-005 — execution order follows real data dependencies — 2026-10-13
+
+The coordinator refined the implementation sequence without changing the 95-requirement release scope. Review entry points wait for real due counts and working session launch; vocabulary order waits for persisted entries rendered in detail. Rename and deletion preservation/cascade tests follow vocabulary and directional learning storage, and combined collection controls follow their functional actions. Data minimization is audited after the complete release storage exists. Requirements remain individually committed and pending until their full acceptance evidence exists; mock data or a disabled placeholder cannot satisfy a missing dependency.
+
 ## COLL-015 — truthful empty collection state — 2026-10-13
 
 An empty-state invitation represents a successful repository result containing no Collections, not a loading or read-failure assumption. The canonical explanation and Create first collection action appear alongside ordinary New; both launch the same validated creation dialog. Dismissal preserves the empty database, and a successful first creation removes the invitation through the existing live stream. No sample Collections or invented review counts appear. This establishes the functional state and action; UX-HOME-002 separately verifies its binding presentation.
