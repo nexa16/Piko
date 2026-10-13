@@ -37,6 +37,7 @@ void main() {
       );
       await tester.tap(find.text('New'));
       await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '');
       await tester.ensureVisible(find.text('Create collection'));
       await tester.tap(find.text('Create collection'));
       await tester.pumpAndSettle();

@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-017 — localized defaults preserve explicit draft edits — 2026-10-13
+
+The creation form starts with the target-language name from the current canonical interface catalog. Target changes replace it only before an explicit user name edit or clear; returning the text to the original default remains customization. Native-language changes never rename it. Locale-only changes preserve name text, selection and focus consistently with I18N-002 rather than introducing an additional automatic rewrite; a later target change uses the current locale while the draft is still automatic. Required-name validation and existing support for duplicate names/language pairs remain in place. Field-order presentation is separately verified under UX-COLL-010.
+
 ## COLL-001 — local collection creation — 2026-10-13
 
 Collection creation now uses local SQLite storage with UUID identities, a required trimmed name and two distinct language codes. Matching names and language pairs remain allowed. The initial language choices follow the binding mockup (Korean, French, English and German). Schema 2 adds collections while preserving existing settings. Explicit Create starts one guarded write; dismissing an unsubmitted form does not write, and dismissing during a previously initiated write cannot close another route when that write completes. Failures preserve inputs for retry. Listing, default names and detail navigation retain their separate requirement commits.

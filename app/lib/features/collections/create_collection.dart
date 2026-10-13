@@ -18,7 +18,18 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
   var target = VocabularyLanguage.korean;
   var native = VocabularyLanguage.german;
   var submitting = false;
+  var nameInitialized = false;
+  var automaticName = true;
   String? error;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!nameInitialized) {
+      name.text = PikoCopyScope.of(context).text(target.copyKey);
+      nameInitialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -85,11 +96,11 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          language(
-            'collection.targetLanguage',
-            target,
-            (value) => target = value,
-          ),
+          language('collection.targetLanguage', target, (value) {
+            if (value == target) return;
+            target = value;
+            if (automaticName) name.text = copy.text(target.copyKey);
+          }),
           SizedBox(height: pikoDesign.dimension('spacing.4')),
           language(
             'collection.nativeLanguage',
@@ -100,6 +111,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
           PikoTextField(
             label: copy.text('collection.name'),
             controller: name,
+            onChanged: (_) => automaticName = false,
             enabled: !submitting,
           ),
           if (error != null)
