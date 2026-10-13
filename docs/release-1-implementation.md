@@ -31,8 +31,8 @@ Every row starts pending. Record the commit, relevant test or runtime evidence, 
 | 3 | FOUNDATION-003 | Local storage and migrations | Verified | 117126d | Analysis clean; eight tests pass; real SQLite file reopen, transaction rollback and exported schema v1. |
 | 4 | FOUNDATION-004 | Canonical design and copy adapters | Verified | bd5fb4d | Four Node tests, generated-output check, eleven Flutter tests and clean analysis. |
 | 5 | FOUNDATION-005 | This traceability ledger and completion audit | Verified | FOUNDATION-005 commit | 95 unique rows; every product ID exists in canonical specs; gates remain pending until full verification. |
-| 6 | UX-SYSTEM-001 | Shared components and explicit states | Verified | Pending commit | Reusable token-backed primitives; 392px/200% German layout, semantic icon activation, focus, disabled, grading colors and reduced motion tests; Flutter analyze/test and catalog generation checks. Product-screen integration remains with owning specs. |
-| 7 | UX-I18N-002 | Shared editable catalog consumption | Pending | — | — |
+| 6 | UX-SYSTEM-001 | Shared components and explicit states | Verified | fc11fb5 | Reusable token-backed primitives; 392px/200% German layout, semantic icon activation, focus, disabled, grading colors and reduced motion tests; Flutter analyze/test and catalog generation checks. Product-screen integration remains with owning specs. |
+| 7 | UX-I18N-002 | Shared editable catalog consumption | Verified | UX-I18N-002 commit | Application title reads canonical app.name; widget scope lookup and locale-change consumer rebuild tests; Flutter analyze/test and generator check. |
 | 8 | I18N-001 | English default and German support | Pending | — | — |
 | 9 | I18N-002 | Localized interface independent of collection languages | Pending | — | — |
 | 10 | UX-I18N-001 | Localized visible and accessible text | Pending | — | — |

@@ -55,7 +55,7 @@ Inline `[Flow: collection]`, `[Flow: entry]`, `[Flow: review]`, and `[Flow: sett
 
 - **UX-SETTINGS-001 [Confirmed]:** [Release: First] [Flow: settings] First-release Settings shows a single App Language control with English and Deutsch. No learning, Hint, developer, or theme preferences appear in that release view. Keep one page title and usable Back navigation.
 
-- **UX-I18N-002 [Confirmed]:** [Flow: collection, entry, review, settings] Maintain one shared editable catalog for UI naming and English/German translations, consumed by the mockup and the eventual application. The prototype supports live draft editing and export; the app adapter depends on the future platform.
+- **UX-I18N-002 [Confirmed]:** [Release: First] [Flow: collection, entry, review, settings] Maintain one shared editable catalog for UI naming and English/German translations, consumed by the mockup and the application. The prototype supports live draft editing and export. Flutter consumes generated canonical catalogs through a shared widget context that rebuilds consumers when the interface locale changes.
 
 - **UX-I18N-001:** [Flow: collection, entry, review, settings] Every visible string, including status labels, tooltips, controls and feedback, is localizable. English is default, German is supported initially. (I18N-001–002)
 

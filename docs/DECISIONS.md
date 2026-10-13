@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-I18N-002 — shared app catalog consumption — 2026-10-13
+
+Classify the previously unassigned shared-catalog requirement as First, as an explicit dependency of the accepted English/German app. Flutter widget consumers use one inherited catalog context; the application title comes from `app.name`. Shared JS remains the editable source, and generated Dart data remains an adapter. Material localization and persisted language selection are separate requirements.
+
 ## FOUNDATION-005 — implementation coordination — 2026-10-13
 
 The accepted implementation plan is tracked in `release-1-implementation.md`, with one spec per commit, explicit exclusions and evidence required for completion. The roadmap and product phase now reflect authorized implementation. Older discovery questions are retained as historical research context, not treated as fresh blockers or permission to add later capabilities. Android is the verification target; the owner controls merge and publication. Requirement details and release tags are reconciled individually as their implementations land.
