@@ -208,7 +208,7 @@ void main() {
       );
       expect(tester.widget<PikoCard>(focusedCard).focused, isTrue);
       final container = tester.widget<Container>(
-        find.descendant(of: focusedCard, matching: find.byType(Container)),
+        find.descendant(of: focusedCard, matching: find.byType(Container)).first,
       );
       final border = (container.decoration! as BoxDecoration).border! as Border;
       expect(border.top.color, pikoDesign.color('primary'));

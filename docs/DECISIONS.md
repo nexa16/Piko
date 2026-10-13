@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-COLL-005 — real target-language badges — 2026-10-13
+
+Classify UX-COLL-005 as First. Collection cards display uppercase Latin codes from the stored target language (KO/FR/EN/DE), independent of interface locale. Extract the binding cover's effective 42px size, 12px radius, 15px font, weight 800 and .03em tracking into `components.languageBadge`; replace the obsolete earlier 48px cover default rather than maintaining conflicting geometry. Flutter uses that baseline as a minimum with centered intrinsic text so enlarged glyphs can grow without clipping. Decorative code does not add another announcement to the existing whole-card name/full-pair action. No due counts or review actions are introduced by this badge requirement.
+
 ## UX-HOME-002 — binding empty invitation presentation — 2026-10-13
 
 The successful-empty invitation uses the binding card with readable muted body text and the primary Create first collection action, while New remains available. Existing canonical body size, card properties and 20px spacing are reused; the mockup's description-only 1.6 line-height is extracted into `components.emptyState.descriptionLineHeight`, consumed by browser and Flutter adapters. English/German semantic and keyboard actions, 392px doubled-text scroll reachability and live locale updates have focused widget coverage. Functional empty-result gating remains COLL-015; this does not claim future review counts or a completed Settings header.

@@ -103,3 +103,19 @@ test('browser empty description adapts only its canonical line-height token', ()
   assert.ok(fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8').includes('line-height:var(--empty-description-line-height)'));
   assert.ok(fs.readFileSync(new URL('../../mockups/mockup.js', import.meta.url), 'utf8').includes('class="meta empty-description"'));
 });
+
+test('browser cover adapts effective language badge geometry and font tokens', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.languageBadge = {size:46,radius:10,fontSize:17,weight:700,letterSpacingEm:0.05};
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  for (const [key, value] of [['size','46px'],['radius','10px'],['font-size','17px'],['weight','700'],['letter-spacing','0.05em']]) {
+    assert.equal(properties.get('--language-badge-'+key), value);
+  }
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('width:var(--language-badge-size)'));
+  assert.ok(css.includes('font-weight:var(--language-badge-weight)'));
+  assert.ok(!css.includes('.cover{height:48px'));
+});

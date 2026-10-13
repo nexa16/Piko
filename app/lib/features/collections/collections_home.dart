@@ -6,6 +6,7 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_card.dart';
+import '../../ui/components/piko_language_badge.dart';
 import '../../ui/piko_theme.dart';
 import 'collection_detail.dart';
 import 'create_collection.dart';
@@ -185,9 +186,17 @@ class _CollectionTileState extends State<_CollectionTile> {
           child: ExcludeSemantics(
             child: PikoCard(
               focused: focused,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Text(widget.collection.name), Text(languages)],
+              child: Row(
+                children: [
+                  PikoLanguageBadge(widget.collection.targetLanguage),
+                  SizedBox(width: pikoDesign.dimension('spacing.3')),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [Text(widget.collection.name), Text(languages)],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

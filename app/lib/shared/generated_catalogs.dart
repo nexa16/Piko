@@ -52,6 +52,13 @@ const designCatalog = <String, Object?>{
 "icons": <String, Object?>{
 "size": 20,
 },
+"languageBadge": <String, Object?>{
+"fontSize": 15,
+"letterSpacingEm": 0.03,
+"radius": 12,
+"size": 42,
+"weight": 800,
+},
 },
 "controls": <String, Object?>{
 "contentWidth": 760,

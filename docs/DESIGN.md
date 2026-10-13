@@ -18,6 +18,8 @@ Accepted compact header geometry (UX-HEADER-002): `components.headings.titleMarg
 
 Empty invitation presentation (UX-HOME-002) uses the shared card, canonical muted body text and `spacing.5` (20px) before the primary creation action. The existing binding description-only 1.6 line-height is now `components.emptyState.descriptionLineHeight`; its browser and Flutter adapters share that value without changing global body line-height. The ordinary New action stays available, and enlarged localized text wraps in normal page scroll flow.
 
+Target-language badges (UX-COLL-005) use canonical `components.languageBadge`: effective binding size 42px, radius 12px, font 15px, weight 800 and .03em tracking. The old overridden 48px cover rule is removed. Browser adapters reproduce the baseline; Flutter uses minimum bounds and centered intrinsic text to let enlarged glyphs grow. Tint/Primary remain semantic colors. Latin codes derive from Collection data, while full localized language names stay in the whole-card accessible action and the code is decorative.
+
 ## What needs refinement
 
 The mockup repeats its identity through an eyebrow, title, subtitle, and collection heading. Activity is below collections, and Statistics has two entry points. Secondary text is faint, heavy headings compete, cards and buttons share similar emphasis, and Unicode symbols substitute for a coherent icon family. A different color alone will not solve hierarchy.
