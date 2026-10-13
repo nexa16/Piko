@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import '../../core/clock.dart';
+import '../../data/vocabulary_deletion.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_normalization.dart';
 
@@ -45,6 +47,21 @@ final class SavedEntryCompletionBlocked implements Exception {
   final Object error;
 }
 
+@immutable
+final class EntryUndoState {
+  const EntryUndoState(this.entry, this.expiresAt, this.error);
+  final VocabularyRecord entry;
+  final DateTime expiresAt;
+  final Object? error;
+}
+
+final class _SessionDeletion {
+  _SessionDeletion(this.receipt);
+  final VocabularyDeletionReceipt receipt;
+  Timer? timer;
+  Object? error;
+}
+
 /// One Collection's ephemeral session: new drafts require confirmation, while
 /// valid edits of this session's confirmed records save automatically.
 /// Text, focus and scroll controllers belong to the consuming widgets.
@@ -52,11 +69,39 @@ final class EntrySessionController extends ChangeNotifier {
   EntrySessionController({
     required this.collectionId,
     required VocabularyRepository repository,
+    VocabularyDeletionService? deletionService,
+    PikoClock? clock,
     // Public injection name with a private dependency; not a UI-facing property.
     // ignore: prefer_initializing_formals
-  }) : _repository = repository;
+  }) : _repository = repository,
+       // Keep the public dependency name distinct from its private field.
+       // ignore: prefer_initializing_formals
+       _deletionService = deletionService,
+       _clock = clock ?? const SystemPikoClock();
   final String collectionId;
   final VocabularyRepository _repository;
+  final VocabularyDeletionService? _deletionService;
+  final PikoClock _clock;
+  final Map<String, int> _ordinals = {};
+  int _nextOrdinal = 0, _advancementRevision = 0;
+  final Map<String, _SessionDeletion> _deletions = {};
+  int _undoLifetime = 0;
+  Future<VocabularyDeletionReceipt>? _deleting;
+  Future<VocabularyRecord>? _restoring;
+  String? _deletingId, _restoringId;
+  bool get supportsDeletion => _deletionService != null;
+  int get advancementRevision => _advancementRevision;
+  bool get isMutating =>
+      !_disposed && (_deleting != null || _restoring != null);
+  List<EntryUndoState> get undoEntries => List.unmodifiable(
+    _deletions.values.map(
+      (value) => EntryUndoState(
+        value.receipt.entry,
+        value.receipt.expiresAt,
+        value.error,
+      ),
+    ),
+  );
   EntryDraft _draft = const EntryDraft();
   bool _disposed = false;
   final List<VocabularyRecord> _confirmedEntries = [];
@@ -68,7 +113,7 @@ final class EntrySessionController extends ChangeNotifier {
   final Map<String, Future<void>> _savedWorkers = {};
   bool get isConfirming => !_disposed && _pendingConfirmation != null;
   bool get isCompleting => !_disposed && _completing;
-  bool get isBusy => isConfirming || isCompleting;
+  bool get isBusy => isConfirming || isCompleting || isMutating;
   bool get isCompleted => !_disposed && _completed;
 
   EntryDraft get draft => _draft;
@@ -189,6 +234,180 @@ final class EntrySessionController extends ChangeNotifier {
     }
   }
 
+  Future<VocabularyDeletionReceipt> deleteSavedEntry(String id) {
+    _ensureActive();
+    if (_deletingId == id && _deleting != null) return _deleting!;
+    _ensureEditable();
+    _savedBuffer(id); // Reject foreign/unknown IDs before any service mutation.
+    if (_deletionService == null) {
+      throw StateError('Deletion service is unavailable.');
+    }
+    final result = Completer<VocabularyDeletionReceipt>();
+    _deletingId = id;
+    _deleting = result.future;
+    notifyListeners();
+    unawaited(_deleteSavedEntry(id, _undoLifetime, result));
+    return result.future;
+  }
+
+  Future<void> _deleteSavedEntry(
+    String id,
+    int undoLifetime,
+    Completer<VocabularyDeletionReceipt> result,
+  ) async {
+    try {
+      while (_savedWorkers.containsKey(id)) {
+        await _savedWorkers[id];
+      }
+      if (_disposed) throw StateError('The entry session has ended.');
+      final startedAt = _clock.now().toUtc();
+      final receipt = await _deletionService!.delete(id);
+      if (receipt.entry.id != id ||
+          receipt.entry.collectionId != collectionId) {
+        _deletionService.forget(receipt);
+        throw StateError('Deletion returned a different entry identity.');
+      }
+      if (_disposed) {
+        _deletionService.forget(receipt);
+      } else {
+        final index = _confirmedEntries.indexWhere((entry) => entry.id == id);
+        _confirmedEntries.removeAt(index);
+        _savedBuffers.remove(id);
+        if (_activeEntryId == id) {
+          _activeEntryId = index < _confirmedEntries.length
+              ? _confirmedEntries[index].id
+              : null;
+        }
+        if (undoLifetime == _undoLifetime) {
+          final deleted = _SessionDeletion(receipt);
+          _deletions[id] = deleted;
+          _scheduleUndo(deleted, fallbackNow: startedAt);
+        } else {
+          _deletionService.forget(receipt);
+        }
+      }
+      result.complete(receipt);
+    } catch (error, stack) {
+      result.completeError(error, stack);
+    } finally {
+      _deleting = null;
+      _deletingId = null;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<VocabularyRecord> undoDeletion(String id) {
+    _ensureActive();
+    if (_restoringId == id && _restoring != null) return _restoring!;
+    _ensureEditable();
+    final deleted = _deletions[id];
+    if (deleted == null) throw VocabularyUndoFailure.invalidReceipt;
+    final result = Completer<VocabularyRecord>();
+    _restoringId = id;
+    _restoring = result.future;
+    deleted.error = null;
+    notifyListeners();
+    unawaited(_undoDeletion(id, deleted, result));
+    return result.future;
+  }
+
+  Future<void> _undoDeletion(
+    String id,
+    _SessionDeletion deleted,
+    Completer<VocabularyRecord> result,
+  ) async {
+    try {
+      final entry = await _deletionService!.restore(deleted.receipt);
+      if (entry.id != id || entry.collectionId != collectionId) {
+        throw StateError('Undo returned a different entry identity.');
+      }
+      if (!_disposed) {
+        if (!_confirmedEntries.any((value) => value.id == id)) {
+          _confirmedEntries.add(entry);
+        }
+        _confirmedEntries.sort(
+          (a, b) => _ordinals[a.id]!.compareTo(_ordinals[b.id]!),
+        );
+        _savedBuffers[id] = _SavedEntryBuffer(entry);
+        if (identical(_deletions[id], deleted)) _forgetUndo(id);
+      }
+      result.complete(entry);
+    } catch (error, stack) {
+      if (!_disposed && identical(_deletions[id], deleted)) {
+        deleted.error = error;
+      }
+      result.completeError(error, stack);
+    } finally {
+      _restoring = null;
+      _restoringId = null;
+      if (!_disposed) {
+        _expireUndo();
+        notifyListeners();
+      }
+    }
+  }
+
+  void _forgetUndo(String id) {
+    final deleted = _deletions.remove(id);
+    if (deleted == null) return;
+    deleted.timer?.cancel();
+    try {
+      _deletionService?.forget(deleted.receipt);
+    } catch (_) {
+      // The caller may already have ended the injected service lifetime.
+    }
+  }
+
+  void _expireUndo() {
+    if (_disposed) return;
+    try {
+      _deletionService?.expireUndo();
+      final now = _clock.now().toUtc();
+      for (final item in _deletions.entries.toList()) {
+        if (item.key != _restoringId) {
+          if (!now.isBefore(item.value.receipt.expiresAt)) {
+            _forgetUndo(item.key);
+          } else {
+            _scheduleUndo(item.value);
+          }
+        }
+      }
+    } catch (_) {
+      for (final id in _deletions.keys.toList()) {
+        if (id != _restoringId) _forgetUndo(id);
+      }
+    }
+    notifyListeners();
+  }
+
+  void _scheduleUndo(_SessionDeletion deleted, {DateTime? fallbackNow}) {
+    deleted.timer?.cancel();
+    DateTime now;
+    try {
+      now = _clock.now().toUtc();
+    } catch (_) {
+      // A fallible clock after commit must not report a failed deletion.
+      // Initial scheduling can use the captured pre-transaction instant;
+      // later expiry fails closed and releases owned capabilities.
+      if (fallbackNow == null) rethrow;
+      now = fallbackNow;
+    }
+    final remaining = deleted.receipt.expiresAt.difference(now);
+    deleted.timer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      _expireUndo,
+    );
+  }
+
+  /// Releases only this session's transient capabilities, not the caller's service.
+  void forgetUndo() {
+    _undoLifetime++;
+    for (final id in _deletions.keys.toList()) {
+      _forgetUndo(id);
+    }
+    if (!_disposed) notifyListeners();
+  }
+
   /// Pending writes freeze editing/navigation; widgets disable those controls
   /// while [isConfirming]. Repeated confirmation shares one result.
   Future<VocabularyRecord> confirmAndNext() {
@@ -258,6 +477,7 @@ final class EntrySessionController extends ChangeNotifier {
         }
         if (!_disposed) {
           _confirmedEntries.add(record);
+          _ordinals[record.id] = _nextOrdinal++;
           _activeEntryId = record.id;
         }
       }
@@ -291,6 +511,8 @@ final class EntrySessionController extends ChangeNotifier {
       _pendingConfirmation = null;
       if (!_disposed) {
         _confirmedEntries.add(record);
+        _ordinals[record.id] = _nextOrdinal++;
+        _advancementRevision++;
         _draft = const EntryDraft();
         _activeEntryId = null;
         notifyListeners();
@@ -343,8 +565,10 @@ final class EntrySessionController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    forgetUndo();
     _draft = const EntryDraft();
     _confirmedEntries.clear();
+    _ordinals.clear();
     _savedBuffers.clear();
     _activeEntryId = null;
     super.dispose();

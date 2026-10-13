@@ -524,6 +524,9 @@ globalThis.PIKO_COPY = {
     "vocab.inlineDuplicate": {"en":"This vocabulary pair already exists in this collection.","de":"Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden."},
     "vocab.delete": {"en":"Delete vocabulary","de":"Vokabel löschen"},
     "vocab.deleted": {"en":"Vocabulary deleted","de":"Vokabel gelöscht"},
+    "vocab.deleteFailed": {"en":"Couldn't delete this vocabulary. Please try again.","de":"Diese Vokabel konnte nicht gelöscht werden. Bitte versuche es erneut."},
+    "vocab.undoFailed": {"en":"Couldn't restore this vocabulary. Please try again.","de":"Diese Vokabel konnte nicht wiederhergestellt werden. Bitte versuche es erneut."},
+    "vocab.undoExpired": {"en":"Undo is no longer available.","de":"Rückgängig ist nicht mehr verfügbar."},
     "vocab.undo": {"en":"Undo","de":"Rückgängig"}
   }
 };

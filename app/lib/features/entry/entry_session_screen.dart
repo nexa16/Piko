@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../data/vocabulary_deletion.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -15,8 +16,8 @@ import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import 'entry_session_controller.dart';
 
-/// Production entry content. The caller owns the session; global completion,
-/// Collection route wiring and deletion are separate specifications.
+/// Production entry content. The caller owns the session and deletion service;
+/// Collection route wiring and swipe presentation are separate specifications.
 class EntrySessionScreen extends StatefulWidget {
   const EntrySessionScreen({
     required this.collection,
@@ -55,18 +56,25 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   final viewport = GlobalKey();
   final cards = <String, GlobalKey>{};
   final editors = <String, _Editors>{};
+  final retiredEditors = <_Editors>{};
   double topPadding = 0, bottomPadding = 0;
   bool userScrolling = false, scheduled = false, adjusting = false;
   bool centerRequested = true;
   bool releaseAnchor = false, jumping = false;
   bool settleSelection = false;
+  bool structuralAnchoring = false;
   String? anchorId;
   double? anchorCenter;
   Object? confirmError;
+  Object? deletionError, undoFeedback;
+  String? deletionErrorId;
   Object? exitRequest;
   bool exitDraining = false, allowPop = false;
   ModalRoute<dynamic>? exitDialog;
-  int confirmedCount = 0;
+  int advancementRevision = 0;
+  late String previousActiveId;
+  late List<String> previousIds;
+  (String?, Object?) previousUndo = (null, null);
   late EntryDraft lastDraft;
   EntrySessionController get session => widget.session;
   String get activeId => session.activeEntryId ?? draftId;
@@ -79,7 +87,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   void initState() {
     super.initState();
     assert(widget.collection.id == session.collectionId);
-    confirmedCount = session.confirmedEntries.length;
+    advancementRevision = session.advancementRevision;
+    previousActiveId = activeId;
+    previousIds = ids;
     lastDraft = session.draft;
     session.addListener(changed);
   }
@@ -89,12 +99,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.session != session) {
       oldWidget.session.removeListener(changed);
+      oldWidget.session.forgetUndo();
       for (final editor in editors.values) {
         editor.dispose();
       }
       editors.clear();
       cards.clear();
       confirmError = null;
+      deletionError = null;
+      deletionErrorId = null;
+      undoFeedback = null;
       exitRequest = null;
       exitDraining = false;
       allowPop = false;
@@ -108,7 +122,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       jumping = false;
       anchorId = null;
       anchorCenter = null;
-      confirmedCount = session.confirmedEntries.length;
+      advancementRevision = session.advancementRevision;
+      previousActiveId = activeId;
+      previousIds = ids;
+      previousUndo = (null, null);
+      structuralAnchoring = false;
       lastDraft = session.draft;
       centerRequested = true;
       session.addListener(changed);
@@ -129,14 +147,39 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       confirmError = null;
     }
     lastDraft = session.draft;
-    if (session.confirmedEntries.length != confirmedCount) {
-      confirmedCount = session.confirmedEntries.length;
+    for (final id in editors.keys.where((id) => !ids.contains(id)).toList()) {
+      final editor = editors.remove(id)!;
+      cards.remove(id);
+      retiredEditors.add(editor);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (retiredEditors.remove(editor)) editor.dispose();
+      });
+    }
+    final advanced = session.advancementRevision != advancementRevision;
+    final latestUndo = session.undoEntries.lastOrNull;
+    final nextUndo = (latestUndo?.entry.id, latestUndo?.error);
+    final structuralChange =
+        previousIds.join('|') != ids.join('|') || previousUndo != nextUndo;
+    if (structuralChange &&
+        !advanced &&
+        activeId == previousActiveId &&
+        !structuralAnchoring) {
+      anchorId = activeId;
+      anchorCenter = center(activeId);
+      structuralAnchoring = true;
+    }
+    if (advanced || (activeId != previousActiveId && !adjusting)) {
+      advancementRevision = session.advancementRevision;
       centerRequested = true;
-      confirmError = null;
-    } else if (!adjusting) {
+      if (advanced) confirmError = null;
+      structuralAnchoring = false;
+    } else if (!adjusting && !structuralAnchoring) {
       anchorId = activeId;
       anchorCenter = center(activeId);
     }
+    previousActiveId = activeId;
+    previousIds = ids;
+    previousUndo = nextUndo;
     setState(() {});
     scheduleLayout();
   }
@@ -153,11 +196,29 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       final first = cards[ids.first]?.currentContext?.findRenderObject();
       final last = cards[draftId]?.currentContext?.findRenderObject();
       if (first is! RenderBox || last is! RenderBox) return;
-      final nextTop = math.max(0.0, (box.size.height - first.size.height) / 2);
-      final nextBottom = math.max(
-        0.0,
-        (box.size.height - last.size.height) / 2,
-      );
+      var nextTop = math.max(0.0, (box.size.height - first.size.height) / 2);
+      var nextBottom = math.max(0.0, (box.size.height - last.size.height) / 2);
+      // Structural changes can resize the viewport (the Undo bar appears or
+      // disappears). Keep sufficient derived edge space for the same anchor,
+      // including the first/last card, rather than clamping it to a new center.
+      if (!centerRequested && anchorCenter != null && !userScrolling) {
+        final viewportTop = box.localToGlobal(Offset.zero).dy;
+        if (anchorId == ids.first) {
+          nextTop = math.max(
+            nextTop,
+            anchorCenter! - viewportTop - first.size.height / 2,
+          );
+        }
+        if (anchorId == draftId) {
+          nextBottom = math.max(
+            nextBottom,
+            viewportTop +
+                box.size.height -
+                anchorCenter! -
+                last.size.height / 2,
+          );
+        }
+      }
       if ((topPadding - nextTop).abs() > 0.5 ||
           (bottomPadding - nextBottom).abs() > 0.5) {
         if (!centerRequested && anchorId == activeId && anchorCenter != null) {
@@ -183,6 +244,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         final current = center(activeId);
         if (current != null) jump(scroll.offset + current - anchorCenter!);
       }
+      structuralAnchoring = false;
       if (releaseAnchor || MediaQuery.disableAnimationsOf(context)) {
         anchorId = null;
         anchorCenter = null;
@@ -262,7 +324,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (event.depth != 0 || event.metrics.axis != Axis.vertical) return false;
     if (jumping) return false;
     if (event is UserScrollNotification) {
-      if (event.direction != ScrollDirection.idle) userScrolling = true;
+      if (event.direction != ScrollDirection.idle) {
+        structuralAnchoring = false;
+        userScrolling = true;
+      }
     }
     if (event is ScrollUpdateNotification &&
         userScrolling &&
@@ -316,6 +381,124 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         });
       }
     }
+  }
+
+  Future<void> deleteEntry(String id) async {
+    if (exitRequest != null || exitDraining) return;
+    final initiatingSession = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    setState(() {
+      deletionError = null;
+      deletionErrorId = null;
+      undoFeedback = null;
+    });
+    try {
+      await initiatingSession.deleteSavedEntry(id);
+    } catch (error) {
+      if (mounted &&
+          identical(session, initiatingSession) &&
+          route?.isCurrent == true) {
+        setState(() {
+          deletionError = error;
+          deletionErrorId = id;
+        });
+      }
+    }
+  }
+
+  Future<void> undoEntry(String id) async {
+    if (exitRequest != null || exitDraining) return;
+    final initiatingSession = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    setState(() => undoFeedback = null);
+    try {
+      await initiatingSession.undoDeletion(id);
+    } catch (error) {
+      if (mounted &&
+          identical(session, initiatingSession) &&
+          route?.isCurrent == true) {
+        setState(() => undoFeedback = error);
+      }
+    }
+  }
+
+  String undoErrorKey(Object error) => switch (error) {
+    VocabularyUndoFailure.expired ||
+    VocabularyUndoFailure.alreadyUsed ||
+    VocabularyUndoFailure.invalidReceipt => 'vocab.undoExpired',
+    VocabularyUndoFailure.duplicatePair => 'vocab.inlineDuplicate',
+    _ => 'vocab.undoFailed',
+  };
+
+  Widget undoBar(BuildContext context) {
+    final copy = PikoCopyScope.of(context);
+    final latest = session.undoEntries.lastOrNull;
+    if (latest == null) {
+      return undoFeedback == null
+          ? const SizedBox.shrink()
+          : Semantics(
+              liveRegion: true,
+              child: Text(
+                copy.text(undoErrorKey(undoFeedback!)),
+                style: TextStyle(color: pikoDesign.color('danger')),
+              ),
+            );
+    }
+    return Container(
+      key: ValueKey('undo-${latest.entry.id}'),
+      padding: EdgeInsets.all(pikoDesign.dimension('spacing.3')),
+      decoration: BoxDecoration(
+        color: pikoDesign.color('tint'),
+        borderRadius: BorderRadius.circular(
+          pikoDesign.dimension('components.buttons.radius'),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: pikoDesign.dimension('spacing.3'),
+            runSpacing: pikoDesign.dimension('spacing.2'),
+            children: [
+              Semantics(
+                liveRegion: true,
+                child: Text(copy.text('vocab.deleted')),
+              ),
+              PikoButton(
+                label: copy.text('vocab.undo'),
+                variant: PikoButtonVariant.ghost,
+                onPressed: session.isBusy || exitDraining || exitRequest != null
+                    ? null
+                    : () => undoEntry(latest.entry.id),
+              ),
+            ],
+          ),
+          Text(
+            '${latest.entry.targetText} · ${latest.entry.nativeText}',
+            // Identification is bounded; full text remains in the editor and
+            // this Text's semantics. A long entry cannot consume the viewport.
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: pikoDesign.color('muted'),
+              fontSize: pikoDesign.dimension('typography.small'),
+            ),
+          ),
+          if (latest.error != null || undoFeedback != null)
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                copy.text(undoErrorKey(latest.error ?? undoFeedback!)),
+                style: TextStyle(color: pikoDesign.color('danger')),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> complete() async {
@@ -673,6 +856,28 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ? null
                                 : () => session.retrySavedEntry(id),
                           ),
+                        if (!draft && session.supportsDeletion)
+                          PikoButton(
+                            label: copy.text('vocab.delete'),
+                            icon: const PikoIcon(PikoIconName.trash),
+                            variant: PikoButtonVariant.dangerGhost,
+                            onPressed:
+                                session.isBusy ||
+                                    exitDraining ||
+                                    exitRequest != null
+                                ? null
+                                : () => deleteEntry(id),
+                          ),
+                        if (deletionErrorId == id && deletionError != null)
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              copy.text('vocab.deleteFailed'),
+                              style: TextStyle(
+                                color: pikoDesign.color('danger'),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -774,6 +979,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ),
                                 ),
                         ),
+                        undoBar(context),
                       ],
                     ),
                   ),
@@ -790,9 +996,14 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   void dispose() {
     dismissOwnedExitDialog();
     session.removeListener(changed);
+    session.forgetUndo();
     for (final editor in editors.values) {
       editor.dispose();
     }
+    for (final editor in retiredEditors) {
+      editor.dispose();
+    }
+    retiredEditors.clear();
     scroll.dispose();
     stackFocus.dispose();
     super.dispose();

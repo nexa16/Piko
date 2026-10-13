@@ -828,6 +828,10 @@ const copyCatalog = <String, Object?>{
 "de": "Vokabel löschen",
 "en": "Delete vocabulary",
 },
+"vocab.deleteFailed": <String, Object?>{
+"de": "Diese Vokabel konnte nicht gelöscht werden. Bitte versuche es erneut.",
+"en": "Couldn't delete this vocabulary. Please try again.",
+},
 "vocab.deleted": <String, Object?>{
 "de": "Vokabel gelöscht",
 "en": "Vocabulary deleted",
@@ -859,6 +863,14 @@ const copyCatalog = <String, Object?>{
 "vocab.undo": <String, Object?>{
 "de": "Rückgängig",
 "en": "Undo",
+},
+"vocab.undoExpired": <String, Object?>{
+"de": "Rückgängig ist nicht mehr verfügbar.",
+"en": "Undo is no longer available.",
+},
+"vocab.undoFailed": <String, Object?>{
+"de": "Diese Vokabel konnte nicht wiederhergestellt werden. Bitte versuche es erneut.",
+"en": "Couldn't restore this vocabulary. Please try again.",
 },
 },
 "schemaVersion": 1,
