@@ -12,6 +12,7 @@ void main() {
   late VocabularyRecord first;
   late VocabularyRecord second;
   late VocabularyRecord foreign;
+  late VocabularyRecord history;
   EntrySessionController? session;
 
   setUp(() async {
@@ -28,22 +29,26 @@ void main() {
       nativeLanguage: VocabularyLanguage.german,
     );
     final vocabulary = SqliteVocabularyRepository(database);
-    first = await vocabulary.create(
+    session = EntrySessionController(
       collectionId: owner.id,
-      targetText: 'pomme',
-      nativeText: 'Apfel',
+      repository: vocabulary,
     );
-    second = await vocabulary.create(
+    session!.setTargetText('pomme');
+    session!.setNativeText('Apfel');
+    first = await session!.confirmAndNext();
+    session!.setTargetText('eau');
+    session!.setNativeText('Wasser');
+    second = await session!.confirmAndNext();
+    history = await vocabulary.create(
       collectionId: owner.id,
-      targetText: 'eau',
-      nativeText: 'Wasser',
+      targetText: 'livre',
+      nativeText: 'Buch',
     );
     foreign = await vocabulary.create(
       collectionId: other.id,
       targetText: 'pomme',
       nativeText: 'Apfel',
     );
-    session = EntrySessionController(collectionId: owner.id);
   });
   tearDown(() async {
     session?.dispose();
@@ -52,17 +57,18 @@ void main() {
 
   test(
     'confirmed records keep session registration order and immutable snapshots',
-    () {
+    () async {
       final controller = session!;
-      expect(controller.confirmedEntries, isEmpty);
-      controller.registerConfirmedEntry(second);
       final previous = controller.confirmedEntries;
-      controller.registerConfirmedEntry(first);
+      controller.setTargetText('ami');
+      controller.setNativeText('Freund');
+      final third = await controller.confirmAndNext();
       expect(controller.confirmedEntries.map((entry) => entry.id), [
-        second.id,
         first.id,
+        second.id,
+        third.id,
       ]);
-      expect(previous.map((entry) => entry.id), [second.id]);
+      expect(previous.map((entry) => entry.id), [first.id, second.id]);
       expect(
         () => controller.confirmedEntries.add(foreign),
         throwsUnsupportedError,
@@ -75,8 +81,6 @@ void main() {
     'saved/draft navigation retains partial raw draft and never writes',
     () async {
       final controller = session!;
-      controller.registerConfirmedEntry(first);
-      controller.registerConfirmedEntry(second);
       controller.setTargetText(' \tCafe\u0301  ');
       final partial = controller.draft;
       controller.selectSavedEntry(second.id);
@@ -97,9 +101,21 @@ void main() {
       final stored = await SqliteVocabularyRepository(
         database,
       ).watchByCollection(first.collectionId).first;
-      expect(stored.map((entry) => entry.id), [first.id, second.id]);
-      expect(stored.map((entry) => entry.targetText), ['pomme', 'eau']);
-      expect(stored.map((entry) => entry.nativeText), ['Apfel', 'Wasser']);
+      expect(stored.map((entry) => entry.id), [
+        first.id,
+        second.id,
+        history.id,
+      ]);
+      expect(stored.map((entry) => entry.targetText), [
+        'pomme',
+        'eau',
+        'livre',
+      ]);
+      expect(stored.map((entry) => entry.nativeText), [
+        'Apfel',
+        'Wasser',
+        'Buch',
+      ]);
     },
   );
 
@@ -107,62 +123,59 @@ void main() {
     'foreign and unknown records cannot become session navigation targets',
     () {
       final controller = session!;
-      controller.registerConfirmedEntry(first);
       controller.selectSavedEntry(first.id);
-      expect(
-        () => controller.registerConfirmedEntry(foreign),
-        throwsArgumentError,
-      );
       expect(
         () => controller.selectSavedEntry(foreign.id),
         throwsArgumentError,
       );
       // A saved record is not in this session merely because it is in the Collection.
-      expect(() => controller.selectSavedEntry(second.id), throwsArgumentError);
+      expect(
+        () => controller.selectSavedEntry(history.id),
+        throwsArgumentError,
+      );
       expect(controller.activeEntryId, first.id);
-      expect(controller.confirmedEntries.map((entry) => entry.id), [first.id]);
+      expect(controller.confirmedEntries.map((entry) => entry.id), [
+        first.id,
+        second.id,
+      ]);
     },
   );
 
-  test(
-    'same registration and current selection do not notify or duplicate cards',
-    () {
-      final controller = session!;
-      var notifications = 0;
-      controller.addListener(() {
-        notifications++;
-      });
-      controller.selectDraft();
-      expect(notifications, 0);
-      controller.registerConfirmedEntry(first);
-      controller.registerConfirmedEntry(first);
-      expect(notifications, 1);
-      controller.selectSavedEntry(first.id);
-      controller.selectSavedEntry(first.id);
-      expect(notifications, 2);
-      controller.selectDraft();
-      controller.selectDraft();
-      expect(notifications, 3);
-      expect(controller.confirmedEntries, hasLength(1));
-    },
-  );
+  test('current selection does not notify or duplicate confirmed cards', () {
+    final controller = session!;
+    var notifications = 0;
+    controller.addListener(() {
+      notifications++;
+    });
+    controller.selectDraft();
+    expect(notifications, 0);
+    controller.selectSavedEntry(first.id);
+    controller.selectSavedEntry(first.id);
+    expect(notifications, 1);
+    controller.selectDraft();
+    controller.selectDraft();
+    expect(notifications, 2);
+    expect(controller.confirmedEntries, hasLength(2));
+  });
 
   test(
     'disposal clears current session cards and rejects later navigation',
     () {
       final controller = session!;
-      controller.registerConfirmedEntry(first);
       controller.selectSavedEntry(first.id);
       final snapshot = controller.confirmedEntries;
       controller.dispose();
       session = null;
       expect(controller.confirmedEntries, isEmpty);
       expect(controller.activeEntryId, isNull);
-      expect(snapshot.single.id, first.id);
-      expect(() => controller.registerConfirmedEntry(second), throwsStateError);
+      expect(snapshot.first.id, first.id);
+      expect(controller.confirmAndNext, throwsStateError);
       expect(() => controller.selectSavedEntry(first.id), throwsStateError);
       expect(controller.selectDraft, throwsStateError);
-      final fresh = EntrySessionController(collectionId: first.collectionId);
+      final fresh = EntrySessionController(
+        collectionId: first.collectionId,
+        repository: SqliteVocabularyRepository(database),
+      );
       addTearDown(fresh.dispose);
       expect(fresh.confirmedEntries, isEmpty);
       expect(fresh.activeEntryId, isNull);

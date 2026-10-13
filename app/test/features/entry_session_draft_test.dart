@@ -6,12 +6,18 @@ import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/features/entry/entry_session_controller.dart';
+import '../support/controlled_vocabulary_repository.dart';
+
+EntrySessionController draftController(String id) => EntrySessionController(
+  collectionId: id,
+  repository: ControlledVocabularyRepository(),
+);
 
 void main() {
   test(
     'draft retains raw target/native values and immutable prior snapshots',
     () {
-      final controller = EntrySessionController(collectionId: 'collection');
+      final controller = draftController('collection');
       addTearDown(controller.dispose);
       final empty = controller.draft;
       controller.setTargetText(' \tCafe\u0301  ');
@@ -30,7 +36,7 @@ void main() {
   );
 
   test('listeners receive complete state once per actual field change', () {
-    final controller = EntrySessionController(collectionId: 'collection');
+    final controller = draftController('collection');
     addTearDown(controller.dispose);
     final snapshots = <EntryDraft>[];
     controller.addListener(() => snapshots.add(controller.draft));
@@ -44,9 +50,9 @@ void main() {
   });
 
   test('same and different Collection sessions never share drafts', () {
-    final first = EntrySessionController(collectionId: 'first');
-    final sameOwner = EntrySessionController(collectionId: 'first');
-    final otherOwner = EntrySessionController(collectionId: 'second');
+    final first = draftController('first');
+    final sameOwner = draftController('first');
+    final otherOwner = draftController('second');
     addTearDown(first.dispose);
     addTearDown(sameOwner.dispose);
     addTearDown(otherOwner.dispose);
@@ -63,7 +69,7 @@ void main() {
   test(
     'ending a lifetime clears its draft and a fresh lifetime starts empty',
     () {
-      final controller = EntrySessionController(collectionId: 'collection');
+      final controller = draftController('collection');
       var notifications = 0;
       controller.addListener(() {
         notifications++;
@@ -76,7 +82,7 @@ void main() {
       expect(() => controller.setTargetText('Late input'), throwsStateError);
       expect(() => controller.setNativeText('Late input'), throwsStateError);
       expect(notifications, 2);
-      final next = EntrySessionController(collectionId: 'collection');
+      final next = draftController('collection');
       addTearDown(next.dispose);
       expect(next.draft.targetText, isEmpty);
       expect(next.draft.nativeText, isEmpty);
@@ -102,7 +108,10 @@ void main() {
           targetText: 'pomme',
           nativeText: 'Apfel',
         );
-        final controller = EntrySessionController(collectionId: owner.id);
+        final controller = EntrySessionController(
+          collectionId: owner.id,
+          repository: SqliteVocabularyRepository(database),
+        );
         controller.setTargetText('Cafe\u0301');
         controller.setNativeText('Kaffee');
         var rows = await SqliteVocabularyRepository(
@@ -120,7 +129,10 @@ void main() {
         expect(rows.single.id, saved.id);
         expect(rows.single.targetText, 'pomme');
         expect(rows.single.nativeText, 'Apfel');
-        final newSession = EntrySessionController(collectionId: owner.id);
+        final newSession = EntrySessionController(
+          collectionId: owner.id,
+          repository: SqliteVocabularyRepository(database),
+        );
         addTearDown(newSession.dispose);
         expect(newSession.draft.targetText, isEmpty);
         expect(newSession.draft.nativeText, isEmpty);

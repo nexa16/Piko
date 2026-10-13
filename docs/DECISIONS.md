@@ -1,5 +1,11 @@
 # Decision log
 
+## ENTRY-002 — guarded confirmation before advancement — 2026-10-13
+
+The entry-session controller now receives its vocabulary repository and writes only through explicit Confirm & Next. It captures the raw draft, validates required normalized fields and guards one pending write. Repeated confirmation returns the same Future. To avoid losing edits made during a write, field mutations and card navigation are rejected while pending; the later UI must disable those controls using `isConfirming`. This is a temporary pending-write guard, not an automatic draft save.
+
+After a successful repository commit, one state transition appends the actual same-owner record, empties the draft and activates the next draft. Required, duplicate and other persistence errors propagate for later localized UI feedback without changing the draft or active saved-card selection. Disposal during a pending write prevents late notification or state revival; an already initiated write still resolves to its caller. The former public record-registration method is removed, so only confirmation adds session history. Draft/navigation tests now build that history through real SQLite confirmations. This extends the earlier controller boundary; unconfirmed drafts remain ephemeral, and actual entry-screen integration is still pending.
+
 ## ENTRY-006 — draft-preserving session navigation — 2026-10-13
 
 The controller now tracks ordered confirmed VocabularyRecord snapshots and the active saved Entry UUID, with a null identity denoting the current draft. Registration is an internal confirmation boundary for records owned by this Collection; it does not query or import Collection history. Saved selection requires a registered identity. Foreign registrations and unknown selections are rejected, while repeated registration/current selection are no-ops. Draft and saved-card navigation preserve the same raw draft snapshot without writing to storage. Confirmed-list views are immutable snapshots; ending the session clears its cards and rejects late navigation. Tests use actual SQLite-created records and verify no saved text changes during navigation. This establishes the session state needed for ENTRY-002 confirmation and the later focused stack; widget text/focus/scroll controllers and screen integration remain separate.
