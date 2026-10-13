@@ -1,5 +1,9 @@
 # Decision log
 
+## ENTRY-006 — draft-preserving session navigation — 2026-10-13
+
+The controller now tracks ordered confirmed VocabularyRecord snapshots and the active saved Entry UUID, with a null identity denoting the current draft. Registration is an internal confirmation boundary for records owned by this Collection; it does not query or import Collection history. Saved selection requires a registered identity. Foreign registrations and unknown selections are rejected, while repeated registration/current selection are no-ops. Draft and saved-card navigation preserve the same raw draft snapshot without writing to storage. Confirmed-list views are immutable snapshots; ending the session clears its cards and rejects late navigation. Tests use actual SQLite-created records and verify no saved text changes during navigation. This establishes the session state needed for ENTRY-002 confirmation and the later focused stack; widget text/focus/scroll controllers and screen integration remain separate.
+
 ## ENTRY-003 — ephemeral raw entry drafts — 2026-10-13
 
 The entry-session controller owns one Collection identity and immutable snapshots of raw target/native draft values. Field changes preserve the other field and notify consumers only when values change. It has no repository dependency, write method or restoration API, so typing cannot save an Entry. Ending its lifetime clears its current draft and rejects later mutations; another session starts empty, including another session for the same Collection. Widget-owned text, focus and scroll controllers remain separate. Five controller tests cover raw values, notification snapshots, Collection/session isolation and lifetime reset; a real file-backed SQLite fixture confirms draft typing/disposal leaves previously saved vocabulary unchanged. Actual entry-screen integration remains pending, with navigation, confirmation, draft-exit handling and focused scrolling implemented under their own requirements.
