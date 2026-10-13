@@ -19,3 +19,18 @@ Acceptance:
 This requirement establishes the application host only. Storage, shared design/copy adapters, product screens and scheduling retain their own requirements and commits. Generated launcher assets are temporary Flutter scaffold assets, not an accepted Piko brand design. Development signing does not establish a store-ready release.
 
 Verification from `app/`: `flutter analyze`, `flutter test`, and a debug APK build/install/launch. Full product behavior is verified as implementation proceeds.
+
+## FOUNDATION-002 — Injectable time and deterministic test harness
+
+**Status:** Accepted for First release implementation.
+
+Time-dependent domain behavior receives a `PikoClock` dependency. The production implementation supplies the current UTC instant. Local learning-day interpretation remains a separate behavior requirement. Tests use a mutable clock that advances or sets time explicitly without sleeping, including exact deadline boundaries and device-clock changes.
+
+Acceptance:
+
+- Production and test clocks implement the same interface.
+- Test time is deterministic and can cross deadlines without real waiting.
+- Input timestamps with offsets preserve their instant when normalized to UTC.
+- The existing Flutter test suite and static analysis pass.
+
+This establishes time injection and test support only; it does not implement retry intervals, timers, FSRS or session behavior. Asynchronous widget timers may use Flutter's test binding virtual time; domain deadlines use the injected clock.
