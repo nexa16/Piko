@@ -9,9 +9,9 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_dialog.dart';
+import '../../ui/components/piko_entry_header.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
-import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 import 'entry_session_controller.dart';
 
@@ -711,31 +711,27 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                     maxWidth: pikoDesign.dimension('controls.contentWidth'),
                   ),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontal),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontal,
+                      pikoDesign.dimension('layout.pageTop'),
+                      horizontal,
+                      0,
+                    ),
                     child: Column(
                       children: [
-                        PikoHeading(
+                        PikoEntryHeader(
                           title: copy.text('entry.title'),
-                          leading: PikoButton(
-                            label: copy.text('common.back'),
-                            icon: const PikoIcon(PikoIconName.arrowLeft),
-                            variant: PikoButtonVariant.ghost,
-                            onPressed: session.isBusy || exitDraining
-                                ? null
-                                : requestExit,
-                          ),
-                          actions: [
-                            PikoIconButton(
-                              icon: const PikoIcon(PikoIconName.check),
-                              semanticLabel: copy.text('entry.complete'),
-                              onPressed:
-                                  session.isBusy ||
-                                      exitDraining ||
-                                      exitRequest != null
-                                  ? null
-                                  : complete,
-                            ),
-                          ],
+                          backLabel: copy.text('common.back'),
+                          completionLabel: copy.text('entry.complete'),
+                          onBack: session.isBusy || exitDraining
+                              ? null
+                              : requestExit,
+                          onComplete:
+                              session.isBusy ||
+                                  exitDraining ||
+                                  exitRequest != null
+                              ? null
+                              : complete,
                         ),
                         Expanded(
                           child: session.isCompleted

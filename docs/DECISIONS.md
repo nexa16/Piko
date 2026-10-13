@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-ENTRY-002 — binding entry header and distinct actions — 2026-10-14
+
+Use the binding three-track entry header with intrinsic Back, a middle-track-centered title and the primary global completion checkmark outside the cards. Canonicalize its gap, title sizes, responsive viewport breakpoint, Back weight and action padding; generate the CSS media rule from the same source as Flutter so a breakpoint change cannot diverge. Reuse shared page-top/title-margin and 48px large-control tokens. Keep localized tooltips/accessibility names distinct between global final completion and card-level Save & Next, preserving the established controller and guarded Back behavior. Large German text can wrap the title without clipping actions. This is header presentation and isolated production-route verification, not Collection route wiring, release completion or an owner decision on the separately pending saved-error policy.
+
 ## ENTRY-011 — final confirmation without advancement — 2026-10-14
 
 Global completion uses a dedicated controller operation with one shared pending Future. It drains accepted saved edits, validates and writes the final meaningful draft exactly once, and enters a reusable terminal state without a fresh card. Empty/whitespace input writes nothing. Input and localized feedback survive required, duplicate or storage failures. Pending completion freezes conflicting entry actions. The screen captures route/session identity before awaiting; covered terminal sessions can resume exit without duplicate persistence, while replacements and unrelated routes are never popped. Disposal before draining finishes starts no new final write; an already accepted final write may finish without publishing late session state.

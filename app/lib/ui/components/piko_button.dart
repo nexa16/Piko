@@ -19,6 +19,9 @@ class PikoButton extends StatelessWidget {
     this.variant = PikoButtonVariant.primary,
     this.focusNode,
     this.minimumSize,
+    this.padding,
+    this.labelSize,
+    this.labelWeight,
   });
   final String label;
   final VoidCallback? onPressed;
@@ -26,6 +29,9 @@ class PikoButton extends StatelessWidget {
   final PikoButtonVariant variant;
   final FocusNode? focusNode;
   final Size? minimumSize;
+  final EdgeInsetsGeometry? padding;
+  final double? labelSize;
+  final FontWeight? labelWeight;
 
   @override
   Widget build(BuildContext context) {
@@ -68,10 +74,11 @@ class PikoButton extends StatelessWidget {
               ),
         ),
         padding: WidgetStatePropertyAll(
-          EdgeInsets.symmetric(
-            horizontal: d.dimension('components.buttons.padding'),
-            vertical: d.dimension('spacing.2'),
-          ),
+          padding ??
+              EdgeInsets.symmetric(
+                horizontal: d.dimension('components.buttons.padding'),
+                vertical: d.dimension('spacing.2'),
+              ),
         ),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -82,8 +89,8 @@ class PikoButton extends StatelessWidget {
         ),
         textStyle: WidgetStatePropertyAll(
           TextStyle(
-            fontSize: d.dimension('typography.label'),
-            fontWeight: d.weight('components.buttons.weight'),
+            fontSize: labelSize ?? d.dimension('typography.label'),
+            fontWeight: labelWeight ?? d.weight('components.buttons.weight'),
           ),
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
@@ -142,12 +149,14 @@ class PikoIconButton extends StatelessWidget {
     required this.onPressed,
     this.variant = PikoButtonVariant.ghost,
     this.large = false,
+    this.padding,
   });
   final Widget icon;
   final String semanticLabel;
   final VoidCallback? onPressed;
   final PikoButtonVariant variant;
   final bool large;
+  final EdgeInsetsGeometry? padding;
   @override
   Widget build(BuildContext context) => Semantics(
     label: semanticLabel,
@@ -163,6 +172,7 @@ class PikoIconButton extends StatelessWidget {
           icon: icon,
           onPressed: onPressed,
           variant: variant,
+          padding: padding,
           minimumSize: large
               ? Size.square(pikoDesign.dimension('controls.largeHeight'))
               : null,

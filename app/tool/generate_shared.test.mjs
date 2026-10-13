@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { generate, readCatalog, update, updateIcons } from './generate_shared.mjs';
+import { generate, readCatalog, update, updateIcons, entryHeaderResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
 const copy = { schemaVersion: 1, defaultLocale: 'en', entries: { test: { en: '{count} $ "quote"', de: '{count} $ "Zitat"', note: 'preserved' } } };
@@ -132,4 +132,31 @@ test('entry-stack browser presentation consumes shared preview and status geomet
   const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
   assert.ok(css.includes('gap:var(--entry-preview-gap);margin-top:var(--entry-preview-top)'));
   assert.ok(css.includes('min-height:var(--entry-compact-min-height)'));
+});
+
+test('entry header adapters consume canonical geometry and responsive breakpoint idempotently', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.entryHeader.compactBreakpoint = 420;
+  config.components.entryHeader.gap = 11;
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  const generated = entryHeaderResponsive(config, css);
+  assert.ok(generated.includes('@media(max-width:420px){.entry-header h1'));
+  assert.equal(entryHeaderResponsive(config, generated), generated);
+  assert.notEqual(generated, css);
+  assert.ok(generated.includes('font-size:var(--entry-header-compact-title-size)'));
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--entry-header-gap'), '11px');
+  assert.equal(properties.get('--entry-header-title-size'), '22px');
+  assert.equal(properties.get('--entry-header-back-weight'), '750');
+  assert.equal(properties.get('--entry-header-title-letter-spacing'), '-1px');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'piko-header-'));
+  const file = path.join(directory, 'components.css');
+  try {
+    update(file, css, false);
+    assert.throws(() => update(file, generated, true));
+    assert.equal(fs.readFileSync(file, 'utf8'), css);
+  } finally { fs.unlinkSync(file); fs.rmdirSync(directory); }
 });

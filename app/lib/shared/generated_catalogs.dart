@@ -40,6 +40,15 @@ const designCatalog = <String, Object?>{
 "emptyState": <String, Object?>{
 "descriptionLineHeight": 1.6,
 },
+"entryHeader": <String, Object?>{
+"actionPadding": 10,
+"backWeight": 750,
+"compactBreakpoint": 400,
+"compactTitleSize": 18,
+"gap": 10,
+"titleLetterSpacing": -1,
+"titleSize": 22,
+},
 "entryStack": <String, Object?>{
 "compactMinHeight": 100,
 "metaLineHeight": 1.5,
