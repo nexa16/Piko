@@ -119,3 +119,17 @@ test('browser cover adapts effective language badge geometry and font tokens', (
   assert.ok(css.includes('font-weight:var(--language-badge-weight)'));
   assert.ok(!css.includes('.cover{height:48px'));
 });
+
+test('entry-stack browser presentation consumes shared preview and status geometry', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.entryStack.previewGap = 9;
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config,
+    document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--entry-preview-gap'), '9px');
+  assert.equal(properties.get('--entry-state-motion'), '200ms');
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('gap:var(--entry-preview-gap);margin-top:var(--entry-preview-top)'));
+  assert.ok(css.includes('min-height:var(--entry-compact-min-height)'));
+});

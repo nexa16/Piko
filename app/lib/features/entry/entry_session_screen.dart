@@ -318,6 +318,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       ..sync(values);
     final active = id == activeId;
     final error = draft ? confirmError : saved!.error;
+    final metaStyle = TextStyle(
+      color: pikoDesign.color('muted'),
+      fontSize: pikoDesign.dimension('typography.small'),
+      height: pikoDesign.dimension('components.entryStack.metaLineHeight'),
+    );
     void edit(bool target, String value) {
       if (draft) {
         if (target) {
@@ -381,14 +386,36 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         PikoCard(
           key: ValueKey('entry-card-$id'),
           selected: active,
+          constraints: BoxConstraints(
+            minHeight: pikoDesign.dimension(
+              'components.entryStack.compactMinHeight',
+            ),
+          ),
+          animationDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : Duration(
+                  milliseconds: pikoDesign
+                      .dimension('components.entryStack.stateMotionMs')
+                      .round(),
+                ),
           padding: EdgeInsets.all(pikoDesign.dimension('spacing.4')),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Wrap(
                 alignment: WrapAlignment.spaceBetween,
+                spacing: pikoDesign.dimension('spacing.3'),
+                runSpacing: pikoDesign.dimension('spacing.3'),
                 children: [
-                  Text(copy.text('entry.number', {'count': index + 1})),
+                  Text(
+                    copy.text('entry.number', {'count': index + 1}),
+                    style: TextStyle(
+                      color: pikoDesign.color('muted'),
+                      fontSize: pikoDesign.dimension(
+                        'components.entryStack.numberSize',
+                      ),
+                    ),
+                  ),
                   Text(
                     copy.text(
                       draft
@@ -401,13 +428,20 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           ? 'entry.unsaved'
                           : 'entry.saved',
                     ),
+                    style: metaStyle.copyWith(
+                      fontSize: pikoDesign.dimension(
+                        'components.entryStack.statusSize',
+                      ),
+                    ),
                   ),
                 ],
               ),
               if (!active)
                 Padding(
                   padding: EdgeInsets.only(
-                    top: pikoDesign.dimension('spacing.3'),
+                    top: pikoDesign.dimension(
+                      'components.entryStack.previewTop',
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,11 +450,26 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         values.targetText.isEmpty
                             ? copy.text('entry.targetPlaceholder')
                             : values.targetText,
+                        style: TextStyle(
+                          fontSize: pikoDesign.dimension('typography.body'),
+                          fontWeight: pikoDesign.weight(
+                            'typography.titleWeight',
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: pikoDesign.dimension(
+                          'components.entryStack.previewGap',
+                        ),
                       ),
                       Text(
                         values.nativeText.isEmpty
                             ? copy.text('entry.nativePlaceholder')
                             : values.nativeText,
+                        style: TextStyle(
+                          fontSize: pikoDesign.dimension('typography.body'),
+                          color: pikoDesign.color('muted'),
+                        ),
                       ),
                       if (error != null)
                         Text(
@@ -447,6 +496,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         if (draft)
                           Wrap(
                             alignment: WrapAlignment.spaceBetween,
+                            spacing: pikoDesign.dimension('spacing.3'),
+                            runSpacing: pikoDesign.dimension('spacing.3'),
                             children: [
                               Text(
                                 copy.text(
@@ -454,9 +505,12 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                       ? 'entry.saving'
                                       : 'entry.draft',
                                 ),
+                                style: metaStyle,
                               ),
                               PikoIconButton(
                                 icon: const PikoIcon(PikoIconName.check),
+                                variant: PikoButtonVariant.primary,
+                                large: true,
                                 semanticLabel: copy.text('action.saveNext'),
                                 onPressed: session.isConfirming
                                     ? null
@@ -473,6 +527,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ? 'entry.unsaved'
                                   : 'entry.autoSave',
                             ),
+                            style: metaStyle,
                           ),
                         if (error != null &&
                             error != VocabularyValidation.requiredTarget &&

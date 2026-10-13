@@ -40,6 +40,15 @@ const designCatalog = <String, Object?>{
 "emptyState": <String, Object?>{
 "descriptionLineHeight": 1.6,
 },
+"entryStack": <String, Object?>{
+"compactMinHeight": 100,
+"metaLineHeight": 1.5,
+"numberSize": 12,
+"previewGap": 5,
+"previewTop": 14,
+"stateMotionMs": 200,
+"statusSize": 11,
+},
 "fields": <String, Object?>{
 "labelSize": 12,
 "labelWeight": 750,

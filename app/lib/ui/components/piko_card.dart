@@ -8,17 +8,21 @@ class PikoCard extends StatelessWidget {
     this.padding,
     this.selected = false,
     this.focused = false,
+    this.animationDuration,
+    this.constraints,
   });
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final bool selected;
   final bool focused;
+  final Duration? animationDuration;
+  final BoxConstraints? constraints;
   @override
-  Widget build(BuildContext context) => Container(
-    padding:
+  Widget build(BuildContext context) {
+    final contentPadding =
         padding ??
-        EdgeInsets.all(pikoDesign.dimension('components.cards.padding')),
-    decoration: BoxDecoration(
+        EdgeInsets.all(pikoDesign.dimension('components.cards.padding'));
+    final decoration = BoxDecoration(
       color: pikoDesign.color('surface'),
       borderRadius: BorderRadius.circular(pikoDesign.dimension('radii.card')),
       border: Border.all(
@@ -29,7 +33,21 @@ class PikoCard extends StatelessWidget {
           focused ? 'states.focusWidth' : 'states.borderWidth',
         ),
       ),
-    ),
-    child: child,
-  );
+    );
+    if (animationDuration != null) {
+      return AnimatedContainer(
+        duration: animationDuration!,
+        padding: contentPadding,
+        constraints: constraints,
+        decoration: decoration,
+        child: child,
+      );
+    }
+    return Container(
+      padding: contentPadding,
+      constraints: constraints,
+      decoration: decoration,
+      child: child,
+    );
+  }
 }

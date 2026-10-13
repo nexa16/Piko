@@ -25,6 +25,10 @@
  dimension('--language-badge-font-size',badge.fontSize,8,100);
  dimension('--language-badge-weight',badge.weight,100,900,'');
  dimension('--language-badge-letter-spacing',badge.letterSpacingEm,0,1,'em');
+ const entry=config.components.entryStack;
+ for(const [name,key] of [['preview-gap','previewGap'],['preview-top','previewTop'],['number-size','numberSize'],['status-size','statusSize'],['compact-min-height','compactMinHeight']])dimension('--entry-'+name,entry[key],0,2000);
+ dimension('--entry-meta-line-height',entry.metaLineHeight,1,3,'');
+ dimension('--entry-state-motion',entry.stateMotionMs,0,2000,'ms');
  if(!/^#[0-9a-f]{6}$/i.test(dialog.backdropColor)||!Number.isFinite(dialog.backdropOpacity)||dialog.backdropOpacity<0||dialog.backdropOpacity>1)throw Error('Invalid dialog backdrop');
  set('--dialog-backdrop',dialog.backdropColor+Math.round(dialog.backdropOpacity*255).toString(16).padStart(2,'0'));
  for(const [name,value,unit] of [['--page-padding',config.layout.pagePadding,'px'],['--mobile-padding',config.layout.mobilePadding,'px'],['--page-top',config.layout.pageTop,'px'],['--border-width',config.states.borderWidth,'px'],['--border-ink-opacity',config.states.borderInkOpacity*100,'%'],['--disabled-opacity',config.states.disabledOpacity,''],['--focus-width',config.states.focusWidth,'px'],['--focus-offset',config.states.focusOffset,'px'],['--icon-size',config.components.icons.size,'px'],['--card-padding',config.components.cards.padding,'px'],['--input-padding',config.components.fields.padding,'px'],['--input-radius',config.components.fields.radius,'px'],['--field-label-size',config.components.fields.labelSize,'px'],['--field-label-weight',config.components.fields.labelWeight,'']])dimension(name,value,0,2000,unit);
