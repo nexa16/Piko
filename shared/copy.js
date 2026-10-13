@@ -31,6 +31,14 @@ globalThis.PIKO_COPY = {
       "en": "My collections",
       "de": "Meine Sammlungen"
     },
+    "home.emptyDescription": {
+      "en": "A collection brings together vocabulary for a language pair. Create your first collection, then add the words you want to learn.",
+      "de": "In einer Sammlung organisierst du Vokabeln für ein Sprachpaar. Lege deine erste Sammlung an und füge die Wörter hinzu, die du lernen möchtest."
+    },
+    "action.firstCollection": {
+      "en": "Create first collection",
+      "de": "Erste Sammlung anlegen"
+    },
     "action.new": {
       "en": "New",
       "de": "Neu"
@@ -133,6 +141,21 @@ globalThis.PIKO_COPY = {
       "en": "Long-term Learning",
       "de": "Langfristiges Lernen"
     },
+    "learn.summaryEncouragement": {"en":"Well done! Every review counts.","de":"Gut gemacht! Jede Wiederholung zählt."},
+    "summary.title": {"en":"Review complete","de":"Wiederholung abgeschlossen"},
+    "summary.sample": {"en":"Sample data · preview only","de":"Beispieldaten · nur Vorschau"},
+    "summary.completed": {"en":"Vocabulary learned","de":"Vokabeln gelernt"},
+    "summary.firstTryCorrect": {"en":"First-try correct","de":"Beim ersten Versuch richtig"},
+    "learn.setup": {"en":"Choose review direction","de":"Lernrichtung wählen"},
+    "learn.start": {"en":"Start review","de":"Wiederholung starten"},
+    "learn.hard": {"en":"Hard","de":"Schwer"},
+    "learn.correctPrevious": {"en":"Correct previous review","de":"Letzte Bewertung korrigieren"},
+    "learn.correcting": {"en":"Correcting the previous review — choose its grade again.","de":"Letzte Bewertung korrigieren — wähle die Bewertung erneut."},
+    "learn.progressLabel": {"en":"Review progress","de":"Lernfortschritt"},
+    "learn.noDueTitle": {"en":"Nothing due right now","de":"Gerade nichts fällig"},
+    "learn.noDueBody": {"en":"There are no vocabulary items due for review in this collection.","de":"In dieser Sammlung sind gerade keine Vokabeln zum Wiederholen fällig."},
+    "learn.completeTitle": {"en":"Review complete","de":"Wiederholung abgeschlossen"},
+    "learn.completeBody": {"en":"You have finished this sample session.","de":"Du hast diese Beispielsitzung abgeschlossen."},
     "learn.speedTitle": {
       "en": "Speed Learning",
       "de": "Intensives Lernen"
@@ -186,9 +209,23 @@ globalThis.PIKO_COPY = {
       "de": "Antwort eingeben"
     },
     "learn.prototype": {
-      "en": "Learning Card is intentionally simplified for navigation testing.",
-      "de": "Die Lernkarte ist für Navigationstests vereinfacht."
+      "en": "Sample review · grades and progress stay in page memory only. No real scheduling or FSRS calculations.",
+      "de": "Beispielwiederholung · Bewertungen und Fortschritt bleiben nur im Seitenspeicher. Keine echte Planung oder FSRS-Berechnung."
     },
+    "entry.end": {"en":"End entry session","de":"Eingabe beenden"},
+    "entry.complete": {"en":"Save last entry & end session","de":"Letzten Eintrag speichern & Eingabe beenden"},
+    "entry.prototype": {"en":"Sample session · changes stay in this preview only and are lost on reload.","de":"Beispielsitzung · Änderungen bleiben nur in dieser Vorschau und gehen beim Neuladen verloren."},
+    "entry.stackLabel": {"en":"Vocabulary cards · scroll to edit","de":"Vokabelkarten · zum Bearbeiten scrollen"},
+    "entry.number": {"en":"Entry {count}","de":"Eintrag {count}"},
+    "entry.new": {"en":"New","de":"Neu"},
+    "entry.saved": {"en":"Confirmed sample","de":"Bestätigtes Beispiel"},
+    "entry.draft": {"en":"Not confirmed yet","de":"Noch nicht bestätigt"},
+    "entry.autoSave": {"en":"Edits saved in preview automatically","de":"Änderungen automatisch in der Vorschau gespeichert"},
+    "entry.required": {"en":"Enter both words before confirming.","de":"Bitte beide Wörter vor dem Bestätigen eingeben."},
+    "entry.exitTitle": {"en":"Leave this entry session?","de":"Eingabesitzung verlassen?"},
+    "entry.exitWarning": {"en":"Your unconfirmed entry will be discarded. Confirmed entries remain in this preview only.","de":"Dein unbestätigter Eintrag wird verworfen. Bestätigte Einträge bleiben nur in dieser Vorschau."},
+    "entry.continue": {"en":"Continue editing","de":"Weiter bearbeiten"},
+    "entry.discard": {"en":"Discard & exit","de":"Verwerfen & beenden"},
     "entry.title": {
       "en": "Add Entries",
       "de": "Einträge hinzufügen"
@@ -453,6 +490,25 @@ globalThis.PIKO_COPY = {
     "collection.targetLanguage": {"en":"Target language","de":"Zielsprache"},
     "collection.nativeLanguage": {"en":"Native language","de":"Muttersprache"},
     "action.create": {"en":"Create collection","de":"Sammlung erstellen"},
-    "prototype.noSave": {"en":"Preview only · no data is saved","de":"Nur Vorschau · keine Daten werden gespeichert"}
+    "prototype.noSave": {"en":"Prototype only · changes last until reload","de":"Nur Prototyp · Änderungen bleiben bis zum Neuladen"},
+    "collection.rename": {"en":"Rename collection","de":"Sammlung umbenennen"},
+    "collection.delete": {"en":"Delete collection","de":"Sammlung löschen"},
+    "collection.deleteWarning": {"en":"Delete {name}? Its vocabulary and learning progress will also be deleted. This cannot be undone.","de":"{name} löschen? Die Vokabeln und der Lernfortschritt werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden."},
+    "collection.requiredName": {"en":"Enter a collection name.","de":"Gib einen Namen für die Sammlung ein."},
+    "collection.empty": {"en":"No vocabulary yet. Add your first entry using the plus button.","de":"Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu."},
+    "collection.sameLanguage": {"en":"Choose two different languages.","de":"Wähle zwei unterschiedliche Sprachen."},
+    "action.saveName": {"en":"Save name","de":"Namen speichern"},
+    "action.cancel": {"en":"Cancel","de":"Abbrechen"},
+    "collection.reviewDue": {"en":"{count} vocabulary items ready to review","de":"{count} Vokabeln zum Wiederholen bereit"},
+    "action.reviewNow": {"en":"Review now","de":"Jetzt wiederholen"},
+    "vocab.inlineEdit": {"en":"Edit vocabulary","de":"Vokabel bearbeiten"},
+    "vocab.inlineCollapse": {"en":"Collapse vocabulary editor","de":"Vokabeleditor einklappen"},
+    "vocab.inlineFinish": {"en":"Finish editing","de":"Bearbeiten abschließen"},
+    "vocab.inlineDiscard": {"en":"Discard changes","de":"Änderungen verwerfen"},
+    "vocab.inlineAutoSave": {"en":"Valid changes are saved automatically in this prototype until reload.","de":"Gültige Änderungen bleiben automatisch bis zum Neuladen in diesem Prototyp erhalten."},
+    "vocab.inlineDuplicate": {"en":"This vocabulary pair already exists in this collection.","de":"Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden."},
+    "vocab.delete": {"en":"Delete vocabulary","de":"Vokabel löschen"},
+    "vocab.deleted": {"en":"Vocabulary deleted","de":"Vokabel gelöscht"},
+    "vocab.undo": {"en":"Undo","de":"Rückgängig"}
   }
 };

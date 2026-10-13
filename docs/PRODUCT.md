@@ -20,6 +20,8 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 
 ## Specifications and current phase
 
+First-release scope is being agreed block by block through inline Release tags. Collections and the scroll-focused manual entry stack (ENTRY-001–008, UX-ENTRY-001–002) are accepted; precise animation/deletion details and the review block still require decisions. The prototype demonstrates those interactions without production storage or persistence guarantees.
+
 - [Functional specification](piko-functional.md): behavior, data, validation, learning rules, and open functional decisions.
 - [UX specification](piko-ux.md): screens, controls, interaction, and pending browser feedback.
 - [Navigation mockup](../mockups/piko-mockup.html): existing mobile-first, English prototype using sample data.

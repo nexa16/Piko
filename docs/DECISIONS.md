@@ -1,6 +1,74 @@
 # Decision log
 
+## Button default — 2026-10-13
+
+Accepted: Soft filled buttons with 24px corner radius. Canonical tokens define this default for standalone mockup and studio reset. Red Incorrect and green Correct grading remain semantic and equal-width. Other height, padding and font-weight experiments are not approved by this decision.
+
 Planning documents are the initial source of truth. Record accepted changes here and update the affected documents.
+
+## All-popup default — 2026-10-13
+
+The owner extends the close-X pattern to all dialogs, including Collection deletion and creation. X/Escape/backdrop dismiss safely and restore focus; redundant Cancel/Close bottom buttons are removed. Positive destructive Delete remains explicit and closing never deletes. Draft-exit Continue Editing / Discard & Exit remain meaningful separate choices; X means stay and preserve the draft. This supersedes the earlier exception preserving destructive-confirmation Cancel buttons, not the requirement for explicit deletion confirmation. UX-DIALOG-001 now covers all flow areas.
+
+## Review popup dismissal consistency — 2026-10-13
+
+The owner aligns review setup with summary: shared title/close-X header, Escape and backdrop dismissal, with Start remaining the setup's bottom action and no redundant Cancel. Closing setup never launches a session. UX-DIALOG-001 is First. Destructive confirmation cancellation is not removed or implicitly redesigned.
+
+## First-release session summary popup — 2026-10-13
+
+The owner accepts a session summary popup containing learned/completed vocabulary count and first-try-correct count. REVIEW-003 and UX-REVIEW-004 are First. Normal close X, Escape or backdrop dismiss it over the Collection; no Back to Collection button or separate summary page. Studio shortcut previews illustrative 30/23 counts without changing a review session's grades. This supersedes the earlier proposed summary page and content disclaimer; prototype data remain explicitly labelled as samples.
+
+## Collection defaults and vocabulary deletion — 2026-10-13
+
+Accepted: required Collection names default to the selected target language in the interface language; owner customization is preserved and multiple same-language Collections remain allowed (COLL-017, First). Saved vocabulary deletion with mobile swipe discovery, explicit Delete and time-limited Undo is First (ENTRY-009, UX-VOCAB-DELETE-001). Exact production Undo timing remains open. A future trash/recovery area is Later with retention undecided (VOCAB-TRASH-001); prototype Undo timing does not specify retention.
+
+## First-release retry gaps and review correction visibility — 2026-10-13
+
+The owner confirms retry gaps 20, 10, 5, 3, then 1 for the fifth and subsequent errors in the current round. RETRY-001–002 move from Undecided to First. Exact counting/off-by-one conventions, short-wait duration and FSRS interaction remain open; these decisions are not inferred from the sequence. Previous-grade correction is available only before revealing the current card's answer, not after reveal. The studio adds a direct sample-summary preview for design discussion; it is a planning-tool shortcut and does not approve summary content or add a production application shortcut.
+
+## Review reveal and direction controls — 2026-10-13
+
+The owner removes the separate Show Answer button: self-assessment reveals through the card itself, retaining keyboard activation and a small Lucide icon beside the lower-right Tap to reveal cue. Choose one direction before starting; learning displays it once as noninteractive context, with no session direction dropdown. Revealed cards omit Answer revealed status, retain the prompt smaller/muted and emphasize the translation. Hard has a full-column clickable label and comfortable mobile target, remaining a checkbox rather than a third grading button. Previous-grade correction gets a back/undo arrow; red-outline styling remains an experiment. This refines REVIEW-001, CARD-UI-007 and UX-REVIEW-002, superseding the optional separate reveal action. The mockup uses a minimal pre-start direction dialog, not a first-release Settings preference.
+
+## Icon family — 2026-10-13
+
+The owner explicitly confirms Lucide as Piko's icon family. Use consistent outline icons for interface controls, with semantic accessible names and shared size/stroke tokens. Preserve upstream ISC and Feather-derived MIT notices. This replaces the earlier pending family choice; it does not select an application framework or a repository license.
+
+## Design source of truth — 2026-10-13
+
+The owner accepts the HTML/CSS mockup as the authoritative design and interaction reference; no parallel Figma document is required. Centralize semantic colors, spacing, typography, radii, control dimensions and reusable UI components; keep bilingual interface copy in shared/copy.js. Document empty, active, draft, error and disabled states. Future implementation must reproduce accepted behavior and design, adapting to platform accessibility, keyboard and responsive constraints. Flutter is the owner's preferred future direction, not a final stack selection or authorization to implement an application. HTML/CSS is not directly reusable Flutter widget code.
+
+## First-release Settings — 2026-10-13
+
+The owner accepts App Language as the only first-release Settings control, with English/German and retained selection. SETTINGS-001 and UX-SETTINGS-001 are First. Learning direction belongs to the review flow; additional settings remain outside the first-release Settings screen. Prototype language switching remains distinct from production persistence.
+
+## Entry completion versus Back — 2026-10-13
+
+The owner confirms separate top-left Back and top-right global completion checkmark. Global completion saves the final valid draft and exits, without another card; Back requires warning before discarding a nonempty draft. The card checkmark still saves and advances. ENTRY-007 and UX-ENTRY-002 are refined; ENTRY-011 is First. Empty drafts create no entry; incomplete nonempty drafts remain open for validation rather than becoming invalid saved vocabulary. This supersedes the earlier assumption that both top actions share discard behavior.
+
+## First-release review refinements — 2026-10-13
+
+Accepted: one selected direction per session (either direction, not both together); self-assessment red/green grading with fixed 50/50 widths; Hard checkbox and its rating semantics; correction of the immediately previous grade with consistent history/queue updates; no-due empty state; both languages on the revealed answer; one direction display plus progress bar/counter. UNDO-001, CARD-UI-015–016, CARD-UI-019–020, OPEN-CARD-004 and core card/progress rules move to First. Implementation details of rollback remain Open even though required for First. Skip (CARD-UI-021–022) is Later. Mixed expanded direction requirements CARD-005/PREF-005 and dynamic-width CARD-UI-014 are Later as whole requirements, with their first-release portions explicitly captured by REVIEW-001/CARD-UI-025. New answer/empty-state rules are CARD-UI-026/REVIEW-002. No FSRS algorithm parameters or release date are inferred.
+
+## First-release focused entry — 2026-10-13
+
+The owner explicitly includes the complete scroll-focused entry stack in the first release, rather than deferring it as visual polish. ENTRY-001–008 move from Undecided to First; ENTRY-001 moves from Additional to Minimum. UX-ENTRY-001–002 are First. New entries use a checkmark for Save & Next; End entry session is top-right outside the cards. Drafts survive scrolling; saved entry edits auto-save; leaving with a nonempty draft requires Continue Editing / Discard & Exit. ENTRY-009 deletion/Undo and the unresolved mixed ENTRY-010 details are not silently approved by this change. Prototype values for animation thresholds are experiments, not accepted production constants.
+
+## First-release Collections — 2026-10-13
+
+The owner accepted create/name/language pair, multiple Collections including matching pairs, list/open, rename without loss of progress, and confirmed deletion of Collection vocabulary/progress. An empty initial state explains Collections and offers creation. COLL-001 and COLL-012 move from Undecided to First; COLL-012 moves from Proposed to Confirmed. New stable IDs COLL-013–015 and UX-HOME-002 are First. Changing an existing language pair is excluded from the first release (COLL-016, Later). This confirms the Collections block only, not the entire release. The mockup remains a visual prototype; rename/deletion persistence is not implemented.
+
+## Homepage review summary — 2026-10-13
+
+| Date | Decision | Status | Context | Alternatives | Reason | Consequences |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Remove the global Ready to review information block; keep review counts and actions per Collection. | Accepted | Owner finds the global block redundant with collection-level information. | Keep the global due-review summary. | Let users start directly from their Collection. | Supersedes the earlier Minimum homepage summary decision; Expanded activity exploration remains separate. |
+
+## Page heading simplification — 2026-10-13
+
+| Date | Decision | Status | Context | Alternatives | Reason | Consequences |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Use one page title without decorative eyebrows or redundant subtitles; keep meaningful Collection subtitles. | Accepted | Owner found the three repeated Settings headings unnecessary, but finds the Collection subtitle useful. | Retain the repeated heading block. | Reduce repetition without removing useful context. | Simplify headers throughout the mockup; preserve collection language/count and learning session context. |
 
 ## Initial decisions — 2026-10-13
 
