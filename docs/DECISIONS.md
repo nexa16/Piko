@@ -1,5 +1,9 @@
 # Decision log
 
+## FOUNDATION-005 — implementation coordination — 2026-10-13
+
+The accepted implementation plan is tracked in `release-1-implementation.md`, with one spec per commit, explicit exclusions and evidence required for completion. The roadmap and product phase now reflect authorized implementation. Older discovery questions are retained as historical research context, not treated as fresh blockers or permission to add later capabilities. Android is the verification target; the owner controls merge and publication. Requirement details and release tags are reconciled individually as their implementations land.
+
 ## FOUNDATION-001 — implementation start — 2026-10-13
 
 The owner authorizes first-release implementation in Flutter, using a local-first approach. Android is the first-release verification target. The application lives under `app/`, with Android application ID `io.github.nexa16.piko` and the installed Flutter 3.44.7 / Dart 3.12.2 baseline. This supersedes earlier statements that Flutter was only preferred and no stack had been selected. FOUNDATION-001 establishes an empty application host; it does not claim persistence or product features are complete. The HTML/CSS mockup and canonical shared design/copy sources remain authoritative. Implementation uses one branch, with one requirement ID per commit and owner-controlled merge/release.

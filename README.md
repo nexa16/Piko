@@ -10,6 +10,7 @@ This repository contains Piko's product planning and future implementation.
 
 - [Product brief](docs/PRODUCT.md)
 - [Roadmap](docs/ROADMAP.md)
+- [First-release implementation order and evidence](docs/release-1-implementation.md)
 - [Decision log](docs/DECISIONS.md)
 - [Research plan](docs/RESEARCH.md)
 - [Functional requirements](docs/piko-functional.md) and [UX requirements](docs/piko-ux.md)

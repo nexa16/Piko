@@ -1,40 +1,24 @@
 # Roadmap
 
-This is a discovery sequence, not a release commitment. No implementation milestone or release date has been defined.
+The owner has authorized the local-first Flutter first release, with Android verification. No release date is implied. The detailed ordered requirements and evidence live in the [implementation ledger](release-1-implementation.md); functional behavior and UX remain defined in their canonical specifications.
 
-## Now — discovery and decisions necessary before implementation
+## Current implementation sequence
 
-- [ ] Define Piko's user problem.
-- [ ] Identify the first target user.
-- [ ] Choose whether Piko is web, mobile, desktop, or multiplatform.
-- [ ] Define the smallest useful user outcome.
-- [ ] Identify privacy and data requirements.
-- [ ] Decide the initial technical foundation.
-- [ ] Define the first implementation milestone only after those decisions exist.
-- [ ] Review the five deferred Collection Overview annotations in the UX specification when the owner resumes UX work.
-- [ ] Refine Collection Overview, then Collection Detail, Learning, Entry Editor/categories, Import Review, Statistics, and Settings, one page at a time.
-- [ ] Agree on proposed design principles, palette, typography, icon family, and public learning names using the design studio.
-- [ ] Review the proposed Base / Minimum / Additional scope labels before defining any implementation milestone; labels do not revoke confirmed requirements.
-- [ ] Resolve remaining functional and UX questions only as needed; do not promote open questions to requirements.
+1. Android host, deterministic tests, transactional local storage, and canonical design/copy adapters.
+2. Shared accessible interface components and localized controls.
+3. Collection creation, listing, naming and deletion; vocabulary integrity and offline persistence.
+4. Focused entry, draft handling, saved edits, inline editing and reversible deletion.
+5. Independent directional FSRS state, self-assessment, reinforcement retries and previous-grade correction.
+6. Session summary, language settings and full Android acceptance verification.
 
-## Next — work likely to follow after discovery
+Use one `codex/release-1-implementation` branch and one draft PR into `develop`. Each implementation commit represents one specification ID. Relevant tests accompany behavior; the coordinator reviews and publishes checked commits. The owner controls merging and release publication.
 
-To be decided: Which work follows from the accepted product brief?
+## Verification
 
-Likely candidates, subject to discovery: validate the core flow, specify the initial scope, and plan the first implementation with appropriate tests.
+Completion requires requirement-specific tests, static analysis, actual Android build/install/runtime checks, comparison with the binding mockup, persistence across restart, offline behavior, scheduling and correction integrity, localization and accessibility checks. Writing code or passing a narrower test does not establish full completion. The ledger records pending checks explicitly.
 
-## Later — possible longer-term work that has not been committed
+## Later scope
 
-To be decided: Which longer-term opportunities are supported by evidence? No longer-term product work is committed.
+Accounts and synchronization, AI, import, categories, hints, examples, typed answers, Speed Learning, mixed-direction sessions, Skip, advanced statistics, developer parameters and retained trash are outside this first release. Learning-level labels and thresholds remain deferred. Conditional constraints for these capabilities do not introduce them into the release.
 
-## Not planned — ideas explicitly excluded for the moment
-
-- GitHub Project setup, custom fields, and heavier lifecycle automation during discovery.
-- Luufi integration or configuration changes.
-- Framework selection, application code, package manifests, databases, or infrastructure during repository bootstrap.
-- Deployment environments, deployment workflows, and GitHub Actions CI during bootstrap.
-- Milestones, releases, tags, and issue forms during bootstrap.
-
-## Mockup iteration checks
-
-For each requested page refinement, update the mockup and corresponding UX requirements together. Keep navigation and back actions usable, check mobile and desktop layouts and browser errors, label placeholders, and preserve stable requirement IDs. Record unresolved decisions explicitly. Add functional changes only when behavior changes.
+Product research questions remain open without invented findings or target users. GitHub Projects and heavier delivery automation remain deferred until delivery volume justifies them. Store publication and release signing are separate from the current Android development verification.
