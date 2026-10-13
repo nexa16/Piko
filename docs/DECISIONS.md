@@ -1,5 +1,9 @@
 # Decision log
 
+## ENTRY-003 — ephemeral raw entry drafts — 2026-10-13
+
+The entry-session controller owns one Collection identity and immutable snapshots of raw target/native draft values. Field changes preserve the other field and notify consumers only when values change. It has no repository dependency, write method or restoration API, so typing cannot save an Entry. Ending its lifetime clears its current draft and rejects later mutations; another session starts empty, including another session for the same Collection. Widget-owned text, focus and scroll controllers remain separate. Five controller tests cover raw values, notification snapshots, Collection/session isolation and lifetime reset; a real file-backed SQLite fixture confirms draft typing/disposal leaves previously saved vocabulary unchanged. Actual entry-screen integration remains pending, with navigation, confirmation, draft-exit handling and focused scrolling implemented under their own requirements.
+
 ## OFFLINE-001 — first-release offline storage evidence — 2026-10-13
 
 Classify OFFLINE-001 from Undecided to First as a constraint on the accepted local-first release. An isolated Android fixture writes through the production Collection/vocabulary repositories with a self-checked HTTP guard and verifies normalized text, IDs, ownership and comparison keys after SQLite file reopen. The verification run had no active default network; original airplane/Wi-Fi/mobile settings were restored afterward. Fixture storage uses only a newly owned application-support subdirectory, not the production piko database. The main manifest requests no Internet permission; debug/profile tooling permissions remain intact. The ledger stays Implemented, not fully verified, until actual manual-entry UI and termination durability gates pass. No fake entry form, synchronization or AI capability is added.
