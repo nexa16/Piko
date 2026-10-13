@@ -178,7 +178,7 @@ The four unnumbered Future / deferred ideas below are all Additional; no new req
 - **BULK-010 [Open]** [Scope: Additional] [Release: Undecided] [Flow: collection, entry] Detailed review interface, treatment of suggested new dimensions, and rollback behavior are not yet defined.
 
 ## Offline, sync, and settings
-- **OFFLINE-001 [Confirmed]** [Scope: Minimum] [Release: Undecided] [Flow: collection, entry] Vocabulary Entries can be created and permanently saved locally without internet access.
+- **OFFLINE-001 [Confirmed]** [Scope: Minimum] [Release: First] [Flow: collection, entry] Vocabulary Entries can be created and permanently saved locally without internet access. The production local repository has Android evidence for saving with HTTP blocked and no active default network, then retaining IDs, normalized text, Collection ownership and comparison keys after file reopen. This is storage-path evidence; actual manual-entry confirmation UI and application termination/relaunch durability remain pending under their owning entry requirements and final acceptance gates. No synchronization or AI dependency is introduced.
 - **OFFLINE-002 [Confirmed]** [Scope: Base] [Release: Undecided] [Flow: collection, entry] Pending locally saved changes synchronize automatically when connectivity is available; failed sync attempts must not delete local changes.
 - **OFFLINE-003 [Confirmed]** [Scope: Additional] [Release: Undecided] [Flow: collection, entry] The app visibly communicates offline, pending, syncing and synced states.
 - **OFFLINE-004 [Confirmed]** [Scope: Minimum] [Release: Undecided] [Flow: collection, entry] Manual entry and category selection work without AI or connectivity; configured Carry-over provides a non-AI fallback.

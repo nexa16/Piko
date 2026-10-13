@@ -1,5 +1,9 @@
 # Decision log
 
+## OFFLINE-001 — first-release offline storage evidence — 2026-10-13
+
+Classify OFFLINE-001 from Undecided to First as a constraint on the accepted local-first release. An isolated Android fixture writes through the production Collection/vocabulary repositories with a self-checked HTTP guard and verifies normalized text, IDs, ownership and comparison keys after SQLite file reopen. The verification run had no active default network; original airplane/Wi-Fi/mobile settings were restored afterward. Fixture storage uses only a newly owned application-support subdirectory, not the production piko database. The main manifest requests no Internet permission; debug/profile tooling permissions remain intact. The ledger stays Implemented, not fully verified, until actual manual-entry UI and termination durability gates pass. No fake entry form, synchronization or AI capability is added.
+
 ## VOCAB-003 — cross-Collection vocabulary independence — 2026-10-13
 
 Dedicated acceptance tests confirm that the existing schema 4 collection-scoped uniqueness permits identical normalized vocabulary pairs in different Collections, even when their names and language pairs match. Entries retain distinct UUIDs and owner-scoped reads. Updating one Entry leaves the other intact and may match a pair in another Collection; attempts to create a second matching pair within either owner remain blocked. File reopen retains both Collection and Entry identities, texts and language metadata. This requirement needs no production change, schema migration or move API; it adds explicit evidence for the accepted ownership boundary. Manual-entry screens remain separately scoped.
