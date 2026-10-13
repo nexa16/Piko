@@ -4,9 +4,24 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { generate, readCatalog, update, updateIcons, entryHeaderResponsive } from './generate_shared.mjs';
+import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('inline vocabulary adapters consume canonical caption and viewport breakpoint', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.inlineVocabulary.compactBreakpoint = 440;
+  config.components.inlineVocabulary.captionSize = 12;
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  const adapted = inlineVocabularyResponsive(config, css);
+  assert.ok(adapted.includes('@media(max-width:440px){.inline-entry-fields'));
+  assert.ok(!adapted.includes('@media(max-width:420px){.inline-entry-fields'));
+  assert.equal(inlineVocabularyResponsive(config, adapted), adapted);
+  const properties = new Map();
+  const context = vm.createContext({PIKO_DESIGN: config, document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
+  vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
+  assert.equal(properties.get('--inline-caption-size'), '12px');
+  assert.ok(css.includes('font-size:var(--inline-caption-size)'));
+});
 const copy = { schemaVersion: 1, defaultLocale: 'en', entries: { test: { en: '{count} $ "quote"', de: '{count} $ "Zitat"', note: 'preserved' } } };
 test('generation preserves fields and escapes Dart interpolation', () => {
   const result = generate(design, copy);

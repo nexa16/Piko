@@ -69,6 +69,16 @@ export function entryHeaderResponsive(design, css) {
   return pattern.test(css) ? css.replace(pattern, block) : css.trimEnd() + '\n' + block + '\n';
 }
 
+export function inlineVocabularyResponsive(design, css) {
+  const breakpoint = design.components.inlineVocabulary.compactBreakpoint;
+  if (!Number.isFinite(breakpoint) || breakpoint < 280 || breakpoint > 2000) throw Error('Invalid inline vocabulary breakpoint');
+  const block = '/* Generated inline vocabulary responsive adapter; edit shared/design-config.js only. */\n'
+    + `@media(max-width:${breakpoint}px){.inline-entry-fields{grid-template-columns:1fr}}\n`
+    + '/* End generated inline vocabulary responsive adapter. */';
+  const pattern = /\/\* Generated inline vocabulary responsive adapter;[^]*?\/\* End generated inline vocabulary responsive adapter\. \*\//;
+  return pattern.test(css) ? css.replace(pattern, block) : css.trimEnd() + '\n' + block + '\n';
+}
+
 // Android packaging omits assets with ../ keys. These copies are generated
 // adapters: mockups/assets/icons/lucide remains the only editable SVG source.
 export function updateIcons(source, destination, check) {
@@ -89,6 +99,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const design = readCatalog(path.join(root, 'shared/design-config.js'), 'PIKO_DESIGN');
   update(output, generate(design, readCatalog(path.join(root, 'shared/copy.js'), 'PIKO_COPY')), process.argv.includes('--check'));
   const components = path.join(root, 'shared/components.css');
-  update(components, entryHeaderResponsive(design, fs.readFileSync(components, 'utf8')), process.argv.includes('--check'));
+  update(components, inlineVocabularyResponsive(design, entryHeaderResponsive(design, fs.readFileSync(components, 'utf8'))), process.argv.includes('--check'));
   updateIcons(path.join(root, 'mockups/assets/icons/lucide'), path.join(root, 'app/assets/generated/lucide'), process.argv.includes('--check'));
 }

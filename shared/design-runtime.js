@@ -29,6 +29,7 @@
  dimension('--language-badge-weight',badge.weight,100,900,'');
  dimension('--language-badge-letter-spacing',badge.letterSpacingEm,0,1,'em');
  const entry=config.components.entryStack;
+ dimension('--inline-caption-size',config.components.inlineVocabulary.captionSize,8,100);
  for(const [name,key] of [['preview-gap','previewGap'],['preview-top','previewTop'],['number-size','numberSize'],['status-size','statusSize'],['compact-min-height','compactMinHeight']])dimension('--entry-'+name,entry[key],0,2000);
  dimension('--entry-meta-line-height',entry.metaLineHeight,1,3,'');
  dimension('--entry-state-motion',entry.stateMotionMs,0,2000,'ms');

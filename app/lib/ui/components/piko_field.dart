@@ -56,6 +56,7 @@ class PikoTextField extends StatelessWidget {
     this.onChanged,
     this.focusNode,
     this.enabled = true,
+    this.style,
   });
   final String label;
   final TextEditingController controller;
@@ -63,12 +64,14 @@ class PikoTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final FocusNode? focusNode;
   final bool enabled;
+  final TextStyle? style;
   @override
   Widget build(BuildContext context) => PikoField(
     label: label,
     child: Semantics(
       label: label,
       child: TextField(
+        style: style,
         enabled: enabled,
         controller: controller,
         onChanged: onChanged,

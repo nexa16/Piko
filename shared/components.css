@@ -37,7 +37,7 @@ h1{font-size:var(--font-title)}.btn{border-radius:var(--radius-control);min-heig
 .word-row strong,.word-row .meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.word-row .meta{font-size:var(--font-body)}
 .word-inline .head strong{margin-right:auto}.word-inline .head .btn{min-width:44px;min-height:44px}.inline-discard[hidden]{display:none}
 .vocab-swipe{position:relative;overflow:hidden;border-radius:var(--radius-card);touch-action:pan-y}.vocab-swipe .word-row{width:100%;position:relative;z-index:1;transition:transform var(--motion-fast)}.vocab-delete-action{position:absolute;right:0;top:0;bottom:0;max-width:100%;white-space:normal;color:var(--piko-danger);background:var(--piko-surface);visibility:hidden}.vocab-swipe.show-delete .word-row{transform:translateX(calc(-1 * var(--swipe-action-width)))}.vocab-swipe.show-delete .vocab-delete-action{visibility:visible;z-index:2}.vocabulary-undo{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-3);background:var(--piko-tint);border-radius:var(--radius-control)}
-.word-inline .head{margin:0 0 var(--space-3)}.inline-entry-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}.inline-entry-fields .field{margin:0}.word-inline .caption{margin:var(--space-2) 0 0}@media(max-width:420px){.inline-entry-fields{grid-template-columns:1fr}}
+.word-inline .head{margin:0 0 var(--space-3)}.inline-entry-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}.inline-entry-fields .field{margin:0}.word-inline .caption{font-size:var(--inline-caption-size);margin:var(--space-2) 0 0}
 @media(max-width:680px){main{padding:var(--space-5) 18px 100px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .summary-header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)}.summary-header h2{font-size:20px;margin:0}.summary-metrics{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);margin:var(--space-6) 0}.summary-metrics>div{display:grid;align-content:start;gap:var(--space-2)}.summary-metrics strong{font-size:36px;line-height:1.15;font-variant-numeric:tabular-nums}.summary-metrics span{font-size:var(--font-label);line-height:1.5;color:var(--piko-muted);overflow-wrap:normal}.summary-modal .caption{margin:0}
@@ -64,3 +64,6 @@ main{padding-top:var(--page-top);padding-inline:var(--page-padding)}
 /* End generated entry header responsive adapter. */
 /* Canonical normal-flow section headings; retain narrower inline-editor rules. */
 .head:has(>h2){margin:var(--section-heading-top-margin) 0 var(--section-heading-bottom-margin);gap:var(--section-heading-gap)}.head>h2{font-size:var(--section-heading-size);font-weight:var(--section-heading-weight)}
+/* Generated inline vocabulary responsive adapter; edit shared/design-config.js only. */
+@media(max-width:420px){.inline-entry-fields{grid-template-columns:1fr}}
+/* End generated inline vocabulary responsive adapter. */

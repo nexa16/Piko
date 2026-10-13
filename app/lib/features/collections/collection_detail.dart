@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
+import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 import '../entry/entry_session_route.dart';
+import '../vocabulary/collection_vocabulary.dart';
 
 String collectionLanguagePair(BuildContext context, CollectionRecord record) {
   final copy = PikoCopyScope.of(context);
@@ -35,11 +37,15 @@ class CollectionDetail extends StatefulWidget {
     required this.repository,
     required this.collectionId,
     this.entrySessionFactory,
+    this.vocabularyRepository,
+    this.onPendingVocabularyWrites,
     super.key,
   });
   final CollectionsRepository repository;
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
+  final VocabularyRepository? vocabularyRepository;
+  final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -48,6 +54,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
   CollectionRecord? _currentCollection;
+  CollectionRecord? _lastReadyCollection;
 
   Future<void> _openEntry() async {
     final record = _currentCollection;
@@ -82,6 +89,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.repository != widget.repository ||
         oldWidget.collectionId != widget.collectionId) {
+      _lastReadyCollection = null;
       _watch();
     }
   }
@@ -101,6 +109,14 @@ class _CollectionDetailState extends State<CollectionDetail> {
                 snapshot.connectionState != ConnectionState.none &&
                 record != null;
             _currentCollection = ready ? record : null;
+            if (ready) {
+              _lastReadyCollection = record;
+            } else if (!snapshot.hasError &&
+                snapshot.connectionState != ConnectionState.waiting &&
+                snapshot.connectionState != ConnectionState.none &&
+                record == null) {
+              _lastReadyCollection = null;
+            }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -122,7 +138,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   Text(copy.text('collection.loading'))
                 else if (record == null)
                   Text(copy.text('collection.notFound')),
-                if (ready && widget.entrySessionFactory != null)
+                if (ready &&
+                    (widget.entrySessionFactory != null ||
+                        widget.vocabularyRepository != null))
                   Padding(
                     padding: EdgeInsets.only(
                       top: pikoDesign.dimension(
@@ -157,22 +175,33 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             'components.sectionHeading.gap',
                           ),
                         ),
-                        SizedBox.square(
-                          dimension: pikoDesign.dimension(
-                            'components.buttons.height',
-                          ),
-                          child: PikoIconButton(
-                            icon: const PikoIcon(PikoIconName.plus),
-                            semanticLabel: copy.text('action.addEntry'),
-                            variant: PikoButtonVariant.primary,
-                            padding: EdgeInsets.all(
-                              pikoDesign.dimension('spacing.2'),
+                        if (widget.entrySessionFactory != null)
+                          SizedBox.square(
+                            dimension: pikoDesign.dimension(
+                              'components.buttons.height',
                             ),
-                            onPressed: _openingEntry ? null : _openEntry,
+                            child: PikoIconButton(
+                              icon: const PikoIcon(PikoIconName.plus),
+                              semanticLabel: copy.text('action.addEntry'),
+                              variant: PikoButtonVariant.primary,
+                              padding: EdgeInsets.all(
+                                pikoDesign.dimension('spacing.2'),
+                              ),
+                              onPressed: _openingEntry ? null : _openEntry,
+                            ),
                           ),
-                        ),
                       ],
                     ),
+                  ),
+                if (_lastReadyCollection != null &&
+                    widget.vocabularyRepository != null)
+                  CollectionVocabulary(
+                    key: ValueKey(
+                      'collection-vocabulary-${widget.collectionId}',
+                    ),
+                    collection: _lastReadyCollection!,
+                    repository: widget.vocabularyRepository!,
+                    onPendingWrites: widget.onPendingVocabularyWrites,
                   ),
               ],
             );

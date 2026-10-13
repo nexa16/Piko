@@ -70,6 +70,10 @@ const designCatalog = <String, Object?>{
 "icons": <String, Object?>{
 "size": 20,
 },
+"inlineVocabulary": <String, Object?>{
+"captionSize": 11,
+"compactBreakpoint": 420,
+},
 "languageBadge": <String, Object?>{
 "fontSize": 15,
 "letterSpacingEm": 0.03,
@@ -847,9 +851,13 @@ const copyCatalog = <String, Object?>{
 "de": "Vokabel gelöscht",
 "en": "Vocabulary deleted",
 },
+"vocab.editPair": <String, Object?>{
+"de": "{target} · {native} bearbeiten",
+"en": "Edit {target} · {native}",
+},
 "vocab.inlineAutoSave": <String, Object?>{
-"de": "Gültige Änderungen bleiben automatisch bis zum Neuladen in diesem Prototyp erhalten.",
-"en": "Valid changes are saved automatically in this prototype until reload.",
+"de": "Gültige Änderungen werden automatisch gespeichert.",
+"en": "Valid changes are saved automatically.",
 },
 "vocab.inlineCollapse": <String, Object?>{
 "de": "Vokabeleditor einklappen",
@@ -870,6 +878,14 @@ const copyCatalog = <String, Object?>{
 "vocab.inlineFinish": <String, Object?>{
 "de": "Bearbeiten abschließen",
 "en": "Finish editing",
+},
+"vocab.loadFailed": <String, Object?>{
+"de": "Vokabeln konnten nicht geladen werden. Bitte versuche es erneut.",
+"en": "Couldn't load vocabulary. Please try again.",
+},
+"vocab.loading": <String, Object?>{
+"de": "Vokabeln werden geladen…",
+"en": "Loading vocabulary…",
 },
 "vocab.undo": <String, Object?>{
 "de": "Rückgängig",

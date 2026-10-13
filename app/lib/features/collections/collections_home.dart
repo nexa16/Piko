@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
+import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
@@ -16,10 +17,14 @@ class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
     required this.repository,
     this.entrySessionFactory,
+    this.vocabularyRepository,
+    this.onPendingVocabularyWrites,
     super.key,
   });
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
+  final VocabularyRepository? vocabularyRepository;
+  final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -139,6 +144,10 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                                 repository: widget.repository,
                                 collectionId: collection.id,
                                 entrySessionFactory: widget.entrySessionFactory,
+                                vocabularyRepository:
+                                    widget.vocabularyRepository,
+                                onPendingVocabularyWrites:
+                                    widget.onPendingVocabularyWrites,
                               ),
                             ),
                           ),

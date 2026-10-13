@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Collection inline vocabulary presentation — UX-COLL-009
+
+The production Collection renderer consumes the binding compact row's 16px padding, 12px gaps and equal target/native columns with single-line ellipsis, expanding that same keyed card to the existing 19px card padding and 16px radius. The inline header uses shared body/title typography; language labels and inputs retain the binding 750 label weight. Field columns switch by viewport width at `components.inlineVocabulary.compactBreakpoint` (420px); generated responsive CSS and Flutter share this editable source. `captionSize` extracts the matching 11px muted caption, with existing 8px spacing above it and 12px error spacing. No Delete, Finish or Discard placeholder controls are introduced. Host checks cover 420/421px layout, keyboard activation/focus visibility and German 392px at 200% with simulated keyboard inset; actual device inline-editor evidence remains pending.
+
 ## Shared popup implementation — UX-DIALOG-001
 
 `components.dialogs` centralizes the existing mockup maximum width (430px), title size (20px), backdrop color and opacity. Popup titles reuse the canonical 700 title weight; padding, header gap and radius reuse shared spacing/radius tokens. Both CSS and Flutter consume these values. Flutter popups have a flat, untinted surface and scroll within the available keyboard-safe height. A localized Lucide X, Escape, backdrop or Android Back dismiss safely and restore opener focus; Tab stays inside the dialog. Generic Cancel buttons are omitted. Explicit positive actions and meaningful Continue Editing / Discard & Exit choices belong to each consuming flow, with safe dismissal returning no action result. Reduced-motion settings suppress transitions.
