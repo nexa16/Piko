@@ -1,5 +1,9 @@
 # Decision log
 
+## ENTRY-008 — real Android termination durability — 2026-10-14
+
+Use a two-phase test-only Android fixture against the actual private production database. Phase A performs Collection creation and vocabulary confirmation through the normal UI, retains an unfinished draft, flushes a private verification checkpoint, and deliberately remains alive. An external coordinator verifies the ready marker and process identity, force-stops the app, and confirms the process is absent. The interrupted phase is not reported as a passing test. After in-place installation and a normal cold launch, phase B verifies unchanged pre-existing logical rows and exact confirmed vocabulary/owner/rowid/comparison keys/two full directional records, then checks that a new production session has a blank draft. Transactional cleanup refuses modified owned records and deletes only the exact synthetic Collection, never resetting identity allocators. All device test invocations use `--no-uninstall`; sentinel preservation and normal APK restoration are independently checked. This proves the scoped ENTRY-008 abrupt-termination outcome, not every release-level offline or lifecycle gate.
+
 ## UX-COLL-003 — production Collection entry route — 2026-10-14
 
 The normal-flow Vocabulary heading uses the binding 17px bold title, 27px top/14px bottom margins and 12px gap through `components.sectionHeading`, consumed by browser and generated Flutter adapters. The localized icon-only plus uses a canonical 44px square with shared padding, semantics, tooltip and keyboard activation. Only a current successful Collection snapshot exposes the action; opening is guarded against duplicate activation. No vocabulary count, sample rows or review actions are introduced.
