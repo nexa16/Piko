@@ -5,10 +5,13 @@ import '../learning_item.dart';
 import '../regular_review.dart';
 import '../retry_obligation.dart';
 import '../retry_answer.dart';
+import '../review_correction.dart';
 import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
+
+part 'sqlite_review_correction.dart';
 
 final class SqliteLearningRepository implements RegularReviewWriter {
   SqliteLearningRepository(this.database);
@@ -660,7 +663,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 }
 
 /// Fixed Collection/direction boundary, not a due set or session launcher.
-final class CollectionReviewGateway implements RetryReviewSource {
+final class CollectionReviewGateway
+    implements RetryReviewSource, ReviewCorrectionSource {
   const CollectionReviewGateway._(
     this._repository,
     this.collectionId,
@@ -671,6 +675,20 @@ final class CollectionReviewGateway implements RetryReviewSource {
   final String collectionId;
   @override
   final LearningDirection direction;
+
+  @override
+  Future<LearningAnswerReceipt> replaceAnswer({
+    required LearningAnswerReceipt expected,
+    required List<RetryWaitMutation> expectedWaits,
+    required LearningRating rating,
+    required DateTime executionAt,
+  }) => _repository._replaceAnswer(
+    this,
+    expected,
+    expectedWaits,
+    rating,
+    executionAt,
+  );
 
   /// Non-presentational discovery; SESSION-018 owns due eligibility/selection.
   /// An existing empty Collection returns []; a deleted owner fails explicitly.

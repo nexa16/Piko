@@ -8,6 +8,12 @@ Reuse the standard modal and existing English/German motivational copy. Move the
 
 The first release retains only the existing product-state tables and interface locale. A file-backed acceptance test inventories every table/column and executes a real regular error, repeated reinforcement errors and success before reopening storage: one regular review remains, the completed current obligation is removed, and no retry-attempt or typed-answer history is added. The test passes in the 39-case focused storage/summary/count batch. This records logical application retention, not physical secure deletion or an operating-system backup decision; Android acceptance remains pending.
 
+## UNDO-001 — atomic latest-answer replacement — 2026-10-14
+
+Correct only the exact latest issued regular or retry answer. A regular correction keeps one event with the same UUID and original UTC instant, recalculates from its captured prior FSRS card and replaces rating/card/retry state atomically. A retry correction changes only current-round state. The Collection/direction ordinal does not advance again; its revision and any affected card/retry revision advance monotonically.
+
+Correction accepts an exact post-answer wait-mutation chain so the ordinary one-item wait path can be replaced without overwriting later state. Never recreate a retry after its original local-04:00 expiry. Stale scope/item/round/wait state, forged context, concurrent replacement or a later accepted answer rejects the whole transaction. Twenty-seven focused real-SQLite cases pass; no schema or attempt log was added. Android remains pending.
+
 ## CARD-UI-026 — retained language/direction/progress context — 2026-10-14
 
 Close the deferred progress portion only after real retry-aware unique counters and UX-CARD-012 presentation. Two actual-route cases cover both translation directions with English/German UI: hidden prompt, both-language revealed answer, one fixed direction, unchanged 0/1 progress through Incorrect/wait and successful retry advancing to1/1 with first-try still0. They pass in the related 19-case batch with clean analysis. No regular receipt count, fake progress, summary or correction is substituted; Android remains pending.
