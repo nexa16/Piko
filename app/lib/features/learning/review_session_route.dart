@@ -341,7 +341,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PikoHeading(
-                    title: copy.text('learn.longTitle'),
+                    title: widget.collection.name,
                     leading: PikoButton(
                       label: copy.text(
                         sessionForBuild.hasInitialWork
