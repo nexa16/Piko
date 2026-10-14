@@ -24,6 +24,24 @@ test('review context and progress adapters share binding geometry and responsive
   assert.ok(responsive.includes('@media(max-width:410px){.review-context'));
   assert.equal(reviewContextResponsive(config,responsive),responsive);
 });
+test('Collection review browser and Flutter adapters share binding geometry', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.collectionReview = {quickWidth:184,quickPaddingX:14,quickPaddingY:10,quickCountSize:13,quickCountMinWidth:26,quickOpenTop:18,quickOpenBottom:13,quickHorizontal:17,quickActionsBottom:16,cardMinHeight:90,cardPadding:22,titleLineHeight:1.6};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN: config, document: {documentElement: {dataset: {}, style: {setProperty: (key, value) => properties.set(key, value)}}}
+  });
+  for (const [name,value] of [['quick-width','184px'],['quick-padding-x','14px'],['quick-padding-y','10px'],['quick-count-size','13px'],['quick-count-min-width','26px'],['quick-open-top','18px'],['quick-open-bottom','13px'],['quick-horizontal','17px'],['quick-actions-bottom','16px'],['card-min-height','90px'],['card-padding','22px'],['title-line-height','1.6']]) {
+    assert.equal(properties.get('--collection-review-'+name), value);
+  }
+  const generated = generate(config, {schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"collectionReview": <String, Object?>{'));
+  assert.ok(generated.includes('"quickWidth": 184,'));
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  for (const name of ['quick-width','quick-padding-x','quick-padding-y','quick-count-size','quick-count-min-width','quick-open-top','quick-open-bottom','quick-horizontal','quick-actions-bottom','card-min-height','card-padding','title-line-height']) {
+    assert.ok(css.includes('var(--collection-review-'+name+')'));
+  }
+});
 test('Settings-only field margin adapts canonical binding inset', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.settings.fieldMarginY = 18;
