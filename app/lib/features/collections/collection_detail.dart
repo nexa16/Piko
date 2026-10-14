@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
@@ -7,6 +8,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_dialog.dart';
+import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
 import '../entry/entry_session_route.dart';
 import '../vocabulary/collection_vocabulary.dart';
@@ -68,6 +70,232 @@ class _CollectionDetailState extends State<CollectionDetail> {
   bool _deleting = false;
   int _identity = 0;
   ModalRoute<bool>? _deleteDialog;
+  final _name = TextEditingController();
+  late final _nameFocus = FocusNode(
+    onKeyEvent: (_, event) {
+      if (event.logicalKey == LogicalKeyboardKey.enter ||
+          event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+        if (event is KeyDownEvent) _saveRename();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    },
+  );
+  final _renameFocus = FocusNode();
+  bool _renaming = false;
+  Object? _renameRequest;
+  Object? _renameError;
+
+  void _restoreRenameFocus(ModalRoute<dynamic>? route, int identity) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          identity == _identity &&
+          route?.isCurrent == true &&
+          !_renaming &&
+          _currentCollection != null) {
+        _renameFocus.requestFocus();
+      }
+    });
+  }
+
+  void _beginRename() {
+    final record = _currentCollection;
+    final route = ModalRoute.of(context);
+    if (record == null ||
+        _renameRequest != null ||
+        _deleteRequest != null ||
+        _openingEntry ||
+        route?.isCurrent != true) {
+      return;
+    }
+    final identity = _identity;
+    _name.value = TextEditingValue(
+      text: record.name,
+      selection: TextSelection(baseOffset: 0, extentOffset: record.name.length),
+    );
+    setState(() {
+      _renaming = true;
+      _renameError = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          identity == _identity &&
+          _renaming &&
+          _renameRequest == null &&
+          route?.isCurrent == true) {
+        _nameFocus.requestFocus();
+      }
+    });
+  }
+
+  void _cancelRename() {
+    final route = ModalRoute.of(context);
+    if (!_renaming ||
+        _renameRequest != null ||
+        _deleteRequest != null ||
+        route?.isCurrent != true) {
+      return;
+    }
+    setState(() {
+      _renaming = false;
+      _renameError = null;
+    });
+    _restoreRenameFocus(route, _identity);
+  }
+
+  Future<void> _saveRename() async {
+    final record = _currentCollection;
+    final route = ModalRoute.of(context);
+    if (!_renaming ||
+        record == null ||
+        _renameRequest != null ||
+        _deleteRequest != null ||
+        route?.isCurrent != true) {
+      return;
+    }
+    if (_name.text.trim().isEmpty) {
+      setState(() => _renameError = CollectionValidation.requiredName);
+      _nameFocus.requestFocus();
+      return;
+    }
+    final repository = widget.repository;
+    final identity = _identity;
+    final request = Object();
+    final raw = _name.value;
+    final register = widget.onPendingVocabularyWrites;
+    bool current() =>
+        mounted &&
+        identity == _identity &&
+        identical(_renameRequest, request) &&
+        identical(repository, widget.repository) &&
+        widget.collectionId == record.id;
+    setState(() {
+      _renameRequest = request;
+      _renameError = null;
+    });
+    try {
+      final operation = (() async {
+        final saved = await repository.rename(id: record.id, name: raw.text);
+        if (!current()) return;
+        setState(() {
+          _lastReadyCollection = saved;
+          _renaming = false;
+        });
+        _restoreRenameFocus(route, identity);
+      })();
+      // Register accepted name work with its captured storage owner before close.
+      register?.call(operation);
+      await operation;
+    } catch (error) {
+      if (current()) {
+        setState(() => _renameError = error);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted &&
+              identity == _identity &&
+              _renaming &&
+              _renameRequest == null &&
+              route?.isCurrent == true &&
+              identical(repository, widget.repository)) {
+            _nameFocus.requestFocus();
+          }
+        });
+      }
+    } finally {
+      if (current()) setState(() => _renameRequest = null);
+    }
+  }
+
+  Widget _nameHeading(CollectionRecord record, bool ready) {
+    final copy = PikoCopyScope.of(context);
+    final gap = pikoDesign.dimension('spacing.2');
+    final blocked = _renameRequest != null || _deleteRequest != null || !ready;
+    if (!_renaming) {
+      return Row(
+        children: [
+          Flexible(
+            child: Semantics(
+              header: true,
+              headingLevel: 1,
+              child: Text(
+                record.name,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+          ),
+          SizedBox(width: gap),
+          PikoIconButton(
+            key: const ValueKey('collection-rename'),
+            icon: const PikoIcon(PikoIconName.pencil),
+            semanticLabel: copy.text('collection.rename'),
+            focusNode: _renameFocus,
+            onPressed: blocked || _openingEntry ? null : _beginRename,
+          ),
+        ],
+      );
+    }
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): _cancelRename,
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  label: copy.text('collection.name'),
+                  child: TextField(
+                    key: const ValueKey('collection-name'),
+                    controller: _name,
+                    focusNode: _nameFocus,
+                    enabled: !blocked,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saveRename(),
+                    onChanged: (_) {
+                      if (_renameError != null) {
+                        setState(() => _renameError = null);
+                      }
+                    },
+                    decoration: pikoInputDecoration(),
+                  ),
+                ),
+              ),
+              SizedBox(width: gap),
+              PikoIconButton(
+                key: const ValueKey('collection-name-save'),
+                icon: const PikoIcon(PikoIconName.check),
+                semanticLabel: copy.text('action.saveName'),
+                onPressed: blocked ? null : _saveRename,
+              ),
+              SizedBox(width: gap),
+              PikoIconButton(
+                key: const ValueKey('collection-name-cancel'),
+                icon: const PikoIcon(PikoIconName.x),
+                semanticLabel: copy.text('action.cancel'),
+                onPressed: blocked ? null : _cancelRename,
+              ),
+            ],
+          ),
+          if (_renameError != null)
+            Padding(
+              padding: EdgeInsets.only(top: gap),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  copy.text(
+                    _renameError == CollectionValidation.requiredName
+                        ? 'collection.requiredName'
+                        : 'collection.renameFailed',
+                  ),
+                  style: TextStyle(color: pikoDesign.color('danger')),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   void _closeDeleteDialog() {
     final owned = _deleteDialog;
@@ -83,6 +311,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final record = _currentCollection;
     final route = ModalRoute.of(context);
     if (_deleteRequest != null ||
+        _renameRequest != null ||
         record == null ||
         _openingEntry ||
         route?.isCurrent == false) {
@@ -211,6 +440,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final record = _currentCollection;
     final factory = widget.entrySessionFactory;
     if (_openingEntry ||
+        _renameRequest != null ||
         _deleteRequest != null ||
         _mutations?.isBusy == true ||
         record == null ||
@@ -250,6 +480,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
         oldWidget.vocabularyMutationsFactory !=
             widget.vocabularyMutationsFactory) {
       _identity++;
+      _renaming = false;
+      _renameRequest = null;
+      _renameError = null;
+      _name.clear();
       _closeDeleteDialog();
       _deleteRequest = null;
       _deleteError = null;
@@ -269,6 +503,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void dispose() {
     _identity++;
+    _name.dispose();
+    _nameFocus.dispose();
+    _renameFocus.dispose();
     _closeDeleteDialog();
     _writeBarrier.dispose();
     _endMutations(widget.onPendingVocabularyWrites);
@@ -314,19 +551,27 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     variant: PikoButtonVariant.ghost,
                     onPressed: () => Navigator.of(context).maybePop(),
                   ),
+                  titleContent: _lastReadyCollection == null
+                      ? null
+                      : _nameHeading(_lastReadyCollection!, ready),
+                  titleMargin: _renaming
+                      ? pikoDesign.dimension('spacing.2')
+                      : null,
+                  actions: [
+                    if (ready)
+                      PikoButton(
+                        label: copy.text('collection.delete'),
+                        icon: const PikoIcon(PikoIconName.trash),
+                        variant: PikoButtonVariant.dangerGhost,
+                        onPressed:
+                            _deleteRequest != null ||
+                                _openingEntry ||
+                                _renameRequest != null
+                            ? null
+                            : _deleteCollection,
+                      ),
+                  ],
                 ),
-                if (ready)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PikoButton(
-                      label: copy.text('collection.delete'),
-                      icon: const PikoIcon(PikoIconName.trash),
-                      variant: PikoButtonVariant.dangerGhost,
-                      onPressed: _deleteRequest != null || _openingEntry
-                          ? null
-                          : _deleteCollection,
-                    ),
-                  ),
                 if (_deleting) Text(copy.text('collection.deleting')),
                 if (_deleteError != null)
                   Semantics(
@@ -393,6 +638,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                               ),
                               onPressed:
                                   _deleteRequest != null ||
+                                      _renameRequest != null ||
                                       _openingEntry ||
                                       _mutations?.isBusy == true
                                   ? null

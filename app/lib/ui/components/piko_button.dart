@@ -150,6 +150,7 @@ class PikoIconButton extends StatelessWidget {
     this.variant = PikoButtonVariant.ghost,
     this.large = false,
     this.padding,
+    this.focusNode,
   });
   final Widget icon;
   final String semanticLabel;
@@ -157,6 +158,7 @@ class PikoIconButton extends StatelessWidget {
   final PikoButtonVariant variant;
   final bool large;
   final EdgeInsetsGeometry? padding;
+  final FocusNode? focusNode;
   @override
   Widget build(BuildContext context) => Semantics(
     label: semanticLabel,
@@ -171,6 +173,7 @@ class PikoIconButton extends StatelessWidget {
           label: '',
           icon: icon,
           onPressed: onPressed,
+          focusNode: focusNode,
           variant: variant,
           padding: padding,
           minimumSize: large

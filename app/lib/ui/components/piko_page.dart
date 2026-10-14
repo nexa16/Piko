@@ -43,6 +43,8 @@ class PikoHeading extends StatelessWidget {
     this.subtitle,
     this.leading,
     this.actions = const [],
+    this.titleContent,
+    this.titleMargin,
   });
   final String title;
 
@@ -51,6 +53,10 @@ class PikoHeading extends StatelessWidget {
   final String? subtitle;
   final Widget? leading;
   final List<Widget> actions;
+
+  /// Optional inline title controls; callers retain the title's heading semantics.
+  final Widget? titleContent;
+  final double? titleMargin;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,22 +64,47 @@ class PikoHeading extends StatelessWidget {
       if (leading != null || actions.isNotEmpty)
         Padding(
           padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.1')),
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            spacing: pikoDesign.dimension('spacing.2'),
-            runSpacing: pikoDesign.dimension('spacing.2'),
-            children: [?leading, ...actions],
-          ),
+          child: leading != null && actions.isNotEmpty
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: leading!,
+                      ),
+                    ),
+                    SizedBox(width: pikoDesign.dimension('spacing.2')),
+                    Expanded(
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: pikoDesign.dimension('spacing.2'),
+                        runSpacing: pikoDesign.dimension('spacing.2'),
+                        children: actions,
+                      ),
+                    ),
+                  ],
+                )
+              : Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: pikoDesign.dimension('spacing.2'),
+                  runSpacing: pikoDesign.dimension('spacing.2'),
+                  children: [?leading, ...actions],
+                ),
         ),
       Padding(
         padding: EdgeInsets.symmetric(
-          vertical: pikoDesign.dimension('components.headings.titleMargin'),
+          vertical:
+              titleMargin ??
+              pikoDesign.dimension('components.headings.titleMargin'),
         ),
-        child: Semantics(
-          header: true,
-          headingLevel: 1,
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-        ),
+        child:
+            titleContent ??
+            Semantics(
+              header: true,
+              headingLevel: 1,
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+            ),
       ),
       if (subtitle != null)
         Padding(

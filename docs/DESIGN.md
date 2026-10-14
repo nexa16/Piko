@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Inline Collection name and navigation controls — UX-COLL-007
+
+The wrapping level-one Collection name has its adjacent shared Lucide pencil. Inline editing replaces that title row with a flexible labelled name field and check/X controls, using canonical `spacing.2` (8px) gaps and vertical margins; ordinary headings retain the existing 7px title margin. Shared icon buttons retain ≥44px minimum targets, localized semantics/tooltips and controlled focus. Failure text uses semantic danger and a live region while the raw field/selection stay intact. Pending save disables competing name, deletion and entry-navigation controls.
+
+Back remains left and red trash/text Delete right in a bounded navigation row. The optional shared heading title slot and focus-node adapter introduce no independent typography, color or control defaults. Long titles wrap within the remaining width; the two navigation sides constrain enlarged localized text so Delete retains its right edge. Host evidence covers exact 392px German at 200% and scroll reachability above a simulated keyboard. The binding mockup's existing inline rename and explicit deletion confirmation are unchanged; Android Collection-management acceptance remains pending.
+
 ## Distinct inline Finish and Discard — UX-COLL-012
 
 The binding inline header now presents one X before changes, then a Finish check followed by a separate Discard X. Both use the shared ghost icon button, canonical ≥44px targets and existing 12px gap; no new independent geometry is introduced. Distinct localized semantics/tooltips and Tab order match the two different operations. Header text wraps within its remaining width at German 392px/200%, with both actions reachable above a simulated keyboard. Pending rollback keeps both controls visible but disabled and uses localized pending/error feedback. Host evidence is recorded under UX-COLL-012; actual Android editor acceptance remains pending.

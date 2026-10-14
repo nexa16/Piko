@@ -507,6 +507,7 @@ globalThis.PIKO_COPY = {
     "action.create": {"en":"Create collection","de":"Sammlung erstellen"},
     "prototype.noSave": {"en":"Prototype only · changes last until reload","de":"Nur Prototyp · Änderungen bleiben bis zum Neuladen"},
     "collection.rename": {"en":"Rename collection","de":"Sammlung umbenennen"},
+    "collection.renameFailed": {"en":"Couldn't save this name. Please try again.","de":"Dieser Name konnte nicht gespeichert werden. Bitte versuche es erneut."},
     "collection.delete": {"en":"Delete collection","de":"Sammlung löschen"},
     "collection.deleteWarning": {"en":"Delete {name}? Its vocabulary and learning progress will also be deleted. This cannot be undone.","de":"{name} löschen? Die Vokabeln und der Lernfortschritt werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden."},
     "collection.deleteFailed": {"en":"Couldn't delete this collection. Please try again.","de":"Diese Sammlung konnte nicht gelöscht werden. Bitte versuche es erneut."},

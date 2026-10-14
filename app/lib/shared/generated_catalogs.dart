@@ -323,6 +323,10 @@ const copyCatalog = <String, Object?>{
 "de": "Sammlung umbenennen",
 "en": "Rename collection",
 },
+"collection.renameFailed": <String, Object?>{
+"de": "Dieser Name konnte nicht gespeichert werden. Bitte versuche es erneut.",
+"en": "Couldn't save this name. Please try again.",
+},
 "collection.requiredName": <String, Object?>{
 "de": "Gib einen Namen für die Sammlung ein.",
 "en": "Enter a collection name.",
