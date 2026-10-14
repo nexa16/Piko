@@ -14,6 +14,8 @@ import 'package:piko/ui/piko_theme.dart';
 
 class EmptyOverviewRepository implements CollectionsRepository {
   @override
+  Future<void> delete(String id) => throw UnimplementedError();
+  @override
   Future<CollectionRecord> rename({required String id, required String name}) =>
       throw UnimplementedError();
   var watches = 0;

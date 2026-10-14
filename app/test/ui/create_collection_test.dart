@@ -11,6 +11,8 @@ import 'package:piko/main.dart';
 
 class PendingRepository implements CollectionsRepository {
   @override
+  Future<void> delete(String id) => throw UnimplementedError();
+  @override
   Future<CollectionRecord> rename({required String id, required String name}) =>
       throw UnimplementedError();
   @override

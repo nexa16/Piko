@@ -10,6 +10,9 @@ import 'piko_icon.dart';
 Future<T?> showPikoDialog<T>(
   BuildContext context, {
   required WidgetBuilder builder,
+  ValueChanged<ModalRoute<T>>? onRouteCreated,
+  bool Function()? canRestoreFocus,
+  bool Function()? canDismiss,
 }) async {
   final opener = FocusManager.instance.primaryFocus;
   try {
@@ -34,25 +37,34 @@ Future<T?> showPikoDialog<T>(
         duration: PikoTheme.motion(context),
         reverseDuration: PikoTheme.motion(context),
       ),
-      builder: (dialogContext) => Shortcuts(
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-        },
-        child: Actions(
-          actions: {
-            DismissIntent: CallbackAction<DismissIntent>(
-              onInvoke: (_) {
-                Navigator.of(dialogContext).pop();
-                return null;
-              },
-            ),
+      builder: (dialogContext) {
+        final route = ModalRoute.of<T>(dialogContext);
+        if (route != null) onRouteCreated?.call(route);
+        return Shortcuts(
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
           },
-          child: Builder(builder: builder),
-        ),
-      ),
+          child: Actions(
+            actions: {
+              DismissIntent: CallbackAction<DismissIntent>(
+                onInvoke: (_) {
+                  if (ModalRoute.of(dialogContext)?.isCurrent == true &&
+                      (canDismiss?.call() ?? true)) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                  return null;
+                },
+              ),
+            },
+            child: Builder(builder: builder),
+          ),
+        );
+      },
     );
   } finally {
-    if (opener?.context?.mounted == true && opener!.canRequestFocus) {
+    if ((canRestoreFocus?.call() ?? true) &&
+        opener?.context?.mounted == true &&
+        opener!.canRequestFocus) {
       opener.requestFocus();
     }
   }
@@ -63,11 +75,13 @@ class PikoDialog extends StatelessWidget {
     required this.title,
     required this.body,
     this.actions = const [],
+    this.onClose,
     super.key,
   });
   final String title;
   final Widget body;
   final List<Widget> actions;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +134,13 @@ class PikoDialog extends StatelessWidget {
                     semanticLabel: PikoCopyScope.of(
                       context,
                     ).text('common.close'),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed:
+                        onClose ??
+                        () {
+                          if (ModalRoute.of(context)?.isCurrent == true) {
+                            Navigator.of(context).pop();
+                          }
+                        },
                   ),
                 ],
               ),

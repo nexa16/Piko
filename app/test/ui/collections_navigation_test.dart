@@ -29,6 +29,8 @@ const second = CollectionRecord(
 /// New watch calls return distinct streams, so retry must really resubscribe.
 class NavigationRepository implements CollectionsRepository {
   @override
+  Future<void> delete(String id) => throw UnimplementedError();
+  @override
   Future<CollectionRecord> rename({required String id, required String name}) =>
       throw UnimplementedError();
   NavigationRepository({this.records = const [], this.seed = true});

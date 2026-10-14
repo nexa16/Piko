@@ -271,9 +271,17 @@ const copyCatalog = <String, Object?>{
 "de": "Sammlung löschen",
 "en": "Delete collection",
 },
+"collection.deleteFailed": <String, Object?>{
+"de": "Diese Sammlung konnte nicht gelöscht werden. Bitte versuche es erneut.",
+"en": "Couldn't delete this collection. Please try again.",
+},
 "collection.deleteWarning": <String, Object?>{
 "de": "{name} löschen? Die Vokabeln und der Lernfortschritt werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden.",
 "en": "Delete {name}? Its vocabulary and learning progress will also be deleted. This cannot be undone.",
+},
+"collection.deleting": <String, Object?>{
+"de": "Sammlung wird gelöscht…",
+"en": "Deleting collection…",
 },
 "collection.empty": <String, Object?>{
 "de": "Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu.",

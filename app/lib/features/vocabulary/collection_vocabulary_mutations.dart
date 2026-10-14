@@ -37,6 +37,16 @@ final class CollectionVocabularyMutations extends ChangeNotifier {
   Object? deleteError;
   String? errorEntryId;
   bool get isBusy => _pending != null;
+  Future<void> awaitPending() async {
+    while (_pending != null) {
+      try {
+        await _pending;
+      } catch (_) {
+        /* The initiating action reports errors. */
+      }
+    }
+  }
+
   CollectionUndoOffer? get latest => _offers.lastOrNull;
   List<CollectionUndoOffer> get offers => List.unmodifiable(_offers);
   bool canUndo(CollectionUndoOffer offer) {

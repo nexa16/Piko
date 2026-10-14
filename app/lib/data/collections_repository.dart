@@ -25,6 +25,9 @@ final class CollectionRecord {
 enum CollectionValidation { requiredName, sameLanguage, collectionNotFound }
 
 abstract interface class CollectionsRepository {
+  /// Permanently removes only this Collection and its dependent vocabulary/progress.
+  Future<void> delete(String id);
+
   /// Changes only the existing Collection's name; storage remains caller-owned.
   Future<CollectionRecord> rename({required String id, required String name});
   Stream<List<CollectionRecord>> watchAll();

@@ -15,6 +15,8 @@ final copy = const PikoCopy('en');
 
 class ControlledEmptyRepository implements CollectionsRepository {
   @override
+  Future<void> delete(String id) => throw UnimplementedError();
+  @override
   Future<CollectionRecord> rename({required String id, required String name}) =>
       throw UnimplementedError();
   final watches = <StreamController<List<CollectionRecord>>>[];

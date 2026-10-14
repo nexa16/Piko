@@ -14,6 +14,7 @@ import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
 import 'inline_vocabulary_edit_controller.dart';
 import 'collection_vocabulary_mutations.dart';
+import '../collections/collection_write_barrier.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -23,11 +24,13 @@ class CollectionVocabulary extends StatefulWidget {
     required this.repository,
     this.onPendingWrites,
     this.mutations,
+    this.writeBarrier,
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CollectionVocabularyMutations? mutations;
+  final CollectionWriteBarrier? writeBarrier;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
@@ -65,6 +68,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   double topSpace = 0, bottomSpace = 0;
   int anchorRevision = 0;
   bool get actionBusy =>
+      widget.writeBarrier?.frozen == true ||
       switching ||
       editor?.edits.isDiscarding == true ||
       widget.mutations?.isBusy == true;
@@ -73,12 +77,20 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   void initState() {
     super.initState();
     widget.mutations?.addListener(changed);
+    widget.writeBarrier?.addListener(barrierChanged);
+    widget.writeBarrier?.attach(drainEditor);
     watch();
   }
 
   @override
   void didUpdateWidget(CollectionVocabulary oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.writeBarrier != widget.writeBarrier) {
+      oldWidget.writeBarrier?.removeListener(barrierChanged);
+      oldWidget.writeBarrier?.detach(drainEditor);
+      widget.writeBarrier?.addListener(barrierChanged);
+      widget.writeBarrier?.attach(drainEditor);
+    }
     if (oldWidget.mutations != widget.mutations) {
       oldWidget.mutations?.removeListener(changed);
       widget.mutations?.addListener(changed);
@@ -149,6 +161,19 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   void changed() {
     if (mounted) setState(() {});
   }
+
+  void barrierChanged() {
+    final previous = editor;
+    changed();
+    if (widget.writeBarrier?.frozen != true) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => restoreEditorFocus(previous),
+      );
+    }
+  }
+
+  Future<void> drainEditor() =>
+      editor?.edits.awaitSavedEdits() ?? Future<void>.value();
 
   void preserveAnchor(String id, double top, int revision, [int attempt = 0]) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -296,6 +321,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         setState(() => switching = true);
         await current.edits.awaitSavedEdits();
         if (!mounted ||
+            widget.writeBarrier?.frozen == true ||
             generation != version ||
             !identical(editor, current) ||
             !identical(transition, request)) {
@@ -326,6 +352,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       );
       final captured = await capture;
       if (!mounted ||
+          widget.writeBarrier?.frozen == true ||
           generation != version ||
           !identical(transition, request) ||
           !rows.any((row) => row.id == record.id)) {
@@ -451,6 +478,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         controller: target ? current.target : current.native,
         focusNode: target ? current.targetFocus : current.nativeFocus,
         enabled:
+            widget.writeBarrier?.frozen != true &&
             !switching &&
             !edits.isDiscarding &&
             widget.mutations?.deletingId != record.id,
@@ -467,6 +495,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             : null,
         onChanged: (value) {
           if (!identical(editor, current) ||
+              widget.writeBarrier?.frozen == true ||
               switching ||
               edits.isDiscarding ||
               widget.mutations?.deletingId == record.id) {
@@ -783,7 +812,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             Text(copy.text('vocab.loadFailed')),
             PikoButton(
               label: copy.text('action.retry'),
-              onPressed: editor?.edits.isDiscarding == true
+              onPressed:
+                  widget.writeBarrier?.frozen == true ||
+                      editor?.edits.isDiscarding == true
                   ? null
                   : () => setState(watch),
             ),
@@ -814,6 +845,8 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   void dispose() {
     generation++;
     widget.mutations?.removeListener(changed);
+    widget.writeBarrier?.removeListener(barrierChanged);
+    widget.writeBarrier?.detach(drainEditor);
     unawaited(subscription?.cancel());
     retireEditor(widget.onPendingWrites);
     for (final old in retired) {

@@ -8,6 +8,19 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
   final PikoDatabase database;
 
   @override
+  Future<void> delete(String id) => database.transaction(() async {
+    final count = await (database.delete(
+      database.collections,
+    )..where((row) => row.id.equals(id))).go();
+    if (count != 1) throw CollectionValidation.collectionNotFound;
+    // SQLite performs the FK cascade; dependent observers must also requery.
+    database.notifyUpdates({
+      TableUpdate.onTable(database.vocabularyEntries, kind: UpdateKind.delete),
+      TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
+    });
+  });
+
+  @override
   Future<CollectionRecord> rename({
     required String id,
     required String name,

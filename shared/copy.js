@@ -509,6 +509,8 @@ globalThis.PIKO_COPY = {
     "collection.rename": {"en":"Rename collection","de":"Sammlung umbenennen"},
     "collection.delete": {"en":"Delete collection","de":"Sammlung löschen"},
     "collection.deleteWarning": {"en":"Delete {name}? Its vocabulary and learning progress will also be deleted. This cannot be undone.","de":"{name} löschen? Die Vokabeln und der Lernfortschritt werden ebenfalls gelöscht. Dies kann nicht rückgängig gemacht werden."},
+    "collection.deleteFailed": {"en":"Couldn't delete this collection. Please try again.","de":"Diese Sammlung konnte nicht gelöscht werden. Bitte versuche es erneut."},
+    "collection.deleting": {"en":"Deleting collection…","de":"Sammlung wird gelöscht…"},
     "collection.requiredName": {"en":"Enter a collection name.","de":"Gib einen Namen für die Sammlung ein."},
     "collection.empty": {"en":"No vocabulary yet. Add your first entry using the plus button.","de":"Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu."},
     "collection.sameLanguage": {"en":"Choose two different languages.","de":"Wähle zwei unterschiedliche Sprachen."},
