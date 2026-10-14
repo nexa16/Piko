@@ -1,5 +1,11 @@
 # Decision log
 
+## CARD-UI-016 — reusable regular-grading coordinator — 2026-10-14
+
+Use one coordinator for the currently activated Learning Item, its Hard modifier and a single pending regular grade. Incorrect always maps to Again; Correct maps to Hard only when selected, otherwise Good. Capture the item/grade/modifier/time before awaiting and call the existing production transaction with explicit regular kind. Do not duplicate FSRS calculations or add Easy, retry processing or visible controls in this step.
+
+Activation issues an opaque presentation handle, even for the same Learning Item ID. Stale/foreign/disposed callbacks cannot mutate or submit the current presentation. Busy activation and competing grades are refused, preserving the captured pending card/modifier; success latches one accepted receipt until explicit card activation or accepted advancement. Failure preserves card and Hard for retry. Register the operation's drain through its fixed owner callback before starting storage; registration failure rejects without a write, and successful reentrant disposal may drain/return the original immutable receipt without late notification. Session owners retain responsibility for handling that captured receipt before storage closure. Nine real-SQLite tests verify all four grade/modifier combinations and exact event/card/revision, queue capture, failure/retry, reset and stale/disposal/registration behavior. Actual card UI, session/retry handling and Android acceptance remain pending; DATA-001's integrated retention follow-up is still open.
+
 ## DATA-001 — explicit regular/reinforcement retention boundary — 2026-10-14
 
 Require `ReviewKind.regular` or `ReviewKind.reinforcement` at the regular-review recording API. Reject reinforcement with `reinforcementNotRetained` before any card validation, scheduling or storage access. Existing regular-review callers explicitly select regular; no default can silently classify a future retry. This guard records no attempt timestamps, retry events, typed answers or additional tables, and introduces no retry-processing model.
