@@ -71,6 +71,8 @@ final class LearningScheduler {
         direction: before.direction,
         cardJson: encoded,
         formatVersion: before.formatVersion,
+        generation: before.generation,
+        reviewRevision: before.reviewRevision,
       ),
       rating: rating,
       reviewedAt: reviewedAt,

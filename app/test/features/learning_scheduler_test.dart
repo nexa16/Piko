@@ -39,6 +39,29 @@ void main() {
     enableFuzzing: false,
   );
   final scheduler = LearningScheduler();
+  test(
+    'pure schedule preserves generation and optimistic review revision metadata',
+    () {
+      final before = LearningItemRecord(
+        id: 77,
+        entryId: 'entry',
+        direction: LearningDirection.nativeToTarget,
+        cardJson: LearningCardCodec.encode(fsrs.Card(cardId: 77, due: at)),
+        formatVersion: LearningCardCodec.version,
+        generation: 9,
+        reviewRevision: 12,
+      );
+      final result = scheduler.review(
+        before,
+        rating: LearningRating.good,
+        reviewedAt: at,
+      );
+      expect(result.prior.generation, 9);
+      expect(result.next.generation, 9);
+      expect(result.prior.reviewRevision, 12);
+      expect(result.next.reviewRevision, 12);
+    },
+  );
   final rated = {
     LearningRating.again: fsrs.Rating.again,
     LearningRating.hard: fsrs.Rating.hard,

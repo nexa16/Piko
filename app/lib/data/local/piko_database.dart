@@ -50,6 +50,12 @@ class LearningItems extends Table {
   TextColumn get direction => text()();
   IntColumn get formatVersion => integer()();
   TextColumn get cardJson => text()();
+  IntColumn get generation => integer()
+      .withDefault(const Constant(0))
+      .check(const CustomExpression<bool>('generation >= 0'))();
+  IntColumn get reviewRevision => integer()
+      .withDefault(const Constant(0))
+      .check(const CustomExpression<bool>('review_revision >= 0'))();
   @override
   Set<Column<Object>> get primaryKey => {id};
   @override
@@ -58,6 +64,26 @@ class LearningItems extends Table {
     "CHECK(direction IN ('targetToNative', 'nativeToTarget'))",
     'CHECK(format_version = 1)',
     'UNIQUE(entry_id, direction)',
+  ];
+}
+
+class RegularReviews extends Table {
+  TextColumn get id => text()();
+  IntColumn get itemId =>
+      integer().references(LearningItems, #id, onDelete: KeyAction.cascade)();
+  IntColumn get generation => integer()();
+
+  /// ISO UTC text retains subsecond precision independent of Drift date mapping.
+  TextColumn get reviewedAt => text()();
+  TextColumn get rating => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(id) > 0)',
+    'CHECK(generation >= 0)',
+    "CHECK(rating IN ('again', 'hard', 'good'))",
+    "CHECK(substr(reviewed_at, -1) = 'Z')",
   ];
 }
 
@@ -93,6 +119,7 @@ class VocabularyOrderSequence extends Table {
     Collections,
     VocabularyEntries,
     LearningItems,
+    RegularReviews,
     LearningIdentitySequence,
     VocabularyOrderSequence,
   ],
@@ -102,7 +129,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,6 +172,14 @@ class PikoDatabase extends _$PikoDatabase {
         if (from < 6) {
           await m.createTable(vocabularyOrderSequence);
           await _initializeVocabularyOrder();
+        }
+        if (from < 7) {
+          // Older migrations already create the latest LearningItems shape.
+          if (from >= 5) {
+            await m.addColumn(learningItems, learningItems.generation);
+            await m.addColumn(learningItems, learningItems.reviewRevision);
+          }
+          await m.createTable(regularReviews);
         }
       });
     },

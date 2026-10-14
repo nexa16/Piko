@@ -93,17 +93,26 @@ final class LearningItemRecord {
     required this.direction,
     required this.cardJson,
     required this.formatVersion,
+    this.generation = 0,
+    this.reviewRevision = 0,
   });
   final int id;
   final String entryId;
   final LearningDirection direction;
   final String cardJson;
   final int formatVersion;
+  final int generation;
+  final int reviewRevision;
 
   /// Returns an independent mutable library object, never shared with another item.
-  fsrs.Card get card => LearningCardCodec.decode(
-    cardJson,
-    expectedId: id,
-    formatVersion: formatVersion,
-  );
+  fsrs.Card get card {
+    if (generation < 0 || reviewRevision < 0 || entryId.trim().isEmpty) {
+      throw const FormatException('Invalid learning ownership or generation');
+    }
+    return LearningCardCodec.decode(
+      cardJson,
+      expectedId: id,
+      formatVersion: formatVersion,
+    );
+  }
 }

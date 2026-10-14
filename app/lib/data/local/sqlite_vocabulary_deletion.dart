@@ -7,10 +7,11 @@ import '../vocabulary_repository.dart';
 import 'piko_database.dart';
 
 final class _Snapshot {
-  const _Snapshot(this.rowId, this.entry, this.learning);
+  const _Snapshot(this.rowId, this.entry, this.learning, this.reviews);
   final int rowId;
   final VocabularyEntry entry;
   final List<LearningItem> learning;
+  final List<RegularReview> reviews;
 }
 
 final class _Receipt implements VocabularyDeletionReceipt {
@@ -124,14 +125,28 @@ final class SqliteVocabularyDeletionService
       final learning = await (database.select(
         database.learningItems,
       )..where((item) => item.entryId.equals(id))).get();
+      final reviewRows = await database
+          .customSelect(
+            'SELECT * FROM regular_reviews WHERE item_id IN '
+            '(SELECT id FROM learning_items WHERE entry_id = ?) ORDER BY rowid',
+            variables: [Variable(id)],
+          )
+          .get();
       final snapshot = _Snapshot(
         row.read<int>('original_rowid'),
         entry,
         List.unmodifiable(learning),
+        List.unmodifiable(
+          reviewRows.map((row) => database.regularReviews.map(row.data)),
+        ),
       );
       await (database.delete(
         database.vocabularyEntries,
       )..where((item) => item.id.equals(id))).go();
+      database.notifyUpdates({
+        TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
+        TableUpdate.onTable(database.regularReviews, kind: UpdateKind.delete),
+      });
       // Deadline/receipt construction belongs to the transaction: a fallible
       // clock cannot commit a deletion without issuing its Undo capability.
       return _Receipt(
@@ -205,6 +220,13 @@ final class SqliteVocabularyDeletionService
             )..where((row) => row.id.isIn(learningIds))).get()).isNotEmpty) {
           throw VocabularyUndoFailure.identityConflict;
         }
+        final reviewIds = snapshot.reviews.map((review) => review.id).toList();
+        if (reviewIds.isNotEmpty &&
+            (await (database.select(
+              database.regularReviews,
+            )..where((row) => row.id.isIn(reviewIds))).get()).isNotEmpty) {
+          throw VocabularyUndoFailure.identityConflict;
+        }
         await database.customInsert(
           'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key) VALUES (?, ?, ?, ?, ?, ?, ?)',
           variables: [
@@ -220,6 +242,11 @@ final class SqliteVocabularyDeletionService
         );
         for (final item in snapshot.learning) {
           await database.into(database.learningItems).insert(item);
+        }
+        // Entire items were deleted; insertion in original order preserves each
+        // item's history order without making physical rowid a domain identity.
+        for (final review in snapshot.reviews) {
+          await database.into(database.regularReviews).insert(review);
         }
       });
       receipt.used = true;

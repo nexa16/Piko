@@ -149,9 +149,9 @@ void main() {
       ).create(collectionId: collection, targetText: 'a', nativeText: 'b');
       final row = (await db.select(db.learningItems).get()).first;
       for (final sql in [
-        "INSERT INTO learning_items SELECT 100, entry_id, direction, format_version, card_json FROM learning_items WHERE id = ${row.id}",
-        "INSERT INTO learning_items VALUES (101, 'missing', 'targetToNative', 1, '{}')",
-        "INSERT INTO learning_items VALUES (102, '${entry.id}', 'wrong', 1, '{}')",
+        "INSERT INTO learning_items (id, entry_id, direction, format_version, card_json) SELECT 100, entry_id, direction, format_version, card_json FROM learning_items WHERE id = ${row.id}",
+        "INSERT INTO learning_items (id, entry_id, direction, format_version, card_json) VALUES (101, 'missing', 'targetToNative', 1, '{}')",
+        "INSERT INTO learning_items (id, entry_id, direction, format_version, card_json) VALUES (102, '${entry.id}', 'wrong', 1, '{}')",
       ]) {
         await expectLater(
           db.customStatement(sql),

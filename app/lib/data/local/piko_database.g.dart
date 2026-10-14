@@ -1024,6 +1024,32 @@ class $LearningItemsTable extends LearningItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _generationMeta = const VerificationMeta(
+    'generation',
+  );
+  @override
+  late final GeneratedColumn<int> generation = GeneratedColumn<int>(
+    'generation',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('generation >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _reviewRevisionMeta = const VerificationMeta(
+    'reviewRevision',
+  );
+  @override
+  late final GeneratedColumn<int> reviewRevision = GeneratedColumn<int>(
+    'review_revision',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('review_revision >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1031,6 +1057,8 @@ class $LearningItemsTable extends LearningItems
     direction,
     formatVersion,
     cardJson,
+    generation,
+    reviewRevision,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1082,6 +1110,21 @@ class $LearningItemsTable extends LearningItems
     } else if (isInserting) {
       context.missing(_cardJsonMeta);
     }
+    if (data.containsKey('generation')) {
+      context.handle(
+        _generationMeta,
+        generation.isAcceptableOrUnknown(data['generation']!, _generationMeta),
+      );
+    }
+    if (data.containsKey('review_revision')) {
+      context.handle(
+        _reviewRevisionMeta,
+        reviewRevision.isAcceptableOrUnknown(
+          data['review_revision']!,
+          _reviewRevisionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1111,6 +1154,14 @@ class $LearningItemsTable extends LearningItems
         DriftSqlType.string,
         data['${effectivePrefix}card_json'],
       )!,
+      generation: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}generation'],
+      )!,
+      reviewRevision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}review_revision'],
+      )!,
     );
   }
 
@@ -1126,12 +1177,16 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
   final String direction;
   final int formatVersion;
   final String cardJson;
+  final int generation;
+  final int reviewRevision;
   const LearningItem({
     required this.id,
     required this.entryId,
     required this.direction,
     required this.formatVersion,
     required this.cardJson,
+    required this.generation,
+    required this.reviewRevision,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1141,6 +1196,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     map['direction'] = Variable<String>(direction);
     map['format_version'] = Variable<int>(formatVersion);
     map['card_json'] = Variable<String>(cardJson);
+    map['generation'] = Variable<int>(generation);
+    map['review_revision'] = Variable<int>(reviewRevision);
     return map;
   }
 
@@ -1151,6 +1208,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       direction: Value(direction),
       formatVersion: Value(formatVersion),
       cardJson: Value(cardJson),
+      generation: Value(generation),
+      reviewRevision: Value(reviewRevision),
     );
   }
 
@@ -1165,6 +1224,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       direction: serializer.fromJson<String>(json['direction']),
       formatVersion: serializer.fromJson<int>(json['formatVersion']),
       cardJson: serializer.fromJson<String>(json['cardJson']),
+      generation: serializer.fromJson<int>(json['generation']),
+      reviewRevision: serializer.fromJson<int>(json['reviewRevision']),
     );
   }
   @override
@@ -1176,6 +1237,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       'direction': serializer.toJson<String>(direction),
       'formatVersion': serializer.toJson<int>(formatVersion),
       'cardJson': serializer.toJson<String>(cardJson),
+      'generation': serializer.toJson<int>(generation),
+      'reviewRevision': serializer.toJson<int>(reviewRevision),
     };
   }
 
@@ -1185,12 +1248,16 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     String? direction,
     int? formatVersion,
     String? cardJson,
+    int? generation,
+    int? reviewRevision,
   }) => LearningItem(
     id: id ?? this.id,
     entryId: entryId ?? this.entryId,
     direction: direction ?? this.direction,
     formatVersion: formatVersion ?? this.formatVersion,
     cardJson: cardJson ?? this.cardJson,
+    generation: generation ?? this.generation,
+    reviewRevision: reviewRevision ?? this.reviewRevision,
   );
   LearningItem copyWithCompanion(LearningItemsCompanion data) {
     return LearningItem(
@@ -1201,6 +1268,12 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
           ? data.formatVersion.value
           : this.formatVersion,
       cardJson: data.cardJson.present ? data.cardJson.value : this.cardJson,
+      generation: data.generation.present
+          ? data.generation.value
+          : this.generation,
+      reviewRevision: data.reviewRevision.present
+          ? data.reviewRevision.value
+          : this.reviewRevision,
     );
   }
 
@@ -1211,14 +1284,23 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
           ..write('entryId: $entryId, ')
           ..write('direction: $direction, ')
           ..write('formatVersion: $formatVersion, ')
-          ..write('cardJson: $cardJson')
+          ..write('cardJson: $cardJson, ')
+          ..write('generation: $generation, ')
+          ..write('reviewRevision: $reviewRevision')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, entryId, direction, formatVersion, cardJson);
+  int get hashCode => Object.hash(
+    id,
+    entryId,
+    direction,
+    formatVersion,
+    cardJson,
+    generation,
+    reviewRevision,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1227,7 +1309,9 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
           other.entryId == this.entryId &&
           other.direction == this.direction &&
           other.formatVersion == this.formatVersion &&
-          other.cardJson == this.cardJson);
+          other.cardJson == this.cardJson &&
+          other.generation == this.generation &&
+          other.reviewRevision == this.reviewRevision);
 }
 
 class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
@@ -1236,12 +1320,16 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
   final Value<String> direction;
   final Value<int> formatVersion;
   final Value<String> cardJson;
+  final Value<int> generation;
+  final Value<int> reviewRevision;
   const LearningItemsCompanion({
     this.id = const Value.absent(),
     this.entryId = const Value.absent(),
     this.direction = const Value.absent(),
     this.formatVersion = const Value.absent(),
     this.cardJson = const Value.absent(),
+    this.generation = const Value.absent(),
+    this.reviewRevision = const Value.absent(),
   });
   LearningItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -1249,6 +1337,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     required String direction,
     required int formatVersion,
     required String cardJson,
+    this.generation = const Value.absent(),
+    this.reviewRevision = const Value.absent(),
   }) : entryId = Value(entryId),
        direction = Value(direction),
        formatVersion = Value(formatVersion),
@@ -1259,6 +1349,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     Expression<String>? direction,
     Expression<int>? formatVersion,
     Expression<String>? cardJson,
+    Expression<int>? generation,
+    Expression<int>? reviewRevision,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1266,6 +1358,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
       if (direction != null) 'direction': direction,
       if (formatVersion != null) 'format_version': formatVersion,
       if (cardJson != null) 'card_json': cardJson,
+      if (generation != null) 'generation': generation,
+      if (reviewRevision != null) 'review_revision': reviewRevision,
     });
   }
 
@@ -1275,6 +1369,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     Value<String>? direction,
     Value<int>? formatVersion,
     Value<String>? cardJson,
+    Value<int>? generation,
+    Value<int>? reviewRevision,
   }) {
     return LearningItemsCompanion(
       id: id ?? this.id,
@@ -1282,6 +1378,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
       direction: direction ?? this.direction,
       formatVersion: formatVersion ?? this.formatVersion,
       cardJson: cardJson ?? this.cardJson,
+      generation: generation ?? this.generation,
+      reviewRevision: reviewRevision ?? this.reviewRevision,
     );
   }
 
@@ -1303,6 +1401,12 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     if (cardJson.present) {
       map['card_json'] = Variable<String>(cardJson.value);
     }
+    if (generation.present) {
+      map['generation'] = Variable<int>(generation.value);
+    }
+    if (reviewRevision.present) {
+      map['review_revision'] = Variable<int>(reviewRevision.value);
+    }
     return map;
   }
 
@@ -1313,7 +1417,376 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
           ..write('entryId: $entryId, ')
           ..write('direction: $direction, ')
           ..write('formatVersion: $formatVersion, ')
-          ..write('cardJson: $cardJson')
+          ..write('cardJson: $cardJson, ')
+          ..write('generation: $generation, ')
+          ..write('reviewRevision: $reviewRevision')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RegularReviewsTable extends RegularReviews
+    with TableInfo<$RegularReviewsTable, RegularReview> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RegularReviewsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES learning_items (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _generationMeta = const VerificationMeta(
+    'generation',
+  );
+  @override
+  late final GeneratedColumn<int> generation = GeneratedColumn<int>(
+    'generation',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewedAtMeta = const VerificationMeta(
+    'reviewedAt',
+  );
+  @override
+  late final GeneratedColumn<String> reviewedAt = GeneratedColumn<String>(
+    'reviewed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
+  @override
+  late final GeneratedColumn<String> rating = GeneratedColumn<String>(
+    'rating',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    itemId,
+    generation,
+    reviewedAt,
+    rating,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'regular_reviews';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RegularReview> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('generation')) {
+      context.handle(
+        _generationMeta,
+        generation.isAcceptableOrUnknown(data['generation']!, _generationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_generationMeta);
+    }
+    if (data.containsKey('reviewed_at')) {
+      context.handle(
+        _reviewedAtMeta,
+        reviewedAt.isAcceptableOrUnknown(data['reviewed_at']!, _reviewedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewedAtMeta);
+    }
+    if (data.containsKey('rating')) {
+      context.handle(
+        _ratingMeta,
+        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ratingMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RegularReview map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RegularReview(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_id'],
+      )!,
+      generation: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}generation'],
+      )!,
+      reviewedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reviewed_at'],
+      )!,
+      rating: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rating'],
+      )!,
+    );
+  }
+
+  @override
+  $RegularReviewsTable createAlias(String alias) {
+    return $RegularReviewsTable(attachedDatabase, alias);
+  }
+}
+
+class RegularReview extends DataClass implements Insertable<RegularReview> {
+  final String id;
+  final int itemId;
+  final int generation;
+
+  /// ISO UTC text retains subsecond precision independent of Drift date mapping.
+  final String reviewedAt;
+  final String rating;
+  const RegularReview({
+    required this.id,
+    required this.itemId,
+    required this.generation,
+    required this.reviewedAt,
+    required this.rating,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item_id'] = Variable<int>(itemId);
+    map['generation'] = Variable<int>(generation);
+    map['reviewed_at'] = Variable<String>(reviewedAt);
+    map['rating'] = Variable<String>(rating);
+    return map;
+  }
+
+  RegularReviewsCompanion toCompanion(bool nullToAbsent) {
+    return RegularReviewsCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      generation: Value(generation),
+      reviewedAt: Value(reviewedAt),
+      rating: Value(rating),
+    );
+  }
+
+  factory RegularReview.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RegularReview(
+      id: serializer.fromJson<String>(json['id']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      generation: serializer.fromJson<int>(json['generation']),
+      reviewedAt: serializer.fromJson<String>(json['reviewedAt']),
+      rating: serializer.fromJson<String>(json['rating']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'itemId': serializer.toJson<int>(itemId),
+      'generation': serializer.toJson<int>(generation),
+      'reviewedAt': serializer.toJson<String>(reviewedAt),
+      'rating': serializer.toJson<String>(rating),
+    };
+  }
+
+  RegularReview copyWith({
+    String? id,
+    int? itemId,
+    int? generation,
+    String? reviewedAt,
+    String? rating,
+  }) => RegularReview(
+    id: id ?? this.id,
+    itemId: itemId ?? this.itemId,
+    generation: generation ?? this.generation,
+    reviewedAt: reviewedAt ?? this.reviewedAt,
+    rating: rating ?? this.rating,
+  );
+  RegularReview copyWithCompanion(RegularReviewsCompanion data) {
+    return RegularReview(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      generation: data.generation.present
+          ? data.generation.value
+          : this.generation,
+      reviewedAt: data.reviewedAt.present
+          ? data.reviewedAt.value
+          : this.reviewedAt,
+      rating: data.rating.present ? data.rating.value : this.rating,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegularReview(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('generation: $generation, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('rating: $rating')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, itemId, generation, reviewedAt, rating);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RegularReview &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.generation == this.generation &&
+          other.reviewedAt == this.reviewedAt &&
+          other.rating == this.rating);
+}
+
+class RegularReviewsCompanion extends UpdateCompanion<RegularReview> {
+  final Value<String> id;
+  final Value<int> itemId;
+  final Value<int> generation;
+  final Value<String> reviewedAt;
+  final Value<String> rating;
+  final Value<int> rowid;
+  const RegularReviewsCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.generation = const Value.absent(),
+    this.reviewedAt = const Value.absent(),
+    this.rating = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RegularReviewsCompanion.insert({
+    required String id,
+    required int itemId,
+    required int generation,
+    required String reviewedAt,
+    required String rating,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       itemId = Value(itemId),
+       generation = Value(generation),
+       reviewedAt = Value(reviewedAt),
+       rating = Value(rating);
+  static Insertable<RegularReview> custom({
+    Expression<String>? id,
+    Expression<int>? itemId,
+    Expression<int>? generation,
+    Expression<String>? reviewedAt,
+    Expression<String>? rating,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (generation != null) 'generation': generation,
+      if (reviewedAt != null) 'reviewed_at': reviewedAt,
+      if (rating != null) 'rating': rating,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RegularReviewsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? itemId,
+    Value<int>? generation,
+    Value<String>? reviewedAt,
+    Value<String>? rating,
+    Value<int>? rowid,
+  }) {
+    return RegularReviewsCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      generation: generation ?? this.generation,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      rating: rating ?? this.rating,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (generation.present) {
+      map['generation'] = Variable<int>(generation.value);
+    }
+    if (reviewedAt.present) {
+      map['reviewed_at'] = Variable<String>(reviewedAt.value);
+    }
+    if (rating.present) {
+      map['rating'] = Variable<String>(rating.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegularReviewsCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('generation: $generation, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('rating: $rating, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1757,6 +2230,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $VocabularyEntriesTable vocabularyEntries =
       $VocabularyEntriesTable(this);
   late final $LearningItemsTable learningItems = $LearningItemsTable(this);
+  late final $RegularReviewsTable regularReviews = $RegularReviewsTable(this);
   late final $LearningIdentitySequenceTable learningIdentitySequence =
       $LearningIdentitySequenceTable(this);
   late final $VocabularyOrderSequenceTable vocabularyOrderSequence =
@@ -1770,6 +2244,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     collections,
     vocabularyEntries,
     learningItems,
+    regularReviews,
     learningIdentitySequence,
     vocabularyOrderSequence,
   ];
@@ -1788,6 +2263,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('learning_items', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'learning_items',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('regular_reviews', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2691,6 +3173,8 @@ typedef $$LearningItemsTableCreateCompanionBuilder =
       required String direction,
       required int formatVersion,
       required String cardJson,
+      Value<int> generation,
+      Value<int> reviewRevision,
     });
 typedef $$LearningItemsTableUpdateCompanionBuilder =
     LearningItemsCompanion Function({
@@ -2699,6 +3183,8 @@ typedef $$LearningItemsTableUpdateCompanionBuilder =
       Value<String> direction,
       Value<int> formatVersion,
       Value<String> cardJson,
+      Value<int> generation,
+      Value<int> reviewRevision,
     });
 
 final class $$LearningItemsTableReferences
@@ -2724,6 +3210,24 @@ final class $$LearningItemsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$RegularReviewsTable, List<RegularReview>>
+  _regularReviewsRefsTable(_$PikoDatabase db) => MultiTypedResultKey.fromTable(
+    db.regularReviews,
+    aliasName: 'learning_items__id__regular_reviews__item_id',
+  );
+
+  $$RegularReviewsTableProcessedTableManager get regularReviewsRefs {
+    final manager = $$RegularReviewsTableTableManager(
+      $_db,
+      $_db.regularReviews,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_regularReviewsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -2757,6 +3261,16 @@ class $$LearningItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviewRevision => $composableBuilder(
+    column: $table.reviewRevision,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$VocabularyEntriesTableFilterComposer get entryId {
     final $$VocabularyEntriesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2778,6 +3292,31 @@ class $$LearningItemsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> regularReviewsRefs(
+    Expression<bool> Function($$RegularReviewsTableFilterComposer f) f,
+  ) {
+    final $$RegularReviewsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.regularReviews,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegularReviewsTableFilterComposer(
+            $db: $db,
+            $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -2807,6 +3346,16 @@ class $$LearningItemsTableOrderingComposer
 
   ColumnOrderings<String> get cardJson => $composableBuilder(
     column: $table.cardJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviewRevision => $composableBuilder(
+    column: $table.reviewRevision,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2857,6 +3406,16 @@ class $$LearningItemsTableAnnotationComposer
   GeneratedColumn<String> get cardJson =>
       $composableBuilder(column: $table.cardJson, builder: (column) => column);
 
+  GeneratedColumn<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reviewRevision => $composableBuilder(
+    column: $table.reviewRevision,
+    builder: (column) => column,
+  );
+
   $$VocabularyEntriesTableAnnotationComposer get entryId {
     final $$VocabularyEntriesTableAnnotationComposer composer =
         $composerBuilder(
@@ -2880,6 +3439,31 @@ class $$LearningItemsTableAnnotationComposer
         );
     return composer;
   }
+
+  Expression<T> regularReviewsRefs<T extends Object>(
+    Expression<T> Function($$RegularReviewsTableAnnotationComposer a) f,
+  ) {
+    final $$RegularReviewsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.regularReviews,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegularReviewsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$LearningItemsTableTableManager
@@ -2895,7 +3479,7 @@ class $$LearningItemsTableTableManager
           $$LearningItemsTableUpdateCompanionBuilder,
           (LearningItem, $$LearningItemsTableReferences),
           LearningItem,
-          PrefetchHooks Function({bool entryId})
+          PrefetchHooks Function({bool entryId, bool regularReviewsRefs})
         > {
   $$LearningItemsTableTableManager(_$PikoDatabase db, $LearningItemsTable table)
     : super(
@@ -2915,12 +3499,16 @@ class $$LearningItemsTableTableManager
                 Value<String> direction = const Value.absent(),
                 Value<int> formatVersion = const Value.absent(),
                 Value<String> cardJson = const Value.absent(),
+                Value<int> generation = const Value.absent(),
+                Value<int> reviewRevision = const Value.absent(),
               }) => LearningItemsCompanion(
                 id: id,
                 entryId: entryId,
                 direction: direction,
                 formatVersion: formatVersion,
                 cardJson: cardJson,
+                generation: generation,
+                reviewRevision: reviewRevision,
               ),
           createCompanionCallback:
               ({
@@ -2929,12 +3517,16 @@ class $$LearningItemsTableTableManager
                 required String direction,
                 required int formatVersion,
                 required String cardJson,
+                Value<int> generation = const Value.absent(),
+                Value<int> reviewRevision = const Value.absent(),
               }) => LearningItemsCompanion.insert(
                 id: id,
                 entryId: entryId,
                 direction: direction,
                 formatVersion: formatVersion,
                 cardJson: cardJson,
+                generation: generation,
+                reviewRevision: reviewRevision,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2944,7 +3536,362 @@ class $$LearningItemsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({entryId = false}) {
+          prefetchHooksCallback:
+              ({entryId = false, regularReviewsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (regularReviewsRefs) db.regularReviews,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (entryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.entryId,
+                                    referencedTable:
+                                        $$LearningItemsTableReferences
+                                            ._entryIdTable(db),
+                                    referencedColumn:
+                                        $$LearningItemsTableReferences
+                                            ._entryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (regularReviewsRefs)
+                        await $_getPrefetchedData<
+                          LearningItem,
+                          $LearningItemsTable,
+                          RegularReview
+                        >(
+                          currentTable: table,
+                          referencedTable: $$LearningItemsTableReferences
+                              ._regularReviewsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$LearningItemsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).regularReviewsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.itemId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$LearningItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $LearningItemsTable,
+      LearningItem,
+      $$LearningItemsTableFilterComposer,
+      $$LearningItemsTableOrderingComposer,
+      $$LearningItemsTableAnnotationComposer,
+      $$LearningItemsTableCreateCompanionBuilder,
+      $$LearningItemsTableUpdateCompanionBuilder,
+      (LearningItem, $$LearningItemsTableReferences),
+      LearningItem,
+      PrefetchHooks Function({bool entryId, bool regularReviewsRefs})
+    >;
+typedef $$RegularReviewsTableCreateCompanionBuilder =
+    RegularReviewsCompanion Function({
+      required String id,
+      required int itemId,
+      required int generation,
+      required String reviewedAt,
+      required String rating,
+      Value<int> rowid,
+    });
+typedef $$RegularReviewsTableUpdateCompanionBuilder =
+    RegularReviewsCompanion Function({
+      Value<String> id,
+      Value<int> itemId,
+      Value<int> generation,
+      Value<String> reviewedAt,
+      Value<String> rating,
+      Value<int> rowid,
+    });
+
+final class $$RegularReviewsTableReferences
+    extends
+        BaseReferences<_$PikoDatabase, $RegularReviewsTable, RegularReview> {
+  $$RegularReviewsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $LearningItemsTable _itemIdTable(_$PikoDatabase db) => db.learningItems
+      .createAlias('regular_reviews__item_id__learning_items__id');
+
+  $$LearningItemsTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<int>('item_id')!;
+
+    final manager = $$LearningItemsTableTableManager(
+      $_db,
+      $_db.learningItems,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RegularReviewsTableFilterComposer
+    extends Composer<_$PikoDatabase, $RegularReviewsTable> {
+  $$RegularReviewsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$LearningItemsTableFilterComposer get itemId {
+    final $$LearningItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegularReviewsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $RegularReviewsTable> {
+  $$RegularReviewsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$LearningItemsTableOrderingComposer get itemId {
+    final $$LearningItemsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableOrderingComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegularReviewsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $RegularReviewsTable> {
+  $$RegularReviewsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => column);
+
+  $$LearningItemsTableAnnotationComposer get itemId {
+    final $$LearningItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegularReviewsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $RegularReviewsTable,
+          RegularReview,
+          $$RegularReviewsTableFilterComposer,
+          $$RegularReviewsTableOrderingComposer,
+          $$RegularReviewsTableAnnotationComposer,
+          $$RegularReviewsTableCreateCompanionBuilder,
+          $$RegularReviewsTableUpdateCompanionBuilder,
+          (RegularReview, $$RegularReviewsTableReferences),
+          RegularReview,
+          PrefetchHooks Function({bool itemId})
+        > {
+  $$RegularReviewsTableTableManager(
+    _$PikoDatabase db,
+    $RegularReviewsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RegularReviewsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RegularReviewsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RegularReviewsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> itemId = const Value.absent(),
+                Value<int> generation = const Value.absent(),
+                Value<String> reviewedAt = const Value.absent(),
+                Value<String> rating = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RegularReviewsCompanion(
+                id: id,
+                itemId: itemId,
+                generation: generation,
+                reviewedAt: reviewedAt,
+                rating: rating,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int itemId,
+                required int generation,
+                required String reviewedAt,
+                required String rating,
+                Value<int> rowid = const Value.absent(),
+              }) => RegularReviewsCompanion.insert(
+                id: id,
+                itemId: itemId,
+                generation: generation,
+                reviewedAt: reviewedAt,
+                rating: rating,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RegularReviewsTable, RegularReview>(table),
+                  $$RegularReviewsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -2964,16 +3911,17 @@ class $$LearningItemsTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (entryId) {
+                    if (itemId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.entryId,
-                                referencedTable: $$LearningItemsTableReferences
-                                    ._entryIdTable(db),
-                                referencedColumn: $$LearningItemsTableReferences
-                                    ._entryIdTable(db)
-                                    .id,
+                                currentColumn: table.itemId,
+                                referencedTable: $$RegularReviewsTableReferences
+                                    ._itemIdTable(db),
+                                referencedColumn:
+                                    $$RegularReviewsTableReferences
+                                        ._itemIdTable(db)
+                                        .id,
                               )
                               as T;
                     }
@@ -2989,19 +3937,19 @@ class $$LearningItemsTableTableManager
       );
 }
 
-typedef $$LearningItemsTableProcessedTableManager =
+typedef $$RegularReviewsTableProcessedTableManager =
     ProcessedTableManager<
       _$PikoDatabase,
-      $LearningItemsTable,
-      LearningItem,
-      $$LearningItemsTableFilterComposer,
-      $$LearningItemsTableOrderingComposer,
-      $$LearningItemsTableAnnotationComposer,
-      $$LearningItemsTableCreateCompanionBuilder,
-      $$LearningItemsTableUpdateCompanionBuilder,
-      (LearningItem, $$LearningItemsTableReferences),
-      LearningItem,
-      PrefetchHooks Function({bool entryId})
+      $RegularReviewsTable,
+      RegularReview,
+      $$RegularReviewsTableFilterComposer,
+      $$RegularReviewsTableOrderingComposer,
+      $$RegularReviewsTableAnnotationComposer,
+      $$RegularReviewsTableCreateCompanionBuilder,
+      $$RegularReviewsTableUpdateCompanionBuilder,
+      (RegularReview, $$RegularReviewsTableReferences),
+      RegularReview,
+      PrefetchHooks Function({bool itemId})
     >;
 typedef $$LearningIdentitySequenceTableCreateCompanionBuilder =
     LearningIdentitySequenceCompanion Function({
@@ -3351,6 +4299,8 @@ class $PikoDatabaseManager {
       $$VocabularyEntriesTableTableManager(_db, _db.vocabularyEntries);
   $$LearningItemsTableTableManager get learningItems =>
       $$LearningItemsTableTableManager(_db, _db.learningItems);
+  $$RegularReviewsTableTableManager get regularReviews =>
+      $$RegularReviewsTableTableManager(_db, _db.regularReviews);
   $$LearningIdentitySequenceTableTableManager get learningIdentitySequence =>
       $$LearningIdentitySequenceTableTableManager(
         _db,
