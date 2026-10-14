@@ -9,7 +9,9 @@ import 'data/local/sqlite_vocabulary_deletion.dart';
 import 'data/local/sqlite_learning_repository.dart';
 import 'data/local/sqlite_settings_repository.dart';
 import 'data/learning_item.dart';
+import 'data/review_due_membership.dart';
 import 'data/settings_repository.dart';
+import 'features/collections/collection_review_count.dart';
 import 'features/learning/due_learning_session.dart';
 import 'features/collections/collections_home.dart';
 import 'features/entry/entry_session_controller.dart';
@@ -154,6 +156,22 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  Future<List<ReviewDueMembership>> _reviewDueMemberships({
+    required String collectionId,
+    required DateTime at,
+  }) async {
+    final memberships = await Future.wait(
+      LearningDirection.values.map((direction) async {
+        final source = await learning.forCollection(
+          collectionId: collectionId,
+          direction: direction,
+        );
+        return source.dueMemberships(at: at);
+      }),
+    );
+    return List.unmodifiable(memberships.expand((group) => group));
+  }
+
   CollectionVocabularyMutations _collectionMutations(String id) =>
       CollectionVocabularyMutations(
         collectionId: id,
@@ -221,6 +239,9 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             onPendingVocabularyWrites: trackWrites,
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
+            reviewMembershipLoader: _reviewDueMemberships,
+            reviewCountPolicy: CollectionReviewCountPolicy.distinctVocabulary,
+            reviewCountClock: database.clock,
             onOpenSettings: _openSettings,
           ),
         ),

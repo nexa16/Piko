@@ -1,5 +1,11 @@
 # Decision log
 
+## UX-COLL-008 — count distinct due vocabulary across directions — 2026-10-14
+
+For Collection Home and Detail review entry points, one vocabulary entry counts as one due word when it is due in either or both translation directions. Do not count the two directional Learning Items as two words. The runtime reads both fixed-direction scopes passively and aggregates by vocabulary-entry identity with the explicit `distinctVocabulary` policy; this does not create a session, arm a wait, expire retry state or alter the separately selected session direction. Counting due-direction cards was considered and rejected for the visible word count.
+
+The existing host cases cover both explicit aggregation policies, passive SQLite reads, Home/Detail presentation, refresh after review/navigation/vocabulary mutations and localized sizing. Two focused production-runtime cases now verify explicit policy/loader/clock injection plus the accepted two-directions-to-one-word composition and unchanged storage, but are not yet executed. Android acceptance remains pending.
+
 ## UNDO-001 — Android correction and downstream acceptance — 2026-10-14
 
 Two isolated Android real-runtime flows pass in English target→native and German native→target. Hard changes actual FSRS/history, correction replaces that same event as Good at its original instant, then another Incorrect answer waits and completes through Hard reinforcement without an extra regular event. Summary reports two completed and one first-try success; dismissal, file reopen and exact opposite-direction state are verified. An injected clock advances the persisted ten-second wait; this is not an Android DST or termination test. No-uninstall preserves the marker and the normal current-schema APK is restored/cold-launched. Exhaustive transitions and concurrency remain covered by the 27 host cases.
