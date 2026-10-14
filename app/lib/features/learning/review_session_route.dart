@@ -220,8 +220,8 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
         child: PikoButton(
           key: const ValueKey('review-correct-previous'),
           label: copy.text('learn.correctPrevious'),
-          icon: const PikoIcon(PikoIconName.rotateCcw),
-          variant: PikoButtonVariant.ghost,
+          icon: const PikoIcon(PikoIconName.arrowLeft),
+          variant: PikoButtonVariant.dangerOutline,
           onPressed: !_exiting && canUse()
               ? () {
                   if (mounted &&
@@ -331,176 +331,177 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
       builder: (_, _) {
         _maybeScheduleSummary(sessionForBuild);
         return PopScope(
-        canPop: !_exiting && widget.session.isStopped,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) unawaited(_exit(sessionForBuild));
-        },
-        child: Scaffold(
-          body: PikoPage(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PikoHeading(
-                  title: copy.text('learn.longTitle'),
-                  leading: PikoButton(
-                    label: copy.text(
-                      sessionForBuild.hasInitialWork
-                          ? 'learn.exit'
-                          : 'common.back',
-                    ),
-                    icon: const PikoIcon(PikoIconName.arrowLeft),
-                    variant: PikoButtonVariant.ghost,
-                    onPressed: _exiting ? null : () => _exit(sessionForBuild),
-                  ),
-                ),
-                if (sessionForBuild.hasInitialWork)
-                  ReviewProgress(
-                    direction: reviewDirectionLabel(
-                      widget.collection,
-                      sessionForBuild.direction,
-                    ),
-                    progress: sessionForBuild.progress,
-                  )
-                else
-                  Text(
-                    reviewDirectionLabel(
-                      widget.collection,
-                      widget.session.direction,
-                    ),
-                    key: const ValueKey('review-fixed-direction'),
-                  ),
-                if (sessionForBuild.isCorrecting)
-                  if (sessionForBuild.previousRating case final rating?)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: pikoDesign.dimension('spacing.3'),
+          canPop: !_exiting && widget.session.isStopped,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) unawaited(_exit(sessionForBuild));
+          },
+          child: Scaffold(
+            body: PikoPage(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PikoHeading(
+                    title: copy.text('learn.longTitle'),
+                    leading: PikoButton(
+                      label: copy.text(
+                        sessionForBuild.hasInitialWork
+                            ? 'learn.exit'
+                            : 'common.back',
                       ),
-                      child: Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          '${copy.text('learn.correcting')} ${_ratingLabel(context, rating)}',
-                          key: const ValueKey('review-correcting-context'),
+                      icon: const PikoIcon(PikoIconName.arrowLeft),
+                      variant: PikoButtonVariant.ghost,
+                      onPressed: _exiting ? null : () => _exit(sessionForBuild),
+                    ),
+                  ),
+                  if (sessionForBuild.hasInitialWork)
+                    ReviewProgress(
+                      direction: reviewDirectionLabel(
+                        widget.collection,
+                        sessionForBuild.direction,
+                      ),
+                      progress: sessionForBuild.progress,
+                    )
+                  else
+                    Text(
+                      reviewDirectionLabel(
+                        widget.collection,
+                        widget.session.direction,
+                      ),
+                      key: const ValueKey('review-fixed-direction'),
+                    ),
+                  if (sessionForBuild.isCorrecting)
+                    if (sessionForBuild.previousRating case final rating?)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: pikoDesign.dimension('spacing.3'),
+                        ),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            '${copy.text('learn.correcting')} ${_ratingLabel(context, rating)}',
+                            key: const ValueKey('review-correcting-context'),
+                          ),
                         ),
                       ),
-                    ),
-                if (sessionForBuild.current case final handle?)
-                  Padding(
-                    padding: EdgeInsets.zero,
-                    child: ReviewPromptCard(
-                      key: ObjectKey(handle),
-                      handle: handle,
-                      repository: widget.vocabularyRepository,
-                      collectionId: sessionForBuild.collectionId,
-                      direction: sessionForBuild.direction,
-                      initiallyRevealed: sessionForBuild.isCorrecting,
-                      canReveal: (handle) =>
-                          !sessionForBuild.isStopped &&
-                          !sessionForBuild.isSubmitting &&
-                          identical(sessionForBuild.current, handle),
-                      questionActions:
-                          !sessionForBuild.isCorrecting &&
-                              sessionForBuild.canCorrectPrevious(handle)
-                          ? (context, canUse) => _previousAction(
+                  if (sessionForBuild.current case final handle?)
+                    Padding(
+                      padding: EdgeInsets.zero,
+                      child: ReviewPromptCard(
+                        key: ObjectKey(handle),
+                        handle: handle,
+                        repository: widget.vocabularyRepository,
+                        collectionId: sessionForBuild.collectionId,
+                        direction: sessionForBuild.direction,
+                        initiallyRevealed: sessionForBuild.isCorrecting,
+                        canReveal: (handle) =>
+                            !sessionForBuild.isStopped &&
+                            !sessionForBuild.isSubmitting &&
+                            identical(sessionForBuild.current, handle),
+                        questionActions:
+                            !sessionForBuild.isCorrecting &&
+                                sessionForBuild.canCorrectPrevious(handle)
+                            ? (context, canUse) => _previousAction(
+                                context,
+                                sessionForBuild,
+                                handle,
+                                canUse,
+                              )
+                            : null,
+                        revealedActions: (context, canSubmit) =>
+                            _gradingActions(
                               context,
                               sessionForBuild,
                               handle,
-                              canUse,
-                            )
-                          : null,
-                      revealedActions: (context, canSubmit) => _gradingActions(
-                        context,
-                        sessionForBuild,
-                        handle,
-                        canSubmit,
+                              canSubmit,
+                            ),
                       ),
                     ),
-                  ),
-                // Initial empty membership is not regular exhaustion after grades.
-                // Retry integration must also check pending reinforcement first.
-                if (!widget.session.hasInitialWork)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.5'),
+                  // Initial empty membership is not regular exhaustion after grades.
+                  // Retry integration must also check pending reinforcement first.
+                  if (!widget.session.hasInitialWork)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: pikoDesign.dimension('spacing.5'),
+                      ),
+                      child: PikoCard(
+                        key: const ValueKey('review-no-due'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Semantics(
+                              header: true,
+                              headingLevel: 2,
+                              child: Text(
+                                copy.text('learn.noDueTitle'),
+                                style: TextStyle(
+                                  fontSize: pikoDesign.dimension(
+                                    'typography.body',
+                                  ),
+                                  fontWeight: pikoDesign.weight(
+                                    'typography.titleWeight',
+                                  ),
+                                  color: pikoDesign.color('ink'),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: pikoDesign.dimension('spacing.3')),
+                            Text(
+                              copy.text('learn.noDueBody'),
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'components.emptyState.descriptionSize',
+                                ),
+                                height: pikoDesign.dimension(
+                                  'components.emptyState.descriptionLineHeight',
+                                ),
+                                color: pikoDesign.color('muted'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: PikoCard(
-                      key: const ValueKey('review-no-due'),
+                  if ((sessionForBuild.hasPendingRetryWork ||
+                          sessionForBuild.selectionFailed) &&
+                      sessionForBuild.current == null)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: pikoDesign.dimension('spacing.5'),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Semantics(
-                            header: true,
-                            headingLevel: 2,
-                            child: Text(
-                              copy.text('learn.noDueTitle'),
-                              style: TextStyle(
-                                fontSize: pikoDesign.dimension(
-                                  'typography.body',
-                                ),
-                                fontWeight: pikoDesign.weight(
-                                  'typography.titleWeight',
-                                ),
-                                color: pikoDesign.color('ink'),
-                              ),
+                          Text(
+                            copy.text(
+                              sessionForBuild.error == null
+                                  ? 'learn.retryWaiting'
+                                  : 'learn.retryLoadFailed',
                             ),
                           ),
-                          SizedBox(height: pikoDesign.dimension('spacing.3')),
-                          Text(
-                            copy.text('learn.noDueBody'),
-                            style: TextStyle(
-                              fontSize: pikoDesign.dimension(
-                                'components.emptyState.descriptionSize',
-                              ),
-                              height: pikoDesign.dimension(
-                                'components.emptyState.descriptionLineHeight',
-                              ),
-                              color: pikoDesign.color('muted'),
-                            ),
+                          PikoButton(
+                            label: copy.text('action.retry'),
+                            onPressed: sessionForBuild.isSubmitting
+                                ? null
+                                : () {
+                                    if (mounted &&
+                                        identical(
+                                          widget.session,
+                                          sessionForBuild,
+                                        ) &&
+                                        ModalRoute.of(context)?.isCurrent ==
+                                            true &&
+                                        !sessionForBuild.isStopped) {
+                                      sessionForBuild.refreshRetries();
+                                    }
+                                  },
                           ),
                         ],
                       ),
                     ),
-                  ),
-                if ((sessionForBuild.hasPendingRetryWork ||
-                        sessionForBuild.selectionFailed) &&
-                    sessionForBuild.current == null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.5'),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          copy.text(
-                            sessionForBuild.error == null
-                                ? 'learn.retryWaiting'
-                                : 'learn.retryLoadFailed',
-                          ),
-                        ),
-                        PikoButton(
-                          label: copy.text('action.retry'),
-                          onPressed: sessionForBuild.isSubmitting
-                              ? null
-                              : () {
-                                  if (mounted &&
-                                      identical(
-                                        widget.session,
-                                        sessionForBuild,
-                                      ) &&
-                                      ModalRoute.of(context)?.isCurrent ==
-                                          true &&
-                                      !sessionForBuild.isStopped) {
-                                    sessionForBuild.refreshRetries();
-                                  }
-                                },
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         );
       },
     );

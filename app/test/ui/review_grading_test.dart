@@ -15,6 +15,7 @@ import 'package:piko/features/learning/regular_grading_coordinator.dart';
 import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_icon.dart';
 import 'package:piko/ui/piko_theme.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
@@ -679,9 +680,7 @@ void main() {
       await reveal(tester);
       await tester.tap(gradeButton(AnswerGrade.correct));
       await h.finish(tester);
-      final previous = find.byKey(
-        const ValueKey('review-correct-previous'),
-      );
+      final previous = find.byKey(const ValueKey('review-correct-previous'));
       expect(previous, findsOneWidget);
       expect(
         find.widgetWithText(PikoButton, PikoCopy('en').text('learn.exit')),
@@ -709,9 +708,7 @@ void main() {
       await h.finish(tester);
       final accepted = session.acceptedReviews.single;
       final unanswered = session.current!;
-      await tester.tap(
-        find.byKey(const ValueKey('review-correct-previous')),
-      );
+      await tester.tap(find.byKey(const ValueKey('review-correct-previous')));
       await tester.pumpAndSettle();
       expect(session.isCorrecting, isTrue);
       expect(session.current!.item.id, accepted.prior.id);
@@ -761,7 +758,10 @@ void main() {
         await h.finish(tester);
       }
       expect(find.text(copy.text('summary.title')), findsOneWidget);
-      expect(find.text(copy.text('learn.summaryEncouragement')), findsOneWidget);
+      expect(
+        find.text(copy.text('learn.summaryEncouragement')),
+        findsOneWidget,
+      );
       expect(find.text('2'), findsNWidgets(2));
       expect(h.sessions.single.progress.completed, 2);
       expect(h.sessions.single.progress.firstTryCorrect, 2);
@@ -775,6 +775,33 @@ void main() {
       expect(find.byType(ReviewSessionRoute), findsNothing);
       expect(find.byType(CollectionDetail), findsOneWidget);
       expect(h.sessions.single.isStopped, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  launch.testWidgets(
+    'previous-review control matches the binding arrow and danger-outline trial',
+    (tester) async {
+      final h = await open(tester);
+      await reveal(tester);
+      await tester.tap(gradeButton(AnswerGrade.correct));
+      await h.finish(tester);
+      final finder = find.byKey(const ValueKey('review-correct-previous'));
+      final button = tester.widget<PikoButton>(finder);
+      expect(button.variant, PikoButtonVariant.dangerOutline);
+      expect(button.icon, isA<PikoIcon>());
+      expect((button.icon! as PikoIcon).name, PikoIconName.arrowLeft);
+      final material = tester.widget<TextButton>(
+        find.descendant(of: finder, matching: find.byType(TextButton)),
+      );
+      expect(
+        material.style!.foregroundColor!.resolve(<WidgetState>{}),
+        pikoDesign.color('danger'),
+      );
+      expect(
+        material.style!.side!.resolve(<WidgetState>{})!.color,
+        pikoDesign.color('danger'),
+      );
       expect(tester.takeException(), isNull);
     },
   );

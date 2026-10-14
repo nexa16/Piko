@@ -536,6 +536,10 @@ Render Previous Review only for the exact hidden current presentation. Reveal re
 
 The owner confirms retry gaps 20, 10, 5, 3, then 1 for the fifth and subsequent errors in the current round. RETRY-001–002 move from Undecided to First. Exact counting/off-by-one conventions, short-wait duration and FSRS interaction remain open; these decisions are not inferred from the sequence. Previous-grade correction is available only before revealing the current card's answer, not after reveal. The studio adds a direct sample-summary preview for design discussion; it is a planning-tool shortcut and does not approve summary content or add a production application shortcut.
 
+## UX-CARD-010 — distinct previous-review navigation — 2026-10-14
+
+Keep app-level Exit in the heading and use a Lucide back/undo-arrow Previous Review action below the hidden current card. Previous opens the latest accepted answer and grade for correction; Exit never invokes correction and Previous never exits. The host currently follows the binding's red unfilled trial; that color treatment is not a finalized style decision. Three focused route cases verify visible separation, activation, return to the retained current card and the binding treatment. Android remains pending.
+
 ## Review reveal and direction controls — 2026-10-13
 
 The owner removes the separate Show Answer button: self-assessment reveals through the card itself, retaining keyboard activation and a small Lucide icon beside the lower-right Tap to reveal cue. Choose one direction before starting; learning displays it once as noninteractive context, with no session direction dropdown. Revealed cards omit Answer revealed status, retain the prompt smaller/muted and emphasize the translation. Hard has a full-column clickable label and comfortable mobile target, remaining a checkbox rather than a third grading button. Previous-grade correction gets a back/undo arrow; red-outline styling remains an experiment. This refines REVIEW-001, CARD-UI-007 and UX-REVIEW-002, superseding the optional separate reveal action. The mockup uses a minimal pre-start direction dialog, not a first-release Settings preference.
