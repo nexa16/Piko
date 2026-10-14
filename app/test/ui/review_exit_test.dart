@@ -198,8 +198,11 @@ void main() {
           MaterialPageRoute(
             builder: (_) => ValueListenableBuilder<DueLearningSession>(
               valueListenable: holder,
-              builder: (_, session, _) =>
-                  ReviewSessionRoute(collection: f.owner, session: session),
+              builder: (_, session, _) => ReviewSessionRoute(
+                collection: f.owner,
+                session: session,
+                vocabularyRepository: f.vocabulary,
+              ),
             ),
           ),
         ),

@@ -86,6 +86,11 @@ const designCatalog = <String, Object?>{
 "size": 42,
 "weight": 800,
 },
+"learningCard": <String, Object?>{
+"minHeight": 290,
+"promptSize": 37,
+"promptWeight": 750,
+},
 "sectionHeading": <String, Object?>{
 "bottomMargin": 14,
 "gap": 12,

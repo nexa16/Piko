@@ -617,6 +617,7 @@ void main() {
           MaterialPageRoute(
             builder: (_) => CollectionDetail(
               repository: f.collections,
+              vocabularyRepository: f.vocabulary,
               collectionId: f.owner.id,
               onPendingVocabularyWrites: home.onPendingVocabularyWrites,
               reviewSessionFactory: (id, direction) async {
@@ -734,8 +735,11 @@ void main() {
       unawaited(
         navigator.push<void>(
           MaterialPageRoute(
-            builder: (_) =>
-                ReviewSessionRoute(collection: f.owner, session: session),
+            builder: (_) => ReviewSessionRoute(
+              collection: f.owner,
+              session: session,
+              vocabularyRepository: f.vocabulary,
+            ),
           ),
         ),
       );

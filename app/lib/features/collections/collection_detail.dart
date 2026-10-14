@@ -504,7 +504,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
       _endMutations(oldWidget.onPendingVocabularyWrites);
       _createMutations();
     }
-    if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory) {
+    if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory ||
+        oldWidget.vocabularyRepository != widget.vocabularyRepository) {
       _reviewIdentity++;
       if (_openingReview) _writeBarrier.release();
       _openingReview = false;
@@ -608,7 +609,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
                 else if (record == null)
                   Text(copy.text('collection.notFound')),
                 if (_lastReadyCollection != null &&
-                    widget.reviewSessionFactory != null)
+                    widget.reviewSessionFactory != null &&
+                    widget.vocabularyRepository != null)
                   Padding(
                     key: ValueKey(
                       'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
@@ -622,6 +624,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                       ),
                       collection: _lastReadyCollection!,
                       factory: widget.reviewSessionFactory!,
+                      vocabularyRepository: widget.vocabularyRepository!,
                       enabled:
                           ready &&
                           _deleteRequest == null &&

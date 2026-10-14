@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../data/learning_item.dart';
+import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
@@ -34,6 +35,7 @@ class ReviewLaunch extends StatefulWidget {
     super.key,
     required this.collection,
     required this.factory,
+    required this.vocabularyRepository,
     required this.beforeLaunch,
     required this.onPendingWrites,
     required this.onBusyChanged,
@@ -41,6 +43,7 @@ class ReviewLaunch extends StatefulWidget {
   });
   final CollectionRecord collection;
   final ReviewSessionFactory factory;
+  final VocabularyRepository vocabularyRepository;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
@@ -74,7 +77,8 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
       });
     }
     if (oldWidget.collection.id != widget.collection.id ||
-        oldWidget.factory != widget.factory) {
+        oldWidget.factory != widget.factory ||
+        oldWidget.vocabularyRepository != widget.vocabularyRepository) {
       _identity++;
       _opening = false;
       _closeDialog();
@@ -97,11 +101,15 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
     final identity = _identity;
     final collection = widget.collection;
     final factory = widget.factory;
+    final vocabulary = widget.vocabularyRepository;
     final beforeLaunch = widget.beforeLaunch;
     final register = widget.onPendingWrites;
     final busy = widget.onBusyChanged;
     bool current() =>
-        mounted && identity == _identity && widget.factory == factory;
+        mounted &&
+        identity == _identity &&
+        widget.factory == factory &&
+        identical(widget.vocabularyRepository, vocabulary);
     setState(() => _opening = true);
     busy(true);
     DueLearningSession? session;
@@ -130,8 +138,11 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
       session = null; // The pushed route now owns the already prepared session.
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
-          builder: (_) =>
-              ReviewSessionRoute(collection: collection, session: launched),
+          builder: (_) => ReviewSessionRoute(
+            collection: collection,
+            session: launched,
+            vocabularyRepository: vocabulary,
+          ),
         ),
       );
     } finally {

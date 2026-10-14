@@ -23,6 +23,10 @@
  dimension('--section-heading-weight',section.weight,100,900,'');
  dimension('--empty-description-line-height',config.components.emptyState.descriptionLineHeight,1,3,'');
  dimension('--empty-description-size',config.components.emptyState.descriptionSize,10,32,'px');
+ const learningCard=config.components.learningCard;
+ dimension('--learning-card-min-height',learningCard.minHeight,44,1000);
+ dimension('--learning-card-prompt-size',learningCard.promptSize,8,100);
+ dimension('--learning-card-prompt-weight',learningCard.promptWeight,100,900,'');
  const badge=config.components.languageBadge;
  dimension('--language-badge-size',badge.size,0,100);
  dimension('--language-badge-radius',badge.radius,0,100);

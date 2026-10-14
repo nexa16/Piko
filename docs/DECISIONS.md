@@ -1,5 +1,15 @@
 # Decision log
 
+## CARD-UI-004 — real uncluttered prompt side, answer acceptance pending — 2026-10-14
+
+Extend the actual review route with its current stored vocabulary prompt, not another sample or detached card preview. Pass the runtime's existing Vocabulary Repository through Collection Detail and launch; do not expand the FSRS/source API or schema. A handle-keyed stream widget reads the current entry UUID, verifies entry/Collection/direction identity and selects target or native text from the fixed session direction. The route listens to real session advancement. Locale rebuild retains the owned subscription, and live stored vocabulary edits update the current prompt without changing memory/history.
+
+The prompt card contains only the vocabulary text: no redundant Question/Answer heading, tag row, category placeholder or invented example. Literal vocabulary such as Question or Answer remains valid content; the rule removes UI labels, not user words. Loading, failed/missing/foreign reads have separate canonical feedback/retry and never retain another card's text or fall back to no-due. Fresh handle/repository reads clear snapshots; stale retry callbacks and pending text-owner replacements cannot target a new owner. First-emission cancellation is tested through actual runtime shutdown with no late UI errors; it is not a separate storage-preservation claim.
+
+Promote the binding card's 290px growable minimum, 37px prompt size and 750 weight to canonical `components.learningCard`, shared by browser variables and generated Flutter. Reuse shared card padding/radius/colors; no reveal affordance or activation promise appears before CARD-UI-007. Thirteen real-SQLite host widget tests cover both directions/exact text/identity, actual advancement, locale subscription stability, live edits, failure/retry/current/repository guards, runtime cancellation, missing/foreign data, pending text-owner replacement and 392px/200% English/German long-word wrapping. All 451 Flutter and 15 Node tests pass with clean analysis, generator, browser syntax and diff checks.
+
+CARD-UI-004 remains In progress until the revealed answer side exists and has its own heading/tag absence acceptance. CARD-UI-007 must add real reveal to this card, and CARD-004 retains the independent default-tag policy check. Full answer/grading/retry/correction and Android acceptance remain pending; DATA-001 and CARD-UI-001 follow-ups are unchanged.
+
 ## CARD-UI-001 — explicit session Exit, correction portion pending — 2026-10-14
 
 Nonempty real review sessions use the canonical `learn.exit` label (Exit review / Wiederholung beenden) for the app-level leave action, with the existing shared ghost button and Lucide navigation arrow. Initial no-due return keeps Back. Align the binding mockup's nonempty navigation label while leaving its sample correction behavior unchanged. Exit stops and drains admitted work; it never grades an unanswered card, erases an accepted review or invokes correction.

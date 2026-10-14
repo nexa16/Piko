@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Stored uncluttered prompt card — CARD-UI-004
+
+The real current-entry card centers only the selected direction's stored prompt. Reuse shared card padding/radius/border/surface and ink text; promote the existing binding `.learning` 290px minimum and `.word` 37px/750 style to `components.learningCard.minHeight`, `promptSize` and `promptWeight`. Browser and Flutter adapters consume those values; Flutter's accepted numeric-weight mapping still applies. Minimum height grows for long text rather than clipping 392px/200% English/German content.
+
+No Question/Answer heading, default tag placeholder, example or reveal cue is invented in this step. Loading/error feedback stays outside the successful prompt card. Live stored text may update while the current handle remains fixed; locale rebuild does not resubscribe. Reveal interaction and revealed-side hierarchy/absence checks remain pending under CARD-UI-007 and CARD-UI-026, with independent default-tag acceptance under CARD-004. CARD-UI-004 is still In progress, and host card geometry does not establish Android acceptance.
+
 ## Session Exit versus previous-review correction — CARD-UI-001
 
 The nonempty real session's navigation action explicitly says `learn.exit`; the initial no-due screen retains `common.back`. Reuse the shared ghost-button target, navigation arrow and localized semantics/keyboard activation with no new geometry or styling. The binding mockup consumes the same Exit key without changing other Back labels or expanding its sample correction. The production previous-review action remains absent until transactional correction exists; its separate `learn.correctPrevious` wording is not replaced or used for Exit. English/German 200% host tests verify the leave action, while visible coexistence with real correction and Android acceptance remain pending.

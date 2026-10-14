@@ -7,6 +7,23 @@ import vm from 'node:vm';
 import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('learning prompt browser and Flutter consume binding card geometry', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.learningCard = {minHeight:320, promptSize:40, promptWeight:800};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN: config, document: {documentElement: {dataset: {}, style: {setProperty: (key, value) => properties.set(key, value)}}}
+  });
+  assert.equal(properties.get('--learning-card-min-height'), '320px');
+  assert.equal(properties.get('--learning-card-prompt-size'), '40px');
+  assert.equal(properties.get('--learning-card-prompt-weight'), '800');
+  const generated = generate(config, {schemaVersion:1, defaultLocale:'en', entries:{}});
+  assert.ok(generated.includes('"minHeight": 320,'));
+  assert.ok(generated.includes('"promptSize": 40,'));
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('.learning{min-height:var(--learning-card-min-height);'));
+  assert.ok(css.includes('.word{font-size:var(--learning-card-prompt-size);font-weight:var(--learning-card-prompt-weight)}'));
+});
 test('review empty browser and Flutter description consume canonical geometry', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.emptyState.descriptionSize = 18;
