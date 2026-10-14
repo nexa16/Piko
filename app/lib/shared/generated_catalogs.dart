@@ -28,6 +28,12 @@ const designCatalog = <String, Object?>{
 "paddingY": 10,
 "size": 24,
 },
+"collectionCard": <String, Object?>{
+"metadataLineHeight": 1.5,
+"metadataSize": 12,
+"titleSize": 15,
+"titleWeight": 700,
+},
 "collectionReview": <String, Object?>{
 "cardMinHeight": 86,
 "cardPadding": 20,
@@ -86,18 +92,18 @@ const designCatalog = <String, Object?>{
 "headings": <String, Object?>{
 "titleMargin": 7,
 },
-"icons": <String, Object?>{
-"size": 20,
-},
-"inlineVocabulary": <String, Object?>{
-"captionSize": 11,
-"compactBreakpoint": 420,
 "homeHeader": <String, Object?>{
 "brandLetterSpacing": -0.7,
 "brandSize": 23,
 "brandWeight": 800,
 "sectionGap": 26,
 },
+"icons": <String, Object?>{
+"size": 20,
+},
+"inlineVocabulary": <String, Object?>{
+"captionSize": 11,
+"compactBreakpoint": 420,
 },
 "languageBadge": <String, Object?>{
 "fontSize": 15,

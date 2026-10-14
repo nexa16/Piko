@@ -55,6 +55,19 @@ test('Home hierarchy adapters share binding typography and spacing', () => {
   const css=fs.readFileSync(new URL('../../shared/components.css',import.meta.url),'utf8');
   for(const name of ['home-brand-size','home-brand-weight','home-brand-letter-spacing','home-section-gap'])assert.ok(css.includes('var(--'+name+')'));
 });
+test('Collection card adapters share binding typography', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.collectionCard = {titleSize:16,titleWeight:750,metadataSize:13,metadataLineHeight:1.6};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN:config,document:{documentElement:{dataset:{},style:{setProperty:(key,value)=>properties.set(key,value)}}}
+  });
+  for(const [name,value] of [['--collection-card-title-size','16px'],['--collection-card-title-weight','750'],['--collection-card-metadata-size','13px'],['--collection-card-metadata-line-height','1.6']])assert.equal(properties.get(name),value);
+  const generated=generate(config,{schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"collectionCard": <String, Object?>{'));
+  const css=fs.readFileSync(new URL('../../shared/components.css',import.meta.url),'utf8');
+  for(const name of ['collection-card-title-size','collection-card-title-weight','collection-card-metadata-size','collection-card-metadata-line-height'])assert.ok(css.includes('var(--'+name+')'));
+});
 test('Settings-only field margin adapts canonical binding inset', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.settings.fieldMarginY = 18;

@@ -47,6 +47,11 @@
  dimension('--inline-caption-size',config.components.inlineVocabulary.captionSize,8,100);
  dimension('--checkbox-size',config.components.checkboxes.size,16,100);
  dimension('--checkbox-padding-y',config.components.checkboxes.paddingY,0,100);
+ const collectionCard=config.components.collectionCard;
+ dimension('--collection-card-title-size',collectionCard.titleSize,8,100);
+ dimension('--collection-card-title-weight',collectionCard.titleWeight,100,900,'');
+ dimension('--collection-card-metadata-size',collectionCard.metadataSize,8,100);
+ dimension('--collection-card-metadata-line-height',collectionCard.metadataLineHeight,1,3,'');
  const collectionReview=config.components.collectionReview;
  dimension('--collection-review-quick-width',collectionReview.quickWidth,44,1000);
  dimension('--collection-review-quick-padding-x',collectionReview.quickPaddingX,0,100);

@@ -362,11 +362,13 @@ class _CollectionTileState extends State<_CollectionTile> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(widget.collection.name),
-                                Text(metadata),
+                                _collectionTitle(),
+                                _collectionMetadata(metadata),
                               ],
                             ),
                           ),
+                          SizedBox(width: pikoDesign.dimension('spacing.3')),
+                          _collectionChevron(),
                         ],
                       ),
                     ),
@@ -424,9 +426,14 @@ class _CollectionTileState extends State<_CollectionTile> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Text(widget.collection.name), Text(metadata)],
+                      children: [
+                        _collectionTitle(),
+                        _collectionMetadata(metadata),
+                      ],
                     ),
                   ),
+                  SizedBox(width: pikoDesign.dimension('spacing.3')),
+                  _collectionChevron(),
                 ],
               ),
             ),
@@ -435,4 +442,29 @@ class _CollectionTileState extends State<_CollectionTile> {
       ),
     );
   }
+
+  Widget _collectionTitle() => Text(
+    widget.collection.name,
+    style: TextStyle(
+      fontSize: pikoDesign.dimension('components.collectionCard.titleSize'),
+      fontWeight: pikoDesign.weight('components.collectionCard.titleWeight'),
+      color: pikoDesign.color('ink'),
+    ),
+  );
+
+  Widget _collectionMetadata(String metadata) => Text(
+    metadata,
+    style: TextStyle(
+      fontSize: pikoDesign.dimension('components.collectionCard.metadataSize'),
+      height: pikoDesign.dimension(
+        'components.collectionCard.metadataLineHeight',
+      ),
+      color: pikoDesign.color('muted'),
+    ),
+  );
+
+  Widget _collectionChevron() => IconTheme(
+    data: IconThemeData(color: pikoDesign.color('muted')),
+    child: const PikoIcon(PikoIconName.chevronRight),
+  );
 }
