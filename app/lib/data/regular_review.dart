@@ -14,6 +14,13 @@ abstract interface class RegularReviewWriter {
   });
 }
 
+/// Authoritative fixed scope and complete due-set discovery for session owners.
+abstract interface class ScopedReviewSource implements RegularReviewWriter {
+  String get collectionId;
+  LearningDirection get direction;
+  Future<List<LearningItemRecord>> dueItems({required DateTime cutoff});
+}
+
 final class RegularReviewRecord {
   const RegularReviewRecord({
     required this.id,

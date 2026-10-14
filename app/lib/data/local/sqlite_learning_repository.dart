@@ -227,19 +227,33 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 }
 
 /// Fixed Collection/direction boundary, not a due set or session launcher.
-final class CollectionReviewGateway implements RegularReviewWriter {
+final class CollectionReviewGateway implements ScopedReviewSource {
   const CollectionReviewGateway._(
     this._repository,
     this.collectionId,
     this.direction,
   );
   final SqliteLearningRepository _repository;
+  @override
   final String collectionId;
+  @override
   final LearningDirection direction;
 
   /// Non-presentational discovery; SESSION-018 owns due eligibility/selection.
   /// An existing empty Collection returns []; a deleted owner fails explicitly.
   Future<List<LearningItemRecord>> items() => _repository._scopedItems(this);
+
+  /// Decode UTC instants; valid stored timestamp spellings need not sort lexically.
+  @override
+  Future<List<LearningItemRecord>> dueItems({required DateTime cutoff}) async {
+    if (!cutoff.isUtc) {
+      throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
+    }
+    final scoped = await items();
+    return List.unmodifiable(
+      scoped.where((item) => !item.card.due.isAfter(cutoff)),
+    );
+  }
 
   @override
   Future<RegularReviewReceipt> review({
