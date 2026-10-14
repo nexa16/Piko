@@ -18,6 +18,8 @@ class ReviewPromptCard extends StatefulWidget {
     required this.collectionId,
     required this.direction,
     required this.canReveal,
+    this.initiallyRevealed = false,
+    this.questionActions,
     this.revealedActions,
   });
   final GradingCardHandle handle;
@@ -25,6 +27,8 @@ class ReviewPromptCard extends StatefulWidget {
   final String collectionId;
   final LearningDirection direction;
   final bool Function(GradingCardHandle) canReveal;
+  final bool initiallyRevealed;
+  final Widget Function(BuildContext, bool Function())? questionActions;
   final Widget Function(BuildContext, bool Function())? revealedActions;
   @override
   State<ReviewPromptCard> createState() => _ReviewPromptCardState();
@@ -44,6 +48,7 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
   @override
   void initState() {
     super.initState();
+    _revealed = widget.initiallyRevealed;
     _watch();
   }
 
@@ -54,7 +59,7 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
         oldWidget.repository != widget.repository ||
         oldWidget.collectionId != widget.collectionId ||
         oldWidget.direction != widget.direction) {
-      _revealed = false;
+      _revealed = widget.initiallyRevealed;
       _watch();
     }
   }
@@ -348,6 +353,11 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 card,
+                if (!_revealed && widget.questionActions != null)
+                  widget.questionActions!(
+                    context,
+                    () => !_revealed && currentSnapshot(),
+                  ),
                 if (_revealed && widget.revealedActions != null)
                   widget.revealedActions!(
                     context,

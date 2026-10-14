@@ -13,6 +13,7 @@ import 'review_launch.dart';
 import 'review_prompt_card.dart';
 import 'regular_grading_coordinator.dart';
 import 'hard_modifier.dart';
+import 'learning_scheduler.dart';
 import 'review_progress.dart';
 
 /// Stored self-assessment card and regular grades; reinforcement follows separately.
@@ -202,6 +203,46 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
     );
   }
 
+  Widget _previousAction(
+    BuildContext context,
+    DueLearningSession session,
+    GradingCardHandle handle,
+    bool Function() canUse,
+  ) {
+    final copy = PikoCopyScope.of(context);
+    return Padding(
+      padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: PikoButton(
+          key: const ValueKey('review-correct-previous'),
+          label: copy.text('learn.correctPrevious'),
+          icon: const PikoIcon(PikoIconName.rotateCcw),
+          variant: PikoButtonVariant.ghost,
+          onPressed: !_exiting && canUse()
+              ? () {
+                  if (mounted &&
+                      !_exiting &&
+                      identical(session, widget.session) &&
+                      canUse()) {
+                    session.beginCorrection(handle);
+                  }
+                }
+              : null,
+        ),
+      ),
+    );
+  }
+
+  String _ratingLabel(BuildContext context, LearningRating rating) {
+    final copy = PikoCopyScope.of(context);
+    return copy.text(switch (rating) {
+      LearningRating.again => 'action.incorrect',
+      LearningRating.hard => 'learn.hard',
+      LearningRating.good => 'action.correct',
+    });
+  }
+
   Future<void> _exit(DueLearningSession session) async {
     if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
@@ -279,6 +320,20 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                     ),
                     key: const ValueKey('review-fixed-direction'),
                   ),
+                if (sessionForBuild.isCorrecting)
+                  if (sessionForBuild.previousRating case final rating?)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: pikoDesign.dimension('spacing.3'),
+                      ),
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          '${copy.text('learn.correcting')} ${_ratingLabel(context, rating)}',
+                          key: const ValueKey('review-correcting-context'),
+                        ),
+                      ),
+                    ),
                 if (sessionForBuild.current case final handle?)
                   Padding(
                     padding: EdgeInsets.zero,
@@ -288,10 +343,21 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                       repository: widget.vocabularyRepository,
                       collectionId: sessionForBuild.collectionId,
                       direction: sessionForBuild.direction,
+                      initiallyRevealed: sessionForBuild.isCorrecting,
                       canReveal: (handle) =>
                           !sessionForBuild.isStopped &&
                           !sessionForBuild.isSubmitting &&
                           identical(sessionForBuild.current, handle),
+                      questionActions:
+                          !sessionForBuild.isCorrecting &&
+                              sessionForBuild.canCorrectPrevious(handle)
+                          ? (context, canUse) => _previousAction(
+                              context,
+                              sessionForBuild,
+                              handle,
+                              canUse,
+                            )
+                          : null,
                       revealedActions: (context, canSubmit) => _gradingActions(
                         context,
                         sessionForBuild,

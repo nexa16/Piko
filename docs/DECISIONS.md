@@ -180,6 +180,12 @@ Promote the binding card's 290px growable minimum, 37px prompt size and 750 weig
 
 CARD-UI-004 remains In progress until the revealed answer side exists and has its own heading/tag absence acceptance. CARD-UI-007 must add real reveal to this card, and CARD-004 retains the independent default-tag policy check. Full answer/grading/retry/correction and Android acceptance remain pending; DATA-001 and CARD-UI-001 follow-ups are unchanged.
 
+## CARD-UI-019 — real previous-review presentation — 2026-10-14
+
+Use the existing localized Previous Review copy with the Lucide rotate-back icon as a separate question-side action below the hidden card. Keep app-level Exit in the heading. Previous opens only the latest accepted answer already revealed, displays its localized previous grade and reuses the established grading controls. An accepted correction returns to the retained hidden current card; stale, covered, stopped and older-answer callbacks cannot enter correction.
+
+Two real-route correction/visibility cases pass. Android remains pending.
+
 ## CARD-UI-001 — explicit session Exit, correction portion pending — 2026-10-14
 
 Nonempty real review sessions use the canonical `learn.exit` label (Exit review / Wiederholung beenden) for the app-level leave action, with the existing shared ghost button and Lucide navigation arrow. Initial no-due return keeps Back. Align the binding mockup's nonempty navigation label while leaving its sample correction behavior unchanged. Exit stops and drains admitted work; it never grades an unanswered card, erases an accepted review or invokes correction.

@@ -671,4 +671,55 @@ void main() {
       },
     );
   }
+
+  launch.testWidgets(
+    'previous-review presentation shows prior answer and grade, then replacement returns to the unanswered card',
+    (tester) async {
+      final h = await open(tester), session = h.sessions.single;
+      await reveal(tester);
+      await tester.tap(gradeButton(AnswerGrade.correct));
+      await h.finish(tester);
+      final accepted = session.acceptedReviews.single;
+      final unanswered = session.current!;
+      await tester.tap(
+        find.byKey(const ValueKey('review-correct-previous')),
+      );
+      await tester.pumpAndSettle();
+      expect(session.isCorrecting, isTrue);
+      expect(session.current!.item.id, accepted.prior.id);
+      expect(find.byKey(const ValueKey('review-answer-text')), findsOneWidget);
+      expect(
+        find.textContaining(PikoCopy('en').text('learn.correcting')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(PikoCopy('en').text('action.correct')),
+        findsWidgets,
+      );
+      expect(
+        find.widgetWithText(PikoButton, PikoCopy('en').text('learn.exit')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('review-correct-previous')),
+        findsNothing,
+      );
+      await tester.tap(gradeButton(AnswerGrade.incorrect));
+      await h.finish(tester);
+      expect(session.isCorrecting, isFalse);
+      expect(session.current, same(unanswered));
+      expect(find.byKey(const ValueKey('review-answer-text')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('review-correct-previous')),
+        findsOneWidget,
+      );
+      final replacement = session.acceptedReviews.single;
+      expect(replacement.event.id, accepted.event.id);
+      expect(replacement.event.reviewedAt, accepted.event.reviewedAt);
+      expect(replacement.event.rating, LearningRating.again);
+      expect(session.progress.completed, 0);
+      expect(session.progress.firstTryCorrect, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
