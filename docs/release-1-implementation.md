@@ -6,6 +6,8 @@
 
 Implementation uses one `codex/release-1-implementation` branch based on the latest `develop`, with one draft implementation PR targeting `develop`. Checked commits can be pushed after public-data review. The owner retains merge and release publication decisions.
 
+The owner approved grouped verification on 2026-10-14: test related specifications together, reuse applicable existing coverage, and reserve full regression runs for integration milestones and final acceptance rather than repeating them after every small spec. Keep each specification's changes and evidence traceable in a separate commit; follow-up fixes may be folded into their owning spec commit before final review. Combined test results must identify the covered specs and must not imply that unexecuted Android or end-to-end gates passed. This changes execution efficiency, not release scope or quality requirements.
+
 ## Accepted implementation constraints
 
 - Flutter application under `app/`, local-first storage, Android-only Release 1 verification. Android application ID: `io.github.nexa16.piko`. No web or iOS verification is claimed.
