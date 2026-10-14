@@ -169,13 +169,13 @@ The initial integration commands omitted `--no-uninstall`. Inspection of the ins
 
 Subsequent Android integration runs must explicitly disable uninstall, use isolated fixture storage and verify existing sentinel/database fingerprints after cleanup. Restoring the normal APK is a working-install repair, not recovery of the erased data. Production restart/termination acceptance remains pending.
 
-Completion remains unproven until evidence covers the full scope, including real Android runtime behavior. Scoped implementation rows do not imply that every release gate has passed. The current integrated host checkpoint at `52bb050` passes 682 Flutter tests, 19 Node adapter tests, canonical generation validation and clean static analysis. All 95 rows have implementations; unfinished platform and publication checks remain explicit below.
+Completion remains unproven until evidence covers the full scope, including real Android runtime behavior. Scoped implementation rows do not imply that every release gate has passed. The current integrated host checkpoint at `442668d` passes 692 Flutter tests, 21 Node adapter tests, canonical generation validation and clean static analysis. All 95 rows have implementations; unfinished platform and publication checks remain explicit below.
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
 | Dependency and canonical requirement reconciliation | Pending | — |
 | Focused automated tests for every implemented behavior | Pending | — |
-| Complete relevant regression suite and static analysis | Passed at 52bb050 | All 682 Flutter tests pass after production distinct-word count wiring; 19 Node adapter tests and canonical generation check pass; static analysis reports no issues. Rerun impacted checks after subsequent changes. |
+| Complete relevant regression suite and static analysis | Passed at 442668d | All 692 Flutter tests pass after Home/card/header/dialog binding repairs; 21 Node adapter tests and canonical generation check pass; static analysis reports no issues. Rerun impacted checks after subsequent changes. |
 | Android build, installation and launch | Passed at 285bf0e | Current-schema normal debug APK builds and installs in place; explicit cold launch reports success. Existing storage marker survives. Development signing remains unsuitable for store publication. |
 | Empty start, collection create/rename/delete and restart durability | Pending | — |
 | Focused entry stack with keyboard, scrolling, validation and draft exit | Pending | — |
