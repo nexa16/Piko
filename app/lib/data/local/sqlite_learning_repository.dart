@@ -232,7 +232,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         return RetryState(scope: ordinal, items: items, rounds: rounds);
       });
 
-  Future<List<ReviewDueMembership>> _dueMemberships(
+  Future<ReviewDueMembershipSnapshot> _dueMemberships(
     CollectionReviewGateway scope,
     DateTime at,
   ) => database.transaction(() async {
@@ -240,13 +240,32 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     final items = await _scopedItems(scope);
     final ordinal = await _scopeState(scope.collectionId, scope.direction);
     final result = <ReviewDueMembership>[];
+    DateTime? nextChangeAt;
+    void consider(DateTime candidate) {
+      if (candidate.isAfter(at) &&
+          (nextChangeAt == null || candidate.isBefore(nextChangeAt!))) {
+        nextChangeAt = candidate;
+      }
+    }
+
     for (final item in items) {
       final round = await _retryFor(item);
       final activeRound = round != null && at.isBefore(round.expiresAt)
           ? round
           : null;
       final scheduledRegularDue = !item.card.due.isAfter(at);
-      if (!scheduledRegularDue && activeRound == null) continue;
+      if (activeRound == null) {
+        if (!scheduledRegularDue) {
+          consider(item.card.due);
+          continue;
+        }
+      } else {
+        consider(activeRound.expiresAt);
+        if (!activeRound.eligibleAt(ordinal, at)) {
+          final wait = activeRound.waitEligibleAt;
+          if (wait != null) consider(wait);
+        }
+      }
       result.add(
         ReviewDueMembership(
           entryId: item.entryId,
@@ -254,12 +273,14 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           generation: item.generation,
           direction: item.direction,
           regularDue: activeRound == null && scheduledRegularDue,
-          eligibleRetry:
-              activeRound?.eligibleAt(ordinal, at) ?? false,
+          eligibleRetry: activeRound?.eligibleAt(ordinal, at) ?? false,
         ),
       );
     }
-    return List.unmodifiable(result);
+    return ReviewDueMembershipSnapshot(
+      memberships: result,
+      nextChangeAt: nextChangeAt,
+    );
   });
 
   Future<RetrySelection> _initialSelection(
@@ -735,7 +756,7 @@ final class CollectionReviewGateway
       _repository._pendingRetries(this, at);
 
   /// Passive badge/count source: never expires, arms or otherwise mutates work.
-  Future<List<ReviewDueMembership>> dueMemberships({required DateTime at}) =>
+  Future<ReviewDueMembershipSnapshot> dueMemberships({required DateTime at}) =>
       _repository._dueMemberships(this, at);
 
   /// Storage boundary only: future reinforcement processing owns answer policy.

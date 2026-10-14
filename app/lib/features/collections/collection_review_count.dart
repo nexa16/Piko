@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import '../../core/clock.dart';
@@ -10,7 +12,7 @@ import '../../data/review_due_membership.dart';
 enum CollectionReviewCountPolicy { distinctVocabulary, dueDirectionCards }
 
 typedef CollectionReviewMembershipLoader =
-    Future<List<ReviewDueMembership>> Function({
+    Future<Iterable<ReviewDueMembership>> Function({
       required String collectionId,
       required DateTime at,
     });
@@ -42,25 +44,47 @@ final class CollectionReviewCount extends ChangeNotifier {
     required this.loader,
     required this.policy,
     this.clock = const SystemPikoClock(),
+    this.timerFactory = Timer.new,
   });
 
   final String collectionId;
   final CollectionReviewMembershipLoader loader;
   final CollectionReviewCountPolicy policy;
   final PikoClock clock;
+  final Timer Function(Duration, void Function()) timerFactory;
 
   int? _value;
   Object? _error;
   bool _loading = false;
   int _generation = 0;
   bool _disposed = false;
+  Timer? _refreshTimer;
 
   int? get value => _value;
   Object? get error => _error;
   bool get loading => _loading;
 
+  void _cancelScheduledRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+  }
+
+  void _scheduleRefresh(DateTime? boundary) {
+    _cancelScheduledRefresh();
+    if (boundary == null || _disposed) return;
+    final now = clock.now().toUtc();
+    _refreshTimer = timerFactory(
+      boundary.isAfter(now) ? boundary.difference(now) : Duration.zero,
+      () {
+        _refreshTimer = null;
+        unawaited(refresh());
+      },
+    );
+  }
+
   Future<void> refresh() async {
     if (_disposed) return;
+    _cancelScheduledRefresh();
     final generation = ++_generation;
     _loading = true;
     _error = null;
@@ -73,6 +97,11 @@ final class CollectionReviewCount extends ChangeNotifier {
       );
       if (_disposed || generation != _generation) return;
       _value = aggregateCollectionReviewCount(memberships, policy);
+      _scheduleRefresh(
+        memberships is ReviewDueMembershipSnapshot
+            ? memberships.nextChangeAt
+            : null,
+      );
     } catch (error) {
       if (_disposed || generation != _generation) return;
       _error = error;
@@ -88,6 +117,7 @@ final class CollectionReviewCount extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _generation++;
+    _cancelScheduledRefresh();
     super.dispose();
   }
 }
@@ -99,7 +129,8 @@ typedef CollectionReviewCountWidgetBuilder =
       VoidCallback retry,
     );
 
-/// Refreshes the passive count when first shown and whenever the app resumes.
+/// Refreshes the passive count when first shown, when the app resumes and at
+/// the source's next time-based eligibility boundary.
 class CollectionReviewCountBuilder extends StatefulWidget {
   const CollectionReviewCountBuilder({
     required this.collectionId,

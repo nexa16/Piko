@@ -156,7 +156,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
-  Future<List<ReviewDueMembership>> _reviewDueMemberships({
+  Future<ReviewDueMembershipSnapshot> _reviewDueMemberships({
     required String collectionId,
     required DateTime at,
   }) async {
@@ -169,7 +169,19 @@ class _PikoRuntimeState extends State<PikoRuntime> {
         return source.dueMemberships(at: at);
       }),
     );
-    return List.unmodifiable(memberships.expand((group) => group));
+    DateTime? nextChangeAt;
+    for (final group in memberships) {
+      final candidate = group.nextChangeAt;
+      final current = nextChangeAt;
+      if (candidate != null &&
+          (current == null || candidate.isBefore(current))) {
+        nextChangeAt = candidate;
+      }
+    }
+    return ReviewDueMembershipSnapshot(
+      memberships: memberships.expand((group) => group),
+      nextChangeAt: nextChangeAt,
+    );
   }
 
   CollectionVocabularyMutations _collectionMutations(String id) =>
