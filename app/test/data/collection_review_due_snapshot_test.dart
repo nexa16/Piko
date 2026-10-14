@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/learning_item.dart';
-import 'package:piko/data/regular_review.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 
 import 'regular_reviews_test.dart' show Fixture, instant, rows;
