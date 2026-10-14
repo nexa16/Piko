@@ -1,5 +1,9 @@
 # Decision log
 
+## CARD-UI-024 — no prior-error question clue — 2026-10-14
+
+Two English/German real-route cases use an actual retry with prior errors and literal mistake-looking numeric vocabulary. Hidden/revealed card text and semantics contain only the stored language text plus the hidden cue; aggregate completed/first-try counters are separate, never a per-question error count. Exact full storage survives reveal. Preserve literal user wording rather than filtering it as metadata. These cases pass in the related 19-case batch with clean analysis; Android remains pending.
+
 ## CARD-UI-023 — pending until success or original expiry — 2026-10-14
 
 The existing integrated session retains one incorrectly graded item as pending through repeated retries; only accepted correct reinforcement or the original local-04:00 expiry removes the obligation. One additional real-SQLite acceptance case verifies this transition without regular-history duplication or expiry success. It passes in the related 19-case batch with clean analysis. This is host acceptance of the implemented flow, not new schema/policy; Android remains pending.
