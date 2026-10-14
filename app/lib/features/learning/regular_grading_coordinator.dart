@@ -21,29 +21,48 @@ abstract interface class HardSelection implements Listenable {
 }
 
 /// Owns a regular card's modifier and one accepted write; storage stays caller-owned.
-final class RegularGradingCoordinator extends ChangeNotifier
-    implements HardSelection {
+final class RegularGradingCoordinator
+    extends GradingCoordinator<RegularReviewReceipt> {
   RegularGradingCoordinator({
     required RegularReviewWriter repository,
+    super.onPendingWrites,
+  }) : super(
+         record: (item, rating, at) => repository.review(
+           kind: ReviewKind.regular,
+           expectedPrior: item,
+           rating: rating,
+           reviewedAt: at,
+         ),
+       );
+}
+
+/// Shared modifier/single-flight mechanics; each caller supplies its actual typed
+/// transaction. Retry receipts never masquerade as regular review events.
+class GradingCoordinator<R extends LearningAnswerReceipt> extends ChangeNotifier
+    implements HardSelection {
+  GradingCoordinator({
+    required Future<R> Function(LearningItemRecord, LearningRating, DateTime)
+    record,
     void Function(Future<void>)? onPendingWrites,
   }) : // Preserve the public dependency name while keeping ownership private.
        // ignore: prefer_initializing_formals
-       _repository = repository,
+       _recordAnswer = record,
        _register = onPendingWrites;
-  final RegularReviewWriter _repository;
+  final Future<R> Function(LearningItemRecord, LearningRating, DateTime)
+  _recordAnswer;
   final void Function(Future<void>)? _register;
   GradingCardHandle? _current;
   bool _hard = false, _disposed = false;
   Object? _error;
-  RegularReviewReceipt? _accepted;
-  Future<RegularReviewReceipt?>? _pending;
+  R? _accepted;
+  Future<R?>? _pending;
   @override
   GradingCardHandle? get current => _current;
   @override
   bool get hard => _hard;
   bool get isSubmitting => _pending != null;
   Object? get error => _error;
-  RegularReviewReceipt? get accepted => _accepted;
+  R? get accepted => _accepted;
 
   /// Busy activation is refused, so an accepted grade cannot be superseded.
   GradingCardHandle? activate(LearningItemRecord item) {
@@ -56,6 +75,22 @@ final class RegularGradingCoordinator extends ChangeNotifier
     _accepted = null;
     notifyListeners();
     return handle;
+  }
+
+  /// Authoritative expiry may retire an unanswered reinforcement presentation;
+  /// this is not accepted advancement and never creates a receipt.
+  bool retireExpired(GradingCardHandle handle) {
+    if (_disposed ||
+        isSubmitting ||
+        !identical(_current, handle) ||
+        _accepted != null) {
+      return false;
+    }
+    _current = null;
+    _hard = false;
+    _error = null;
+    notifyListeners();
+    return true;
   }
 
   @override
@@ -93,7 +128,7 @@ final class RegularGradingCoordinator extends ChangeNotifier
     return true;
   }
 
-  Future<RegularReviewReceipt?> submit(
+  Future<R?> submit(
     GradingCardHandle handle,
     AnswerGrade grade, {
     required DateTime reviewedAt,
@@ -109,7 +144,7 @@ final class RegularGradingCoordinator extends ChangeNotifier
         : _hard
         ? LearningRating.hard
         : LearningRating.good;
-    final result = Completer<RegularReviewReceipt?>();
+    final result = Completer<R?>();
     _pending = result.future;
     _error = null;
     final drain = result.future.then<void>(
@@ -135,15 +170,10 @@ final class RegularGradingCoordinator extends ChangeNotifier
     GradingCardHandle handle,
     LearningRating rating,
     DateTime at,
-    Completer<RegularReviewReceipt?> result,
+    Completer<R?> result,
   ) async {
     try {
-      final receipt = await _repository.review(
-        kind: ReviewKind.regular,
-        expectedPrior: handle.item,
-        rating: rating,
-        reviewedAt: at,
-      );
+      final receipt = await _recordAnswer(handle.item, rating, at);
       if (!_disposed && identical(_current, handle)) _accepted = receipt;
       // Return the original accepted receipt even after disposal; session owners
       // may still need its captured identity or await it before closing storage.

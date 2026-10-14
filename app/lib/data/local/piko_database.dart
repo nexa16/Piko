@@ -98,6 +98,12 @@ class RetryObligations extends Table {
       text().references(RegularReviews, #id, onDelete: KeyAction.cascade)();
   TextColumn get createdAt => text()();
   TextColumn get expiresAt => text()();
+  IntColumn get errorCount => integer()
+      .withDefault(const Constant(1))
+      .check(const CustomExpression<bool>('error_count >= 1'))();
+  IntColumn get dueOrdinal => integer()
+      .withDefault(const Constant(20))
+      .check(const CustomExpression<bool>('due_ordinal >= 0'))();
   @override
   Set<Column<Object>> get primaryKey => {id};
   @override
@@ -108,6 +114,23 @@ class RetryObligations extends Table {
     'UNIQUE(item_id, generation)',
     "CHECK(substr(created_at, -1) = 'Z')",
     "CHECK(substr(expires_at, -1) = 'Z')",
+  ];
+}
+
+/// Answer admission only, not statistics or an attempt-event log.
+class ScopeAnswerOrdinals extends Table {
+  TextColumn get collectionId =>
+      text().references(Collections, #id, onDelete: KeyAction.cascade)();
+  TextColumn get direction => text()();
+  IntColumn get ordinal => integer()();
+  IntColumn get revision => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {collectionId, direction};
+  @override
+  List<String> get customConstraints => [
+    "CHECK(direction IN ('targetToNative', 'nativeToTarget'))",
+    'CHECK(ordinal >= 0)',
+    'CHECK(revision >= 0)',
   ];
 }
 
@@ -145,6 +168,7 @@ class VocabularyOrderSequence extends Table {
     LearningItems,
     RegularReviews,
     RetryObligations,
+    ScopeAnswerOrdinals,
     LearningIdentitySequence,
     VocabularyOrderSequence,
   ],
@@ -154,7 +178,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -207,6 +231,16 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createTable(regularReviews);
         }
         if (from < 8) await m.createTable(retryObligations);
+        if (from < 9) {
+          // Pre-8 migrations create the latest retry shape already. Schema 8
+          // had no gap tracking: preserve rounds with first-error/20 baseline,
+          // never reconstruct an invented answered history from regular events.
+          if (from == 8) {
+            await m.addColumn(retryObligations, retryObligations.errorCount);
+            await m.addColumn(retryObligations, retryObligations.dueOrdinal);
+          }
+          await m.createTable(scopeAnswerOrdinals);
+        }
       });
     },
     beforeOpen: (_) async {

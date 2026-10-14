@@ -123,6 +123,7 @@ void main() {
           'learning_items',
           'regular_reviews',
           'retry_obligations',
+          'scope_answer_ordinals',
           'learning_identity_sequence',
           'vocabulary_order_sequence',
         ];

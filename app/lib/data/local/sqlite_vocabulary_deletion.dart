@@ -347,5 +347,7 @@ final class SqliteVocabularyDeletionService
         originReviewId: row.originReviewId,
         createdAt: row.createdAt,
         expiresAt: row.expiresAt,
+        errorCount: row.errorCount,
+        dueOrdinal: row.dueOrdinal,
       );
 }

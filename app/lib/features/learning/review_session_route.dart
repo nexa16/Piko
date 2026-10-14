@@ -47,7 +47,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
     }
     if (_preAdmissionError != null) setState(() => _preAdmissionError = null);
     try {
-      await session.submitNow(handle, grade);
+      await session.submitAnswerNow(handle, grade);
     } catch (_) {
       // The existing coordinator retains the current answer/modifier and error.
       // Its registered drain and session bookkeeping own the accepted operation.
@@ -202,9 +202,9 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                   title: copy.text('learn.longTitle'),
                   leading: PikoButton(
                     label: copy.text(
-                      sessionForBuild.members.isEmpty
-                          ? 'common.back'
-                          : 'learn.exit',
+                      sessionForBuild.hasInitialWork
+                          ? 'learn.exit'
+                          : 'common.back',
                     ),
                     icon: const PikoIcon(PikoIconName.arrowLeft),
                     variant: PikoButtonVariant.ghost,
@@ -243,7 +243,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                   ),
                 // Initial empty membership is not regular exhaustion after grades.
                 // Retry integration must also check pending reinforcement first.
-                if (widget.session.members.isEmpty)
+                if (!widget.session.hasInitialWork)
                   Padding(
                     padding: EdgeInsets.only(
                       top: pikoDesign.dimension('spacing.5'),
@@ -284,6 +284,43 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                if ((sessionForBuild.hasPendingRetryWork ||
+                        sessionForBuild.selectionFailed) &&
+                    sessionForBuild.current == null)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: pikoDesign.dimension('spacing.5'),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          copy.text(
+                            sessionForBuild.error == null
+                                ? 'learn.retryPending'
+                                : 'learn.retryLoadFailed',
+                          ),
+                        ),
+                        PikoButton(
+                          label: copy.text('action.retry'),
+                          onPressed: sessionForBuild.isSubmitting
+                              ? null
+                              : () {
+                                  if (mounted &&
+                                      identical(
+                                        widget.session,
+                                        sessionForBuild,
+                                      ) &&
+                                      ModalRoute.of(context)?.isCurrent ==
+                                          true &&
+                                      !sessionForBuild.isStopped) {
+                                    sessionForBuild.refreshRetries();
+                                  }
+                                },
+                        ),
+                      ],
                     ),
                   ),
               ],

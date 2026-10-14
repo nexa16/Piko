@@ -19,6 +19,7 @@ Future<List<Object?>> snapshot(Fixture f) => Future.wait([
     'learning_items',
     'regular_reviews',
     'retry_obligations',
+    'scope_answer_ordinals',
     'app_settings',
     'learning_identity_sequence',
     'vocabulary_order_sequence',

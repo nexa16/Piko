@@ -42,6 +42,7 @@ Future<List<Object?>> snapshot(Fixture f) => Future.wait([
     'learning_items',
     'regular_reviews',
     'retry_obligations',
+    'scope_answer_ordinals',
     'app_settings',
     'learning_identity_sequence',
     'vocabulary_order_sequence',
@@ -63,6 +64,8 @@ RetryObligation changed(
   originReviewId: origin ?? value.originReviewId,
   createdAt: value.createdAt,
   expiresAt: expires ?? value.expiresAt,
+  errorCount: value.errorCount,
+  dueOrdinal: value.dueOrdinal,
 );
 
 void main() {
@@ -99,8 +102,9 @@ void main() {
     'successful retry DELETE failure rolls back exact round and retries without FSRS/history writes',
     () async {
       final f = await fixture(), gateway = await scope(f);
-      final retry = (await f.review(rating: LearningRating.again)).retryNext!,
-          before = await snapshot(f);
+      final retry = (await f.review(rating: LearningRating.again)).retryNext!;
+      await f.makeRetryEligible(retry);
+      final before = await snapshot(f);
       await f.db.customStatement(
         "CREATE TRIGGER complete_retry_fail AFTER DELETE ON retry_obligations BEGIN SELECT RAISE(FAIL,'retry complete'); END",
       );
@@ -353,6 +357,7 @@ void main() {
       expect(await snapshot(f), before);
       final cards = await rows(f.db, 'learning_items'),
           events = await rows(f.db, 'regular_reviews');
+      await f.makeRetryEligible(retry);
       await gateway.completeSuccessfulRetry(
         expected: retry,
         answeredAt: instant,
@@ -383,6 +388,7 @@ void main() {
       );
       final actual = (await gateway.pendingRetries(at: instant)).single;
       expect(actual.revision, 1);
+      await f.makeRetryEligible(actual);
       await gateway.completeSuccessfulRetry(
         expected: actual,
         answeredAt: instant,
@@ -601,6 +607,7 @@ void main() {
                   as String,
             ),
           );
+          await reopened.makeRetryEligible(pending);
           await gateway.completeSuccessfulRetry(
             expected: pending,
             answeredAt: instant.add(const Duration(minutes: 1)),
@@ -695,7 +702,7 @@ void main() {
           expect(
             (await db.customSelect('PRAGMA user_version').getSingle())
                 .read<int>('user_version'),
-            8,
+            db.schemaVersion,
           );
           expect(
             (await SqliteLearningRepository(

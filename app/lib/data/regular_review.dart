@@ -38,21 +38,32 @@ final class RegularReviewRecord {
 }
 
 /// In-memory correction context; no duplicated card snapshots are stored in history.
-final class RegularReviewReceipt {
+abstract interface class LearningAnswerReceipt {
+  LearningItemRecord get prior;
+  LearningItemRecord get next;
+}
+
+final class RegularReviewReceipt implements LearningAnswerReceipt {
   const RegularReviewReceipt({
     required this.prior,
     required this.next,
     required this.event,
     this.retryPrior,
     this.retryNext,
+    this.scopePrior,
+    this.scopeNext,
   });
+  @override
   final LearningItemRecord prior;
+  @override
   final LearningItemRecord next;
   final RegularReviewRecord event;
 
   /// Exact same-transaction correction context; never a post-receipt queue read.
   final RetryObligation? retryPrior;
   final RetryObligation? retryNext;
+  final ScopeAnswerState? scopePrior;
+  final ScopeAnswerState? scopeNext;
 }
 
 enum RegularReviewFailure {

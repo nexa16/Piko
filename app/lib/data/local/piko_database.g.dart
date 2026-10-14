@@ -1878,6 +1878,32 @@ class $RetryObligationsTable extends RetryObligations
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _errorCountMeta = const VerificationMeta(
+    'errorCount',
+  );
+  @override
+  late final GeneratedColumn<int> errorCount = GeneratedColumn<int>(
+    'error_count',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('error_count >= 1'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _dueOrdinalMeta = const VerificationMeta(
+    'dueOrdinal',
+  );
+  @override
+  late final GeneratedColumn<int> dueOrdinal = GeneratedColumn<int>(
+    'due_ordinal',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('due_ordinal >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(20),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1887,6 +1913,8 @@ class $RetryObligationsTable extends RetryObligations
     originReviewId,
     createdAt,
     expiresAt,
+    errorCount,
+    dueOrdinal,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1954,6 +1982,18 @@ class $RetryObligationsTable extends RetryObligations
     } else if (isInserting) {
       context.missing(_expiresAtMeta);
     }
+    if (data.containsKey('error_count')) {
+      context.handle(
+        _errorCountMeta,
+        errorCount.isAcceptableOrUnknown(data['error_count']!, _errorCountMeta),
+      );
+    }
+    if (data.containsKey('due_ordinal')) {
+      context.handle(
+        _dueOrdinalMeta,
+        dueOrdinal.isAcceptableOrUnknown(data['due_ordinal']!, _dueOrdinalMeta),
+      );
+    }
     return context;
   }
 
@@ -1991,6 +2031,14 @@ class $RetryObligationsTable extends RetryObligations
         DriftSqlType.string,
         data['${effectivePrefix}expires_at'],
       )!,
+      errorCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}error_count'],
+      )!,
+      dueOrdinal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_ordinal'],
+      )!,
     );
   }
 
@@ -2009,6 +2057,8 @@ class StoredRetryObligation extends DataClass
   final String originReviewId;
   final String createdAt;
   final String expiresAt;
+  final int errorCount;
+  final int dueOrdinal;
   const StoredRetryObligation({
     required this.id,
     required this.itemId,
@@ -2017,6 +2067,8 @@ class StoredRetryObligation extends DataClass
     required this.originReviewId,
     required this.createdAt,
     required this.expiresAt,
+    required this.errorCount,
+    required this.dueOrdinal,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2028,6 +2080,8 @@ class StoredRetryObligation extends DataClass
     map['origin_review_id'] = Variable<String>(originReviewId);
     map['created_at'] = Variable<String>(createdAt);
     map['expires_at'] = Variable<String>(expiresAt);
+    map['error_count'] = Variable<int>(errorCount);
+    map['due_ordinal'] = Variable<int>(dueOrdinal);
     return map;
   }
 
@@ -2040,6 +2094,8 @@ class StoredRetryObligation extends DataClass
       originReviewId: Value(originReviewId),
       createdAt: Value(createdAt),
       expiresAt: Value(expiresAt),
+      errorCount: Value(errorCount),
+      dueOrdinal: Value(dueOrdinal),
     );
   }
 
@@ -2056,6 +2112,8 @@ class StoredRetryObligation extends DataClass
       originReviewId: serializer.fromJson<String>(json['originReviewId']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       expiresAt: serializer.fromJson<String>(json['expiresAt']),
+      errorCount: serializer.fromJson<int>(json['errorCount']),
+      dueOrdinal: serializer.fromJson<int>(json['dueOrdinal']),
     );
   }
   @override
@@ -2069,6 +2127,8 @@ class StoredRetryObligation extends DataClass
       'originReviewId': serializer.toJson<String>(originReviewId),
       'createdAt': serializer.toJson<String>(createdAt),
       'expiresAt': serializer.toJson<String>(expiresAt),
+      'errorCount': serializer.toJson<int>(errorCount),
+      'dueOrdinal': serializer.toJson<int>(dueOrdinal),
     };
   }
 
@@ -2080,6 +2140,8 @@ class StoredRetryObligation extends DataClass
     String? originReviewId,
     String? createdAt,
     String? expiresAt,
+    int? errorCount,
+    int? dueOrdinal,
   }) => StoredRetryObligation(
     id: id ?? this.id,
     itemId: itemId ?? this.itemId,
@@ -2088,6 +2150,8 @@ class StoredRetryObligation extends DataClass
     originReviewId: originReviewId ?? this.originReviewId,
     createdAt: createdAt ?? this.createdAt,
     expiresAt: expiresAt ?? this.expiresAt,
+    errorCount: errorCount ?? this.errorCount,
+    dueOrdinal: dueOrdinal ?? this.dueOrdinal,
   );
   StoredRetryObligation copyWithCompanion(RetryObligationsCompanion data) {
     return StoredRetryObligation(
@@ -2102,6 +2166,12 @@ class StoredRetryObligation extends DataClass
           : this.originReviewId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      errorCount: data.errorCount.present
+          ? data.errorCount.value
+          : this.errorCount,
+      dueOrdinal: data.dueOrdinal.present
+          ? data.dueOrdinal.value
+          : this.dueOrdinal,
     );
   }
 
@@ -2114,7 +2184,9 @@ class StoredRetryObligation extends DataClass
           ..write('revision: $revision, ')
           ..write('originReviewId: $originReviewId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('expiresAt: $expiresAt')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('errorCount: $errorCount, ')
+          ..write('dueOrdinal: $dueOrdinal')
           ..write(')'))
         .toString();
   }
@@ -2128,6 +2200,8 @@ class StoredRetryObligation extends DataClass
     originReviewId,
     createdAt,
     expiresAt,
+    errorCount,
+    dueOrdinal,
   );
   @override
   bool operator ==(Object other) =>
@@ -2139,7 +2213,9 @@ class StoredRetryObligation extends DataClass
           other.revision == this.revision &&
           other.originReviewId == this.originReviewId &&
           other.createdAt == this.createdAt &&
-          other.expiresAt == this.expiresAt);
+          other.expiresAt == this.expiresAt &&
+          other.errorCount == this.errorCount &&
+          other.dueOrdinal == this.dueOrdinal);
 }
 
 class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
@@ -2150,6 +2226,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
   final Value<String> originReviewId;
   final Value<String> createdAt;
   final Value<String> expiresAt;
+  final Value<int> errorCount;
+  final Value<int> dueOrdinal;
   final Value<int> rowid;
   const RetryObligationsCompanion({
     this.id = const Value.absent(),
@@ -2159,6 +2237,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     this.originReviewId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.expiresAt = const Value.absent(),
+    this.errorCount = const Value.absent(),
+    this.dueOrdinal = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RetryObligationsCompanion.insert({
@@ -2169,6 +2249,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     required String originReviewId,
     required String createdAt,
     required String expiresAt,
+    this.errorCount = const Value.absent(),
+    this.dueOrdinal = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        itemId = Value(itemId),
@@ -2184,6 +2266,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     Expression<String>? originReviewId,
     Expression<String>? createdAt,
     Expression<String>? expiresAt,
+    Expression<int>? errorCount,
+    Expression<int>? dueOrdinal,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2194,6 +2278,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
       if (originReviewId != null) 'origin_review_id': originReviewId,
       if (createdAt != null) 'created_at': createdAt,
       if (expiresAt != null) 'expires_at': expiresAt,
+      if (errorCount != null) 'error_count': errorCount,
+      if (dueOrdinal != null) 'due_ordinal': dueOrdinal,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2206,6 +2292,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     Value<String>? originReviewId,
     Value<String>? createdAt,
     Value<String>? expiresAt,
+    Value<int>? errorCount,
+    Value<int>? dueOrdinal,
     Value<int>? rowid,
   }) {
     return RetryObligationsCompanion(
@@ -2216,6 +2304,8 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
       originReviewId: originReviewId ?? this.originReviewId,
       createdAt: createdAt ?? this.createdAt,
       expiresAt: expiresAt ?? this.expiresAt,
+      errorCount: errorCount ?? this.errorCount,
+      dueOrdinal: dueOrdinal ?? this.dueOrdinal,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2244,6 +2334,12 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     if (expiresAt.present) {
       map['expires_at'] = Variable<String>(expiresAt.value);
     }
+    if (errorCount.present) {
+      map['error_count'] = Variable<int>(errorCount.value);
+    }
+    if (dueOrdinal.present) {
+      map['due_ordinal'] = Variable<int>(dueOrdinal.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2260,6 +2356,337 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
           ..write('originReviewId: $originReviewId, ')
           ..write('createdAt: $createdAt, ')
           ..write('expiresAt: $expiresAt, ')
+          ..write('errorCount: $errorCount, ')
+          ..write('dueOrdinal: $dueOrdinal, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ScopeAnswerOrdinalsTable extends ScopeAnswerOrdinals
+    with TableInfo<$ScopeAnswerOrdinalsTable, ScopeAnswerOrdinal> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ScopeAnswerOrdinalsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES collections (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ordinalMeta = const VerificationMeta(
+    'ordinal',
+  );
+  @override
+  late final GeneratedColumn<int> ordinal = GeneratedColumn<int>(
+    'ordinal',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    collectionId,
+    direction,
+    ordinal,
+    revision,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'scope_answer_ordinals';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ScopeAnswerOrdinal> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('ordinal')) {
+      context.handle(
+        _ordinalMeta,
+        ordinal.isAcceptableOrUnknown(data['ordinal']!, _ordinalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ordinalMeta);
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {collectionId, direction};
+  @override
+  ScopeAnswerOrdinal map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ScopeAnswerOrdinal(
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      ordinal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ordinal'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+    );
+  }
+
+  @override
+  $ScopeAnswerOrdinalsTable createAlias(String alias) {
+    return $ScopeAnswerOrdinalsTable(attachedDatabase, alias);
+  }
+}
+
+class ScopeAnswerOrdinal extends DataClass
+    implements Insertable<ScopeAnswerOrdinal> {
+  final String collectionId;
+  final String direction;
+  final int ordinal;
+  final int revision;
+  const ScopeAnswerOrdinal({
+    required this.collectionId,
+    required this.direction,
+    required this.ordinal,
+    required this.revision,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['collection_id'] = Variable<String>(collectionId);
+    map['direction'] = Variable<String>(direction);
+    map['ordinal'] = Variable<int>(ordinal);
+    map['revision'] = Variable<int>(revision);
+    return map;
+  }
+
+  ScopeAnswerOrdinalsCompanion toCompanion(bool nullToAbsent) {
+    return ScopeAnswerOrdinalsCompanion(
+      collectionId: Value(collectionId),
+      direction: Value(direction),
+      ordinal: Value(ordinal),
+      revision: Value(revision),
+    );
+  }
+
+  factory ScopeAnswerOrdinal.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ScopeAnswerOrdinal(
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+      direction: serializer.fromJson<String>(json['direction']),
+      ordinal: serializer.fromJson<int>(json['ordinal']),
+      revision: serializer.fromJson<int>(json['revision']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'collectionId': serializer.toJson<String>(collectionId),
+      'direction': serializer.toJson<String>(direction),
+      'ordinal': serializer.toJson<int>(ordinal),
+      'revision': serializer.toJson<int>(revision),
+    };
+  }
+
+  ScopeAnswerOrdinal copyWith({
+    String? collectionId,
+    String? direction,
+    int? ordinal,
+    int? revision,
+  }) => ScopeAnswerOrdinal(
+    collectionId: collectionId ?? this.collectionId,
+    direction: direction ?? this.direction,
+    ordinal: ordinal ?? this.ordinal,
+    revision: revision ?? this.revision,
+  );
+  ScopeAnswerOrdinal copyWithCompanion(ScopeAnswerOrdinalsCompanion data) {
+    return ScopeAnswerOrdinal(
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      ordinal: data.ordinal.present ? data.ordinal.value : this.ordinal,
+      revision: data.revision.present ? data.revision.value : this.revision,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScopeAnswerOrdinal(')
+          ..write('collectionId: $collectionId, ')
+          ..write('direction: $direction, ')
+          ..write('ordinal: $ordinal, ')
+          ..write('revision: $revision')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(collectionId, direction, ordinal, revision);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ScopeAnswerOrdinal &&
+          other.collectionId == this.collectionId &&
+          other.direction == this.direction &&
+          other.ordinal == this.ordinal &&
+          other.revision == this.revision);
+}
+
+class ScopeAnswerOrdinalsCompanion extends UpdateCompanion<ScopeAnswerOrdinal> {
+  final Value<String> collectionId;
+  final Value<String> direction;
+  final Value<int> ordinal;
+  final Value<int> revision;
+  final Value<int> rowid;
+  const ScopeAnswerOrdinalsCompanion({
+    this.collectionId = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.ordinal = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ScopeAnswerOrdinalsCompanion.insert({
+    required String collectionId,
+    required String direction,
+    required int ordinal,
+    required int revision,
+    this.rowid = const Value.absent(),
+  }) : collectionId = Value(collectionId),
+       direction = Value(direction),
+       ordinal = Value(ordinal),
+       revision = Value(revision);
+  static Insertable<ScopeAnswerOrdinal> custom({
+    Expression<String>? collectionId,
+    Expression<String>? direction,
+    Expression<int>? ordinal,
+    Expression<int>? revision,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (collectionId != null) 'collection_id': collectionId,
+      if (direction != null) 'direction': direction,
+      if (ordinal != null) 'ordinal': ordinal,
+      if (revision != null) 'revision': revision,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ScopeAnswerOrdinalsCompanion copyWith({
+    Value<String>? collectionId,
+    Value<String>? direction,
+    Value<int>? ordinal,
+    Value<int>? revision,
+    Value<int>? rowid,
+  }) {
+    return ScopeAnswerOrdinalsCompanion(
+      collectionId: collectionId ?? this.collectionId,
+      direction: direction ?? this.direction,
+      ordinal: ordinal ?? this.ordinal,
+      revision: revision ?? this.revision,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (ordinal.present) {
+      map['ordinal'] = Variable<int>(ordinal.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScopeAnswerOrdinalsCompanion(')
+          ..write('collectionId: $collectionId, ')
+          ..write('direction: $direction, ')
+          ..write('ordinal: $ordinal, ')
+          ..write('revision: $revision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2708,6 +3135,8 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $RetryObligationsTable retryObligations = $RetryObligationsTable(
     this,
   );
+  late final $ScopeAnswerOrdinalsTable scopeAnswerOrdinals =
+      $ScopeAnswerOrdinalsTable(this);
   late final $LearningIdentitySequenceTable learningIdentitySequence =
       $LearningIdentitySequenceTable(this);
   late final $VocabularyOrderSequenceTable vocabularyOrderSequence =
@@ -2723,6 +3152,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     learningItems,
     regularReviews,
     retryObligations,
+    scopeAnswerOrdinals,
     learningIdentitySequence,
     vocabularyOrderSequence,
   ];
@@ -2762,6 +3192,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('retry_obligations', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'collections',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('scope_answer_ordinals', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2955,6 +3392,30 @@ final class $$CollectionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $ScopeAnswerOrdinalsTable,
+    List<ScopeAnswerOrdinal>
+  >
+  _scopeAnswerOrdinalsRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.scopeAnswerOrdinals,
+        aliasName: 'collections__id__scope_answer_ordinals__collection_id',
+      );
+
+  $$ScopeAnswerOrdinalsTableProcessedTableManager get scopeAnswerOrdinalsRefs {
+    final manager = $$ScopeAnswerOrdinalsTableTableManager(
+      $_db,
+      $_db.scopeAnswerOrdinals,
+    ).filter((f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _scopeAnswerOrdinalsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CollectionsTableFilterComposer
@@ -3002,6 +3463,31 @@ class $$CollectionsTableFilterComposer
           }) => $$VocabularyEntriesTableFilterComposer(
             $db: $db,
             $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> scopeAnswerOrdinalsRefs(
+    Expression<bool> Function($$ScopeAnswerOrdinalsTableFilterComposer f) f,
+  ) {
+    final $$ScopeAnswerOrdinalsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.scopeAnswerOrdinals,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ScopeAnswerOrdinalsTableFilterComposer(
+            $db: $db,
+            $table: $db.scopeAnswerOrdinals,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3092,6 +3578,32 @@ class $$CollectionsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> scopeAnswerOrdinalsRefs<T extends Object>(
+    Expression<T> Function($$ScopeAnswerOrdinalsTableAnnotationComposer a) f,
+  ) {
+    final $$ScopeAnswerOrdinalsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.scopeAnswerOrdinals,
+          getReferencedColumn: (t) => t.collectionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ScopeAnswerOrdinalsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.scopeAnswerOrdinals,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CollectionsTableTableManager
@@ -3107,7 +3619,10 @@ class $$CollectionsTableTableManager
           $$CollectionsTableUpdateCompanionBuilder,
           (Collection, $$CollectionsTableReferences),
           Collection,
-          PrefetchHooks Function({bool vocabularyEntriesRefs})
+          PrefetchHooks Function({
+            bool vocabularyEntriesRefs,
+            bool scopeAnswerOrdinalsRefs,
+          })
         > {
   $$CollectionsTableTableManager(_$PikoDatabase db, $CollectionsTable table)
     : super(
@@ -3156,40 +3671,66 @@ class $$CollectionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({vocabularyEntriesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (vocabularyEntriesRefs) db.vocabularyEntries,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (vocabularyEntriesRefs)
-                    await $_getPrefetchedData<
-                      Collection,
-                      $CollectionsTable,
-                      VocabularyEntry
-                    >(
-                      currentTable: table,
-                      referencedTable: $$CollectionsTableReferences
-                          ._vocabularyEntriesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$CollectionsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).vocabularyEntriesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.collectionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                vocabularyEntriesRefs = false,
+                scopeAnswerOrdinalsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (vocabularyEntriesRefs) db.vocabularyEntries,
+                    if (scopeAnswerOrdinalsRefs) db.scopeAnswerOrdinals,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (vocabularyEntriesRefs)
+                        await $_getPrefetchedData<
+                          Collection,
+                          $CollectionsTable,
+                          VocabularyEntry
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CollectionsTableReferences
+                              ._vocabularyEntriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CollectionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).vocabularyEntriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.collectionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (scopeAnswerOrdinalsRefs)
+                        await $_getPrefetchedData<
+                          Collection,
+                          $CollectionsTable,
+                          ScopeAnswerOrdinal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CollectionsTableReferences
+                              ._scopeAnswerOrdinalsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CollectionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).scopeAnswerOrdinalsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.collectionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -3206,7 +3747,10 @@ typedef $$CollectionsTableProcessedTableManager =
       $$CollectionsTableUpdateCompanionBuilder,
       (Collection, $$CollectionsTableReferences),
       Collection,
-      PrefetchHooks Function({bool vocabularyEntriesRefs})
+      PrefetchHooks Function({
+        bool vocabularyEntriesRefs,
+        bool scopeAnswerOrdinalsRefs,
+      })
     >;
 typedef $$VocabularyEntriesTableCreateCompanionBuilder =
     VocabularyEntriesCompanion Function({
@@ -4660,6 +5204,8 @@ typedef $$RetryObligationsTableCreateCompanionBuilder =
       required String originReviewId,
       required String createdAt,
       required String expiresAt,
+      Value<int> errorCount,
+      Value<int> dueOrdinal,
       Value<int> rowid,
     });
 typedef $$RetryObligationsTableUpdateCompanionBuilder =
@@ -4671,6 +5217,8 @@ typedef $$RetryObligationsTableUpdateCompanionBuilder =
       Value<String> originReviewId,
       Value<String> createdAt,
       Value<String> expiresAt,
+      Value<int> errorCount,
+      Value<int> dueOrdinal,
       Value<int> rowid,
     });
 
@@ -4757,6 +5305,16 @@ class $$RetryObligationsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get errorCount => $composableBuilder(
+    column: $table.errorCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueOrdinal => $composableBuilder(
+    column: $table.dueOrdinal,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$LearningItemsTableFilterComposer get itemId {
     final $$LearningItemsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4838,6 +5396,16 @@ class $$RetryObligationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get errorCount => $composableBuilder(
+    column: $table.errorCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueOrdinal => $composableBuilder(
+    column: $table.dueOrdinal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$LearningItemsTableOrderingComposer get itemId {
     final $$LearningItemsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4910,6 +5478,16 @@ class $$RetryObligationsTableAnnotationComposer
 
   GeneratedColumn<String> get expiresAt =>
       $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<int> get errorCount => $composableBuilder(
+    column: $table.errorCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dueOrdinal => $composableBuilder(
+    column: $table.dueOrdinal,
+    builder: (column) => column,
+  );
 
   $$LearningItemsTableAnnotationComposer get itemId {
     final $$LearningItemsTableAnnotationComposer composer = $composerBuilder(
@@ -4995,6 +5573,8 @@ class $$RetryObligationsTableTableManager
                 Value<String> originReviewId = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> expiresAt = const Value.absent(),
+                Value<int> errorCount = const Value.absent(),
+                Value<int> dueOrdinal = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RetryObligationsCompanion(
                 id: id,
@@ -5004,6 +5584,8 @@ class $$RetryObligationsTableTableManager
                 originReviewId: originReviewId,
                 createdAt: createdAt,
                 expiresAt: expiresAt,
+                errorCount: errorCount,
+                dueOrdinal: dueOrdinal,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5015,6 +5597,8 @@ class $$RetryObligationsTableTableManager
                 required String originReviewId,
                 required String createdAt,
                 required String expiresAt,
+                Value<int> errorCount = const Value.absent(),
+                Value<int> dueOrdinal = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RetryObligationsCompanion.insert(
                 id: id,
@@ -5024,6 +5608,8 @@ class $$RetryObligationsTableTableManager
                 originReviewId: originReviewId,
                 createdAt: createdAt,
                 expiresAt: expiresAt,
+                errorCount: errorCount,
+                dueOrdinal: dueOrdinal,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5111,6 +5697,326 @@ typedef $$RetryObligationsTableProcessedTableManager =
       (StoredRetryObligation, $$RetryObligationsTableReferences),
       StoredRetryObligation,
       PrefetchHooks Function({bool itemId, bool originReviewId})
+    >;
+typedef $$ScopeAnswerOrdinalsTableCreateCompanionBuilder =
+    ScopeAnswerOrdinalsCompanion Function({
+      required String collectionId,
+      required String direction,
+      required int ordinal,
+      required int revision,
+      Value<int> rowid,
+    });
+typedef $$ScopeAnswerOrdinalsTableUpdateCompanionBuilder =
+    ScopeAnswerOrdinalsCompanion Function({
+      Value<String> collectionId,
+      Value<String> direction,
+      Value<int> ordinal,
+      Value<int> revision,
+      Value<int> rowid,
+    });
+
+final class $$ScopeAnswerOrdinalsTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $ScopeAnswerOrdinalsTable,
+          ScopeAnswerOrdinal
+        > {
+  $$ScopeAnswerOrdinalsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CollectionsTable _collectionIdTable(_$PikoDatabase db) => db
+      .collections
+      .createAlias('scope_answer_ordinals__collection_id__collections__id');
+
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
+    final manager = $$CollectionsTableTableManager(
+      $_db,
+      $_db.collections,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ScopeAnswerOrdinalsTableFilterComposer
+    extends Composer<_$PikoDatabase, $ScopeAnswerOrdinalsTable> {
+  $$ScopeAnswerOrdinalsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ordinal => $composableBuilder(
+    column: $table.ordinal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CollectionsTableFilterComposer get collectionId {
+    final $$CollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ScopeAnswerOrdinalsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $ScopeAnswerOrdinalsTable> {
+  $$ScopeAnswerOrdinalsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ordinal => $composableBuilder(
+    column: $table.ordinal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CollectionsTableOrderingComposer get collectionId {
+    final $$CollectionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ScopeAnswerOrdinalsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $ScopeAnswerOrdinalsTable> {
+  $$ScopeAnswerOrdinalsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<int> get ordinal =>
+      $composableBuilder(column: $table.ordinal, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  $$CollectionsTableAnnotationComposer get collectionId {
+    final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ScopeAnswerOrdinalsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $ScopeAnswerOrdinalsTable,
+          ScopeAnswerOrdinal,
+          $$ScopeAnswerOrdinalsTableFilterComposer,
+          $$ScopeAnswerOrdinalsTableOrderingComposer,
+          $$ScopeAnswerOrdinalsTableAnnotationComposer,
+          $$ScopeAnswerOrdinalsTableCreateCompanionBuilder,
+          $$ScopeAnswerOrdinalsTableUpdateCompanionBuilder,
+          (ScopeAnswerOrdinal, $$ScopeAnswerOrdinalsTableReferences),
+          ScopeAnswerOrdinal,
+          PrefetchHooks Function({bool collectionId})
+        > {
+  $$ScopeAnswerOrdinalsTableTableManager(
+    _$PikoDatabase db,
+    $ScopeAnswerOrdinalsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ScopeAnswerOrdinalsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ScopeAnswerOrdinalsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ScopeAnswerOrdinalsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> collectionId = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<int> ordinal = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ScopeAnswerOrdinalsCompanion(
+                collectionId: collectionId,
+                direction: direction,
+                ordinal: ordinal,
+                revision: revision,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String collectionId,
+                required String direction,
+                required int ordinal,
+                required int revision,
+                Value<int> rowid = const Value.absent(),
+              }) => ScopeAnswerOrdinalsCompanion.insert(
+                collectionId: collectionId,
+                direction: direction,
+                ordinal: ordinal,
+                revision: revision,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ScopeAnswerOrdinalsTable, ScopeAnswerOrdinal>(
+                    table,
+                  ),
+                  $$ScopeAnswerOrdinalsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({collectionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (collectionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.collectionId,
+                                referencedTable:
+                                    $$ScopeAnswerOrdinalsTableReferences
+                                        ._collectionIdTable(db),
+                                referencedColumn:
+                                    $$ScopeAnswerOrdinalsTableReferences
+                                        ._collectionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ScopeAnswerOrdinalsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $ScopeAnswerOrdinalsTable,
+      ScopeAnswerOrdinal,
+      $$ScopeAnswerOrdinalsTableFilterComposer,
+      $$ScopeAnswerOrdinalsTableOrderingComposer,
+      $$ScopeAnswerOrdinalsTableAnnotationComposer,
+      $$ScopeAnswerOrdinalsTableCreateCompanionBuilder,
+      $$ScopeAnswerOrdinalsTableUpdateCompanionBuilder,
+      (ScopeAnswerOrdinal, $$ScopeAnswerOrdinalsTableReferences),
+      ScopeAnswerOrdinal,
+      PrefetchHooks Function({bool collectionId})
     >;
 typedef $$LearningIdentitySequenceTableCreateCompanionBuilder =
     LearningIdentitySequenceCompanion Function({
@@ -5464,6 +6370,8 @@ class $PikoDatabaseManager {
       $$RegularReviewsTableTableManager(_db, _db.regularReviews);
   $$RetryObligationsTableTableManager get retryObligations =>
       $$RetryObligationsTableTableManager(_db, _db.retryObligations);
+  $$ScopeAnswerOrdinalsTableTableManager get scopeAnswerOrdinals =>
+      $$ScopeAnswerOrdinalsTableTableManager(_db, _db.scopeAnswerOrdinals);
   $$LearningIdentitySequenceTableTableManager get learningIdentitySequence =>
       $$LearningIdentitySequenceTableTableManager(
         _db,

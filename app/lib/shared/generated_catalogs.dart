@@ -725,6 +725,14 @@ const copyCatalog = <String, Object?>{
 "de": "Beispielwiederholung · Bewertungen und Fortschritt bleiben nur im Seitenspeicher. Keine echte Planung oder FSRS-Berechnung.",
 "en": "Sample review · grades and progress stay in page memory only. No real scheduling or FSRS calculations.",
 },
+"learn.retryLoadFailed": <String, Object?>{
+"de": "Der Wiederholungsstand konnte nicht geladen werden. Bitte erneut versuchen.",
+"en": "Retry state could not be loaded. Try again.",
+},
+"learn.retryPending": <String, Object?>{
+"de": "Vor der Wiederholung sind weitere bewertete Antworten in dieser Sammlung und Richtung nötig. Du kannst die Sitzung verlassen und später zurückkehren.",
+"en": "More graded answers in this Collection and direction are needed before retrying. You can leave and return later.",
+},
 "learn.revealCue": <String, Object?>{
 "de": "Zum Aufdecken antippen",
 "en": "Tap to reveal",

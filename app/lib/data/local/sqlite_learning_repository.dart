@@ -4,8 +4,10 @@ import 'package:uuid/uuid.dart';
 import '../learning_item.dart';
 import '../regular_review.dart';
 import '../retry_obligation.dart';
+import '../retry_answer.dart';
 import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
+import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
 
 final class SqliteLearningRepository implements RegularReviewWriter {
@@ -73,6 +75,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       originReviewId: row.originReviewId,
       createdAt: row.createdAt,
       expiresAt: row.expiresAt,
+      errorCount: row.errorCount,
+      dueOrdinal: row.dueOrdinal,
     );
     final origin =
         await (database.select(database.regularReviews)
@@ -173,42 +177,180 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     return due;
   }
 
-  Future<void> _completeSuccessfulRetry(
+  Future<ScopeAnswerState> _scopeState(
+    String collectionId,
+    LearningDirection direction,
+  ) async {
+    final row =
+        await (database.select(database.scopeAnswerOrdinals)..where(
+              (row) =>
+                  row.collectionId.equals(collectionId) &
+                  row.direction.equals(direction.name),
+            ))
+            .getSingleOrNull();
+    final result = ScopeAnswerState(
+      collectionId: collectionId,
+      direction: direction,
+      ordinal: row?.ordinal ?? 0,
+      revision: row?.revision ?? 0,
+    );
+    result.validate();
+    return result;
+  }
+
+  Future<ScopeAnswerState> _advanceScope(ScopeAnswerState before) async {
+    final after = ScopeAnswerState(
+      collectionId: before.collectionId,
+      direction: before.direction,
+      ordinal: before.ordinal + 1,
+      revision: before.revision + 1,
+    );
+    after.validate();
+    await database
+        .into(database.scopeAnswerOrdinals)
+        .insertOnConflictUpdate(
+          ScopeAnswerOrdinalsCompanion.insert(
+            collectionId: after.collectionId,
+            direction: after.direction.name,
+            ordinal: after.ordinal,
+            revision: after.revision,
+          ),
+        );
+    return after;
+  }
+
+  Future<RetryState> _retryState(CollectionReviewGateway scope, DateTime at) =>
+      database.transaction(() async {
+        final rounds = await _pendingRetries(scope, at);
+        final items = await _scopedItems(scope);
+        final ordinal = await _scopeState(scope.collectionId, scope.direction);
+        return RetryState(scope: ordinal, items: items, rounds: rounds);
+      });
+
+  Future<RetrySelection> _initialSelection(
+    CollectionReviewGateway scope,
+    DateTime cutoff,
+  ) => database.transaction(() async {
+    if (!cutoff.isUtc) {
+      throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
+    }
+    final state = await _retryState(scope, cutoff);
+    final pending = state.rounds.map((round) => round.itemId).toSet();
+    return RetrySelection(
+      retries: state,
+      regular: state.items
+          .where(
+            (item) =>
+                !pending.contains(item.id) && !item.card.due.isAfter(cutoff),
+          )
+          .toList(),
+    );
+  });
+
+  bool _sameItem(LearningItemRecord actual, LearningItemRecord expected) =>
+      actual.id == expected.id &&
+      actual.entryId == expected.entryId &&
+      actual.direction == expected.direction &&
+      actual.formatVersion == expected.formatVersion &&
+      actual.generation == expected.generation &&
+      actual.reviewRevision == expected.reviewRevision &&
+      actual.cardJson == expected.cardJson;
+
+  Future<RetryAnswerReceipt> _answerRetry(
     CollectionReviewGateway scope,
     RetryObligation expected,
-    DateTime answeredAt,
+    LearningItemRecord? expectedPrior,
+    LearningRating rating,
+    DateTime at,
   ) async {
     expected.validate();
-    if (!answeredAt.isUtc || answeredAt.isBefore(expected.createdAt)) {
+    expectedPrior?.card;
+    if (!at.isUtc || at.isBefore(expected.createdAt)) {
       throw ArgumentError.value(
-        answeredAt,
+        at,
         'answeredAt',
         'Must be UTC and not before the round',
       );
     }
-    await database.transaction(() async {
+    final result = await database.transaction<RetryAnswerReceipt?>(() async {
       final items = await _scopedItems(scope);
-      final matches = items.where((item) => item.id == expected.itemId);
-      if (matches.length != 1) throw RegularReviewFailure.outOfScope;
-      final item = matches.single;
-      if (item.generation != expected.generation) throw RetryFailure.staleState;
+      final item = items
+          .where((item) => item.id == expected.itemId)
+          .firstOrNull;
+      if (item == null) throw RegularReviewFailure.outOfScope;
+      if (item.generation != expected.generation ||
+          expectedPrior != null && !_sameItem(item, expectedPrior)) {
+        throw RetryFailure.staleState;
+      }
       final actual = await _retryFor(item);
       if (actual == null) throw RetryFailure.notFound;
       if (!actual.sameStateAs(expected)) throw RetryFailure.staleState;
-      if (!answeredAt.isBefore(actual.expiresAt)) {
-        // Commit observed expiry, but never count it as a successful answer.
+      if (!at.isBefore(actual.expiresAt)) {
         await (database.delete(
           database.retryObligations,
         )..where((row) => row.id.equals(actual.id))).go();
-        return;
+        return null; // Published expiry is not an answer and never advances count.
       }
-      await (database.delete(
-        database.retryObligations,
-      )..where((row) => row.id.equals(actual.id))).go();
+      final last = item.card.lastReview;
+      if (last != null && at.isBefore(last)) {
+        throw ArgumentError.value(
+          at,
+          'answeredAt',
+          'Must not precede regular review',
+        );
+      }
+      final before = await _scopeState(scope.collectionId, scope.direction);
+      if (before.ordinal < actual.dueOrdinal) throw RetryFailure.notEligible;
+      final after = await _advanceScope(before);
+      final RetryObligation? next;
+      if (rating == LearningRating.again) {
+        final errors = actual.errorCount + 1;
+        next = RetryObligation(
+          id: actual.id,
+          itemId: actual.itemId,
+          generation: actual.generation,
+          revision: actual.revision + 1,
+          originReviewId: actual.originReviewId,
+          createdAt: actual.createdAt,
+          expiresAt: actual.expiresAt,
+          errorCount: errors,
+          dueOrdinal: after.ordinal + retryGapAfterError(errors),
+        );
+        next.validate();
+        await (database.update(
+          database.retryObligations,
+        )..where((row) => row.id.equals(actual.id))).write(
+          RetryObligationsCompanion(
+            revision: Value(next.revision),
+            errorCount: Value(next.errorCount),
+            dueOrdinal: Value(next.dueOrdinal),
+          ),
+        );
+      } else {
+        next = null;
+        await (database.delete(
+          database.retryObligations,
+        )..where((row) => row.id.equals(actual.id))).go();
+      }
+      return RetryAnswerReceipt(
+        prior: item,
+        retryPrior: actual,
+        retryNext: next,
+        scopePrior: before,
+        scopeNext: after,
+        rating: rating,
+        answeredAt: at,
+      );
     });
-    // Expiration is reported after its owned transaction can commit the removal.
-    if (!answeredAt.isBefore(expected.expiresAt)) throw RetryFailure.expired;
+    if (result == null) throw RetryFailure.expired;
+    return result;
   }
+
+  Future<RetryAnswerReceipt> _completeSuccessfulRetry(
+    CollectionReviewGateway scope,
+    RetryObligation expected,
+    DateTime answeredAt,
+  ) => _answerRetry(scope, expected, null, LearningRating.good, answeredAt);
 
   /// Accepts one regular review of exactly the caller's displayed prior state.
   @override
@@ -244,14 +386,14 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         database.learningItems,
       )..where((item) => item.id.equals(expectedPrior.id))).getSingleOrNull();
       if (row == null) throw RegularReviewFailure.itemNotFound;
+      final entry = await (database.select(
+        database.vocabularyEntries,
+      )..where((entry) => entry.id.equals(row.entryId))).getSingleOrNull();
+      if (entry == null) throw RegularReviewFailure.itemNotFound;
       if (scope != null) {
         // Recheck authoritative ownership in the event/card write transaction.
         // Neither a discovered list nor the caller's prior can establish scope.
-        final entry = await (database.select(
-          database.vocabularyEntries,
-        )..where((entry) => entry.id.equals(row.entryId))).getSingleOrNull();
-        if (entry == null ||
-            entry.collectionId != scope.collectionId ||
+        if (entry.collectionId != scope.collectionId ||
             row.direction != scope.direction.name) {
           throw RegularReviewFailure.outOfScope;
         }
@@ -287,6 +429,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         rating: rating,
         reviewedAt: reviewedAt,
       );
+      final scopePrior = await _scopeState(entry.collectionId, prior.direction);
+      final scopeNext = await _advanceScope(scopePrior);
       final event = RegularReviewRecord(
         id: const Uuid().v4(),
         itemId: prior.id,
@@ -325,6 +469,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           originReviewId: event.id,
           createdAt: reviewedAt,
           expiresAt: LearningDay.nextBoundaryUtc(reviewedAt),
+          errorCount: 1,
+          dueOrdinal: scopeNext.ordinal + retryGapAfterError(1),
         );
         retryNext.validate();
         await database
@@ -337,6 +483,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
                 originReviewId: retryNext.originReviewId,
                 createdAt: retryNext.createdAt.toIso8601String(),
                 expiresAt: retryNext.expiresAt.toIso8601String(),
+                errorCount: Value(retryNext.errorCount),
+                dueOrdinal: Value(retryNext.dueOrdinal),
               ),
             );
       } else {
@@ -356,6 +504,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         event: event,
         retryPrior: retryPrior,
         retryNext: retryNext,
+        scopePrior: scopePrior,
+        scopeNext: scopeNext,
       );
     });
   }
@@ -424,7 +574,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 }
 
 /// Fixed Collection/direction boundary, not a due set or session launcher.
-final class CollectionReviewGateway implements ScopedReviewSource {
+final class CollectionReviewGateway implements RetryReviewSource {
   const CollectionReviewGateway._(
     this._repository,
     this.collectionId,
@@ -451,10 +601,30 @@ final class CollectionReviewGateway implements ScopedReviewSource {
 
   /// Storage boundary only: future reinforcement processing owns answer policy.
   /// This removes current-round state, never writes FSRS or regular history.
-  Future<void> completeSuccessfulRetry({
+  Future<RetryAnswerReceipt> completeSuccessfulRetry({
     required RetryObligation expected,
     required DateTime answeredAt,
   }) => _repository._completeSuccessfulRetry(this, expected, answeredAt);
+
+  @override
+  Future<RetryState> retryState({required DateTime at}) =>
+      _repository._retryState(this, at);
+  @override
+  Future<RetrySelection> initialSelection({required DateTime cutoff}) =>
+      _repository._initialSelection(this, cutoff);
+  @override
+  Future<RetryAnswerReceipt> answerRetry({
+    required LearningItemRecord expectedPrior,
+    required RetryObligation expectedRetry,
+    required LearningRating rating,
+    required DateTime answeredAt,
+  }) => _repository._answerRetry(
+    this,
+    expectedRetry,
+    expectedPrior,
+    rating,
+    answeredAt,
+  );
 
   @override
   Future<RegularReviewReceipt> review({

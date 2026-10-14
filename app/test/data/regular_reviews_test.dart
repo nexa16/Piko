@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:piko/data/collections_repository.dart';
 import 'package:piko/data/learning_item.dart';
 import 'package:piko/data/regular_review.dart';
+import 'package:piko/data/retry_obligation.dart';
 import 'package:piko/data/vocabulary_deletion.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/data/local/piko_database.dart';
@@ -111,8 +112,19 @@ class Fixture {
     final retry = (await source.pendingRetries(
       at: at,
     )).singleWhere((retry) => retry.itemId == item.id);
+    await makeRetryEligible(retry);
     await source.completeSuccessfulRetry(expected: retry, answeredAt: at);
   }
+
+  /// Explicit seeded ordinal for completion-boundary fixtures. Earned-gap tests
+  /// use actual other graded answers; production never calls this fixture helper.
+  Future<void> makeRetryEligible(RetryObligation retry) => db.customStatement(
+    'INSERT INTO scope_answer_ordinals (collection_id,direction,ordinal,revision) '
+    'SELECT v.collection_id,l.direction,?,0 FROM learning_items l '
+    'JOIN vocabulary_entries v ON v.id=l.entry_id WHERE l.id=? '
+    'ON CONFLICT(collection_id,direction) DO UPDATE SET ordinal=max(ordinal,excluded.ordinal)',
+    [retry.dueOrdinal, retry.itemId],
+  );
 }
 
 void main() {
