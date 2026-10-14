@@ -1,5 +1,9 @@
 # Decision log
 
+## CARD-UI-026 — retained language/direction/progress context — 2026-10-14
+
+Close the deferred progress portion only after real retry-aware unique counters and UX-CARD-012 presentation. Two actual-route cases cover both translation directions with English/German UI: hidden prompt, both-language revealed answer, one fixed direction, unchanged 0/1 progress through Incorrect/wait and successful retry advancing to1/1 with first-try still0. They pass in the related 19-case batch with clean analysis. No regular receipt count, fake progress, summary or correction is substituted; Android remains pending.
+
 ## CARD-UI-024 — no prior-error question clue — 2026-10-14
 
 Two English/German real-route cases use an actual retry with prior errors and literal mistake-looking numeric vocabulary. Hidden/revealed card text and semantics contain only the stored language text plus the hidden cue; aggregate completed/first-try counters are separate, never a per-question error count. Exact full storage survives reveal. Preserve literal user wording rather than filtering it as metadata. These cases pass in the related 19-case batch with clean analysis; Android remains pending.
