@@ -1,5 +1,9 @@
 # Decision log
 
+## DATA-005 — minimal logical retention acceptance — 2026-10-14
+
+The first release retains only the existing product-state tables and interface locale. A file-backed acceptance test inventories every table/column and executes a real regular error, repeated reinforcement errors and success before reopening storage: one regular review remains, the completed current obligation is removed, and no retry-attempt or typed-answer history is added. The test passes in the 39-case focused storage/summary/count batch. This records logical application retention, not physical secure deletion or an operating-system backup decision; Android acceptance remains pending.
+
 ## CARD-UI-026 — retained language/direction/progress context — 2026-10-14
 
 Close the deferred progress portion only after real retry-aware unique counters and UX-CARD-012 presentation. Two actual-route cases cover both translation directions with English/German UI: hidden prompt, both-language revealed answer, one fixed direction, unchanged 0/1 progress through Incorrect/wait and successful retry advancing to1/1 with first-try still0. They pass in the related 19-case batch with clean analysis. No regular receipt count, fake progress, summary or correction is substituted; Android remains pending.
