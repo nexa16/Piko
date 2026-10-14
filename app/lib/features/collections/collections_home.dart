@@ -113,7 +113,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Flexible(
+                Expanded(
                   child: Text(
                     copy.text('app.name'),
                     key: const ValueKey('home-brand'),

@@ -77,6 +77,13 @@ void main() {
         PikoButtonVariant.ghost,
       );
       expect(
+        tester.getRect(find.widgetWithText(PikoButton, 'Settings')).right,
+        closeTo(
+          tester.getRect(find.widgetWithText(PikoButton, 'New')).right,
+          0.01,
+        ),
+      );
+      expect(
         tester.getTopLeft(find.text('My collections')).dy -
             tester.getBottomLeft(find.text('Piko')).dy,
         greaterThanOrEqualTo(
