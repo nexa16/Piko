@@ -1,5 +1,11 @@
 # Decision log
 
+## CARD-UI-002 — unique per-launch success counters — 2026-10-14
+
+Interpret session counters per launch, not as persistent daily aggregates or carried prior-session success. Capture the immutable union of regular and initially pending item/generation identities. Complete each unique member only after accepted initial Good/Hard or successful reinforcement; only successful initial regular answers count first-try. Incorrect, reveal, modifiers, waits, failed/repeated submissions and expiry do not add success or change total. Expiry can therefore end work below 100%. This is an implementation interpretation, not an additional owner quote.
+
+Five real-SQLite session cases verify counts/pending, resumed initial union, immutable/idempotent snapshots, write/read failure and stale replay, accepted post-stop drain, and expiry without success. Retain the latest accepted receipt's exact prior/next counter context for later correction, not an attempt history. The related five-spec batch passes 19 focused cases with clean analysis; presentation and its shared adapter acceptance are committed separately. Android remains pending.
+
 ## SESSION-019 — newly generated resumed question order — 2026-10-14
 
 When initial discovery contains pending same-day retries, generate a fresh shuffled order for the complete captured regular membership rather than restoring a previous sequence. Eligible captured retries retain priority; ineligible rounds never bypass their earned gap/persisted wait. Keep ordinary launches unchanged, with no stored sequence, schema, filler or repeated due discovery. An optional Random input makes ordering acceptance deterministic; production uses the platform generator. A random launch is not required to differ from every prior permutation.

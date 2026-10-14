@@ -8,6 +8,7 @@ import '../../data/retry_answer.dart';
 import '../../data/retry_obligation.dart';
 import 'learning_scheduler.dart';
 import 'regular_grading_coordinator.dart';
+import 'learning_session_progress.dart';
 
 /// Owns captured regular membership and its actual scope-bound reinforcement.
 final class DueLearningSession extends ChangeNotifier implements HardSelection {
@@ -27,6 +28,14 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       hasInitialWork =
           members.isNotEmpty ||
           (selection?.retries.rounds.isNotEmpty ?? false) {
+    _progress = LearningSessionProgress(
+      members: {
+        for (final item in members)
+          (itemId: item.id, generation: item.generation),
+        for (final round in selection?.retries.rounds ?? <RetryObligation>[])
+          (itemId: round.itemId, generation: round.generation),
+      },
+    );
     _grading = GradingCoordinator<LearningAnswerReceipt>(
       record: _recordAnswer,
       // Drain includes session receipt bookkeeping, not just the database write.
@@ -109,6 +118,16 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   Object? _selectionError;
   LearningAnswerReceipt? _lastAnswer;
   LearningAnswerReceipt? get lastAnswer => _lastAnswer;
+  late LearningSessionProgress _progress;
+  LearningSessionProgress get progress => _progress;
+  SessionProgressChange? _lastProgressChange;
+  SessionProgressChange? get lastProgressChange => _lastProgressChange;
+  int get pendingItemCount => {
+    for (final item in unreviewedMembers)
+      (itemId: item.id, generation: item.generation),
+    for (final round in _rounds.values)
+      (itemId: round.itemId, generation: round.generation),
+  }.length;
   bool get currentIsRetry => _currentRetry != null;
   bool get hasPendingRetryWork => _rounds.isNotEmpty;
   final List<RegularReviewReceipt> _receipts = [];
@@ -433,6 +452,13 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       if (receipt != null) {
         // Retain accepted writes even after stop/disposal, without late UI changes.
         _lastAnswer = receipt;
+        final priorProgress = _progress;
+        _progress = _progress.accepting(receipt);
+        _lastProgressChange = SessionProgressChange(
+          receipt: receipt,
+          prior: priorProgress,
+          next: _progress,
+        );
         if (receipt is RegularReviewReceipt) {
           _receipts.add(receipt);
           _index++;
