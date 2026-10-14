@@ -867,6 +867,14 @@ const copyCatalog = <String, Object?>{
 "de": "Änderungen verwerfen",
 "en": "Discard changes",
 },
+"vocab.inlineDiscardFailed": <String, Object?>{
+"de": "Änderungen konnten nicht verworfen werden. Bitte versuche es erneut.",
+"en": "Couldn't discard changes. Please try again.",
+},
+"vocab.inlineDiscarding": <String, Object?>{
+"de": "Änderungen werden verworfen…",
+"en": "Discarding changes…",
+},
 "vocab.inlineDuplicate": <String, Object?>{
 "de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden.",
 "en": "This vocabulary pair already exists in this collection.",

@@ -520,6 +520,8 @@ globalThis.PIKO_COPY = {
     "vocab.inlineCollapse": {"en":"Collapse vocabulary editor","de":"Vokabeleditor einklappen"},
     "vocab.inlineFinish": {"en":"Finish editing","de":"Bearbeiten abschließen"},
     "vocab.inlineDiscard": {"en":"Discard changes","de":"Änderungen verwerfen"},
+    "vocab.inlineDiscardFailed": {"en":"Couldn't discard changes. Please try again.","de":"Änderungen konnten nicht verworfen werden. Bitte versuche es erneut."},
+    "vocab.inlineDiscarding": {"en":"Discarding changes…","de":"Änderungen werden verworfen…"},
     "vocab.inlineAutoSave": {"en":"Valid changes are saved automatically.","de":"Gültige Änderungen werden automatisch gespeichert."},
     "vocab.editPair": {"en":"Edit {target} · {native}","de":"{target} · {native} bearbeiten"},
     "vocab.loading": {"en":"Loading vocabulary…","de":"Vokabeln werden geladen…"},

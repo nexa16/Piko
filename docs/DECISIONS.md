@@ -1,5 +1,11 @@
 # Decision log
 
+## UX-COLL-012 — distinct Finish and Discard controls — 2026-10-14
+
+Before a change, show one collapse X; after a change, keep the existing Finish check and append a separate Discard X. Shared icon buttons supply canonical minimum targets, localized names/tooltips, visible focus and keyboard activation. Use only InlineVocabularyEditController.changedSinceOpening: pending/committed differences matter even when raw text appears to have returned to opening values. No widget-local rollback snapshot or comparison replaces the repository-issued opening boundary.
+
+Discard starts the controller's serialized rollback and registers accepted work before any lifecycle cleanup. While pending, disable fields, row transitions, competing edit/deletion controls and vocabulary retry independently of the switch flag. Success updates a potentially lagging compact snapshot and retires only the initiating editor under identity/generation/operation guards; it never navigates. Failure retains the same raw TextControllers/selection and restores focus only on the current route. Separate localized rollback failure/pending copy and explicit Retry call Discard again, not the autosave worker. Invalid raw input can discard; duplicate opening-pair conflicts remain visible without overwriting another entry. Existing controller drainage keeps accepted rollback safe through replacement/disposal; no late completion changes another editor or focuses a covered route. Eight focused host widget tests cover real persistence/progress, delayed saves, retry/conflict, EN/DE names/targets/Tab+Enter and narrow enlarged German with a simulated keyboard. Android acceptance remains pending.
+
 ## RETRY-003 — Preserve pending retry eligibility on resume — 2026-10-14
 
 The owner confirmed that resuming during the same learning day keeps the remaining gap and wait. Preserve the pending retry's progress and existing eligibility timing rather than starting again or bypassing the remaining requirement. Eligible retries take priority; the learning-day boundary still expires unfinished obligations. This is an accepted behavioral decision, not a claim that retry persistence is implemented.

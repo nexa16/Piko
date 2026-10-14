@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Distinct inline Finish and Discard — UX-COLL-012
+
+The binding inline header now presents one X before changes, then a Finish check followed by a separate Discard X. Both use the shared ghost icon button, canonical ≥44px targets and existing 12px gap; no new independent geometry is introduced. Distinct localized semantics/tooltips and Tab order match the two different operations. Header text wraps within its remaining width at German 392px/200%, with both actions reachable above a simulated keyboard. Pending rollback keeps both controls visible but disabled and uses localized pending/error feedback. Host evidence is recorded under UX-COLL-012; actual Android editor acceptance remains pending.
+
 ## Collection compact editing and deletion — UX-COLL-011
 
 Stacked inline fields retain no outer field margins, the shared field-label gap and existing 12px field separation. A localized ≥44px X changes to a Finish editing check when the raw pair differs from its opening values, even after autosave; invalid edits stay open. Collection compact rows reuse the canonical swipe reveal rather than deleting on a gesture. Expanded editors offer red trash/icon text through the shared danger-ghost button. The latest Undo bar uses shared tint, 12px padding/gap and the existing control-radius adapter, wrapping its action at enlarged text sizes and bounding identifying vocabulary to two visible lines while retaining full semantics. No Discard placeholder is shipped. Host evidence includes 392px German at 200% with a simulated keyboard inset and reduced motion; actual Android evidence remains pending.

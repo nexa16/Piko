@@ -64,7 +64,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   final rowKeys = <String, GlobalKey>{};
   double topSpace = 0, bottomSpace = 0;
   int anchorRevision = 0;
-  bool get actionBusy => switching || widget.mutations?.isBusy == true;
+  bool get actionBusy =>
+      switching ||
+      editor?.edits.isDiscarding == true ||
+      widget.mutations?.isBusy == true;
 
   @override
   void initState() {
@@ -356,6 +359,49 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     _ => 'entry.saveFailed',
   };
 
+  Future<void> discardEditor(_Editor current) async {
+    if (actionBusy || !identical(editor, current)) return;
+    final version = generation;
+    final request = Object();
+    transition = request;
+    setState(() => switching = true);
+    var failed = false;
+    try {
+      final operation = current.edits.discard();
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      final restored = await operation;
+      if (!mounted ||
+          generation != version ||
+          !identical(editor, current) ||
+          !identical(transition, request)) {
+        return;
+      }
+      setState(() {
+        rows = [for (final row in rows) row.id == restored.id ? restored : row];
+        retireEditor(widget.onPendingWrites);
+      });
+    } catch (_) {
+      failed = true; // Controller retains the raw input and rollback error.
+    } finally {
+      if (mounted && identical(transition, request)) {
+        setState(() {
+          switching = false;
+          transition = null;
+        });
+      }
+      if (failed) restoreEditorFocus(current);
+    }
+  }
+
+  String discardErrorKey(Object error) => switch (error) {
+    VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
+    VocabularyValidation.entryNotFound ||
+    VocabularyValidation.collectionNotFound => 'entry.notFound',
+    _ => 'vocab.inlineDiscardFailed',
+  };
+
   Widget row(VocabularyRecord record) {
     final copy = PikoCopyScope.of(context);
     final current = editor?.edits.entryId == record.id ? editor : null;
@@ -404,7 +450,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         ),
         controller: target ? current.target : current.native,
         focusNode: target ? current.targetFocus : current.nativeFocus,
-        enabled: !switching && widget.mutations?.deletingId != record.id,
+        enabled:
+            !switching &&
+            !edits.isDiscarding &&
+            widget.mutations?.deletingId != record.id,
         style: TextStyle(
           fontSize: pikoDesign.dimension('typography.body'),
           fontWeight: pikoDesign.weight('components.fields.labelWeight'),
@@ -419,6 +468,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         onChanged: (value) {
           if (!identical(editor, current) ||
               switching ||
+              edits.isDiscarding ||
               widget.mutations?.deletingId == record.id) {
             return;
           }
@@ -465,6 +515,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               ),
               SizedBox(width: pikoDesign.dimension('spacing.3')),
               PikoIconButton(
+                key: ValueKey('inline-complete-${record.id}'),
                 icon: PikoIcon(
                   current.changed ? PikoIconName.check : PikoIconName.x,
                 ),
@@ -475,6 +526,15 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 ),
                 onPressed: actionBusy ? null : () => activateRow(null),
               ),
+              if (current.changed) ...[
+                SizedBox(width: pikoDesign.dimension('spacing.3')),
+                PikoIconButton(
+                  key: ValueKey('inline-discard-${record.id}'),
+                  icon: const PikoIcon(PikoIconName.x),
+                  semanticLabel: copy.text('vocab.inlineDiscard'),
+                  onPressed: actionBusy ? null : () => discardEditor(current),
+                ),
+              ],
             ],
           ),
           SizedBox(height: pikoDesign.dimension('spacing.3')),
@@ -495,7 +555,26 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 ),
               ),
             ),
-          if (error != null && error is! VocabularyValidation)
+          if (edits.discardError != null)
+            Padding(
+              padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  copy.text(discardErrorKey(edits.discardError!)),
+                  style: TextStyle(
+                    fontSize: pikoDesign.dimension('typography.small'),
+                    color: pikoDesign.color('danger'),
+                  ),
+                ),
+              ),
+            ),
+          if (edits.discardError != null)
+            PikoButton(
+              label: copy.text('action.retry'),
+              onPressed: actionBusy ? null : () => discardEditor(current),
+            )
+          else if (error != null && error is! VocabularyValidation)
             PikoButton(
               label: copy.text('action.retry'),
               onPressed: actionBusy || edits.isSaving ? null : edits.retry,
@@ -523,7 +602,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           SizedBox(height: pikoDesign.dimension('spacing.2')),
           Text(
             copy.text(
-              edits.isSaving
+              edits.isDiscarding
+                  ? 'vocab.inlineDiscarding'
+                  : edits.isSaving
                   ? 'entry.saving'
                   : error != null
                   ? 'entry.unsaved'
@@ -702,7 +783,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             Text(copy.text('vocab.loadFailed')),
             PikoButton(
               label: copy.text('action.retry'),
-              onPressed: () => setState(watch),
+              onPressed: editor?.edits.isDiscarding == true
+                  ? null
+                  : () => setState(watch),
             ),
           ],
           if (!waiting && loadError == null && rows.isEmpty)
