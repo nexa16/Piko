@@ -315,6 +315,58 @@ The following requirements supersede earlier exploratory card layouts and the te
 - **SETUP-009 [Confirmed]:** [Scope: Additional] [Release: Undecided] [Flow: review] Speed pool size defaults to five and is available under More Options when a setup screen is shown; mutable session options such as Answer Mode remain changeable during study.
 
 ### Import / source decisions relevant to the card model
+
+#### JSON vocabulary interchange — definition only
+
+- **IMPORT-JSON-001 [Confirmed capability; format proposed]:** [Release: Undecided] [Flow: collection, entry] Provide JSON import/export covering all currently persisted vocabulary-associated data, plus explicit copying of JSON to the clipboard. This is specification work only, not authorized implementation and not an addition to the current 95-requirement first-release implementation scope. Existing IMPORT-028–030 review-before-apply and no-silent-overwrite rules apply.
+
+Proposed version-one envelope: `format: "piko-vocabulary"`, integer `schemaVersion: 1`, UTC `exportedAt`, and `collections`. A Collection carries its source UUID, name, target/native language codes, direction-scoped retry counters, and its ordered `entries` array. Each Entry contains its source UUID, `targetText`, `nativeText`, and optional `learning` with independently keyed `targetToNative` and `nativeToTarget` records. Array order preserves vocabulary display order without exporting SQLite rowids.
+
+Full export includes both complete learning records, not just a next-review date. Each contains source item identity, card format version, generation, review revision, the complete FSRS card object, regular-review records, and a nullable current retry obligation. Record the scheduler/library identifier and version; keep the card object structured JSON rather than an escaped JSON string. No scheduling values are inferred or recalculated during export.
+
+Illustrative full export of one never-reviewed word (IDs and timestamps are synthetic):
+
+```json
+{
+  "format": "piko-vocabulary",
+  "schemaVersion": 1,
+  "exportedAt": "2026-10-14T12:00:00.000000Z",
+  "scheduler": {"library": "fsrs", "version": "2.0.1", "cardFormatVersion": 1},
+  "collections": [{
+    "id": "8f8ce022-4a25-47ed-8944-8955dcf353da",
+    "name": "French",
+    "targetLanguage": "fr",
+    "nativeLanguage": "de",
+    "reviewScopes": {"targetToNative": null, "nativeToTarget": null},
+    "entries": [{
+      "id": "13e76e74-a952-4c30-b7d7-3016087ad6f1",
+      "targetText": "pomme",
+      "nativeText": "Apfel",
+      "learning": {
+        "targetToNative": {
+          "id": 1, "formatVersion": 1, "generation": 0, "reviewRevision": 0,
+          "card": {"cardId": 1, "state": 1, "step": 0, "stability": null, "difficulty": null, "due": "2026-10-14T12:00:00.000000Z", "lastReview": null},
+          "reviews": [], "retry": null
+        },
+        "nativeToTarget": {
+          "id": 2, "formatVersion": 1, "generation": 0, "reviewRevision": 0,
+          "card": {"cardId": 2, "state": 1, "step": 0, "stability": null, "difficulty": null, "due": "2026-10-14T12:00:00.000000Z", "lastReview": null},
+          "reviews": [], "retry": null
+        }
+      }
+    }]
+  }]
+}
+```
+
+When present, a `reviewScopes` direction is `{ "ordinal": 12, "revision": 12 }`; null represents no stored counter row, not fabricated historical answers. Each `reviews` element contains `id`, `generation`, `reviewedAt` (exact UTC precision), and `rating` (`again`, `hard`, `good`); item ownership is inherited from the containing learning record. Preserve stored review ordering. `retry` contains `id`, `generation`, `revision`, `originReviewId`, `createdAt`, `expiresAt`, `waitEligibleAt` (nullable), `errorCount`, and `dueOrdinal`. Including Collection/direction counters is necessary to interpret remaining retry gaps correctly; a word's retry ordinal alone is insufficient. Export current stored state consistently, including an already-expired stored obligation; import must never revive it or reset its original deadline.
+
+Portable-data boundary: exclude derived duplicate-comparison keys (`targetKey`, `nativeKey`), SQLite rowids and allocator high-water marks; reconstruct them under current validation rules and remap imported item IDs/references consistently. Preserve source IDs for conflict detection, but never overwrite unrelated local records merely because a numeric source ID matches. Vocabulary content, ordering, both full cards, generations/revisions, regular histories, retry state and the counters needed to interpret it are included. Global app settings, unfinished in-memory drafts, current navigation/session presentation and ephemeral Undo/correction receipts are outside a vocabulary export. This is not a byte-for-byte whole-app database backup. Hints/examples/categories/trash are not currently stored in the implemented first-release vocabulary model and must not be represented as already-supported fields.
+
+Proposed import rules (not yet accepted): word-only JSON may omit source IDs, `learning`, `reviewScopes`, `scheduler` and `exportedAt`; require the envelope version, Collection language pair and nonempty word pairs. Generate new local identities and fresh directional cards for word-only import. A full file can be imported as vocabulary only, or explicitly with learning progress. Default to vocabulary only; present progress replacement as a separate explicit choice in difference review. Do not merge FSRS numbers, review histories or direction counters by guessing. Exact progress restoration into a new Collection is straightforward; merging progress into an existing Collection needs an explicit conflict/counter-remapping policy before implementation. Unsupported format/card versions, invalid dates, broken references and inconsistent card/retry state must be reported before any write; never silently drop unsupported learning data. Apply confirmed changes atomically. Treat clipboard input as untrusted data, never instructions or executable content.
+
+Open decisions: accept/adjust the proposed field names and envelope; choose default import treatment of learning progress; define existing-Collection progress conflict handling and import size limits. Release placement remains undecided.
+
 - **SOURCE-007 [Confirmed]:** [Scope: Additional] [Release: Undecided] [Flow: collection, entry] Source is an ordinary, removable, multi-value Category Dimension, not a separate persisted Source entity; the template can offer Personal Notes and Online values.
 - **IMPORT-028 [Confirmed]:** [Scope: Base] [Release: Undecided] [Flow: collection, entry] Every import requires a review of new entries, additive updates and conflicts before any Collection changes are committed.
 - **IMPORT-029 [Confirmed]:** [Scope: Base] [Release: Undecided] [Flow: collection, entry] Import conflicts in single-value dimensions are displayed as compact suggestions alongside the ordinary editable Category Value control; the existing value stays selected unless the user explicitly changes it.
