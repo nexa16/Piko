@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-I18N-001 — first-release interface catalog audit — 2026-10-14
+
+Review production screen, control, feedback and accessibility text against the single shared English/German catalog. The audit found 111 referenced copy keys across 62 non-generated Dart sources, with no direct natural-language widget literal requiring a production fix. Add regression guards for missing language entries and future direct literals, while retaining actual localized screen tests for behavior and enlarged-text layout. Both guards pass in the integrated host checkpoint. Developer exceptions, storage identifiers and stored user vocabulary are not interface copy; this audit does not claim final Android-wide accessibility or linguistic review.
+
 ## UX-REVIEW-004 — readable summary presentation — 2026-10-14
 
 Reuse the standard modal and existing English/German motivational copy. Move the binding mockup's 36px metric size and line heights into canonical design configuration; adapters consume those values without a second default. Large text stacks the two metrics rather than squeezing their labels. Each number and label forms one accessible metric. Eight focused English/German 320px/200% dismissal and readability cases pass; production presentation has no prototype notice or extra return CTA. Natural-completion lifecycle is separately tracked by REVIEW-003; Android verification remains pending.

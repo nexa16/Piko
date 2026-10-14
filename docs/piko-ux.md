@@ -67,7 +67,7 @@ CARD-UI-015 host evidence: the real revealed self-assessment card now places the
 
 - **UX-I18N-002 [Confirmed]:** [Release: First] [Flow: collection, entry, review, settings] Maintain one shared editable catalog for UI naming and English/German translations, consumed by the mockup and the application. The prototype supports live draft editing and export. Flutter consumes generated canonical catalogs through a shared widget context that rebuilds consumers when the interface locale changes.
 
-- **UX-I18N-001:** [Flow: collection, entry, review, settings] Every visible string, including status labels, tooltips, controls and feedback, is localizable. English is default, German is supported initially. (I18N-001–002)
+- **UX-I18N-001:** [Release: First] [Flow: collection, entry, review, settings] Every visible string, including status labels, tooltips, controls and feedback, is localizable. English is default, German is supported initially. Production controls consume the canonical shared catalog, including errors, dialog dismissal, review correction and summary semantics. A source audit and two regression checks verify referenced catalog keys have both translations and reject direct visible/accessibility string literals; stored vocabulary and non-rendered developer diagnostics are not interface translations. Existing English/German screen and enlarged-text tests remain the behavioral evidence; static scanning alone does not prove layout or translation quality. Host audit passed; final Android-wide accessibility acceptance remains pending. (I18N-001–002)
 
 
 ## Learning activity and streak — confirmed 2026-10-13
