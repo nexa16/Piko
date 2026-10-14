@@ -354,7 +354,7 @@ void main() {
           await tester.runAsync(() => rows(f.db, 'regular_reviews')),
           isEmpty,
         );
-        await tester.tap(button('Back'));
+        await tester.tap(button('Exit review'));
         await h.finish(tester);
         expect(route.session.isStopped, isTrue);
         expect(find.byType(ReviewSessionRoute), findsNothing);
@@ -687,7 +687,7 @@ void main() {
       expect(stored.single.targetText, 'Accepted word');
       expect(stored.single.nativeText, 'Eins');
       expect(h.sessions.single.members.single.entryId, f.entry.id);
-      await tester.tap(button('Back'));
+      await tester.tap(button('Exit review'));
       await h.finish(tester);
       expect(
         identical(tester.widget<TextField>(field(false)).controller, raw),
@@ -703,7 +703,7 @@ void main() {
   );
 
   testWidgets(
-    'session Back during admitted grade drains receipt; covered completion never pops cover and Back retries',
+    'session Exit during admitted grade drains receipt; covered completion never pops cover and Exit retries',
     (tester) async {
       final f = fixture();
       await tester.runAsync(f.initialize);
@@ -749,9 +749,12 @@ void main() {
         );
         await gated.entered.future;
       });
-      await tester.tap(button('Back'));
+      await tester.tap(button('Exit review'));
       await tester.pumpAndSettle();
-      expect(tester.widget<PikoButton>(button('Back')).onPressed, isNull);
+      expect(
+        tester.widget<PikoButton>(button('Exit review')).onPressed,
+        isNull,
+      );
       expect(session.isStopped, isTrue);
       await navigator.maybePop();
       await tester.pump();
@@ -773,8 +776,11 @@ void main() {
       expect(session.acceptedReviews.single, same(receipt));
       navigator.pop();
       await tester.pumpAndSettle();
-      expect(tester.widget<PikoButton>(button('Back')).onPressed, isNotNull);
-      await tester.tap(button('Back'));
+      expect(
+        tester.widget<PikoButton>(button('Exit review')).onPressed,
+        isNotNull,
+      );
+      await tester.tap(button('Exit review'));
       await tester.pumpAndSettle();
       expect(find.byType(ReviewSessionRoute), findsNothing);
       expect(find.text('home'), findsOneWidget);

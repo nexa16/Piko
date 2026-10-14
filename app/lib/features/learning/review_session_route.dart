@@ -25,10 +25,10 @@ class ReviewSessionRoute extends StatefulWidget {
 
 class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
   bool _exiting = false;
-  Future<void> _exit() async {
-    if (_exiting) return;
+  Future<void> _exit(DueLearningSession session) async {
+    if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
-    final session = widget.session;
+    if (route?.isCurrent != true) return;
     setState(() => _exiting = true);
     await session.stop();
     if (mounted && identical(session, widget.session)) {
@@ -57,10 +57,11 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final sessionForBuild = widget.session;
     return PopScope(
       canPop: !_exiting && widget.session.isStopped,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_exit());
+        if (!didPop) unawaited(_exit(sessionForBuild));
       },
       child: Scaffold(
         body: PikoPage(
@@ -70,10 +71,14 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
               PikoHeading(
                 title: copy.text('learn.longTitle'),
                 leading: PikoButton(
-                  label: copy.text('common.back'),
+                  label: copy.text(
+                    sessionForBuild.members.isEmpty
+                        ? 'common.back'
+                        : 'learn.exit',
+                  ),
                   icon: const PikoIcon(PikoIconName.arrowLeft),
                   variant: PikoButtonVariant.ghost,
-                  onPressed: _exiting ? null : _exit,
+                  onPressed: _exiting ? null : () => _exit(sessionForBuild),
                 ),
               ),
               Text(

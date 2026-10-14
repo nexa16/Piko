@@ -1,5 +1,13 @@
 # Decision log
 
+## CARD-UI-001 — explicit session Exit, correction portion pending — 2026-10-14
+
+Nonempty real review sessions use the canonical `learn.exit` label (Exit review / Wiederholung beenden) for the app-level leave action, with the existing shared ghost button and Lucide navigation arrow. Initial no-due return keeps Back. Align the binding mockup's nonempty navigation label while leaving its sample correction behavior unchanged. Exit stops and drains admitted work; it never grades an unanswered card, erases an accepted review or invokes correction.
+
+Capture the displayed session in both visible and system Back callbacks. Before stopping anything, reject disposed, covered or replaced-session callbacks; after drainage, only the same current route may pop. An old callback cannot end a newly installed session or navigate an unrelated route. Five new real-SQLite host widget tests cover English/German enlarged semantic/keyboard Exit, exact accepted-receipt/history/unanswered preservation, system Back, covered callbacks and same-State replacement. Existing pending-grade Exit/coverage/drain tests remain passing. All 438 Flutter and 14 Node tests pass with clean analysis, generator, browser syntax and diff checks.
+
+CARD-UI-001 remains In progress because its required separation from a working immediately-previous correction control is not yet integrated. Do not render a fake or disabled correction promise, add a speculative entrypoint interface, or claim rollback from Exit acceptance. UNDO-001 and CARD-UI-019/020 must provide the real correction action and complete the visible separation check; full card/retry/correction and Android acceptance remain pending.
+
 ## REVIEW-002 — honest initial no-due view — 2026-10-14
 
 The real session route displays `learn.noDueTitle` and `learn.noDueBody` only when the selected scoped session's initial membership is empty. Keep the fixed direction context and one existing safe Back returning to the same Collection. Do not manufacture a question, grade, completion result or progress. Never use regular-membership exhaustion as the empty discriminator: an Incorrect review can exhaust regular items while later reinforcement remains unresolved. When retry integration ships, pending same-day retries must take precedence before this no-due presentation is chosen; this step does not implement that queue or mark DATA-001 complete.

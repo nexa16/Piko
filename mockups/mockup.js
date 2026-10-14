@@ -36,7 +36,7 @@ function startReview(){const direction=document.getElementById('review-setup-dir
 let dialogReturnFocus=null;
 function popup(key,name=''){if(key&&!s.modal)dialogReturnFocus=document.activeElement;s.modal=key;s.modalName=name;overlay();}
 function title(key,heading,description){const contextual=['collection.title','learn.longTitle','learn.speedTitle'].includes(key);return '<h1>'+heading+'</h1>'+(contextual?'<div class="sub">'+description+'</div>':'');}
-function back(page){return '<button class="back" onclick="go(\''+page+'\')">'+uiIcon('back')+' '+t('common.back')+'</button>';}
+function back(page,key='common.back'){return '<button class="back" onclick="go(\''+page+'\')">'+uiIcon('back')+' '+t(key)+'</button>';}
 function button(key,action,style='',icon=''){return '<button type="button" class="btn '+style+'" onclick="'+action+'">'+icon+t(key)+'</button>';}
 function overview(){
  if(emptyCollections||!books.length)return '<header class="home-header"><span class="home-brand">'+t('app.name')+'</span>'+button('nav.settings',"go('settings')",'ghost',uiIcon('settings')+' ')+'</header><div class="head collection-heading"><h2>'+t('home.collections')+'</h2>'+button('action.new',"popup('dialog.newCollection')",'ghost',uiIcon('plus')+' ')+'</div><section class="card"><p class="meta empty-description">'+t('home.emptyDescription')+'</p>'+button('action.firstCollection',"popup('dialog.newCollection')",'primary')+'</section>';
@@ -81,8 +81,8 @@ function drawWords(){
 function learning(){
  if(!reviewSession)reviewSession={index:0,completed:12,total:30,correct:9,history:[],hard:false,direction:'targetNative',correction:false};
  const r=reviewSession,pairs=getCollectionEntries(),codes=getCollectionCodes(),reverse=r.direction==='nativeTarget',pair=pairs.length?pairs[r.index%pairs.length]:['',''],prompt=pair[reverse?1:0],answer=pair[reverse?0:1];
- const header=back('detail')+'<h1>'+esc(books[s.book][0])+'</h1>';
- if(!pairs.length||books[s.book][4]===0||new URLSearchParams(location.search).get('noDue')==='1')return header+'<section class="card review-empty"><h2>'+t('learn.noDueTitle')+'</h2><p class="meta">'+t('learn.noDueBody')+'</p>'+button('common.back',"go('detail')",'tint')+'</section><p class="caption">'+t('learn.prototype')+'</p>';
+ const noDue=!pairs.length||books[s.book][4]===0||new URLSearchParams(location.search).get('noDue')==='1',header=back('detail',noDue?'common.back':'learn.exit')+'<h1>'+esc(books[s.book][0])+'</h1>';
+ if(noDue)return header+'<section class="card review-empty"><h2>'+t('learn.noDueTitle')+'</h2><p class="meta">'+t('learn.noDueBody')+'</p>'+button('common.back',"go('detail')",'tint')+'</section><p class="caption">'+t('learn.prototype')+'</p>';
  const direction='<span class="review-direction">'+esc(reverse?codes[1]+' → '+codes[0]:codes[0]+' → '+codes[1])+'</span>';
  const progress='<div class="review-context">'+direction+'<span class="meta">'+t('learn.progress',{completed:r.completed,total:r.total,correct:r.correct})+'</span></div><div class="progress" role="progressbar" aria-label="'+t('learn.progressLabel')+'" aria-valuemin="0" aria-valuemax="'+r.total+'" aria-valuenow="'+r.completed+'"><div style="width:'+r.completed/r.total*100+'%"></div></div>';
  const previous=r.history.length&&!r.correction&&!s.revealed?button('learn.correctPrevious',"correctPreviousReview()",'review-correct-previous',uiIcon('back')+' '):'';

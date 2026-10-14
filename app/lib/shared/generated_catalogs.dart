@@ -644,6 +644,10 @@ const copyCatalog = <String, Object?>{
 "de": "Letzte Bewertung korrigieren — wähle die Bewertung erneut.",
 "en": "Correcting the previous review — choose its grade again.",
 },
+"learn.exit": <String, Object?>{
+"de": "Wiederholung beenden",
+"en": "Exit review",
+},
 "learn.hard": <String, Object?>{
 "de": "Schwer",
 "en": "Hard",
