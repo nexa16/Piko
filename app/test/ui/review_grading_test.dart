@@ -104,6 +104,7 @@ void withClock(launch.Harness h, PikoClock clock) {
 
 Future<void> reveal(WidgetTester tester) async {
   expect(actions, findsNothing);
+  await tester.ensureVisible(card);
   await tester.tap(card);
   await tester.pumpAndSettle();
   expect(actions, findsOneWidget);
@@ -587,6 +588,7 @@ void main() {
         await reveal(tester);
         clock.advance(const Duration(minutes: 13));
         (db.clock as MutablePikoClock).set(clock.now());
+        await tester.ensureVisible(gradeButton(AnswerGrade.correct));
         await tester.tap(gradeButton(AnswerGrade.correct));
         var drained = false;
         unawaited(session.awaitPending().then((_) => drained = true));
