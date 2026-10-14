@@ -9,6 +9,7 @@ import 'data/local/sqlite_vocabulary_deletion.dart';
 import 'features/collections/collections_home.dart';
 import 'features/entry/entry_session_controller.dart';
 import 'features/entry/entry_session_route.dart';
+import 'features/vocabulary/collection_vocabulary_mutations.dart';
 
 /// Owns private runtime storage. Injected feature repositories remain caller-owned.
 class PikoRuntime extends StatefulWidget {
@@ -61,6 +62,13 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  CollectionVocabularyMutations _collectionMutations(String id) =>
+      CollectionVocabularyMutations(
+        collectionId: id,
+        service: SqliteVocabularyDeletionService(database),
+        clock: database.clock,
+      );
+
   @override
   void dispose() {
     unawaited(closeDatabase());
@@ -73,5 +81,6 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     entrySessionFactory: _entrySession,
     vocabularyRepository: vocabulary,
     onPendingVocabularyWrites: trackWrites,
+    vocabularyMutationsFactory: _collectionMutations,
   );
 }

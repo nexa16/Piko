@@ -157,7 +157,9 @@ Finder collapse() => find.byWidgetPredicate(
   (w) =>
       w is PikoIconButton &&
       (w.semanticLabel == 'Collapse vocabulary editor' ||
-          w.semanticLabel == 'Vokabeleditor einklappen'),
+          w.semanticLabel == 'Vokabeleditor einklappen' ||
+          w.semanticLabel == 'Finish editing' ||
+          w.semanticLabel == 'Bearbeiten abschließen'),
 );
 Future<void> mount(
   WidgetTester tester,

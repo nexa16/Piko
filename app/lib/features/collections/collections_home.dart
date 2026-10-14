@@ -12,6 +12,7 @@ import '../../ui/piko_theme.dart';
 import 'collection_detail.dart';
 import 'create_collection.dart';
 import '../entry/entry_session_route.dart';
+import '../vocabulary/collection_vocabulary_mutations.dart';
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -19,12 +20,14 @@ class CollectionsHome extends StatefulWidget {
     this.entrySessionFactory,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
+    this.vocabularyMutationsFactory,
     super.key,
   });
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
+  final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -148,6 +151,8 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                                     widget.vocabularyRepository,
                                 onPendingVocabularyWrites:
                                     widget.onPendingVocabularyWrites,
+                                vocabularyMutationsFactory:
+                                    widget.vocabularyMutationsFactory,
                               ),
                             ),
                           ),

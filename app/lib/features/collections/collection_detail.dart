@@ -8,6 +8,7 @@ import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 import '../entry/entry_session_route.dart';
 import '../vocabulary/collection_vocabulary.dart';
+import '../vocabulary/collection_vocabulary_mutations.dart';
 
 String collectionLanguagePair(BuildContext context, CollectionRecord record) {
   final copy = PikoCopyScope.of(context);
@@ -39,6 +40,7 @@ class CollectionDetail extends StatefulWidget {
     this.entrySessionFactory,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
+    this.vocabularyMutationsFactory,
     super.key,
   });
   final CollectionsRepository repository;
@@ -46,6 +48,7 @@ class CollectionDetail extends StatefulWidget {
   final EntrySessionFactory? entrySessionFactory;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
+  final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -55,11 +58,36 @@ class _CollectionDetailState extends State<CollectionDetail> {
   bool _openingEntry = false;
   CollectionRecord? _currentCollection;
   CollectionRecord? _lastReadyCollection;
+  CollectionVocabularyMutations? _mutations;
+
+  void _mutationChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _createMutations() {
+    _mutations = widget.vocabularyMutationsFactory?.call(widget.collectionId);
+    _mutations?.addListener(_mutationChanged);
+  }
+
+  void _endMutations(ValueChanged<Future<void>>? register) {
+    final old = _mutations;
+    _mutations = null;
+    old?.removeListener(_mutationChanged);
+    if (old != null) {
+      final ending = old.end();
+      register?.call(ending);
+    }
+  }
 
   Future<void> _openEntry() async {
     final record = _currentCollection;
     final factory = widget.entrySessionFactory;
-    if (_openingEntry || record == null || factory == null) return;
+    if (_openingEntry ||
+        _mutations?.isBusy == true ||
+        record == null ||
+        factory == null) {
+      return;
+    }
     setState(() => _openingEntry = true);
     try {
       await Navigator.of(context).push<void>(
@@ -76,6 +104,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void initState() {
     super.initState();
+    _createMutations();
     _watch();
   }
 
@@ -87,11 +116,24 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void didUpdateWidget(CollectionDetail oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.collectionId != widget.collectionId ||
+        oldWidget.repository != widget.repository ||
+        oldWidget.vocabularyMutationsFactory !=
+            widget.vocabularyMutationsFactory) {
+      _endMutations(oldWidget.onPendingVocabularyWrites);
+      _createMutations();
+    }
     if (oldWidget.repository != widget.repository ||
         oldWidget.collectionId != widget.collectionId) {
       _lastReadyCollection = null;
       _watch();
     }
+  }
+
+  @override
+  void dispose() {
+    _endMutations(widget.onPendingVocabularyWrites);
+    super.dispose();
   }
 
   @override
@@ -187,7 +229,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
                               padding: EdgeInsets.all(
                                 pikoDesign.dimension('spacing.2'),
                               ),
-                              onPressed: _openingEntry ? null : _openEntry,
+                              onPressed:
+                                  _openingEntry || _mutations?.isBusy == true
+                                  ? null
+                                  : _openEntry,
                             ),
                           ),
                       ],
@@ -202,6 +247,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     collection: _lastReadyCollection!,
                     repository: widget.vocabularyRepository!,
                     onPendingWrites: widget.onPendingVocabularyWrites,
+                    mutations: _mutations,
                   ),
               ],
             );

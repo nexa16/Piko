@@ -1,14 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    show RenderAbstractViewport, ScrollDirection;
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../data/vocabulary_deletion.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
 import 'inline_vocabulary_edit_controller.dart';
+import 'collection_vocabulary_mutations.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -17,25 +22,40 @@ class CollectionVocabulary extends StatefulWidget {
     required this.collection,
     required this.repository,
     this.onPendingWrites,
+    this.mutations,
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final CollectionVocabularyMutations? mutations;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
 
 class _Editor {
   _Editor(VocabularyRecord record, VocabularyRepository repository)
-    : edits = InlineVocabularyEditController(
+    : opening = record,
+      edits = InlineVocabularyEditController(
         entry: record,
         repository: repository,
       ),
       target = TextEditingController(text: record.targetText),
-      native = TextEditingController(text: record.nativeText);
+      native = TextEditingController(text: record.nativeText) {
+    targetFocus.addListener(() {
+      if (targetFocus.hasFocus) lastFocus = targetFocus;
+    });
+    nativeFocus.addListener(() {
+      if (nativeFocus.hasFocus) lastFocus = nativeFocus;
+    });
+  }
   final InlineVocabularyEditController edits;
+  final VocabularyRecord opening;
+  bool get changed =>
+      edits.draft.targetText != opening.targetText ||
+      edits.draft.nativeText != opening.nativeText;
   final TextEditingController target, native;
   final targetFocus = FocusNode(), nativeFocus = FocusNode();
+  FocusNode? lastFocus;
 }
 
 class _CollectionVocabularyState extends State<CollectionVocabulary> {
@@ -48,16 +68,25 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   String? focusedId;
   _Editor? editor;
   final retired = <_Editor>{};
+  final rowKeys = <String, GlobalKey>{};
+  double topSpace = 0, bottomSpace = 0;
+  int anchorRevision = 0;
+  bool get actionBusy => switching || widget.mutations?.isBusy == true;
 
   @override
   void initState() {
     super.initState();
+    widget.mutations?.addListener(changed);
     watch();
   }
 
   @override
   void didUpdateWidget(CollectionVocabulary oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.mutations != widget.mutations) {
+      oldWidget.mutations?.removeListener(changed);
+      widget.mutations?.addListener(changed);
+    }
     if (oldWidget.collection.id != widget.collection.id ||
         oldWidget.repository != widget.repository) {
       retireEditor(oldWidget.onPendingWrites);
@@ -65,6 +94,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       rows = [];
       waiting = true;
       loadError = null;
+      rowKeys.clear();
+      topSpace = 0;
+      bottomSpace = 0;
+      anchorRevision++;
       watch();
     }
   }
@@ -80,6 +113,18 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         .listen(
           (value) {
             if (!mounted || version != generation) return;
+            final structural =
+                rows.map((r) => r.id).join('|') !=
+                value.map((r) => r.id).join('|');
+            final anchorId =
+                structural && value.any((r) => r.id == editor?.edits.entryId)
+                ? editor?.edits.entryId
+                : null;
+            final anchorBox = rowKeys[anchorId]?.currentContext
+                ?.findRenderObject();
+            final anchorTop = anchorBox is RenderBox && anchorBox.attached
+                ? anchorBox.localToGlobal(Offset.zero).dy
+                : null;
             if (editor != null &&
                 !value.any((row) => row.id == editor!.edits.entryId)) {
               retireEditor(widget.onPendingWrites);
@@ -89,6 +134,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               waiting = false;
               loadError = null;
             });
+            if (anchorId != null && anchorTop != null) {
+              preserveAnchor(anchorId, anchorTop, ++anchorRevision);
+            }
           },
           onError: (Object error) {
             if (mounted && version == generation) {
@@ -105,6 +153,107 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     if (mounted) setState(() {});
   }
 
+  void preserveAnchor(String id, double top, int revision, [int attempt = 0]) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || revision != anchorRevision || attempt > 3) return;
+      final position = Scrollable.maybeOf(context)?.position;
+      final box = rowKeys[id]?.currentContext?.findRenderObject();
+      if (position == null ||
+          !position.hasContentDimensions ||
+          box is! RenderBox ||
+          !box.attached) {
+        return;
+      }
+      final delta = box.localToGlobal(Offset.zero).dy - top;
+      if (delta.abs() < .5) return;
+      // Reconcile temporary leading compensation when an insertion reverses a
+      // prior removal, rather than forcing a short list to become scrollable.
+      if (delta > 0 && topSpace > 0) {
+        setState(() => topSpace -= delta.clamp(0, topSpace));
+        preserveAnchor(id, top, revision, attempt + 1);
+        return;
+      }
+      final desired = position.pixels + delta;
+      final viewportObject = RenderAbstractViewport.maybeOf(box);
+      final viewport = viewportObject is RenderBox
+          ? viewportObject as RenderBox
+          : null;
+      final content = context.findRenderObject();
+      // Measure visible slack from actual bounds. A short list can be hundreds
+      // of pixels below its viewport height despite maxScrollExtent == 0.
+      final slack = viewport != null && content is RenderBox
+          ? (viewport
+                        .localToGlobal(
+                          Offset(
+                            0,
+                            viewport.constraints.hasBoundedHeight
+                                ? viewport.constraints.maxHeight
+                                : position.viewportDimension,
+                          ),
+                        )
+                        .dy -
+                    content.localToGlobal(Offset(0, content.size.height)).dy)
+                .clamp(0, double.infinity)
+          : 0.0;
+      if (desired < position.minScrollExtent ||
+          desired > position.maxScrollExtent) {
+        setState(() {
+          if (desired < position.minScrollExtent) {
+            topSpace += position.minScrollExtent - desired;
+          } else {
+            bottomSpace += desired - position.maxScrollExtent + slack;
+          }
+        });
+        preserveAnchor(id, top, revision, attempt + 1);
+      } else {
+        position.jumpTo(desired);
+      }
+    });
+  }
+
+  Future<void> deleteEntry(VocabularyRecord entry) async {
+    final mutations = widget.mutations;
+    if (mutations == null || actionBusy) return;
+    final current = editor?.edits.entryId == entry.id ? editor : null;
+    final unrelated = current == null ? editor : null;
+    // Mutation owner enters busy synchronously before any accepted-save await.
+    final operation = mutations.delete(
+      entry,
+      acceptedWrites: current?.edits.awaitSavedEdits(),
+    );
+    widget.onPendingWrites?.call(operation);
+    try {
+      await operation;
+    } catch (_) {
+      /* Owner exposes localized row failure. */
+    }
+    restoreEditorFocus(unrelated);
+  }
+
+  Future<void> undoEntry(CollectionUndoOffer offer) async {
+    final mutations = widget.mutations;
+    if (mutations == null || actionBusy) return;
+    final current = editor;
+    final operation = mutations.undo(offer);
+    widget.onPendingWrites?.call(operation);
+    try {
+      await operation;
+    } catch (_) {
+      /* Offer retains localized failure. */
+    }
+    restoreEditorFocus(current);
+  }
+
+  void restoreEditorFocus(_Editor? previous) {
+    if (!mounted ||
+        previous == null ||
+        !identical(editor, previous) ||
+        ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
+    previous.lastFocus?.requestFocus();
+  }
+
   void retireEditor(
     ValueChanged<Future<void>>? register, {
     bool invalidateTransition = true,
@@ -116,6 +265,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     final old = editor;
     editor = null;
     if (old == null) return;
+    anchorRevision++;
+    topSpace = 0;
+    bottomSpace = 0;
     old.edits.removeListener(changed);
     final drain = old.edits.awaitSavedEdits();
     register?.call(drain);
@@ -133,7 +285,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   }
 
   Future<void> activateRow(String? id) async {
-    if (switching || editor?.edits.entryId == id && id != null) return;
+    if (actionBusy || editor?.edits.entryId == id && id != null) return;
     final current = editor;
     final version = generation;
     final request = Object();
@@ -235,7 +387,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         ),
         controller: target ? current.target : current.native,
         focusNode: target ? current.targetFocus : current.nativeFocus,
-        enabled: !switching,
+        enabled: !switching && widget.mutations?.deletingId != record.id,
         style: TextStyle(
           fontSize: pikoDesign.dimension('typography.body'),
           fontWeight: pikoDesign.weight('components.fields.labelWeight'),
@@ -248,7 +400,11 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             ? copy.text(errorKey(error!))
             : null,
         onChanged: (value) {
-          if (!identical(editor, current) || switching) return;
+          if (!identical(editor, current) ||
+              switching ||
+              widget.mutations?.deletingId == record.id) {
+            return;
+          }
           if (target) {
             edits.setTargetText(value);
           } else {
@@ -292,9 +448,15 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               ),
               SizedBox(width: pikoDesign.dimension('spacing.3')),
               PikoIconButton(
-                icon: const PikoIcon(PikoIconName.x),
-                semanticLabel: copy.text('vocab.inlineCollapse'),
-                onPressed: switching ? null : () => activateRow(null),
+                icon: PikoIcon(
+                  current.changed ? PikoIconName.check : PikoIconName.x,
+                ),
+                semanticLabel: copy.text(
+                  current.changed
+                      ? 'vocab.inlineFinish'
+                      : 'vocab.inlineCollapse',
+                ),
+                onPressed: actionBusy ? null : () => activateRow(null),
               ),
             ],
           ),
@@ -319,7 +481,27 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           if (error != null && error is! VocabularyValidation)
             PikoButton(
               label: copy.text('action.retry'),
-              onPressed: switching || edits.isSaving ? null : edits.retry,
+              onPressed: actionBusy || edits.isSaving ? null : edits.retry,
+            ),
+          if (widget.mutations != null) ...[
+            SizedBox(height: pikoDesign.dimension('spacing.3')),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: PikoButton(
+                label: copy.text('vocab.delete'),
+                icon: const PikoIcon(PikoIconName.trash),
+                variant: PikoButtonVariant.dangerGhost,
+                onPressed: actionBusy ? null : () => deleteEntry(record),
+              ),
+            ),
+          ],
+          if (widget.mutations?.errorEntryId == record.id)
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                copy.text('vocab.deleteFailed'),
+                style: TextStyle(color: pikoDesign.color('danger')),
+              ),
             ),
           SizedBox(height: pikoDesign.dimension('spacing.2')),
           Text(
@@ -340,7 +522,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         ],
       );
     }
-    return Semantics(
+    final card = Semantics(
       label: expanded
           ? null
           : copy.text('vocab.editPair', {
@@ -349,15 +531,15 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             }),
       button: !expanded,
       expanded: expanded,
-      onTap: expanded || switching ? null : () => activateRow(record.id),
+      onTap: expanded || actionBusy ? null : () => activateRow(record.id),
       child: ExcludeSemantics(
         excluding: !expanded,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: expanded || switching ? null : () => activateRow(record.id),
+            onTap: expanded || actionBusy ? null : () => activateRow(record.id),
             excludeFromSemantics: true,
-            canRequestFocus: !expanded && !switching,
+            canRequestFocus: !expanded && !actionBusy,
             onFocusChange: (value) => setState(
               () => focusedId = value
                   ? record.id
@@ -382,38 +564,146 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         ),
       ),
     );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.mutations == null)
+          card
+        else
+          PikoSwipeReveal(
+            enabled: !expanded && !actionBusy,
+            label: copy.text('vocab.delete'),
+            onDelete: actionBusy ? null : () => deleteEntry(record),
+            child: card,
+          ),
+        if (!expanded && widget.mutations?.errorEntryId == record.id)
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              copy.text('vocab.deleteFailed'),
+              style: TextStyle(color: pikoDesign.color('danger')),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String undoErrorKey(Object error) => switch (error) {
+    VocabularyUndoFailure.expired ||
+    VocabularyUndoFailure.alreadyUsed ||
+    VocabularyUndoFailure.invalidReceipt => 'vocab.undoExpired',
+    VocabularyUndoFailure.duplicatePair => 'vocab.inlineDuplicate',
+    _ => 'vocab.undoFailed',
+  };
+  Widget undoBar(CollectionUndoOffer offer) {
+    final copy = PikoCopyScope.of(context);
+    return Container(
+      key: ValueKey('collection-undo-${offer.entry.id}'),
+      padding: EdgeInsets.all(pikoDesign.dimension('spacing.3')),
+      decoration: BoxDecoration(
+        color: pikoDesign.color('tint'),
+        borderRadius: BorderRadius.circular(
+          pikoDesign.dimension('components.buttons.radius'),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: pikoDesign.dimension('spacing.3'),
+            runSpacing: pikoDesign.dimension('spacing.2'),
+            children: [
+              Semantics(
+                liveRegion: true,
+                child: Text(copy.text('vocab.deleted')),
+              ),
+              PikoButton(
+                label: copy.text('vocab.undo'),
+                variant: PikoButtonVariant.ghost,
+                onPressed: !actionBusy && widget.mutations!.canUndo(offer)
+                    ? () => undoEntry(offer)
+                    : null,
+              ),
+            ],
+          ),
+          Text(
+            '${offer.entry.targetText} · ${offer.entry.nativeText}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: pikoDesign.color('muted'),
+              fontSize: pikoDesign.dimension('typography.small'),
+            ),
+          ),
+          if (offer.error != null)
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                copy.text(undoErrorKey(offer.error!)),
+                style: TextStyle(color: pikoDesign.color('danger')),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (waiting) Text(copy.text('vocab.loading')),
-        if (loadError != null) ...[
-          Text(copy.text('vocab.loadFailed')),
-          PikoButton(
-            label: copy.text('action.retry'),
-            onPressed: () => setState(watch),
-          ),
+    return Listener(
+      onPointerMove: (event) {
+        anchorRevision++;
+        if (Scrollable.maybeOf(context)?.position.userScrollDirection !=
+                ScrollDirection.idle &&
+            event.delta.dy.abs() > event.delta.dx.abs() &&
+            (topSpace != 0 || bottomSpace != 0)) {
+          setState(() {
+            topSpace = 0;
+            bottomSpace = 0;
+          });
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (topSpace > 0) SizedBox(height: topSpace),
+          if (waiting) Text(copy.text('vocab.loading')),
+          if (loadError != null) ...[
+            Text(copy.text('vocab.loadFailed')),
+            PikoButton(
+              label: copy.text('action.retry'),
+              onPressed: () => setState(watch),
+            ),
+          ],
+          if (!waiting && loadError == null && rows.isEmpty)
+            PikoCard(child: Text(copy.text('collection.empty'))),
+          for (var index = 0; index < rows.length; index++) ...[
+            if (index > 0) SizedBox(height: pikoDesign.dimension('spacing.3')),
+            KeyedSubtree(
+              key: ValueKey('vocabulary-row-${rows[index].id}'),
+              child: KeyedSubtree(
+                key: rowKeys.putIfAbsent(rows[index].id, GlobalKey.new),
+                child: row(rows[index]),
+              ),
+            ),
+          ],
+          if (widget.mutations?.latest case final offer?) ...[
+            SizedBox(height: pikoDesign.dimension('spacing.3')),
+            undoBar(offer),
+          ],
+          if (bottomSpace > 0) SizedBox(height: bottomSpace),
         ],
-        if (!waiting && loadError == null && rows.isEmpty)
-          PikoCard(child: Text(copy.text('collection.empty'))),
-        for (var index = 0; index < rows.length; index++) ...[
-          if (index > 0) SizedBox(height: pikoDesign.dimension('spacing.3')),
-          KeyedSubtree(
-            key: ValueKey('vocabulary-row-${rows[index].id}'),
-            child: row(rows[index]),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
   @override
   void dispose() {
     generation++;
+    widget.mutations?.removeListener(changed);
     unawaited(subscription?.cancel());
     retireEditor(widget.onPendingWrites);
     for (final old in retired) {

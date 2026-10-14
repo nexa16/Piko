@@ -61,7 +61,7 @@ function detail(){
 }
 const inlineVocabulary=new WeakMap();
 function inlineChanged(pair){const state=inlineState(),original=state.originals.get(pair)||pair,draft=state.drafts.get(pair)||pair;return draft.some((value,index)=>value!==original[index]);}
-const vocabularyUndoDuration=8000; // Prototype timing experiment; production duration remains open.
+const vocabularyUndoDuration=8000; // Confirmed eight-second Undo; this sample-data prototype does not persist learning state.
 let vocabularyUndo=null,vocabularyUndoTimer=0;
 function deleteVocabulary(index){const book=books[s.book],entries=getCollectionEntries(),pair=entries[index];if(!pair)return;clearTimeout(vocabularyUndoTimer);vocabularyUndo={book,pair,index,expires:Date.now()+vocabularyUndoDuration};entries.splice(index,1);if(entrySession?.book===s.book)entrySession.active=Math.min(entrySession.active,entries.length);if(reviewSession)reviewSession=null;vocabularyUndoTimer=setTimeout(()=>{vocabularyUndo=null;if(s.page==='entry'||s.page==='detail')render();},vocabularyUndoDuration);render();}
 function undoVocabularyDelete(){if(!vocabularyUndo||Date.now()>vocabularyUndo.expires)return;const {book,pair,index}=vocabularyUndo;if(collectionEntries.has(book))collectionEntries.get(book).splice(index,0,pair);clearTimeout(vocabularyUndoTimer);vocabularyUndo=null;render();}
