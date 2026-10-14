@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Real equal-width grading — CARD-UI-025
+
+Below a successful revealed card, use one equal-column row: solid semantic danger Incorrect left and success Correct right, with existing onPrimary contrast and shared growable 48px targets. `components.reviewGrading` lifts the binding 10px gap, 18px top margin, 8px/12px padding and numeric 650 weight into the canonical adapters. The effective browser label is the later `.btn` 14px font-label override, which matches Flutter. English/German 392px/200% tests verify equal physical widths, order, reachable targets, colors and semantics.
+
+Grading is separate from card activation and remains absent until a valid stored answer is revealed. Pending controls disable together with localized live-region saving feedback; failed writes retain the answer and offer another explicit grade choice with canonical failure text. No Hard/progress/retry/correction placeholder is rendered. Host geometry does not establish Android or the later integrated layout requirements.
+
 ## Default tag policy — CARD-004
 
 Neither the real hidden nor revealed default card adds category pills, tags or placeholder labels. Preserve literal stored vocabulary, even if it resembles a UI heading or hashtag; do not sanitize it as metadata. The hidden side contains its stored prompt and the accepted reveal cue, while the revealed side contains only the two stored language values. Four English/German, both-direction host route tests verify exact text/semantics and unchanged storage through return/relaunch. No visual/token change or category feature is introduced; Android acceptance remains pending.

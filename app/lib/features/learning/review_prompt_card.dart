@@ -18,12 +18,14 @@ class ReviewPromptCard extends StatefulWidget {
     required this.collectionId,
     required this.direction,
     required this.canReveal,
+    this.revealedActions,
   });
   final GradingCardHandle handle;
   final VocabularyRepository repository;
   final String collectionId;
   final LearningDirection direction;
   final bool Function(GradingCardHandle) canReveal;
+  final Widget Function(BuildContext, bool Function())? revealedActions;
   @override
   State<ReviewPromptCard> createState() => _ReviewPromptCardState();
 }
@@ -109,15 +111,16 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
             ? entry.nativeText
             : entry.targetText;
         _visibleEntry = entry;
+        bool currentSnapshot() =>
+            mounted &&
+            revision == _revision &&
+            identical(widget.handle, handle) &&
+            identical(widget.repository, repository) &&
+            identical(_visibleEntry, entry) &&
+            widget.canReveal(handle) &&
+            ModalRoute.of(context)?.isCurrent == true;
         void reveal() {
-          if (!mounted ||
-              _revealed ||
-              revision != _revision ||
-              !identical(widget.handle, handle) ||
-              !identical(widget.repository, repository) ||
-              !identical(_visibleEntry, entry) ||
-              !widget.canReveal(handle) ||
-              ModalRoute.of(context)?.isCurrent != true) {
+          if (_revealed || !currentSnapshot()) {
             return;
           }
           setState(() => _revealed = true);
@@ -244,7 +247,7 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
                 ),
               ),
             );
-            return Semantics(
+            final card = Semantics(
               key: const ValueKey('review-reveal-target'),
               label: _revealed ? '$prompt\n$answer' : prompt,
               hint: active ? copy.text('learn.revealCue') : null,
@@ -340,6 +343,17 @@ class _ReviewPromptCardState extends State<ReviewPromptCard> {
                   ),
                 ),
               ),
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                card,
+                if (_revealed && widget.revealedActions != null)
+                  widget.revealedActions!(
+                    context,
+                    () => _revealed && currentSnapshot(),
+                  ),
+              ],
             );
           },
         );

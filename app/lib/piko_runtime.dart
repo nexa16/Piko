@@ -77,6 +77,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     return DueLearningSession.start(
       source: source,
       cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
       onPendingWrites: trackWrites,
     );
   }

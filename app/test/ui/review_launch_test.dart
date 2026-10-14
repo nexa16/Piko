@@ -104,6 +104,7 @@ class Harness {
     final session = await DueLearningSession.start(
       source: source,
       cutoff: instant,
+      clock: f.db.clock,
       onPendingWrites: drains.add,
     );
     sessions.add(session);

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../../core/clock.dart';
 import '../../data/learning_item.dart';
 import '../../data/regular_review.dart';
 import 'regular_grading_coordinator.dart';
@@ -10,6 +11,7 @@ final class DueLearningSession extends ChangeNotifier {
     ScopedReviewSource source,
     this.cutoff,
     this.members,
+    this._clock,
     void Function(Future<void>)? register,
   ) : collectionId = source.collectionId,
       direction = source.direction {
@@ -25,6 +27,7 @@ final class DueLearningSession extends ChangeNotifier {
   static Future<DueLearningSession> start({
     required ScopedReviewSource source,
     required DateTime cutoff,
+    PikoClock clock = const SystemPikoClock(),
     void Function(Future<void>)? onPendingWrites,
   }) async {
     if (!cutoff.isUtc) {
@@ -33,12 +36,19 @@ final class DueLearningSession extends ChangeNotifier {
     final members = List<LearningItemRecord>.unmodifiable(
       await source.dueItems(cutoff: cutoff),
     );
-    return DueLearningSession._(source, cutoff, members, onPendingWrites);
+    return DueLearningSession._(
+      source,
+      cutoff,
+      members,
+      clock,
+      onPendingWrites,
+    );
   }
 
   final String collectionId;
   final LearningDirection direction;
   final DateTime cutoff;
+  final PikoClock _clock;
   final List<LearningItemRecord> members;
   late final RegularGradingCoordinator _grading;
   final List<RegularReviewReceipt> _receipts = [];
@@ -75,6 +85,17 @@ final class DueLearningSession extends ChangeNotifier {
 
   bool setHard(GradingCardHandle handle, bool selected) =>
       !_stopped && !_disposed && _grading.setHard(handle, selected);
+
+  /// UI admission uses the current runtime instant, never the launch cutoff.
+  Future<RegularReviewReceipt?> submitNow(
+    GradingCardHandle handle,
+    AnswerGrade grade,
+  ) {
+    if (_stopped || _disposed || isSubmitting || !identical(current, handle)) {
+      return Future.value(null);
+    }
+    return submit(handle, grade, reviewedAt: _clock.now().toUtc());
+  }
 
   Future<RegularReviewReceipt?> submit(
     GradingCardHandle handle,

@@ -105,6 +105,13 @@ const designCatalog = <String, Object?>{
 "promptSize": 37,
 "promptWeight": 750,
 },
+"reviewGrading": <String, Object?>{
+"gap": 10,
+"paddingX": 8,
+"paddingY": 12,
+"topMargin": 18,
+"weight": 650,
+},
 "sectionHeading": <String, Object?>{
 "bottomMargin": 14,
 "gap": 12,
@@ -666,6 +673,14 @@ const copyCatalog = <String, Object?>{
 "learn.exit": <String, Object?>{
 "de": "Wiederholung beenden",
 "en": "Exit review",
+},
+"learn.gradeFailed": <String, Object?>{
+"de": "Diese Bewertung konnte nicht gespeichert werden. Wähle die Bewertung erneut, um es noch einmal zu versuchen.",
+"en": "Couldn't save this review. Choose its grade again to retry.",
+},
+"learn.gradeSaving": <String, Object?>{
+"de": "Bewertung wird gespeichert…",
+"en": "Saving review…",
 },
 "learn.hard": <String, Object?>{
 "de": "Schwer",

@@ -7,6 +7,22 @@ import vm from 'node:vm';
 import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('grading browser and Flutter adapters consume canonical geometry and weight', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.reviewGrading = {gap:11,topMargin:19,paddingX:9,paddingY:13,weight:700};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN: config, document: {documentElement: {dataset: {}, style: {setProperty: (key, value) => properties.set(key, value)}}}
+  });
+  for (const [name,value] of [['gap','11px'],['top-margin','19px'],['padding-x','9px'],['padding-y','13px'],['weight','700']]) {
+    assert.equal(properties.get('--review-grading-'+name), value);
+  }
+  const generated = generate(config, {schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"reviewGrading": <String, Object?>{'));
+  assert.ok(generated.includes('"topMargin": 19,'));
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  for (const name of ['gap','top-margin','padding-x','padding-y','weight']) assert.ok(css.includes('var(--review-grading-'+name+')'));
+});
 test('learning prompt browser and Flutter consume binding card geometry', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.learningCard = {...config.components.learningCard, minHeight:320, promptSize:40, promptWeight:800, bottomPadding:62, cueSize:13, cueIconSize:17, answerPromptSize:23, answerSize:38, dividerWidthFactor:0.7};

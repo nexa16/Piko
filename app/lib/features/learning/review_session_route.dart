@@ -11,8 +11,9 @@ import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_launch.dart';
 import 'review_prompt_card.dart';
+import 'regular_grading_coordinator.dart';
 
-/// Actual stored prompt and initial no-due view; reveal/grading follow separately.
+/// Stored self-assessment card and regular grades; reinforcement follows separately.
 class ReviewSessionRoute extends StatefulWidget {
   const ReviewSessionRoute({
     super.key,
@@ -29,6 +30,105 @@ class ReviewSessionRoute extends StatefulWidget {
 
 class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
   bool _exiting = false;
+  GradingCardHandle? _preAdmissionError;
+  Future<void> _grade(
+    DueLearningSession session,
+    GradingCardHandle handle,
+    AnswerGrade grade,
+    bool Function() canSubmit,
+  ) async {
+    if (!mounted ||
+        _exiting ||
+        !identical(session, widget.session) ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        !canSubmit()) {
+      return;
+    }
+    if (_preAdmissionError != null) setState(() => _preAdmissionError = null);
+    try {
+      await session.submitNow(handle, grade);
+    } catch (_) {
+      // The existing coordinator retains the current answer/modifier and error.
+      // Its registered drain and session bookkeeping own the accepted operation.
+      // A clock can fail before coordinator admission; keep that feedback local
+      // to this still-current stored presentation, with no late covered effect.
+      if (mounted &&
+          identical(session, widget.session) &&
+          canSubmit() &&
+          session.error == null) {
+        setState(() => _preAdmissionError = handle);
+      }
+    }
+  }
+
+  Widget _gradingActions(
+    BuildContext context,
+    DueLearningSession session,
+    GradingCardHandle handle,
+    bool Function() canSubmit,
+  ) {
+    final copy = PikoCopyScope.of(context), d = pikoDesign;
+    final enabled = !_exiting && canSubmit();
+    Widget action(AnswerGrade grade) => Expanded(
+      child: PikoButton(
+        key: ValueKey('review-grade-${grade.name}'),
+        label: copy.text(
+          grade == AnswerGrade.incorrect
+              ? 'action.incorrect'
+              : 'action.correct',
+        ),
+        variant: grade == AnswerGrade.incorrect
+            ? PikoButtonVariant.gradeIncorrect
+            : PikoButtonVariant.gradeCorrect,
+        padding: EdgeInsets.symmetric(
+          horizontal: d.dimension('components.reviewGrading.paddingX'),
+          vertical: d.dimension('components.reviewGrading.paddingY'),
+        ),
+        labelWeight: d.weight('components.reviewGrading.weight'),
+        onPressed: enabled
+            ? () => _grade(session, handle, grade, canSubmit)
+            : null,
+      ),
+    );
+    return Padding(
+      padding: EdgeInsets.only(
+        top: d.dimension('components.reviewGrading.topMargin'),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            key: const ValueKey('review-grading'),
+            children: [
+              action(AnswerGrade.incorrect),
+              SizedBox(width: d.dimension('components.reviewGrading.gap')),
+              action(AnswerGrade.correct),
+            ],
+          ),
+          if (session.isSubmitting ||
+              session.error != null ||
+              identical(_preAdmissionError, handle))
+            Padding(
+              padding: EdgeInsets.only(top: d.dimension('spacing.3')),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  copy.text(
+                    session.isSubmitting
+                        ? 'learn.gradeSaving'
+                        : 'learn.gradeFailed',
+                  ),
+                  style: TextStyle(
+                    color: d.color(session.isSubmitting ? 'muted' : 'danger'),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _exit(DueLearningSession session) async {
     if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
@@ -48,6 +148,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
       unawaited(oldWidget.session.stop());
       oldWidget.session.dispose();
       _exiting = false;
+      _preAdmissionError = null;
     }
   }
 
@@ -109,6 +210,12 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                           !sessionForBuild.isStopped &&
                           !sessionForBuild.isSubmitting &&
                           identical(sessionForBuild.current, handle),
+                      revealedActions: (context, canSubmit) => _gradingActions(
+                        context,
+                        sessionForBuild,
+                        handle,
+                        canSubmit,
+                      ),
                     ),
                   ),
                 // Initial empty membership is not regular exhaustion after grades.

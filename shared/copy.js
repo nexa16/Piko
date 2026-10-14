@@ -9,6 +9,8 @@ globalThis.PIKO_COPY = {
     "collection.open": {"en":"Open {name}, {languages}","de":"{name} öffnen, {languages}"},
     "collection.languagePair": {"en":"{target} · {native}","de":"{target} · {native}"},
     "action.retry": {"en":"Try again","de":"Erneut versuchen"},
+    "learn.gradeSaving": {"en":"Saving review…","de":"Bewertung wird gespeichert…"},
+    "learn.gradeFailed": {"en":"Couldn't save this review. Choose its grade again to retry.","de":"Diese Bewertung konnte nicht gespeichert werden. Wähle die Bewertung erneut, um es noch einmal zu versuchen."},
     "collection.saveFailed": {"en":"Couldn't save the collection. Please try again.","de":"Die Sammlung konnte nicht gespeichert werden. Bitte versuche es erneut."},
     "collection.created": {"en":"Created {name}","de":"{name} erstellt"},
     "app.name": {
