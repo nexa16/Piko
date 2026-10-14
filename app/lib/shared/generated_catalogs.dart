@@ -124,6 +124,11 @@ const designCatalog = <String, Object?>{
 "topMargin": 18,
 "weight": 650,
 },
+"reviewSummary": <String, Object?>{
+"labelLineHeight": 1.5,
+"metricLineHeight": 1.15,
+"metricSize": 36,
+},
 "sectionHeading": <String, Object?>{
 "bottomMargin": 14,
 "gap": 12,

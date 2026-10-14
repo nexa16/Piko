@@ -47,6 +47,9 @@
  for(const [name,key] of [['gap','gap'],['top-margin','topMargin'],['compact-size','compactSize']])dimension('--review-context-'+name,config.components.reviewContext[key],0,100);
  dimension('--review-context-line-height',config.components.reviewContext.lineHeight,1,3,'');
  for(const [name,key] of [['height','height'],['radius','radius'],['margin-y','marginY']])dimension('--progress-'+name,config.components.progress[key],0,100);
+ dimension('--summary-metric-size',config.components.reviewSummary.metricSize,1,100);
+ dimension('--summary-metric-line-height',config.components.reviewSummary.metricLineHeight,1,3,'');
+ dimension('--summary-label-line-height',config.components.reviewSummary.labelLineHeight,1,3,'');
  for(const [name,key] of [['preview-gap','previewGap'],['preview-top','previewTop'],['number-size','numberSize'],['status-size','statusSize'],['compact-min-height','compactMinHeight']])dimension('--entry-'+name,entry[key],0,2000);
  dimension('--entry-meta-line-height',entry.metaLineHeight,1,3,'');
  dimension('--entry-state-motion',entry.stateMotionMs,0,2000,'ms');

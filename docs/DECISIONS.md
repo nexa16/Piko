@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-REVIEW-004 — readable summary presentation — 2026-10-14
+
+Reuse the standard modal and existing English/German motivational copy. Move the binding mockup's 36px metric size and line heights into canonical design configuration; adapters consume those values without a second default. Large text stacks the two metrics rather than squeezing their labels. Each number and label forms one accessible metric. Eight focused English/German 320px/200% dismissal and readability cases pass; production presentation has no prototype notice or extra return CTA. Natural-completion lifecycle is separately tracked by REVIEW-003; Android verification remains pending.
+
 ## DATA-005 — minimal logical retention acceptance — 2026-10-14
 
 The first release retains only the existing product-state tables and interface locale. A file-backed acceptance test inventories every table/column and executes a real regular error, repeated reinforcement errors and success before reopening storage: one regular review remains, the completed current obligation is removed, and no retry-attempt or typed-answer history is added. The test passes in the 39-case focused storage/summary/count batch. This records logical application retention, not physical secure deletion or an operating-system backup decision; Android acceptance remains pending.
