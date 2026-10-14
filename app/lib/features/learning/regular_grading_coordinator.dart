@@ -79,7 +79,11 @@ class GradingCoordinator<R extends LearningAnswerReceipt> extends ChangeNotifier
 
   /// Authoritative expiry may retire an unanswered reinforcement presentation;
   /// this is not accepted advancement and never creates a receipt.
-  bool retireExpired(GradingCardHandle handle) {
+  bool retireExpired(GradingCardHandle handle) => retireUnanswered(handle);
+
+  /// Retires an unanswered presentation whose authoritative queue membership
+  /// disappeared (for example after correcting its preceding retry answer).
+  bool retireUnanswered(GradingCardHandle handle) {
     if (_disposed ||
         isSubmitting ||
         !identical(_current, handle) ||

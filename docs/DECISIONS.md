@@ -32,6 +32,12 @@ Render actual per-launch completed/total and first-try counts above the card, wi
 
 Two English/German real-route 320px/200% cases verify wrapping, exact bar/card edges/margins, localized semantics, zero/half fill and accepted updates. The related batch passes 19 focused cases, clean analysis and 18 Node tests/canonical checks. One full integration checkpoint passed 617 cases and caught five legacy off-screen taps after the added context; all 41 tests in those three fixture files pass after explicit scroll-to-visible, with assertions unchanged. No unrun full622 claim; Android remains pending.
 
+## CARD-UI-020 — correction-owned counters, queue and drainage — 2026-10-14
+
+Retain only the latest accepted answer and its prior/next progress context. Entering correction preserves the unanswered current card; acceptance reverses the captured counters, applies the replacement once and reconciles only the corrected round. Unrelated rounds survive. If the displayed unanswered retry is the round removed by correction, retire it and continue authoritative selection. Pause wake timers during correction and register the whole correction/bookkeeping operation with runtime drainage.
+
+Three focused real-SQLite session cases pass for both regular progress directions and same-round retirement with an unrelated armed retry. Android remains pending.
+
 ## CARD-UI-002 — unique per-launch success counters — 2026-10-14
 
 Interpret session counters per launch, not as persistent daily aggregates or carried prior-session success. Capture the immutable union of regular and initially pending item/generation identities. Complete each unique member only after accepted initial Good/Hard or successful reinforcement; only successful initial regular answers count first-try. Incorrect, reveal, modifiers, waits, failed/repeated submissions and expiry do not add success or change total. Expiry can therefore end work below 100%. This is an implementation interpretation, not an additional owner quote.

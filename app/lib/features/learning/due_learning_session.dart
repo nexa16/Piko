@@ -6,6 +6,7 @@ import '../../data/learning_item.dart';
 import '../../data/regular_review.dart';
 import '../../data/retry_answer.dart';
 import '../../data/retry_obligation.dart';
+import '../../data/review_correction.dart';
 import 'learning_scheduler.dart';
 import 'regular_grading_coordinator.dart';
 import 'learning_session_progress.dart';
@@ -118,6 +119,10 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   Object? _selectionError;
   LearningAnswerReceipt? _lastAnswer;
   LearningAnswerReceipt? get lastAnswer => _lastAnswer;
+  GradingCoordinator<LearningAnswerReceipt>? _correction;
+  LearningAnswerReceipt? _correctionExpected;
+  List<RetryWaitMutation> _correctionWaits = const [];
+  int _lastAnswerWaitIndex = 0;
   late LearningSessionProgress _progress;
   LearningSessionProgress get progress => _progress;
   SessionProgressChange? _lastProgressChange;
@@ -138,13 +143,15 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
 
   bool get isStopped => _stopped;
   bool get isSubmitting => _pending != null;
+  bool get isCorrecting => _correction != null;
   // Exhausting regular membership does not imply retries or learning are complete.
   bool get regularItemsExhausted => _index == members.length;
   @override
-  GradingCardHandle? get current => _stopped ? null : _grading.current;
+  GradingCardHandle? get current =>
+      _stopped ? null : _correction?.current ?? _grading.current;
   @override
-  bool get hard => _grading.hard;
-  Object? get error => _selectionError ?? _grading.error;
+  bool get hard => _correction?.hard ?? _grading.hard;
+  Object? get error => _selectionError ?? _correction?.error ?? _grading.error;
   bool get selectionFailed => _selectionError != null;
   List<RegularReviewReceipt> get acceptedReviews =>
       List.unmodifiable(_receipts);
@@ -167,11 +174,77 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
 
   @override
   bool canSetHard(GradingCardHandle handle) =>
-      !_stopped && !_disposed && !isSubmitting && _grading.canSetHard(handle);
+      !_stopped &&
+      !_disposed &&
+      !isSubmitting &&
+      (_correction?.canSetHard(handle) ?? _grading.canSetHard(handle));
 
   @override
   bool setHard(GradingCardHandle handle, bool selected) =>
-      canSetHard(handle) && _grading.setHard(handle, selected);
+      canSetHard(handle) &&
+      (_correction?.setHard(handle, selected) ??
+          _grading.setHard(handle, selected));
+
+  LearningRating? get previousRating {
+    final answer = _correctionExpected;
+    return switch (answer) {
+      RegularReviewReceipt() => answer.event.rating,
+      RetryAnswerReceipt() => answer.rating,
+      _ => null,
+    };
+  }
+
+  bool canCorrectPrevious(GradingCardHandle handle) =>
+      !_stopped &&
+      !_disposed &&
+      !isSubmitting &&
+      _correction == null &&
+      identical(_grading.current, handle) &&
+      _lastAnswer != null &&
+      _lastProgressChange?.receipt == _lastAnswer &&
+      _source is ReviewCorrectionSource;
+
+  /// Presents only the latest accepted answer. The unanswered current card is
+  /// retained privately and resumes after an accepted replacement.
+  bool beginCorrection(GradingCardHandle handle) {
+    if (!canCorrectPrevious(handle)) return false;
+    _cancelWake();
+    final expected = _lastAnswer!;
+    final waits = List<RetryWaitMutation>.unmodifiable(
+      _waitMutations.skip(_lastAnswerWaitIndex),
+    );
+    final source = _source as ReviewCorrectionSource;
+    final correction = GradingCoordinator<LearningAnswerReceipt>(
+      record: (_, rating, at) => source.replaceAnswer(
+        expected: expected,
+        expectedWaits: waits,
+        rating: rating,
+        executionAt: at,
+      ),
+      // Runtime drainage includes applying the replacement to session state.
+      onPendingWrites: (_) => _register?.call(awaitPending()),
+    );
+    correction.addListener(_changed);
+    final correctionHandle = correction.activate(expected.prior);
+    if (correctionHandle == null) {
+      correction.removeListener(_changed);
+      correction.dispose();
+      return false;
+    }
+    final priorRating = switch (expected) {
+      RegularReviewReceipt() => expected.event.rating,
+      RetryAnswerReceipt() => expected.rating,
+      _ => LearningRating.good,
+    };
+    if (priorRating == LearningRating.hard) {
+      correction.setHard(correctionHandle, true);
+    }
+    _correctionExpected = expected;
+    _correctionWaits = waits;
+    _correction = correction;
+    _emit();
+    return true;
+  }
 
   Future<LearningAnswerReceipt> _recordAnswer(
     LearningItemRecord item,
@@ -320,6 +393,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   bool get _canWake =>
       !_stopped &&
       !_disposed &&
+      _correction == null &&
       _presentationActive &&
       (_presentationGuard?.call() ?? true);
 
@@ -436,8 +510,143 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     final result = Completer<LearningAnswerReceipt?>();
     _pending = result.future;
     _cancelWake();
-    unawaited(_submit(handle, grade, reviewedAt, result));
+    final correction = _correction;
+    if (correction != null && identical(correction.current, handle)) {
+      unawaited(
+        _submitCorrection(correction, handle, grade, reviewedAt, result),
+      );
+    } else {
+      unawaited(_submit(handle, grade, reviewedAt, result));
+    }
     return result.future;
+  }
+
+  Future<void> _submitCorrection(
+    GradingCoordinator<LearningAnswerReceipt> correction,
+    GradingCardHandle handle,
+    AnswerGrade grade,
+    DateTime at,
+    Completer<LearningAnswerReceipt?> result,
+  ) async {
+    final expected = _correctionExpected;
+    final progressChange = _lastProgressChange;
+    final waits = _correctionWaits;
+    try {
+      if (expected == null ||
+          progressChange == null ||
+          !identical(progressChange.receipt, expected)) {
+        throw StateError('Correction context is no longer current');
+      }
+      final regularIndex = expected is RegularReviewReceipt
+          ? _receipts.lastIndexWhere(
+              (receipt) => receipt.event.id == expected.event.id,
+            )
+          : null;
+      if (regularIndex != null &&
+          (regularIndex < 0 || regularIndex != _receipts.length - 1)) {
+        throw StateError('Corrected review is no longer latest');
+      }
+      final replacement = await correction.submit(
+        handle,
+        grade,
+        reviewedAt: at,
+      );
+      if (replacement != null) {
+        final sameKind =
+            expected is RegularReviewReceipt &&
+                replacement is RegularReviewReceipt ||
+            expected is RetryAnswerReceipt && replacement is RetryAnswerReceipt;
+        if (!sameKind ||
+            replacement.prior.id != expected.prior.id ||
+            replacement.prior.generation != expected.prior.generation) {
+          throw StateError('Correction returned an unrelated answer');
+        }
+        final correctedProgress = progressChange.prior.accepting(replacement);
+        _lastAnswer = replacement;
+        _progress = correctedProgress;
+        _lastProgressChange = SessionProgressChange(
+          receipt: replacement,
+          prior: progressChange.prior,
+          next: correctedProgress,
+        );
+        if (expected is RegularReviewReceipt &&
+            replacement is RegularReviewReceipt) {
+          _receipts[regularIndex!] = replacement;
+        }
+        final retiredCurrent = _applyCorrectedQueue(
+          expected,
+          replacement,
+          waits,
+        );
+        _scopeState = switch (replacement) {
+          RegularReviewReceipt() => replacement.scopeNext,
+          RetryAnswerReceipt() => replacement.scopeNext,
+          _ => _scopeState,
+        };
+        _lastAnswerWaitIndex = _waitMutations.length;
+        correction.completeAdvance(handle);
+        correction.removeListener(_changed);
+        correction.dispose();
+        if (identical(_correction, correction)) {
+          _correction = null;
+          _correctionExpected = null;
+          _correctionWaits = const [];
+        }
+        if (retiredCurrent && !_stopped && !_disposed) {
+          try {
+            await _refreshAndSelect(at);
+            _selectionError = null;
+          } catch (error) {
+            if (!_stopped && !_disposed) _selectionError = error;
+          }
+        }
+      }
+      result.complete(replacement);
+    } catch (error, stack) {
+      result.completeError(error, stack);
+    } finally {
+      if (identical(_pending, result.future)) _pending = null;
+      _changed();
+      _scheduleWake();
+    }
+  }
+
+  bool _applyCorrectedQueue(
+    LearningAnswerReceipt expected,
+    LearningAnswerReceipt replacement,
+    List<RetryWaitMutation> waits,
+  ) {
+    final correctedRoundId = switch (expected) {
+      RegularReviewReceipt() => expected.retryNext?.id,
+      RetryAnswerReceipt() => expected.retryPrior.id,
+      _ => null,
+    };
+    final ids = <String>{};
+    if (correctedRoundId != null) ids.add(correctedRoundId);
+    ids.addAll(
+      waits
+          .where((mutation) => mutation.prior.id == correctedRoundId)
+          .map((mutation) => mutation.prior.id),
+    );
+    for (final id in ids) {
+      _rounds.remove(id);
+    }
+    final next = switch (replacement) {
+      RegularReviewReceipt() => replacement.retryNext,
+      RetryAnswerReceipt() => replacement.retryNext,
+      _ => null,
+    };
+    if (next != null) _rounds[next.id] = next;
+    if (correctedRoundId == null || _currentRetry?.id != correctedRoundId) {
+      return false;
+    }
+    if (next != null) {
+      _currentRetry = next;
+      return false;
+    }
+    final unanswered = _grading.current;
+    _currentRetry = null;
+    return unanswered != null && _grading.retireUnanswered(unanswered);
   }
 
   Future<void> _submit(
@@ -452,6 +661,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       if (receipt != null) {
         // Retain accepted writes even after stop/disposal, without late UI changes.
         _lastAnswer = receipt;
+        _lastAnswerWaitIndex = _waitMutations.length;
         final priorProgress = _progress;
         _progress = _progress.accepting(receipt);
         _lastProgressChange = SessionProgressChange(
@@ -514,9 +724,12 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       _stopped = true;
       _cancelWake();
       _grading.removeListener(_changed);
+      _correction?.removeListener(_changed);
       // Stop may be called by a listener inside the coordinator's notification.
       // Remove forwarding now, but never dispose a notifier on its own stack.
       scheduleMicrotask(_grading.dispose);
+      final correction = _correction;
+      if (correction != null) scheduleMicrotask(correction.dispose);
       _emit();
     }
     return awaitPending();
