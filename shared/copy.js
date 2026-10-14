@@ -156,6 +156,8 @@ globalThis.PIKO_COPY = {
     "summary.firstTryCorrect": {"en":"First-try correct","de":"Beim ersten Versuch richtig"},
     "learn.setup": {"en":"Choose review direction","de":"Lernrichtung wählen"},
     "learn.start": {"en":"Start review","de":"Wiederholung starten"},
+    "learn.preparing": {"en":"Preparing review…","de":"Wiederholung wird vorbereitet…"},
+    "learn.prepareFailed": {"en":"Couldn't prepare review. Please try again.","de":"Wiederholung konnte nicht vorbereitet werden. Bitte versuche es erneut."},
     "learn.hard": {"en":"Hard","de":"Schwer"},
     "learn.correctPrevious": {"en":"Correct previous review","de":"Letzte Bewertung korrigieren"},
     "learn.correcting": {"en":"Correcting the previous review — choose its grade again.","de":"Letzte Bewertung korrigieren — wähle die Bewertung erneut."},

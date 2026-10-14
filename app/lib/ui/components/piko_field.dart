@@ -89,11 +89,13 @@ class PikoDropdown<T> extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.autofocus = false,
   });
   final String label;
   final T? value;
   final List<DropdownMenuItem<T>> items;
   final ValueChanged<T?>? onChanged;
+  final bool autofocus;
   @override
   Widget build(BuildContext context) {
     final d = pikoDesign;
@@ -122,6 +124,7 @@ class PikoDropdown<T> extends StatelessWidget {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<T>(
+                  autofocus: autofocus,
                   value: value,
                   items: items,
                   onChanged: onChanged,

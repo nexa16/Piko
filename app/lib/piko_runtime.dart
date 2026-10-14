@@ -6,6 +6,9 @@ import 'data/local/piko_database.dart';
 import 'data/local/sqlite_collections_repository.dart';
 import 'data/local/sqlite_vocabulary_repository.dart';
 import 'data/local/sqlite_vocabulary_deletion.dart';
+import 'data/local/sqlite_learning_repository.dart';
+import 'data/learning_item.dart';
+import 'features/learning/due_learning_session.dart';
 import 'features/collections/collections_home.dart';
 import 'features/entry/entry_session_controller.dart';
 import 'features/entry/entry_session_route.dart';
@@ -27,6 +30,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
   late final collections = SqliteCollectionsRepository(database);
   late final vocabulary = SqliteVocabularyRepository(database);
+  late final learning = SqliteLearningRepository(database);
   final pendingVocabularyWrites = <Future<void>>{};
   void trackWrites(Future<void> future) {
     final tracked = future.then<void>(
@@ -62,6 +66,21 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  Future<DueLearningSession> _reviewSession(
+    String collectionId,
+    LearningDirection direction,
+  ) async {
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      onPendingWrites: trackWrites,
+    );
+  }
+
   CollectionVocabularyMutations _collectionMutations(String id) =>
       CollectionVocabularyMutations(
         collectionId: id,
@@ -82,5 +101,6 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     vocabularyRepository: vocabulary,
     onPendingVocabularyWrites: trackWrites,
     vocabularyMutationsFactory: _collectionMutations,
+    reviewSessionFactory: _reviewSession,
   );
 }

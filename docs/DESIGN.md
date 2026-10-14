@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Explicit review direction popup — REVIEW-001
+
+Use the binding mockup's shared popup with localized `learn.setup`, `settings.direction`, `learn.start` and close X. The growable shared dropdown has exactly the Collection's two code-arrow-code directions, using the canonical 8px label/control gap and existing dropdown geometry. It receives initial focus through an optional shared autofocus adapter; native Space/arrow/Enter selection and Tab/Enter Start are host-tested. Selection survives English/German rebuilds. Preparation wording/failure lives only in shared copy, and pending/readiness states disable Start without introducing an alternate design source. X/Escape/backdrop remain safe dismissal of read-only setup.
+
+The interim runtime session route reuses the shared page/heading/Back and shows the captured direction as noninteractive context. It deliberately has no invented card, sample question, progress or no-due view; those layouts remain with subsequent requirements. Enlarged 392px German popup checks and real-session lifecycle evidence are host-level only, not Android acceptance.
+
 ## Optional Hard checkbox — ANSWER-004
 
 The shared checkbox uses one full-width clickable/semantic label, the canonical 44px control minimum, 8px horizontal padding/gap and 14px label typography. The binding 24px checkbox and 10px vertical padding are now `components.checkboxes.size` and `paddingY`, consumed by browser variables and the generated Flutter adapter. Remove overridden independent checkbox dimensions from CSS. Labels wrap without a fixed height, including a 170px German column at 200% text size. Selected Hard uses semantic success and the existing onPrimary check contrast; scale the decorative checkbox without scaling the canonical border width. Focus uses the shared border/radius policy without moving layout; disabled presentation uses the shared opacity.

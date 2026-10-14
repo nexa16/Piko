@@ -663,6 +663,14 @@ const copyCatalog = <String, Object?>{
 "de": "Aktiver Pool: {count}",
 "en": "Active pool: {count}",
 },
+"learn.prepareFailed": <String, Object?>{
+"de": "Wiederholung konnte nicht vorbereitet werden. Bitte versuche es erneut.",
+"en": "Couldn't prepare review. Please try again.",
+},
+"learn.preparing": <String, Object?>{
+"de": "Wiederholung wird vorbereitet…",
+"en": "Preparing review…",
+},
 "learn.progress": <String, Object?>{
 "de": "{completed} / {total} abgeschlossen · {correct} sofort richtig",
 "en": "{completed} / {total} completed · {correct} first-try correct",

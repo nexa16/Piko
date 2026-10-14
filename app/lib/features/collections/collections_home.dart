@@ -12,6 +12,7 @@ import '../../ui/piko_theme.dart';
 import 'collection_detail.dart';
 import 'create_collection.dart';
 import '../entry/entry_session_route.dart';
+import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 
 class CollectionsHome extends StatefulWidget {
@@ -21,6 +22,7 @@ class CollectionsHome extends StatefulWidget {
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
+    this.reviewSessionFactory,
     super.key,
   });
   final CollectionsRepository repository;
@@ -28,6 +30,7 @@ class CollectionsHome extends StatefulWidget {
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
+  final ReviewSessionFactory? reviewSessionFactory;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -147,6 +150,8 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                                 repository: widget.repository,
                                 collectionId: collection.id,
                                 entrySessionFactory: widget.entrySessionFactory,
+                                reviewSessionFactory:
+                                    widget.reviewSessionFactory,
                                 vocabularyRepository:
                                     widget.vocabularyRepository,
                                 onPendingVocabularyWrites:

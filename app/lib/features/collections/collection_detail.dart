@@ -11,6 +11,7 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
 import '../entry/entry_session_route.dart';
+import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_write_barrier.dart';
@@ -46,6 +47,7 @@ class CollectionDetail extends StatefulWidget {
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
+    this.reviewSessionFactory,
     super.key,
   });
   final CollectionsRepository repository;
@@ -54,6 +56,7 @@ class CollectionDetail extends StatefulWidget {
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
+  final ReviewSessionFactory? reviewSessionFactory;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -61,6 +64,8 @@ class CollectionDetail extends StatefulWidget {
 class _CollectionDetailState extends State<CollectionDetail> {
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
+  bool _openingReview = false;
+  int _reviewIdentity = 0;
   CollectionRecord? _currentCollection;
   CollectionRecord? _lastReadyCollection;
   CollectionVocabularyMutations? _mutations;
@@ -105,6 +110,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _renameRequest != null ||
         _deleteRequest != null ||
         _openingEntry ||
+        _openingReview ||
         route?.isCurrent != true) {
       return;
     }
@@ -228,7 +234,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
             icon: const PikoIcon(PikoIconName.pencil),
             semanticLabel: copy.text('collection.rename'),
             focusNode: _renameFocus,
-            onPressed: blocked || _openingEntry ? null : _beginRename,
+            onPressed: blocked || _openingEntry || _openingReview
+                ? null
+                : _beginRename,
           ),
         ],
       );
@@ -314,6 +322,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _renameRequest != null ||
         record == null ||
         _openingEntry ||
+        _openingReview ||
         route?.isCurrent == false) {
       return;
     }
@@ -440,6 +449,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final record = _currentCollection;
     final factory = widget.entrySessionFactory;
     if (_openingEntry ||
+        _openingReview ||
         _renameRequest != null ||
         _deleteRequest != null ||
         _mutations?.isBusy == true ||
@@ -480,6 +490,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         oldWidget.vocabularyMutationsFactory !=
             widget.vocabularyMutationsFactory) {
       _identity++;
+      _openingReview = false;
       _renaming = false;
       _renameRequest = null;
       _renameError = null;
@@ -492,6 +503,11 @@ class _CollectionDetailState extends State<CollectionDetail> {
       _writeBarrier = CollectionWriteBarrier();
       _endMutations(oldWidget.onPendingVocabularyWrites);
       _createMutations();
+    }
+    if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory) {
+      _reviewIdentity++;
+      if (_openingReview) _writeBarrier.release();
+      _openingReview = false;
     }
     if (oldWidget.repository != widget.repository ||
         oldWidget.collectionId != widget.collectionId) {
@@ -517,6 +533,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final copy = PikoCopyScope.of(context);
     final barrierForBuild = _writeBarrier;
     final registerForBuild = widget.onPendingVocabularyWrites;
+    final identityForBuild = _identity;
+    final reviewIdentityForBuild = _reviewIdentity;
+    final mutationsForBuild = _mutations;
     return Scaffold(
       body: PikoPage(
         child: StreamBuilder<CollectionRecord?>(
@@ -566,6 +585,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                         onPressed:
                             _deleteRequest != null ||
                                 _openingEntry ||
+                                _openingReview ||
                                 _renameRequest != null
                             ? null
                             : _deleteCollection,
@@ -587,6 +607,43 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   Text(copy.text('collection.loading'))
                 else if (record == null)
                   Text(copy.text('collection.notFound')),
+                if (_lastReadyCollection != null &&
+                    widget.reviewSessionFactory != null)
+                  Padding(
+                    key: ValueKey(
+                      'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
+                    ),
+                    padding: EdgeInsets.only(
+                      top: pikoDesign.dimension('spacing.3'),
+                    ),
+                    child: ReviewLaunch(
+                      key: ValueKey(
+                        'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                      ),
+                      collection: _lastReadyCollection!,
+                      factory: widget.reviewSessionFactory!,
+                      enabled:
+                          ready &&
+                          _deleteRequest == null &&
+                          _renameRequest == null &&
+                          !_openingEntry &&
+                          _mutations?.isBusy != true,
+                      beforeLaunch: () async {
+                        barrierForBuild.freeze();
+                        await barrierForBuild.drain();
+                        await mutationsForBuild?.awaitPending();
+                      },
+                      onPendingWrites: registerForBuild,
+                      onBusyChanged: (busy) {
+                        if (mounted &&
+                            identityForBuild == _identity &&
+                            reviewIdentityForBuild == _reviewIdentity) {
+                          if (!busy) barrierForBuild.release();
+                          setState(() => _openingReview = busy);
+                        }
+                      },
+                    ),
+                  ),
                 if (ready &&
                     (widget.entrySessionFactory != null ||
                         widget.vocabularyRepository != null))
@@ -640,6 +697,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                   _deleteRequest != null ||
                                       _renameRequest != null ||
                                       _openingEntry ||
+                                      _openingReview ||
                                       _mutations?.isBusy == true
                                   ? null
                                   : _openEntry,
