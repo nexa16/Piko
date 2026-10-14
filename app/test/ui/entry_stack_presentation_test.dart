@@ -18,6 +18,19 @@ const collection = CollectionRecord(
 );
 
 class PresentationRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) => throw UnimplementedError(
+    'Entry-stack fixture does not open inline editors.',
+  );
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => throw UnimplementedError(
+    'Entry-stack fixture does not discard inline edits.',
+  );
   var next = 0;
   @override
   Future<VocabularyRecord> create({

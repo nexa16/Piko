@@ -5,9 +5,78 @@ import '../vocabulary_repository.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 
+final class _OpeningSnapshot implements VocabularyOpeningSnapshot {
+  const _OpeningSnapshot(this.entry, this.issuer);
+  @override
+  final VocabularyRecord entry;
+  final Object issuer;
+}
+
 final class SqliteVocabularyRepository implements VocabularyRepository {
   SqliteVocabularyRepository(this.database);
   final PikoDatabase database;
+  final _issuer = Object();
+
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) async {
+    final row =
+        await (database.select(database.vocabularyEntries)..where(
+              (row) =>
+                  row.id.equals(entryId) &
+                  row.collectionId.equals(collectionId),
+            ))
+            .getSingleOrNull();
+    if (row == null) throw VocabularyValidation.entryNotFound;
+    return _OpeningSnapshot(_record(row), _issuer);
+  }
+
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) {
+    if (snapshot is! _OpeningSnapshot || !identical(snapshot.issuer, _issuer)) {
+      throw StateError('Opening snapshot belongs to a different repository.');
+    }
+    final original = snapshot.entry;
+    return _write(() async {
+      final row =
+          await (database.select(database.vocabularyEntries)..where(
+                (row) =>
+                    row.id.equals(original.id) &
+                    row.collectionId.equals(original.collectionId),
+              ))
+              .getSingleOrNull();
+      if (row == null) throw VocabularyValidation.entryNotFound;
+      final owner =
+          await (database.select(database.collections)
+                ..where((row) => row.id.equals(original.collectionId)))
+              .getSingleOrNull();
+      if (owner == null) throw VocabularyValidation.collectionNotFound;
+      final count =
+          await (database.update(database.vocabularyEntries)..where(
+                (row) =>
+                    row.id.equals(original.id) &
+                    row.collectionId.equals(original.collectionId),
+              ))
+              .write(
+                VocabularyEntriesCompanion(
+                  targetText: Value(original.targetText),
+                  nativeText: Value(original.nativeText),
+                  targetKey: Value(
+                    vocabularyComparisonKey(original.targetText),
+                  ),
+                  nativeKey: Value(
+                    vocabularyComparisonKey(original.nativeText),
+                  ),
+                ),
+              );
+      if (count != 1) throw VocabularyValidation.entryNotFound;
+      return original;
+    });
+  }
 
   Future<VocabularyRecord> _write(
     Future<VocabularyRecord> Function() action,

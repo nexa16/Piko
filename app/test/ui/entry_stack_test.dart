@@ -27,6 +27,19 @@ const owner = CollectionRecord(
 );
 
 class ScreenRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) => throw UnimplementedError(
+    'Entry-stack fixture does not open inline editors.',
+  );
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => throw UnimplementedError(
+    'Entry-stack fixture does not discard inline edits.',
+  );
   Completer<VocabularyRecord>? pending;
   bool failUpdate = false;
   Completer<VocabularyRecord>? pendingEdit;

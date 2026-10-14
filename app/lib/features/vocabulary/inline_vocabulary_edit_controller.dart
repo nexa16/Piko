@@ -15,9 +15,10 @@ final class InlineVocabularyDraft {
 /// One existing entry's raw edit lifetime, independent of entry-session routing.
 /// Widgets own text/focus controllers; callers own repository/storage lifetime.
 final class InlineVocabularyEditController extends ChangeNotifier {
-  InlineVocabularyEditController({
+  InlineVocabularyEditController._({
     required VocabularyRecord entry,
     required VocabularyRepository repository,
+    required VocabularyOpeningSnapshot opening,
   }) : entryId = entry.id,
        collectionId = entry.collectionId,
        _draft = InlineVocabularyDraft(
@@ -27,10 +28,53 @@ final class InlineVocabularyEditController extends ChangeNotifier {
        _committed = entry,
        // Keep the public dependency name separate from its private field.
        // ignore: prefer_initializing_formals
-       _repository = repository;
+       _repository = repository,
+       // The public factory receives this value under its domain name.
+       // ignore: prefer_initializing_formals
+       _opening = opening;
+
+  static Future<InlineVocabularyEditController> open({
+    required String entryId,
+    required String collectionId,
+    required VocabularyRepository repository,
+  }) async {
+    final opening = await repository.captureOpeningSnapshot(
+      entryId: entryId,
+      collectionId: collectionId,
+    );
+    if (opening.entry.id != entryId ||
+        opening.entry.collectionId != collectionId) {
+      throw StateError('Opening capture returned a different identity.');
+    }
+    return InlineVocabularyEditController._(
+      entry: opening.entry,
+      repository: repository,
+      opening: opening,
+    );
+  }
 
   final String entryId, collectionId;
   final VocabularyRepository _repository;
+  VocabularyOpeningSnapshot? _opening;
+  Future<VocabularyRecord>? _discarding;
+  Object? _discardError;
+  Object? get discardError => _discardError;
+  bool get isDiscarding => _discarding != null;
+  VocabularyRecord get opening {
+    _ensureActive();
+    return _opening!.entry;
+  }
+
+  bool get changedSinceOpening {
+    _ensureActive();
+    return _worker != null ||
+        _discarding != null ||
+        _draft.targetText != opening.targetText ||
+        _draft.nativeText != opening.nativeText ||
+        _committed!.targetText != opening.targetText ||
+        _committed!.nativeText != opening.nativeText;
+  }
+
   InlineVocabularyDraft _draft;
   VocabularyRecord? _committed;
   Object? _error;
@@ -64,6 +108,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
 
   void edit({String? targetText, String? nativeText}) {
     _ensureActive();
+    if (isDiscarding) throw StateError('Discard is in progress.');
+    _discardError = null;
     final next = InlineVocabularyDraft(
       targetText: targetText ?? _draft.targetText,
       nativeText: nativeText ?? _draft.nativeText,
@@ -95,6 +141,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   /// Explicit retry is single-flight and never writes an invalid raw pair.
   void retry() {
     _ensureActive();
+    if (isDiscarding) return;
     if (_worker != null) return;
     _error = _requiredError(_draft);
     if (_error == null) {
@@ -142,8 +189,59 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   /// Drains accepted/coalesced writes, including additions while waiting. May
   /// be awaited after disposal before the caller closes its repository.
   Future<void> awaitSavedEdits() async {
-    while (_worker != null) {
-      await _worker;
+    while (_worker != null || _discarding != null) {
+      if (_worker != null) await _worker;
+      final discard = _discarding;
+      if (discard != null) {
+        try {
+          await discard;
+        } catch (_) {
+          /* Initiating caller owns the error. */
+        }
+      }
+    }
+  }
+
+  Future<VocabularyRecord> discard() {
+    _ensureActive();
+    if (_discarding != null) return _discarding!;
+    final opening = _opening!;
+    final done = Completer<VocabularyRecord>();
+    _discarding = done.future;
+    _discardError = null;
+    notifyListeners();
+    unawaited(_restore(done, opening));
+    return done.future;
+  }
+
+  Future<void> _restore(
+    Completer<VocabularyRecord> done,
+    VocabularyOpeningSnapshot opening,
+  ) async {
+    try {
+      while (_worker != null) {
+        await _worker;
+      }
+      final restored = await _repository.restoreOpeningSnapshot(opening);
+      if (restored.id != entryId || restored.collectionId != collectionId) {
+        throw StateError('Discard returned a different identity.');
+      }
+      if (!_disposed) {
+        _committed = restored;
+        _draft = InlineVocabularyDraft(
+          targetText: restored.targetText,
+          nativeText: restored.nativeText,
+        );
+        _error = null;
+        _revision++;
+      }
+      done.complete(restored);
+    } catch (error, stack) {
+      if (!_disposed) _discardError = error;
+      done.completeError(error, stack);
+    } finally {
+      _discarding = null;
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -157,6 +255,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     _draft = const InlineVocabularyDraft(targetText: '', nativeText: '');
     _committed = null;
     _error = null;
+    _opening = null;
+    _discardError = null;
     // Already accepted snapshots finish; they never publish late state.
     super.dispose();
   }

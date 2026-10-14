@@ -16,6 +16,16 @@ import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 
 class GatedRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) =>
+      real.captureOpeningSnapshot(entryId: entryId, collectionId: collectionId);
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => real.restoreOpeningSnapshot(snapshot);
   GatedRepository(this.real);
   final VocabularyRepository real;
   Completer<void>? createGate, updateGate;

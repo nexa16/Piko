@@ -64,8 +64,9 @@ void main() {
                   .get())
               .map((r) => r.data)
               .toList();
-      final controller = InlineVocabularyEditController(
-        entry: entry,
+      final controller = await InlineVocabularyEditController.open(
+        entryId: entry.id,
+        collectionId: entry.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -112,9 +113,11 @@ void main() {
   test(
     'accepted A then coalesced B still drains after invalid raw C without clearing its validation',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -146,9 +149,11 @@ void main() {
   test(
     'stale failure A cannot replace current required error or invalidate successful B',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -175,9 +180,11 @@ void main() {
   test(
     'current duplicate/storage failure retains raw pair and last committed record; retry is single-flight',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -210,9 +217,11 @@ void main() {
   test(
     'canonical-equivalent raw text stays raw but is not an unpersisted change after drain',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -232,9 +241,11 @@ void main() {
   );
 
   test('identity/owner mismatch cannot replace committed state', () async {
-    final repository = ControlledVocabularyRepository();
-    final controller = InlineVocabularyEditController(
-      entry: original,
+    final repository = ControlledVocabularyRepository()
+      ..openingRecord = original;
+    final controller = await InlineVocabularyEditController.open(
+      entryId: original.id,
+      collectionId: original.collectionId,
       repository: repository,
     );
     addTearDown(controller.dispose);
@@ -256,9 +267,11 @@ void main() {
   test(
     'drain includes valid edits accepted while waiting and never freezes ordinary typing',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       addTearDown(controller.dispose);
@@ -281,9 +294,11 @@ void main() {
   test(
     'disposal clears exposed editing state; accepted/coalesced writes finish without late notifications',
     () async {
-      final repository = ControlledVocabularyRepository();
-      final controller = InlineVocabularyEditController(
-        entry: original,
+      final repository = ControlledVocabularyRepository()
+        ..openingRecord = original;
+      final controller = await InlineVocabularyEditController.open(
+        entryId: original.id,
+        collectionId: original.collectionId,
         repository: repository,
       );
       controller.setNativeText('A');

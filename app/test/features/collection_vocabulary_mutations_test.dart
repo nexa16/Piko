@@ -79,8 +79,9 @@ void main() {
       final entry = f.entries[0];
       final gate = Completer<void>();
       f.repository.updateGates[entry.id] = gate;
-      final edit = InlineVocabularyEditController(
-        entry: entry,
+      final edit = await InlineVocabularyEditController.open(
+        entryId: entry.id,
+        collectionId: entry.collectionId,
         repository: f.repository,
       );
       addTearDown(edit.dispose);

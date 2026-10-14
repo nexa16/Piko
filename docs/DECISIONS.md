@@ -1,5 +1,13 @@
 # Decision log
 
+## VOCAB-EDIT-002 — Repository-issued opening values and reversible autosave — 2026-10-14
+
+Inline Collection editing now captures a repository-issued opening snapshot before creating editable buffers. The snapshot retains the exact stored pair and identity; restoring it drains accepted autosaves and atomically updates only the text and comparison keys. Legacy display bytes are preserved, uniqueness is checked, deleted entries are never recreated, and directional learning state, ordering and allocators remain untouched. A snapshot from another repository instance or a forged implementation is rejected.
+
+Rollback is single-flight and freezes further edits until it settles. A failure preserves the opening snapshot and current raw input for retry, separately from ordinary validation errors. Pending rollback participates in runtime drainage even after the view is disposed. Capture failures are retryable; late captures cannot reopen removed rows or disposed views. The changed-state indicator includes pending and persisted edits, so a failed autosave reverting to the opening text does not hide recovery.
+
+This implements the functional rollback boundary; the separate visible Discard action and close-on-success integration remain UX-COLL-012. ENTRY-005 entry-stack semantics are unchanged. Host tests cover exact legacy restoration after file reopen, divergent full FSRS states, allocator preservation, duplicate conflicts, identity/issuer checks, queued saves, failure/retry, disposal and capture races. Android inline-edit acceptance remains pending.
+
 ## UX-COLL-011 — Collection deletion, Undo and changed-edit completion — 2026-10-14
 
 Use a small Collection-route mutation owner for deletion/Undo receipts and deadlines, separate from the one inline editor and repository-backed row stream. The runtime supplies a stable factory; Collection Detail creates the owned service once, never on locale-dependent rebuilds. Deletion drains only its target's accepted valid edits, blocks competing actions and preserves another editor's raw text/selection/focus. Streams remain authoritative for removing/restoring the original vocabulary identity, insertion position and both complete directional records; invalid deleted raw input is not revived. Compact previews reuse PikoSwipeReveal and expanded fields retain native selection with a real labeled danger-ghost Delete action. Existing canonical field gaps, control targets and Undo-bar tokens are reused without a parallel visual default.

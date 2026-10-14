@@ -11,6 +11,19 @@ import 'package:piko/ui/components/piko_entry_header.dart';
 import 'package:piko/ui/piko_theme.dart';
 
 class HeaderRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) => throw UnimplementedError(
+    'Entry-stack fixture does not open inline editors.',
+  );
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => throw UnimplementedError(
+    'Entry-stack fixture does not discard inline edits.',
+  );
   int writes = 0;
   @override
   Future<VocabularyRecord> create({

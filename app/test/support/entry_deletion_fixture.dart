@@ -53,6 +53,16 @@ class GatedDeletion implements VocabularyDeletionService {
 }
 
 class GatedEntryRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) =>
+      real.captureOpeningSnapshot(entryId: entryId, collectionId: collectionId);
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => real.restoreOpeningSnapshot(snapshot);
   GatedEntryRepository(this.real);
   final VocabularyRepository real;
   final updateGates = <String, Completer<void>>{};

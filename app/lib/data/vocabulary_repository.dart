@@ -19,7 +19,18 @@ enum VocabularyValidation {
   duplicatePair,
 }
 
+abstract interface class VocabularyOpeningSnapshot {
+  VocabularyRecord get entry;
+}
+
 abstract interface class VocabularyRepository {
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  });
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  );
   Future<VocabularyRecord> create({
     required String collectionId,
     required String targetText,

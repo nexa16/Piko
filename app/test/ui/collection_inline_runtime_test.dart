@@ -40,6 +40,16 @@ class ObservedDatabase extends PikoDatabase {
 }
 
 class GatedRepository implements VocabularyRepository {
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) =>
+      real.captureOpeningSnapshot(entryId: entryId, collectionId: collectionId);
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => real.restoreOpeningSnapshot(snapshot);
   GatedRepository(this.real);
   final VocabularyRepository real;
   final gates = <Completer<void>>[];
@@ -166,8 +176,9 @@ void main() {
           .widget<CollectionsHome>(find.byType(CollectionsHome))
           .onPendingVocabularyWrites!;
       final repository = GatedRepository(real);
-      final edits = InlineVocabularyEditController(
-        entry: entry,
+      final edits = await InlineVocabularyEditController.open(
+        entryId: entry.id,
+        collectionId: entry.collectionId,
         repository: repository,
       );
       edits.setTargetText('Accepted A');

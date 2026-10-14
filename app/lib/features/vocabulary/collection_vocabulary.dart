@@ -33,14 +33,9 @@ class CollectionVocabulary extends StatefulWidget {
 }
 
 class _Editor {
-  _Editor(VocabularyRecord record, VocabularyRepository repository)
-    : opening = record,
-      edits = InlineVocabularyEditController(
-        entry: record,
-        repository: repository,
-      ),
-      target = TextEditingController(text: record.targetText),
-      native = TextEditingController(text: record.nativeText) {
+  _Editor(this.edits)
+    : target = TextEditingController(text: edits.opening.targetText),
+      native = TextEditingController(text: edits.opening.nativeText) {
     targetFocus.addListener(() {
       if (targetFocus.hasFocus) lastFocus = targetFocus;
     });
@@ -49,10 +44,7 @@ class _Editor {
     });
   }
   final InlineVocabularyEditController edits;
-  final VocabularyRecord opening;
-  bool get changed =>
-      edits.draft.targetText != opening.targetText ||
-      edits.draft.nativeText != opening.nativeText;
+  bool get changed => edits.changedSinceOpening;
   final TextEditingController target, native;
   final targetFocus = FocusNode(), nativeFocus = FocusNode();
   FocusNode? lastFocus;
@@ -62,6 +54,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   StreamSubscription<List<VocabularyRecord>>? subscription;
   List<VocabularyRecord> rows = [];
   Object? loadError;
+  String? openingErrorId;
   bool waiting = true, switching = false;
   Object? transition;
   int generation = 0;
@@ -94,6 +87,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       rows = [];
       waiting = true;
       loadError = null;
+      openingErrorId = null;
       rowKeys.clear();
       topSpace = 0;
       bottomSpace = 0;
@@ -290,6 +284,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     final version = generation;
     final request = Object();
     transition = request;
+    setState(() {
+      switching = true;
+      openingErrorId = null;
+    });
     try {
       if (current != null) {
         setState(() => switching = true);
@@ -314,13 +312,32 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       }
       if (!mounted || generation != version) return;
       final record = rows.where((row) => row.id == id).firstOrNull;
+      if (record == null) return;
+      final capture = InlineVocabularyEditController.open(
+        entryId: record.id,
+        collectionId: widget.collection.id,
+        repository: widget.repository,
+      );
+      widget.onPendingWrites?.call(
+        capture.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      final captured = await capture;
+      if (!mounted ||
+          generation != version ||
+          !identical(transition, request) ||
+          !rows.any((row) => row.id == record.id)) {
+        captured.dispose();
+        return;
+      }
       setState(() {
         switching = false;
-        if (record != null) {
-          editor = _Editor(record, widget.repository);
-          editor!.edits.addListener(changed);
-        }
+        editor = _Editor(captured);
+        editor!.edits.addListener(changed);
       });
+    } catch (_) {
+      if (mounted && generation == version && identical(transition, request)) {
+        setState(() => openingErrorId = id);
+      }
     } finally {
       if (mounted && identical(transition, request)) {
         setState(() {
@@ -567,6 +584,16 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (!expanded && openingErrorId == record.id) ...[
+          Semantics(
+            liveRegion: true,
+            child: Text(copy.text('vocab.loadFailed')),
+          ),
+          PikoButton(
+            label: copy.text('action.retry'),
+            onPressed: actionBusy ? null : () => activateRow(record.id),
+          ),
+        ],
         if (widget.mutations == null)
           card
         else

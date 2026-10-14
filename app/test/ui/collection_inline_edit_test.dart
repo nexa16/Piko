@@ -16,6 +16,7 @@ import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_card.dart';
 import 'package:piko/ui/piko_theme.dart';
+import '../support/vocabulary_opening_snapshot.dart';
 
 const owner = CollectionRecord(
   id: 'owner',
@@ -37,6 +38,30 @@ const two = VocabularyRecord(
 );
 
 class LiveVocabulary implements VocabularyRepository {
+  Completer<void>? captureGate;
+  bool failCapture = false;
+  @override
+  Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
+    required String entryId,
+    required String collectionId,
+  }) async {
+    await captureGate?.future;
+    if (failCapture) throw StateError('Capture failed');
+    return TestOpeningSnapshot(
+      records.singleWhere(
+        (row) => row.id == entryId && row.collectionId == collectionId,
+      ),
+    );
+  }
+
+  @override
+  Future<VocabularyRecord> restoreOpeningSnapshot(
+    VocabularyOpeningSnapshot snapshot,
+  ) => update(
+    id: snapshot.entry.id,
+    targetText: snapshot.entry.targetText,
+    nativeText: snapshot.entry.nativeText,
+  );
   List<VocabularyRecord> records = [one, two];
   final streams = <StreamController<List<VocabularyRecord>>>[];
   final writes =
@@ -205,6 +230,77 @@ void cleanup(WidgetTester tester, LiveVocabulary repository) =>
     });
 
 void main() {
+  testWidgets(
+    'capture completes before editable buffers exist; captured values then retain raw selection',
+    (tester) async {
+      final repository = LiveVocabulary()..captureGate = Completer<void>();
+      addTearDown(repository.close);
+      await mount(tester, repository);
+      await tester.tap(card('one'));
+      await tester.pump();
+      expect(find.byType(TextField), findsNothing);
+      repository.records[0] = const VocabularyRecord(
+        id: 'one',
+        collectionId: 'owner',
+        targetText: 'Fresh stored',
+        nativeText: 'Frisch',
+      );
+      repository.captureGate!.complete();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(field('one')).controller!.text,
+        'Fresh stored',
+      );
+      await tester.enterText(field('one'), ' raw ');
+      final controller = tester.widget<TextField>(field('one')).controller!;
+      controller.selection = const TextSelection(
+        baseOffset: 1,
+        extentOffset: 3,
+      );
+      repository.emit();
+      await tester.pumpAndSettle();
+      expect(controller.text, ' raw ');
+      expect(
+        controller.selection,
+        const TextSelection(baseOffset: 1, extentOffset: 3),
+      );
+    },
+  );
+
+  testWidgets(
+    'failed capture retries and late capture cannot revive removed row or disposed view',
+    (tester) async {
+      final repository = LiveVocabulary()..failCapture = true;
+      addTearDown(repository.close);
+      await mount(tester, repository);
+      await tester.tap(card('one'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Try again'), findsOneWidget);
+      repository.failCapture = false;
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+      expect(field('one'), findsOneWidget);
+      await tester.tap(collapse());
+      await tester.pumpAndSettle();
+      repository.captureGate = Completer<void>();
+      await tester.tap(card('one'));
+      await tester.pump();
+      repository.records.removeAt(0);
+      repository.emit();
+      await tester.pump();
+      repository.captureGate!.complete();
+      await tester.pumpAndSettle();
+      expect(field('one'), findsNothing);
+      repository.captureGate = Completer<void>();
+      await tester.tap(card('two'));
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox());
+      repository.captureGate!.complete();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets(
     'real SQLite same card expands, autosaves, guards invalid and duplicate input, and reopens committed values',
     (tester) async {
