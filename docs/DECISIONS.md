@@ -1,5 +1,9 @@
 # Decision log
 
+## VOCAB-EDIT-002 — Android inline-edit acceptance — 2026-10-14
+
+Two English/German emulator cases exercise the real inline editor, keyboard, valid auto-save/Finish, rejected incomplete/duplicate Finish and exact opening-value Discard. Identity, row order, independent full directional state and reopened fixture storage remain correct. Tests inject isolated files and use --no-uninstall; existing production database and sentinel fingerprints were unchanged after cleanup. The normal current-schema APK was restored with an in-place install and successful cold launch. This verifies the inline-edit scope, not every release gate.
+
 ## UX-I18N-001 — first-release interface catalog audit — 2026-10-14
 
 Review production screen, control, feedback and accessibility text against the single shared English/German catalog. The audit found 111 referenced copy keys across 62 non-generated Dart sources, with no direct natural-language widget literal requiring a production fix. Add regression guards for missing language entries and future direct literals, while retaining actual localized screen tests for behavior and enlarged-text layout. Both guards pass in the integrated host checkpoint. Developer exceptions, storage identifiers and stored user vocabulary are not interface copy; this audit does not claim final Android-wide accessibility or linguistic review.
