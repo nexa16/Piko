@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-014 — Android cascade and safe dismissal — 2026-10-14
+
+The isolated real-runtime Android fixture creates both directions of actual regular review, FSRS, retry and scope-ordinal state in two Collections. Dismissing the confirmation preserves everything; confirming removes only the selected owner's descendants. Unrelated rows, settings and allocator high-water marks survive exactly, including after file reopen. The case passes with no-uninstall and unchanged production DB/sentinel fingerprints; the normal same-schema APK was restored and cold-launched. No broader release-gate completion is inferred.
+
 ## COLL-012 — Android rename preservation — 2026-10-14
 
 English/German emulator acceptance now verifies blank validation, dismissal without changes, trimmed rename and exact preservation of collection identity, vocabulary and divergent directional learning state through file reopen. Both isolated real-runtime cases pass. No-uninstall runner cleanup leaves the production database and preservation marker unchanged; the normal same-schema APK was restored and cold-launched. This closes scoped rename verification without claiming the remaining release gates.
