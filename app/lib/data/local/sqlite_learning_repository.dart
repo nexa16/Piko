@@ -6,6 +6,7 @@ import '../regular_review.dart';
 import '../retry_obligation.dart';
 import '../retry_answer.dart';
 import '../review_correction.dart';
+import '../review_due_membership.dart';
 import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
@@ -230,6 +231,36 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         final ordinal = await _scopeState(scope.collectionId, scope.direction);
         return RetryState(scope: ordinal, items: items, rounds: rounds);
       });
+
+  Future<List<ReviewDueMembership>> _dueMemberships(
+    CollectionReviewGateway scope,
+    DateTime at,
+  ) => database.transaction(() async {
+    if (!at.isUtc) throw ArgumentError.value(at, 'at', 'Must be UTC');
+    final items = await _scopedItems(scope);
+    final ordinal = await _scopeState(scope.collectionId, scope.direction);
+    final result = <ReviewDueMembership>[];
+    for (final item in items) {
+      final round = await _retryFor(item);
+      final activeRound = round != null && at.isBefore(round.expiresAt)
+          ? round
+          : null;
+      final scheduledRegularDue = !item.card.due.isAfter(at);
+      if (!scheduledRegularDue && activeRound == null) continue;
+      result.add(
+        ReviewDueMembership(
+          entryId: item.entryId,
+          itemId: item.id,
+          generation: item.generation,
+          direction: item.direction,
+          regularDue: activeRound == null && scheduledRegularDue,
+          eligibleRetry:
+              activeRound?.eligibleAt(ordinal, at) ?? false,
+        ),
+      );
+    }
+    return List.unmodifiable(result);
+  });
 
   Future<RetrySelection> _initialSelection(
     CollectionReviewGateway scope,
@@ -702,6 +733,10 @@ final class CollectionReviewGateway
   /// Caller-owned awaited read/cleanup; active same-day retry rounds only.
   Future<List<RetryObligation>> pendingRetries({required DateTime at}) =>
       _repository._pendingRetries(this, at);
+
+  /// Passive badge/count source: never expires, arms or otherwise mutates work.
+  Future<List<ReviewDueMembership>> dueMemberships({required DateTime at}) =>
+      _repository._dueMemberships(this, at);
 
   /// Storage boundary only: future reinforcement processing owns answer policy.
   /// This removes current-round state, never writes FSRS or regular history.

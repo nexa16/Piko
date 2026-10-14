@@ -532,6 +532,8 @@ globalThis.PIKO_COPY = {
     "action.saveName": {"en":"Save name","de":"Namen speichern"},
     "action.cancel": {"en":"Cancel","de":"Abbrechen"},
     "collection.reviewDue": {"en":"{count} vocabulary items ready to review","de":"{count} Vokabeln zum Wiederholen bereit"},
+    "collection.reviewLoading": {"en":"Loading review count…","de":"Wiederholungsanzahl wird geladen…"},
+    "collection.reviewLoadFailed": {"en":"Couldn't load the review count.","de":"Die Wiederholungsanzahl konnte nicht geladen werden."},
     "action.reviewNow": {"en":"Review now","de":"Jetzt wiederholen"},
     "vocab.inlineEdit": {"en":"Edit vocabulary","de":"Vokabel bearbeiten"},
     "vocab.inlineCollapse": {"en":"Collapse vocabulary editor","de":"Vokabeleditor einklappen"},

@@ -12,6 +12,7 @@ globalThis.PIKO_DESIGN = {
     dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
     icons: {size:20},
     checkboxes: {size:24,paddingY:10},
+    collectionReview: {quickWidth:180,quickPaddingX:13,quickPaddingY:9,quickCountSize:12,quickCountMinWidth:24,quickOpenTop:17,quickOpenBottom:12,quickHorizontal:16,quickActionsBottom:15,cardMinHeight:86,cardPadding:20,titleLineHeight:1.5},
     reviewGrading: {gap:10,topMargin:18,paddingX:8,paddingY:12,weight:650},
     reviewContext: {gap:14,topMargin:16,compactBreakpoint:400,compactSize:12,lineHeight:1.5},
     progress: {height:7,radius:9,marginY:16},

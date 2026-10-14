@@ -16,22 +16,28 @@ class PikoButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.icon,
+    this.trailing,
     this.variant = PikoButtonVariant.primary,
     this.focusNode,
     this.minimumSize,
     this.padding,
     this.labelSize,
     this.labelWeight,
+    this.iconLabelSpacing,
+    this.trailingSpacing,
   });
   final String label;
   final VoidCallback? onPressed;
   final Widget? icon;
+  final Widget? trailing;
   final PikoButtonVariant variant;
   final FocusNode? focusNode;
   final Size? minimumSize;
   final EdgeInsetsGeometry? padding;
   final double? labelSize;
   final FontWeight? labelWeight;
+  final double? iconLabelSpacing;
+  final double? trailingSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -132,9 +138,12 @@ class PikoButton extends StatelessWidget {
               ),
             ),
           if (icon != null && label.isNotEmpty)
-            SizedBox(width: d.dimension('spacing.2')),
+            SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
           if (label.isNotEmpty)
             Flexible(child: Text(label, textAlign: TextAlign.center)),
+          if (trailing != null)
+            SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
+          ?trailing,
         ],
       ),
     );

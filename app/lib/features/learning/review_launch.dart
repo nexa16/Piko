@@ -8,6 +8,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_session_route.dart';
@@ -17,6 +18,8 @@ typedef ReviewSessionFactory =
       String collectionId,
       LearningDirection direction,
     );
+
+enum ReviewLaunchPresentation { plain, collectionQuick, collectionCard }
 
 String reviewDirectionLabel(
   CollectionRecord collection,
@@ -40,7 +43,12 @@ class ReviewLaunch extends StatefulWidget {
     required this.onPendingWrites,
     required this.onBusyChanged,
     this.enabled = true,
-  });
+    this.presentation = ReviewLaunchPresentation.plain,
+    this.dueCount,
+    this.onSessionClosed,
+  }) : assert(
+         presentation == ReviewLaunchPresentation.plain || dueCount != null,
+       );
   final CollectionRecord collection;
   final ReviewSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
@@ -48,6 +56,9 @@ class ReviewLaunch extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
   final bool enabled;
+  final ReviewLaunchPresentation presentation;
+  final int? dueCount;
+  final VoidCallback? onSessionClosed;
   @override
   State<ReviewLaunch> createState() => _ReviewLaunchState();
 }
@@ -145,6 +156,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
           ),
         ),
       );
+      if (current()) widget.onSessionClosed?.call();
     } finally {
       if (session != null) {
         await session.stop();
@@ -158,10 +170,129 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
   }
 
   @override
-  Widget build(BuildContext context) => PikoButton(
-    label: PikoCopyScope.of(context).text('action.review'),
-    onPressed: widget.enabled && !_opening ? _open : null,
-  );
+  Widget build(BuildContext context) {
+    final copy = PikoCopyScope.of(context);
+    final activate = widget.enabled && !_opening ? _open : null;
+    return switch (widget.presentation) {
+      ReviewLaunchPresentation.plain => PikoButton(
+        label: copy.text('action.review'),
+        onPressed: activate,
+      ),
+      ReviewLaunchPresentation.collectionQuick => SizedBox(
+        width: pikoDesign.dimension('components.collectionReview.quickWidth'),
+        child: PikoButton(
+          key: const ValueKey('collection-review-quick'),
+          label: copy.text('action.review'),
+          icon: const PikoIcon(PikoIconName.rotateCcw),
+          padding: EdgeInsets.symmetric(
+            horizontal: pikoDesign.dimension(
+              'components.collectionReview.quickPaddingX',
+            ),
+            vertical: pikoDesign.dimension(
+              'components.collectionReview.quickPaddingY',
+            ),
+          ),
+          iconLabelSpacing: pikoDesign.dimension('spacing.1'),
+          trailingSpacing: pikoDesign.dimension('spacing.2'),
+          trailing: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: pikoDesign.dimension(
+                'components.collectionReview.quickCountMinWidth',
+              ),
+            ),
+            child: Text(
+              '${widget.dueCount!}',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: pikoDesign.dimension(
+                  'components.collectionReview.quickCountSize',
+                ),
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          onPressed: activate,
+        ),
+      ),
+      ReviewLaunchPresentation.collectionCard => Semantics(
+        button: true,
+        enabled: activate != null,
+        label:
+            '${copy.text('collection.reviewDue', {'count': widget.dueCount!})}. '
+            '${copy.text('action.reviewNow')}',
+        onTap: activate,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: const ValueKey('collection-review-card'),
+            excludeFromSemantics: true,
+            borderRadius: BorderRadius.circular(
+              pikoDesign.dimension('radii.card'),
+            ),
+            onTap: activate,
+            child: Container(
+              width: double.infinity,
+              constraints: BoxConstraints(
+                minHeight: pikoDesign.dimension(
+                  'components.collectionReview.cardMinHeight',
+                ),
+              ),
+              padding: EdgeInsets.all(
+                pikoDesign.dimension('components.collectionReview.cardPadding'),
+              ),
+              decoration: BoxDecoration(
+                color: pikoDesign.color('tint'),
+                borderRadius: BorderRadius.circular(
+                  pikoDesign.dimension('radii.card'),
+                ),
+              ),
+              child: ExcludeSemantics(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            copy.text('collection.reviewDue', {
+                              'count': widget.dueCount!,
+                            }),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension('typography.body'),
+                              height: pikoDesign.dimension(
+                                'components.collectionReview.titleLineHeight',
+                              ),
+                              fontWeight: pikoDesign.weight(
+                                'components.buttons.weight',
+                              ),
+                              color: pikoDesign.color('primary'),
+                            ),
+                          ),
+                          SizedBox(height: pikoDesign.dimension('spacing.1')),
+                          Text(
+                            copy.text('action.reviewNow'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension(
+                                'typography.small',
+                              ),
+                              color: pikoDesign.color('muted'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: pikoDesign.dimension('spacing.3')),
+                    const PikoIcon(PikoIconName.rotateCcw),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    };
+  }
 }
 
 class ReviewDirectionDialog extends StatefulWidget {

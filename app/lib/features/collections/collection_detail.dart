@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
@@ -15,6 +16,8 @@ import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_write_barrier.dart';
+import 'collection_review_count.dart';
+import 'collection_review_entry_point.dart';
 
 String collectionLanguagePair(BuildContext context, CollectionRecord record) {
   final copy = PikoCopyScope.of(context);
@@ -48,8 +51,11 @@ class CollectionDetail extends StatefulWidget {
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
     this.reviewSessionFactory,
+    this.reviewMembershipLoader,
+    this.reviewCountPolicy,
+    this.reviewCountClock = const SystemPikoClock(),
     super.key,
-  });
+  }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
@@ -57,6 +63,9 @@ class CollectionDetail extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
   final ReviewSessionFactory? reviewSessionFactory;
+  final CollectionReviewMembershipLoader? reviewMembershipLoader;
+  final CollectionReviewCountPolicy? reviewCountPolicy;
+  final PikoClock reviewCountClock;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -65,6 +74,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
   bool _openingReview = false;
+  bool _mutationWasBusy = false;
   int _reviewIdentity = 0;
   CollectionRecord? _currentCollection;
   CollectionRecord? _lastReadyCollection;
@@ -427,17 +437,27 @@ class _CollectionDetailState extends State<CollectionDetail> {
   }
 
   void _mutationChanged() {
-    if (mounted) setState(() {});
+    final busy = _mutations?.isBusy == true;
+    if (mounted) {
+      setState(() {
+        if (_mutationWasBusy && !busy) _reviewIdentity++;
+        _mutationWasBusy = busy;
+      });
+    } else {
+      _mutationWasBusy = busy;
+    }
   }
 
   void _createMutations() {
     _mutations = widget.vocabularyMutationsFactory?.call(widget.collectionId);
+    _mutationWasBusy = _mutations?.isBusy == true;
     _mutations?.addListener(_mutationChanged);
   }
 
   void _endMutations(ValueChanged<Future<void>>? register) {
     final old = _mutations;
     _mutations = null;
+    _mutationWasBusy = false;
     old?.removeListener(_mutationChanged);
     if (old != null) {
       final ending = old.end();
@@ -466,7 +486,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _openingEntry = false);
+      if (mounted) {
+        setState(() {
+          _openingEntry = false;
+          _reviewIdentity++;
+        });
+      }
     }
   }
 
@@ -505,6 +530,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
       _createMutations();
     }
     if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory ||
+        oldWidget.reviewMembershipLoader != widget.reviewMembershipLoader ||
+        oldWidget.reviewCountPolicy != widget.reviewCountPolicy ||
+        !identical(oldWidget.reviewCountClock, widget.reviewCountClock) ||
         oldWidget.vocabularyRepository != widget.vocabularyRepository) {
       _reviewIdentity++;
       if (_openingReview) _writeBarrier.release();
@@ -616,36 +644,74 @@ class _CollectionDetailState extends State<CollectionDetail> {
                       'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
                     ),
                     padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.3'),
-                    ),
-                    child: ReviewLaunch(
-                      key: ValueKey(
-                        'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                      top: pikoDesign.dimension(
+                        widget.reviewMembershipLoader == null
+                            ? 'spacing.3'
+                            : 'spacing.5',
                       ),
-                      collection: _lastReadyCollection!,
-                      factory: widget.reviewSessionFactory!,
-                      vocabularyRepository: widget.vocabularyRepository!,
-                      enabled:
-                          ready &&
-                          _deleteRequest == null &&
-                          _renameRequest == null &&
-                          !_openingEntry &&
-                          _mutations?.isBusy != true,
-                      beforeLaunch: () async {
-                        barrierForBuild.freeze();
-                        await barrierForBuild.drain();
-                        await mutationsForBuild?.awaitPending();
-                      },
-                      onPendingWrites: registerForBuild,
-                      onBusyChanged: (busy) {
-                        if (mounted &&
-                            identityForBuild == _identity &&
-                            reviewIdentityForBuild == _reviewIdentity) {
-                          if (!busy) barrierForBuild.release();
-                          setState(() => _openingReview = busy);
-                        }
-                      },
                     ),
+                    child: widget.reviewMembershipLoader == null
+                        ? ReviewLaunch(
+                            key: ValueKey(
+                              'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                            ),
+                            collection: _lastReadyCollection!,
+                            factory: widget.reviewSessionFactory!,
+                            vocabularyRepository: widget.vocabularyRepository!,
+                            enabled:
+                                ready &&
+                                _deleteRequest == null &&
+                                _renameRequest == null &&
+                                !_openingEntry &&
+                                _mutations?.isBusy != true,
+                            beforeLaunch: () async {
+                              barrierForBuild.freeze();
+                              await barrierForBuild.drain();
+                              await mutationsForBuild?.awaitPending();
+                            },
+                            onPendingWrites: registerForBuild,
+                            onBusyChanged: (busy) {
+                              if (mounted &&
+                                  identityForBuild == _identity &&
+                                  reviewIdentityForBuild == _reviewIdentity) {
+                                if (!busy) barrierForBuild.release();
+                                setState(() => _openingReview = busy);
+                              }
+                            },
+                          )
+                        : CollectionReviewEntryPoint(
+                            key: ValueKey(
+                              'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                            ),
+                            collection: _lastReadyCollection!,
+                            loader: widget.reviewMembershipLoader!,
+                            policy: widget.reviewCountPolicy!,
+                            clock: widget.reviewCountClock,
+                            factory: widget.reviewSessionFactory!,
+                            vocabularyRepository: widget.vocabularyRepository!,
+                            enabled:
+                                ready &&
+                                _deleteRequest == null &&
+                                _renameRequest == null &&
+                                !_openingEntry &&
+                                _mutations?.isBusy != true,
+                            beforeLaunch: () async {
+                              barrierForBuild.freeze();
+                              await barrierForBuild.drain();
+                              await mutationsForBuild?.awaitPending();
+                            },
+                            onPendingWrites: registerForBuild,
+                            onBusyChanged: (busy) {
+                              if (mounted &&
+                                  identityForBuild == _identity &&
+                                  reviewIdentityForBuild == _reviewIdentity) {
+                                if (!busy) barrierForBuild.release();
+                                setState(() => _openingReview = busy);
+                              }
+                            },
+                            presentation:
+                                ReviewLaunchPresentation.collectionCard,
+                          ),
                   ),
                 if (ready &&
                     (widget.entrySessionFactory != null ||

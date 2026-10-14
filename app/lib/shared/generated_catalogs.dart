@@ -28,6 +28,20 @@ const designCatalog = <String, Object?>{
 "paddingY": 10,
 "size": 24,
 },
+"collectionReview": <String, Object?>{
+"cardMinHeight": 86,
+"cardPadding": 20,
+"quickActionsBottom": 15,
+"quickCountMinWidth": 24,
+"quickCountSize": 12,
+"quickHorizontal": 16,
+"quickOpenBottom": 12,
+"quickOpenTop": 17,
+"quickPaddingX": 13,
+"quickPaddingY": 9,
+"quickWidth": 180,
+"titleLineHeight": 1.5,
+},
 "dialogs": <String, Object?>{
 "backdropColor": "#15251c",
 "backdropOpacity": 0.5333333333333333,
@@ -385,6 +399,14 @@ const copyCatalog = <String, Object?>{
 "collection.reviewDue": <String, Object?>{
 "de": "{count} Vokabeln zum Wiederholen bereit",
 "en": "{count} vocabulary items ready to review",
+},
+"collection.reviewLoadFailed": <String, Object?>{
+"de": "Die Wiederholungsanzahl konnte nicht geladen werden.",
+"en": "Couldn't load the review count.",
+},
+"collection.reviewLoading": <String, Object?>{
+"de": "Wiederholungsanzahl wird geladen…",
+"en": "Loading review count…",
 },
 "collection.sameLanguage": <String, Object?>{
 "de": "Wähle zwei unterschiedliche Sprachen.",
