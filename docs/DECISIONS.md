@@ -504,7 +504,7 @@ Classify UX-HEADER-002 as First. Extract the binding mockup's existing 7px title
 
 ## UX-HEADER-001 — first-release page-heading hierarchy — 2026-10-13
 
-Classify UX-HEADER-001 as First, as the shared heading dependency for the accepted screens. PikoHeading presents one level-one semantic title and supports a meaningful Collection subtitle using canonical small/muted typography with natural wrapping. There is no decorative eyebrow or generic explanatory subtitle slot. Learning direction/progress, section headings and field instructions remain separate useful context. This establishes the shared primitive; full page integration belongs to each screen requirement and spacing belongs to UX-HEADER-002.
+Classify UX-HEADER-001 as First, as the shared heading dependency for the accepted screens. PikoHeading presents one level-one semantic title and supports a meaningful Collection subtitle using canonical small/muted typography with natural wrapping. Collection Detail combines its localized language pair with the live persisted vocabulary-entry count; a successful empty read shows zero, while unresolved or failed entry reads retain the pair without inventing a count. There is no decorative eyebrow or generic explanatory subtitle slot. Learning direction/progress, section headings and field instructions remain separate useful context. This establishes the shared primitive; full page integration belongs to each screen requirement and spacing belongs to UX-HEADER-002.
 
 ## UX-DIALOG-001 — reusable application popup — 2026-10-13
 

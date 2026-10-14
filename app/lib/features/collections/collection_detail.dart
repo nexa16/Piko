@@ -16,16 +16,9 @@ import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_write_barrier.dart';
+import 'collection_entry_count.dart';
 import 'collection_review_count.dart';
 import 'collection_review_entry_point.dart';
-
-String collectionLanguagePair(BuildContext context, CollectionRecord record) {
-  final copy = PikoCopyScope.of(context);
-  return copy.text('collection.languagePair', {
-    'target': copy.text(record.targetLanguage.copyKey),
-    'native': copy.text(record.nativeLanguage.copyKey),
-  });
-}
 
 class CollectionLoadFailure extends StatelessWidget {
   const CollectionLoadFailure({required this.onRetry, super.key});
@@ -588,39 +581,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PikoHeading(
-                  title: record?.name ?? copy.text('collection.title'),
-                  subtitle: record == null
-                      ? null
-                      : collectionLanguagePair(context, record),
-                  leading: PikoButton(
-                    label: copy.text('common.back'),
-                    icon: const PikoIcon(PikoIconName.arrowLeft),
-                    variant: PikoButtonVariant.ghost,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  ),
-                  titleContent: _lastReadyCollection == null
-                      ? null
-                      : _nameHeading(_lastReadyCollection!, ready),
-                  titleMargin: _renaming
-                      ? pikoDesign.dimension('spacing.2')
-                      : null,
-                  actions: [
-                    if (ready)
-                      PikoButton(
-                        label: copy.text('collection.delete'),
-                        icon: const PikoIcon(PikoIconName.trash),
-                        variant: PikoButtonVariant.dangerGhost,
-                        onPressed:
-                            _deleteRequest != null ||
-                                _openingEntry ||
-                                _openingReview ||
-                                _renameRequest != null
-                            ? null
-                            : _deleteCollection,
-                      ),
-                  ],
-                ),
+                _detailHeading(record, ready),
                 if (_deleting) Text(copy.text('collection.deleting')),
                 if (_deleteError != null)
                   Semantics(
@@ -797,6 +758,48 @@ class _CollectionDetailState extends State<CollectionDetail> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _detailHeading(CollectionRecord? record, bool ready) {
+    final copy = PikoCopyScope.of(context);
+    Widget heading(int? entryCount) => PikoHeading(
+      title: record?.name ?? copy.text('collection.title'),
+      subtitle: record == null
+          ? null
+          : collectionEntryMetadata(context, record, entryCount),
+      leading: PikoButton(
+        label: copy.text('common.back'),
+        icon: const PikoIcon(PikoIconName.arrowLeft),
+        variant: PikoButtonVariant.ghost,
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      titleContent: _lastReadyCollection == null
+          ? null
+          : _nameHeading(_lastReadyCollection!, ready),
+      titleMargin: _renaming ? pikoDesign.dimension('spacing.2') : null,
+      actions: [
+        if (ready)
+          PikoButton(
+            label: copy.text('collection.delete'),
+            icon: const PikoIcon(PikoIconName.trash),
+            variant: PikoButtonVariant.dangerGhost,
+            onPressed:
+                _deleteRequest != null ||
+                    _openingEntry ||
+                    _openingReview ||
+                    _renameRequest != null
+                ? null
+                : _deleteCollection,
+          ),
+      ],
+    );
+    final repository = widget.vocabularyRepository;
+    if (record == null || repository == null) return heading(null);
+    return CollectionEntryCount(
+      repository: repository,
+      collectionId: record.id,
+      builder: (_, count) => heading(count),
     );
   }
 }
