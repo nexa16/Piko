@@ -11,6 +11,40 @@ final class SqliteLearningRepository implements RegularReviewWriter {
   final PikoDatabase database;
   final _scheduler = LearningScheduler();
 
+  /// Resolves an actual Collection UUID; names never establish review scope.
+  Future<CollectionReviewGateway> forCollection({
+    required String collectionId,
+    required LearningDirection direction,
+  }) async {
+    final collection = await (database.select(
+      database.collections,
+    )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
+    if (collection == null) throw RegularReviewFailure.collectionNotFound;
+    return CollectionReviewGateway._(this, collection.id, direction);
+  }
+
+  Future<List<LearningItemRecord>> _scopedItems(
+    CollectionReviewGateway scope,
+  ) => database.transaction(() async {
+    final collection = await (database.select(
+      database.collections,
+    )..where((row) => row.id.equals(scope.collectionId))).getSingleOrNull();
+    if (collection == null) throw RegularReviewFailure.collectionNotFound;
+    final items = database.learningItems;
+    final entries = database.vocabularyEntries;
+    final rows =
+        await (database.select(items).join([
+                innerJoin(entries, entries.id.equalsExp(items.entryId)),
+              ])
+              ..where(
+                entries.collectionId.equals(scope.collectionId) &
+                    items.direction.equals(scope.direction.name),
+              )
+              ..orderBy([OrderingTerm(expression: items.id)]))
+            .get();
+    return List.unmodifiable(rows.map((row) => _record(row.readTable(items))));
+  });
+
   LearningItemRecord _record(LearningItem row) {
     final record = LearningItemRecord(
       id: row.id,
@@ -32,6 +66,19 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     required LearningItemRecord expectedPrior,
     required LearningRating rating,
     required DateTime reviewedAt,
+  }) => _review(
+    kind: kind,
+    expectedPrior: expectedPrior,
+    rating: rating,
+    reviewedAt: reviewedAt,
+  );
+
+  Future<RegularReviewReceipt> _review({
+    required ReviewKind kind,
+    required LearningItemRecord expectedPrior,
+    required LearningRating rating,
+    required DateTime reviewedAt,
+    CollectionReviewGateway? scope,
   }) async {
     // Reject reinforcement at the boundary, before storage or FSRS calculation.
     if (kind != ReviewKind.regular) {
@@ -46,6 +93,18 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         database.learningItems,
       )..where((item) => item.id.equals(expectedPrior.id))).getSingleOrNull();
       if (row == null) throw RegularReviewFailure.itemNotFound;
+      if (scope != null) {
+        // Recheck authoritative ownership in the event/card write transaction.
+        // Neither a discovered list nor the caller's prior can establish scope.
+        final entry = await (database.select(
+          database.vocabularyEntries,
+        )..where((entry) => entry.id.equals(row.entryId))).getSingleOrNull();
+        if (entry == null ||
+            entry.collectionId != scope.collectionId ||
+            row.direction != scope.direction.name) {
+          throw RegularReviewFailure.outOfScope;
+        }
+      }
       final prior = _record(row);
       if (prior.entryId != expectedPrior.entryId ||
           prior.direction != expectedPrior.direction ||
@@ -165,4 +224,34 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             .write(LearningItemsCompanion(cardJson: Value(encoded)));
     if (count != 1) throw StateError('Learning item does not exist');
   }
+}
+
+/// Fixed Collection/direction boundary, not a due set or session launcher.
+final class CollectionReviewGateway implements RegularReviewWriter {
+  const CollectionReviewGateway._(
+    this._repository,
+    this.collectionId,
+    this.direction,
+  );
+  final SqliteLearningRepository _repository;
+  final String collectionId;
+  final LearningDirection direction;
+
+  /// Non-presentational discovery; SESSION-018 owns due eligibility/selection.
+  /// An existing empty Collection returns []; a deleted owner fails explicitly.
+  Future<List<LearningItemRecord>> items() => _repository._scopedItems(this);
+
+  @override
+  Future<RegularReviewReceipt> review({
+    required ReviewKind kind,
+    required LearningItemRecord expectedPrior,
+    required LearningRating rating,
+    required DateTime reviewedAt,
+  }) => _repository._review(
+    kind: kind,
+    expectedPrior: expectedPrior,
+    rating: rating,
+    reviewedAt: reviewedAt,
+    scope: this,
+  );
 }

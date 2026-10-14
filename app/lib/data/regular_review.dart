@@ -41,4 +41,10 @@ final class RegularReviewReceipt {
   final RegularReviewRecord event;
 }
 
-enum RegularReviewFailure { itemNotFound, staleState, reinforcementNotRetained }
+enum RegularReviewFailure {
+  itemNotFound,
+  staleState,
+  reinforcementNotRetained,
+  collectionNotFound,
+  outOfScope,
+}

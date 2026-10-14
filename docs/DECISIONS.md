@@ -1,5 +1,13 @@
 # Decision log
 
+## SESSION-017 — authoritative Collection/direction review boundary — 2026-10-14
+
+Create an immutable scoped review gateway only after resolving the actual Collection UUID, with one fixed Learning Direction. Names and caller snapshots do not establish ownership. Discovery joins Learning Items to stored vocabulary ownership/direction and validates complete cards; it returns an unmodifiable list in item-ID order, not a due set or session launch. Owner lookup and discovery share one read transaction: a valid empty Collection returns an empty list, while a deleted/missing Collection reports `collectionNotFound` rather than a no-due result.
+
+The gateway implements the existing narrow `RegularReviewWriter` so the production grading coordinator can consume it. Its common private regular-review transaction loads current item/entry ownership and checks Collection/direction before the existing exact-prior, scheduling, event/card/revision writes. Foreign or opposite-direction items fail `outOfScope`, including forged caller entry/direction metadata; missing items and stale state retain their existing failures. Reinforcement still rejects before storage/scheduling, and actual database failures roll back event/card writes together. The lower-level unscoped repository API remains for isolated storage use; future product sessions must use the scoped gateway. No new schema, security/token mechanism, UI or queue is introduced.
+
+Eight real-SQLite host tests verify same-named UUID isolation and both directions, read/clone isolation, actual coordinator receipts, foreign/forged/stale submissions, ownership changed after discovery, entry/Collection deletion, typed retention/corruption guards and real trigger rollback/retry. All 393 Flutter and 13 Node tests pass with clean analysis, generator and browser checks; the final strengthened SQLite exception assertion also passes focused acceptance. This establishes the authoritative boundary only. SESSION-018 owns due cutoff/all-due selection without a cap, while launch, full session/retry behavior and Android acceptance remain pending.
+
 ## ANSWER-004 — optional Hard control — 2026-10-14
 
 Implement a reusable full-label checkbox and a learning-feature adapter that reads and toggles the existing grading coordinator. Hard starts off, can be toggled off again and never submits a grade alone. Correct with Hard records Hard, ordinary Correct records Good, and Incorrect remains Again regardless of the modifier. Pending, accepted and stale presentations disable the control; failed storage preserves the selection for retry. Use the existing shared `learn.hard` English/German label rather than adding interface wording.
