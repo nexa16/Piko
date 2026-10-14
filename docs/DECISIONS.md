@@ -1,5 +1,9 @@
 # Decision log
 
+## RETRY-002 — Count answered questions, not presentations — 2026-10-14
+
+The owner confirmed that retry gaps count answered questions. Opening or revealing a question and then leaving does not shorten the gap. After the triggering incorrect answer, count subsequent graded questions, including other retries, toward the confirmed 20/10/5/3/1 gaps. The triggering answer does not count toward its own newly created gap. This records the accepted counting rule; retry-queue implementation and verification remain pending.
+
 ## VOCAB-EDIT-002 — Repository-issued opening values and reversible autosave — 2026-10-14
 
 Inline Collection editing now captures a repository-issued opening snapshot before creating editable buffers. The snapshot retains the exact stored pair and identity; restoring it drains accepted autosaves and atomically updates only the text and comparison keys. Legacy display bytes are preserved, uniqueness is checked, deleted entries are never recreated, and directional learning state, ordering and allocators remain untouched. A snapshot from another repository instance or a forged implementation is rejected.
