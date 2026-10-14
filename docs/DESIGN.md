@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Actual session counters and progress — UX-CARD-012
+
+Above each real hidden/revealed card and pending wait, retain a single fixed direction, completed/total unique launch members and first-try correct text. Use existing shared copy and semantic muted text; do not expose the current round's error count. Canonical `components.reviewContext` and `components.progress` adapt the binding's context gap/type/breakpoint and 7px ink-on-tint bar with 9px radius and 16px margins. Narrow metadata wraps naturally without clipping. Numeric progress-bar semantics include min/max/value and localized description.
+
+English/German 320px/200% host tests verify counter containment, shared edges and margins above the card, accessible role/value and exact zero/half fill after accepted success. Browser adapter tests preserve reference dimensions. Scrolling is expected when context and enlarged cards exceed the viewport; prior reveal/grading fixtures now scroll before activating the same targets. Android rendering remains pending.
+
 ## Language-only Settings presentation — UX-SETTINGS-001
 
 Use one shared level-one page title, ghost Back and language card/dropdown; English and Deutsch are the canonical option autonyms. No learning, direction, Hint, developer or theme preference appears in the first-release route. Growable shared controls and page scrolling retain keyboard and touch access at English/German 320px/392px with 200% text; host tests verify single heading, menu/control containment, ≥44px targets and return to the same Home.

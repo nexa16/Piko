@@ -35,7 +35,7 @@ CARD-UI-015 host evidence: the real revealed self-assessment card now places the
 
 - **UX-CARD-010:** [Flow: review] Distinguish app Back/Exit from Previous Review. Previous returns only to the immediately preceding card and exposes its prior grade for correction. (CARD-UI-019–020, UNDO-001)
 - **UX-CARD-011:** [Flow: review] Provide an explicit Skip action on the question side, at most once per Learning Item per session. Do not conflate Skip with swipe navigation. (CARD-UI-021)
-- **UX-CARD-012:** [Flow: review] Above the card show completed / total unique Learning Items and first-try-correct count; do not show the current item's mistake count as a clue. (CARD-UI-002, CARD-UI-024)
+- **UX-CARD-012 [Confirmed]:** [Release: First] [Flow: review] Above the card show completed / total unique Learning Items and first-try-correct count; do not show the current item's mistake count as a clue. Actual per-launch counters and determinate progress retain localized fixed-direction context on hidden/revealed/pending states. Two EN/DE 320px/200% real-route cases verify wrapping, above-card geometry, shared bar edges/margins, numeric accessible progress semantics and exact accepted zero/half updates; 18 Node tests verify canonical browser/Flutter adapters. Host implemented, Android pending. (CARD-UI-002, CARD-UI-024)
 - **UX-CARD-013:** [Flow: review] Keep grading actions reachable when long example content requires scrolling; all examples remain accessible. (EXAMPLE-005)
 
 ## Collection and Learning Setup — confirmed UX

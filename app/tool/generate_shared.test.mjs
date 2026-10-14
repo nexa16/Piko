@@ -4,9 +4,26 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
+import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive, reviewContextResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('review context and progress adapters share binding geometry and responsive policy', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.reviewContext = {gap:15,topMargin:17,compactBreakpoint:410,compactSize:13,lineHeight:1.6};
+  config.components.progress = {height:8,radius:10,marginY:18};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN:config,document:{documentElement:{dataset:{},style:{setProperty:(key,value)=>properties.set(key,value)}}}
+  });
+  for(const [name,value] of [['--review-context-gap','15px'],['--review-context-top-margin','17px'],['--review-context-compact-size','13px'],['--review-context-line-height','1.6'],['--progress-height','8px'],['--progress-radius','10px'],['--progress-margin-y','18px']])assert.equal(properties.get(name),value);
+  const generated=generate(config,{schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"compactBreakpoint": 410,'));
+  const css=fs.readFileSync(new URL('../../shared/components.css',import.meta.url),'utf8');
+  for(const name of ['progress-height','progress-radius','progress-margin-y','review-context-gap','review-context-top-margin','review-context-line-height','review-context-compact-size'])assert.ok(css.includes('var(--'+name+')'));
+  const responsive=reviewContextResponsive(config,css);
+  assert.ok(responsive.includes('@media(max-width:410px){.review-context'));
+  assert.equal(reviewContextResponsive(config,responsive),responsive);
+});
 test('Settings-only field margin adapts canonical binding inset', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.settings.fieldMarginY = 18;

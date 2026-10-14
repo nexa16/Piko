@@ -13,6 +13,7 @@ import 'review_launch.dart';
 import 'review_prompt_card.dart';
 import 'regular_grading_coordinator.dart';
 import 'hard_modifier.dart';
+import 'review_progress.dart';
 
 /// Stored self-assessment card and regular grades; reinforcement follows separately.
 class ReviewSessionRoute extends StatefulWidget {
@@ -262,18 +263,25 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                     onPressed: _exiting ? null : () => _exit(sessionForBuild),
                   ),
                 ),
-                Text(
-                  reviewDirectionLabel(
-                    widget.collection,
-                    widget.session.direction,
+                if (sessionForBuild.hasInitialWork)
+                  ReviewProgress(
+                    direction: reviewDirectionLabel(
+                      widget.collection,
+                      sessionForBuild.direction,
+                    ),
+                    progress: sessionForBuild.progress,
+                  )
+                else
+                  Text(
+                    reviewDirectionLabel(
+                      widget.collection,
+                      widget.session.direction,
+                    ),
+                    key: const ValueKey('review-fixed-direction'),
                   ),
-                  key: const ValueKey('review-fixed-direction'),
-                ),
                 if (sessionForBuild.current case final handle?)
                   Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.4'),
-                    ),
+                    padding: EdgeInsets.zero,
                     child: ReviewPromptCard(
                       key: ObjectKey(handle),
                       handle: handle,

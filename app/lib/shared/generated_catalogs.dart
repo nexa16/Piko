@@ -105,6 +105,18 @@ const designCatalog = <String, Object?>{
 "promptSize": 37,
 "promptWeight": 750,
 },
+"progress": <String, Object?>{
+"height": 7,
+"marginY": 16,
+"radius": 9,
+},
+"reviewContext": <String, Object?>{
+"compactBreakpoint": 400,
+"compactSize": 12,
+"gap": 14,
+"lineHeight": 1.5,
+"topMargin": 16,
+},
 "reviewGrading": <String, Object?>{
 "gap": 10,
 "paddingX": 8,

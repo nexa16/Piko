@@ -1,5 +1,11 @@
 # Decision log
 
+## UX-CARD-012 — real readable unique progress — 2026-10-14
+
+Render actual per-launch completed/total and first-try counts above the card, with one fixed direction and an ink/tint determinate bar. Lift existing binding geometry into canonical context/progress adapters: 7px bar, 9px radius, 16px vertical margin; 14px context gap, compact 8px/12px metadata at 400px. Numeric min/max/value progress semantics carry the localized readable description. Do not show a per-question mistake clue.
+
+Two English/German real-route 320px/200% cases verify wrapping, exact bar/card edges/margins, localized semantics, zero/half fill and accepted updates. The related batch passes 19 focused cases, clean analysis and 18 Node tests/canonical checks. One full integration checkpoint passed 617 cases and caught five legacy off-screen taps after the added context; all 41 tests in those three fixture files pass after explicit scroll-to-visible, with assertions unchanged. No unrun full622 claim; Android remains pending.
+
 ## CARD-UI-002 — unique per-launch success counters — 2026-10-14
 
 Interpret session counters per launch, not as persistent daily aggregates or carried prior-session success. Capture the immutable union of regular and initially pending item/generation identities. Complete each unique member only after accepted initial Good/Hard or successful reinforcement; only successful initial regular answers count first-try. Incorrect, reveal, modifiers, waits, failed/repeated submissions and expiry do not add success or change total. Expiry can therefore end work below 100%. This is an implementation interpretation, not an additional owner quote.

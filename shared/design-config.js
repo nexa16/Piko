@@ -13,6 +13,8 @@ globalThis.PIKO_DESIGN = {
     icons: {size:20},
     checkboxes: {size:24,paddingY:10},
     reviewGrading: {gap:10,topMargin:18,paddingX:8,paddingY:12,weight:650},
+    reviewContext: {gap:14,topMargin:16,compactBreakpoint:400,compactSize:12,lineHeight:1.5},
+    progress: {height:7,radius:9,marginY:16},
     headings: {titleMargin:7},
     settings: {fieldMarginY:17},
     sectionHeading: {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12},
