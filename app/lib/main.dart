@@ -12,7 +12,7 @@ void main() {
   runApp(const PikoApp());
 }
 
-class PikoApp extends StatelessWidget {
+class PikoApp extends StatefulWidget {
   const PikoApp({this.locale, this.localeController, this.home, super.key});
 
   final Locale? locale;
@@ -21,15 +21,42 @@ class PikoApp extends StatelessWidget {
   static const supportedLocales = InterfaceLocaleController.supportedLocales;
 
   @override
-  Widget build(BuildContext context) {
-    final controller = localeController;
-    if (controller != null) {
-      return ValueListenableBuilder<Locale>(
-        valueListenable: controller,
-        builder: (context, selected, child) => _localizedApp(selected),
-      );
+  State<PikoApp> createState() => _PikoAppState();
+}
+
+class _PikoAppState extends State<PikoApp> {
+  InterfaceLocaleController? _owned;
+  InterfaceLocaleController get _controller =>
+      widget.localeController ??
+      (_owned ??= InterfaceLocaleController(widget.locale));
+
+  @override
+  void didUpdateWidget(PikoApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.localeController != null && _owned != null) {
+      _owned!.dispose();
+      _owned = null;
+    } else if (widget.localeController == null &&
+        oldWidget.locale != widget.locale) {
+      _controller.value = InterfaceLocaleController.resolve(widget.locale);
     }
-    return _localizedApp(InterfaceLocaleController.resolve(locale));
+  }
+
+  @override
+  void dispose() {
+    _owned?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InterfaceLocaleScope(
+      controller: _controller,
+      child: ValueListenableBuilder<Locale>(
+        valueListenable: _controller,
+        builder: (context, selected, child) => _localizedApp(selected),
+      ),
+    );
   }
 
   Widget _localizedApp(Locale selected) {
@@ -38,12 +65,12 @@ class PikoApp extends StatelessWidget {
       child: Builder(
         builder: (context) => MaterialApp(
           locale: selected,
-          supportedLocales: supportedLocales,
+          supportedLocales: PikoApp.supportedLocales,
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           title: PikoCopyScope.of(context).text('app.name'),
           theme: PikoTheme.build(),
           debugShowCheckedModeBanner: false,
-          home: home ?? const PikoRuntime(),
+          home: widget.home ?? const PikoRuntime(),
         ),
       ),
     );

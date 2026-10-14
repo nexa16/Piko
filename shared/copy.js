@@ -414,6 +414,12 @@ globalThis.PIKO_COPY = {
       "en": "App language",
       "de": "App-Sprache"
     },
+    "settings.languageEnglish": {"en": "English", "de": "English"},
+    "settings.languageGerman": {"en": "Deutsch", "de": "Deutsch"},
+    "settings.loading": {"en": "Loading app language…", "de": "App-Sprache wird geladen…"},
+    "settings.loadFailed": {"en": "App language could not be loaded. Try again.", "de": "Die App-Sprache konnte nicht geladen werden. Bitte erneut versuchen."},
+    "settings.saving": {"en": "Saving app language…", "de": "App-Sprache wird gespeichert…"},
+    "settings.saveFailed": {"en": "App language could not be saved. The previous language was restored. Try again.", "de": "Die App-Sprache konnte nicht gespeichert werden. Die vorherige Sprache wurde wiederhergestellt. Bitte erneut versuchen."},
     "settings.learning": {
       "en": "Learning preferences",
       "de": "Lerneinstellungen"

@@ -12,3 +12,19 @@ final class InterfaceLocaleController extends ValueNotifier<Locale> {
   @override
   set value(Locale requested) => super.value = resolve(requested);
 }
+
+/// Shares the app-lifetime controller without taking ownership of injections.
+class InterfaceLocaleScope extends InheritedWidget {
+  const InterfaceLocaleScope({
+    required this.controller,
+    required super.child,
+    super.key,
+  });
+  final InterfaceLocaleController controller;
+  static InterfaceLocaleController of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<InterfaceLocaleScope>()!
+      .controller;
+  @override
+  bool updateShouldNotify(InterfaceLocaleScope oldWidget) =>
+      controller != oldWidget.controller;
+}

@@ -23,6 +23,7 @@ class CollectionsHome extends StatefulWidget {
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
     this.reviewSessionFactory,
+    this.onOpenSettings,
     super.key,
   });
   final CollectionsRepository repository;
@@ -31,6 +32,7 @@ class CollectionsHome extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
   final ReviewSessionFactory? reviewSessionFactory;
+  final VoidCallback? onOpenSettings;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -77,7 +79,25 @@ class _CollectionsHomeState extends State<CollectionsHome> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoHeading(title: copy.text('home.collections')),
+            PikoHeading(
+              title: copy.text('home.collections'),
+              actions: widget.onOpenSettings == null
+                  ? const []
+                  : [
+                      SizedBox(
+                        width: double.infinity,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: PikoButton(
+                            label: copy.text('nav.settings'),
+                            icon: const PikoIcon(PikoIconName.settings),
+                            variant: PikoButtonVariant.ghost,
+                            onPressed: widget.onOpenSettings,
+                          ),
+                        ),
+                      ),
+                    ],
+            ),
             Align(
               alignment: Alignment.centerRight,
               child: PikoButton(

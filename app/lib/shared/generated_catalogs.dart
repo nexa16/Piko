@@ -846,9 +846,33 @@ const copyCatalog = <String, Object?>{
 "de": "App-Sprache",
 "en": "App language",
 },
+"settings.languageEnglish": <String, Object?>{
+"de": "English",
+"en": "English",
+},
+"settings.languageGerman": <String, Object?>{
+"de": "Deutsch",
+"en": "Deutsch",
+},
 "settings.learning": <String, Object?>{
 "de": "Lerneinstellungen",
 "en": "Learning preferences",
+},
+"settings.loadFailed": <String, Object?>{
+"de": "Die App-Sprache konnte nicht geladen werden. Bitte erneut versuchen.",
+"en": "App language could not be loaded. Try again.",
+},
+"settings.loading": <String, Object?>{
+"de": "App-Sprache wird geladen…",
+"en": "Loading app language…",
+},
+"settings.saveFailed": <String, Object?>{
+"de": "Die App-Sprache konnte nicht gespeichert werden. Die vorherige Sprache wurde wiederhergestellt. Bitte erneut versuchen.",
+"en": "App language could not be saved. The previous language was restored. Try again.",
+},
+"settings.saving": <String, Object?>{
+"de": "App-Sprache wird gespeichert…",
+"en": "Saving app language…",
 },
 "stats.activity": <String, Object?>{
 "de": "Lernaktivität",

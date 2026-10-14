@@ -4,6 +4,8 @@ Flutter application for the local-first first release. Android is the release ve
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 
+The real Settings route applies and retains English/Deutsch interface language through the runtime's existing SQLite `locale` setting. `PikoApp` owns only its internal locale controller; an injected controller remains caller-owned. With `PikoRuntime`, retained valid language overrides the injected initial composition and missing/unsupported preferences use English. A custom non-runtime `home` continues to use the injected locale/controller without storage hydration. Language changes preserve navigation and current feature state. Host acceptance does not replace the pending detailed Settings UX or Android verification.
+
 From this directory, run `flutter pub get`, `flutter analyze`, `flutter test`, then `flutter run` with an Android emulator or development device available.
 
 Android integration runs must use `flutter test --no-uninstall integration_test/<fixture>.dart -d <android-device>`. Flutter 3.44.7 otherwise uninstalls the application after the test and deletes its app data. Use isolated fixture storage, verify a pre-existing sentinel survives runner cleanup, then restore the normal debug APK with an in-place install. Never infer data preservation merely from seeing a newly created database after relaunch. Do not use these integration commands on a personal device without a verified backup and explicit approval.

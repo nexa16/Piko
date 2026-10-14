@@ -31,6 +31,8 @@ Execution dependencies refined after COLL-015: language badges can use existing 
 
 After real reveal, execute CARD-UI-025/CARD-UI-015 grading controls and rows 68–78 retry/counter integration before closing CARD-UI-026 progress (row 65). Its both-language/fixed-direction portions already have evidence, but regular-review receipts cannot stand in for completed learning or pending-retry-aware counts. Keep row numbers and requirement IDs unchanged; the delayed progress acceptance remains Pending rather than displaying fabricated completion.
 
+After the RETRY-001 storage and RETRY-004 calendar boundaries, implement independent SETTINGS-001 before RETRY-002 while the owner decides whether answered-question gaps advance only within the same Collection/direction or across all scopes. Settings uses the existing locale and storage foundations and does not depend on that choice. Preserve all row numbers and remaining retry integration requirements; this ordering change neither selects a counting scope nor marks the partial retry boundaries complete.
+
 Before deletion implementation, LEARN-002 precedes ENTRY-009 so Undo restores actual independent directional records rather than a placeholder progress snapshot. Later scheduling/history/retry requirements must extend preservation tests with the real state they introduce. This dependency refinement retains every included ID and does not claim future progress preservation before those records exist.
 
 | Order | Spec ID | Implementation focus | Status | Commit | Verification evidence |
@@ -126,7 +128,7 @@ Before deletion implementation, LEARN-002 precedes ENTRY-009 so Undo restores ac
 | 89 | UX-ICON-001 | Circular review icon | Pending | — | — |
 | 90 | REVIEW-003 | Dismissible learned/first-try summary | Pending | — | — |
 | 91 | UX-REVIEW-004 | Readable motivational summary popup | Pending | — | — |
-| 92 | SETTINGS-001 | Persistent immediate interface language setting | Pending | — | — |
+| 92 | SETTINGS-001 | Persistent immediate interface language setting | Implemented | SETTINGS-001 commit | Real top-right home Settings action and language-only route; app-lifetime live copy/Material locale, retained `locale` hydration before normal content, English missing/unsupported fallback, distinct read retry and optimistic write rollback/retry. Registered single-flight work drains before runtime close; replacement/open-route rebinding waits original accepted writes. 21 new host cases plus existing locale tests cover file reopen, real SQLite failure, raw editor/revealed review/Hard preservation, real history/retry/allocator/unrelated-setting preservation and pending shutdown. Final full 549 Flutter tests pass; analysis clean, 16 Node/browser adapter tests, generator and syntax checks pass. UX-SETTINGS-001 and Android acceptance remain pending. |
 | 93 | UX-SETTINGS-001 | Language-only Settings view | Pending | — | — |
 | 94 | DATA-005 | Minimal necessary stored data | Pending | — | — |
 | 95 | UX-I18N-001 | Localized visible and accessible text across implemented screens | Pending | — | — |
