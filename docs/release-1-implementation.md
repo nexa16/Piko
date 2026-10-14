@@ -15,6 +15,7 @@ Implementation uses one `codex/release-1-implementation` branch based on the lat
 - Duplicate pairs are checked within a Collection after surrounding whitespace trimming, Unicode NFC normalization and case-insensitive comparison. Different meanings sharing only one language text and identical pairs in different Collections remain allowed.
 - Vocabulary deletion offers eight seconds of Undo. Future trash retention is excluded.
 - Retry gaps are 20, 10, 5, 3 and then 1 intervening answered questions after successive errors. Count subsequent graded answers, including other retries, but not the triggering incorrect answer or an opened/revealed unanswered question. If insufficient other items are available, use a ten-second wait; do not insert filler vocabulary.
+- Same-learning-day resume preserves pending retries' remaining answered-question gaps and existing wait/eligibility timing. Reopening neither resets nor bypasses them; eligible retries take priority until learning-day expiry.
 - The local learning day ends at 04:00. Pending retries expire without becoming successes. Previous-grade correction restores the prior state and replaces the affected regular review transactionally rather than appending a second review.
 - Confirmed entries survive application termination; unconfirmed entry-session drafts do not require crash recovery.
 

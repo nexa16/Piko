@@ -1,5 +1,9 @@
 # Decision log
 
+## RETRY-003 — Preserve pending retry eligibility on resume — 2026-10-14
+
+The owner confirmed that resuming during the same learning day keeps the remaining gap and wait. Preserve the pending retry's progress and existing eligibility timing rather than starting again or bypassing the remaining requirement. Eligible retries take priority; the learning-day boundary still expires unfinished obligations. This is an accepted behavioral decision, not a claim that retry persistence is implemented.
+
 ## RETRY-002 — Count answered questions, not presentations — 2026-10-14
 
 The owner confirmed that retry gaps count answered questions. Opening or revealing a question and then leaving does not shorten the gap. After the triggering incorrect answer, count subsequent graded questions, including other retries, toward the confirmed 20/10/5/3/1 gaps. The triggering answer does not count toward its own newly created gap. This records the accepted counting rule; retry-queue implementation and verification remain pending.
