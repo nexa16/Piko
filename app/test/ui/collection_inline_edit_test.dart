@@ -466,6 +466,9 @@ void main() {
       await tester.enterText(field(one.id), ' ');
       final text = tester.widget<TextField>(field(one.id));
       text.controller!.selection = const TextSelection.collapsed(offset: 0);
+      // Detail has independent subscriptions for the saved-entry subtitle and
+      // the editable list. Retrying failed metadata recreates only the former.
+      expect(repo.watchCalls, 2);
       collections.streams.last.addError(StateError('metadata failed'));
       await tester.pumpAndSettle();
       expect(field(one.id), findsOneWidget);
@@ -477,7 +480,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(collections.streams.length, 2);
-      expect(repo.watchCalls, 1);
+      expect(repo.watchCalls, 3);
       expect(
         tester.widget<TextField>(field(one.id)).controller,
         same(text.controller),
