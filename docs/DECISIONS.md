@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-REVIEW-002 — answer emphasis and usable Hard target — 2026-10-14
+
+Reuse the real reveal/Hard acceptance rather than introducing another presentation: the revealed translation is primary, its prompt smaller/muted, and the cue disappears. The full-width right-column Hard label remains clickable with the established checkbox geometry. Localized enlarged-text host cases and actual Android reveal/Hard flows pass; direction remains fixed and previous correction uses a distinct back arrow. Red-outline treatment remains the binding prototype trial, not a new finalized color decision. Final whole-release accessibility review is still separate.
+
 ## UX-REVIEW-001 — integrated self-assessment acceptance — 2026-10-14
 
 Close the composition requirement only after its real grading, Hard alignment, direction, progress, no-due and previous-review components work together. Reuse their passing localized host geometry/lifecycle cases rather than duplicate the suite. Two Android real-runtime flows also pass grading, same-event correction, retry waiting/success and actual summary in opposite directions. Dynamic typed-answer action widths and Skip remain excluded; whole-release visual/accessibility verification stays a separate gate.
