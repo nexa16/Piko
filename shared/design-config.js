@@ -11,6 +11,7 @@ globalThis.PIKO_DESIGN = {
   components: {
     dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
     icons: {size:20},
+    checkboxes: {size:24,paddingY:10},
     headings: {titleMargin:7},
     sectionHeading: {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12},
     emptyState: {descriptionLineHeight:1.6},

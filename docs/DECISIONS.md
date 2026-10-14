@@ -1,5 +1,13 @@
 # Decision log
 
+## ANSWER-004 — optional Hard control — 2026-10-14
+
+Implement a reusable full-label checkbox and a learning-feature adapter that reads and toggles the existing grading coordinator. Hard starts off, can be toggled off again and never submits a grade alone. Correct with Hard records Hard, ordinary Correct records Good, and Incorrect remains Again regardless of the modifier. Pending, accepted and stale presentations disable the control; failed storage preserves the selection for retry. Use the existing shared `learn.hard` English/German label rather than adding interface wording.
+
+Promote the binding mockup's checkbox size (24px) and vertical label padding (10px) into canonical component configuration, reusing the existing 44px minimum target, 8px horizontal padding/gap, 14px label, focus, border and disabled tokens. Selected Hard uses success with the existing onPrimary check contrast, matching Correct and the browser accent. Keep one semantic checkbox action across the full wrapping label; Space/Enter activate it, and focus does not shift geometry. A narrow `RegularReviewWriter` interface contains only the existing production review signature, allowing deterministic pending-control acceptance before forwarding to real SQLite without a fake receipt or duplicate persistence mechanism.
+
+Ten host widget tests cover English/German keyboard/semantics, optional toggling with no writes, success/focus geometry, 392px at 200% and a 170px German column, all four real-SQLite grade/modifier combinations, pending/stale rejection and actual failure/retry. The complete suite passes 385 Flutter and 13 Node tests with clean analysis and shared-adapter checks. This establishes the control and persisted host composition only: CARD-UI-015 owns placement above Correct, and full review/session/retry integration and Android acceptance remain pending. DATA-001 remains In progress until the actual retry flow consumes its retention boundary.
+
 ## CARD-UI-016 — reusable regular-grading coordinator — 2026-10-14
 
 Use one coordinator for the currently activated Learning Item, its Hard modifier and a single pending regular grade. Incorrect always maps to Again; Correct maps to Hard only when selected, otherwise Good. Capture the item/grade/modifier/time before awaiting and call the existing production transaction with explicit regular kind. Do not duplicate FSRS calculations or add Easy, retry processing or visible controls in this step.

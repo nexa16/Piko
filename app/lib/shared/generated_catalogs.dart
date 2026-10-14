@@ -24,6 +24,10 @@ const designCatalog = <String, Object?>{
 "cards": <String, Object?>{
 "padding": 19,
 },
+"checkboxes": <String, Object?>{
+"paddingY": 10,
+"size": 24,
+},
 "dialogs": <String, Object?>{
 "backdropColor": "#15251c",
 "backdropOpacity": 0.5333333333333333,

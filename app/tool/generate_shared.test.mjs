@@ -7,6 +7,23 @@ import vm from 'node:vm';
 import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('checkbox browser and Flutter adapters consume canonical size/padding', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.checkboxes.size = 30;
+  config.components.checkboxes.paddingY = 12;
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN: config,
+    document: { documentElement: { dataset: {}, style: { setProperty: (key, value) => properties.set(key, value) } } }
+  });
+  assert.equal(properties.get('--checkbox-size'), '30px');
+  assert.equal(properties.get('--checkbox-padding-y'), '12px');
+  const generated = generate(config, { schemaVersion: 1, defaultLocale: 'en', entries: {} });
+  assert.match(generated, /"checkboxes": <String, Object\?>\{\n"paddingY": 12,\n"size": 30,/);
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('padding:var(--checkbox-padding-y) var(--space-2)'));
+  assert.ok(css.includes('width:var(--checkbox-size);height:var(--checkbox-size)'));
+});
 test('inline vocabulary adapters consume canonical caption and viewport breakpoint', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.inlineVocabulary.compactBreakpoint = 440;

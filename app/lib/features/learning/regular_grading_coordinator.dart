@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../data/learning_item.dart';
-import '../../data/local/sqlite_learning_repository.dart';
 import '../../data/regular_review.dart';
 import 'learning_scheduler.dart';
 
@@ -16,13 +15,13 @@ final class GradingCardHandle {
 /// Owns a regular card's modifier and one accepted write; storage stays caller-owned.
 final class RegularGradingCoordinator extends ChangeNotifier {
   RegularGradingCoordinator({
-    required SqliteLearningRepository repository,
+    required RegularReviewWriter repository,
     void Function(Future<void>)? onPendingWrites,
   }) : // Preserve the public dependency name while keeping ownership private.
        // ignore: prefer_initializing_formals
        _repository = repository,
        _register = onPendingWrites;
-  final SqliteLearningRepository _repository;
+  final RegularReviewWriter _repository;
   final void Function(Future<void>)? _register;
   GradingCardHandle? _current;
   bool _hard = false, _disposed = false;

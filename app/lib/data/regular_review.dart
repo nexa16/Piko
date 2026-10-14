@@ -4,6 +4,16 @@ import '../features/learning/learning_scheduler.dart';
 /// Reinforcement is processed separately and must not enter regular review history.
 enum ReviewKind { regular, reinforcement }
 
+/// The existing atomic regular-review write boundary, independent of its storage.
+abstract interface class RegularReviewWriter {
+  Future<RegularReviewReceipt> review({
+    required ReviewKind kind,
+    required LearningItemRecord expectedPrior,
+    required LearningRating rating,
+    required DateTime reviewedAt,
+  });
+}
+
 final class RegularReviewRecord {
   const RegularReviewRecord({
     required this.id,

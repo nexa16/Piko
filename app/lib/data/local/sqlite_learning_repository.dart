@@ -6,7 +6,7 @@ import '../regular_review.dart';
 import '../../features/learning/learning_scheduler.dart';
 import 'piko_database.dart';
 
-final class SqliteLearningRepository {
+final class SqliteLearningRepository implements RegularReviewWriter {
   SqliteLearningRepository(this.database);
   final PikoDatabase database;
   final _scheduler = LearningScheduler();
@@ -26,6 +26,7 @@ final class SqliteLearningRepository {
   }
 
   /// Accepts one regular review of exactly the caller's displayed prior state.
+  @override
   Future<RegularReviewReceipt> review({
     required ReviewKind kind,
     required LearningItemRecord expectedPrior,

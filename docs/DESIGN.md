@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Optional Hard checkbox — ANSWER-004
+
+The shared checkbox uses one full-width clickable/semantic label, the canonical 44px control minimum, 8px horizontal padding/gap and 14px label typography. The binding 24px checkbox and 10px vertical padding are now `components.checkboxes.size` and `paddingY`, consumed by browser variables and the generated Flutter adapter. Remove overridden independent checkbox dimensions from CSS. Labels wrap without a fixed height, including a 170px German column at 200% text size. Selected Hard uses semantic success and the existing onPrimary check contrast; scale the decorative checkbox without scaling the canonical border width. Focus uses the shared border/radius policy without moving layout; disabled presentation uses the shared opacity.
+
+The Hard adapter uses `learn.hard`, starts off and only changes the coordinator's modifier. It disables during a pending grade, after acceptance or for a stale card handle, retaining selection after failure. Host composition verifies actual persisted grades, but this component does not implement CARD-UI-015's position above Correct or the full review screen. Those placements and Android verification remain pending.
+
 ## Inline Collection name and navigation controls — UX-COLL-007
 
 The wrapping level-one Collection name has its adjacent shared Lucide pencil. Inline editing replaces that title row with a flexible labelled name field and check/X controls, using canonical `spacing.2` (8px) gaps and vertical margins; ordinary headings retain the existing 7px title margin. Shared icon buttons retain ≥44px minimum targets, localized semantics/tooltips and controlled focus. Failure text uses semantic danger and a live region while the raw field/selection stay intact. Pending save disables competing name, deletion and entry-navigation controls.
