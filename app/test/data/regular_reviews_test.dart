@@ -95,6 +95,24 @@ class Fixture {
     rating: rating,
     reviewedAt: at ?? instant,
   );
+
+  /// Explicitly finish a reinforcement round when a test intentionally records
+  /// another independent regular review; never auto-clear in [review].
+  Future<void> finishRetry({
+    VocabularyRecord? word,
+    bool reverse = false,
+  }) async {
+    final item = await current(word, reverse);
+    final at = item.card.lastReview!;
+    final source = await learning.forCollection(
+      collectionId: (word ?? entry).collectionId,
+      direction: item.direction,
+    );
+    final retry = (await source.pendingRetries(
+      at: at,
+    )).singleWhere((retry) => retry.itemId == item.id);
+    await source.completeSuccessfulRetry(expected: retry, answeredAt: at);
+  }
 }
 
 void main() {
@@ -118,6 +136,7 @@ void main() {
         await f.review(rating: LearningRating.hard);
         await f.review(reverse: true, rating: LearningRating.again);
         await f.review(rating: LearningRating.good);
+        await f.finishRetry(reverse: true);
         await f.review(reverse: true, rating: LearningRating.hard);
         final stored = await rows(db, 'regular_reviews');
         final items = await f.learning.forEntry(f.entry.id);
@@ -469,6 +488,10 @@ void main() {
             ..where((row) => row.entryId.equals(f.entry.id)))
           .write(const LearningItemsCompanion(generation: Value(5)));
       for (final rating in LearningRating.values) {
+        if (rating == LearningRating.hard) {
+          await f.finishRetry();
+          await f.finishRetry(reverse: true);
+        }
         await f.review(rating: rating);
         await f.review(word: f.other);
         await f.review(reverse: true, rating: rating);
@@ -682,7 +705,7 @@ void main() {
 
   for (var version = 1; version <= 6; version++) {
     test(
-      'schema$version upgrades to7 preserving existing exact rows and initializing zero discriminator/revision without invented history',
+      'schema$version upgrades to8 preserving existing exact rows and initializing zero discriminator/revision without invented history/retries',
       () async {
         final directory = await Directory.systemTemp.createTemp(
           'piko-review-migration-',
@@ -738,6 +761,7 @@ void main() {
         );
         try {
           expect(await rows(db, 'regular_reviews'), isEmpty);
+          expect(await rows(db, 'retry_obligations'), isEmpty);
           expect((await rows(db, 'app_settings')).single['value'], 'de');
           if (version >= 3) {
             final vocabulary =
@@ -794,7 +818,7 @@ void main() {
           expect(
             (await db.customSelect('PRAGMA user_version').getSingle())
                 .read<int>('user_version'),
-            7,
+            db.schemaVersion,
           );
         } finally {
           await db.close();

@@ -4,14 +4,22 @@ import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import '../../core/clock.dart';
 import '../vocabulary_deletion.dart';
 import '../vocabulary_repository.dart';
+import '../retry_obligation.dart';
 import 'piko_database.dart';
 
 final class _Snapshot {
-  const _Snapshot(this.rowId, this.entry, this.learning, this.reviews);
+  const _Snapshot(
+    this.rowId,
+    this.entry,
+    this.learning,
+    this.reviews,
+    this.retries,
+  );
   final int rowId;
   final VocabularyEntry entry;
   final List<LearningItem> learning;
   final List<RegularReview> reviews;
+  final List<StoredRetryObligation> retries;
 }
 
 final class _Receipt implements VocabularyDeletionReceipt {
@@ -132,6 +140,41 @@ final class SqliteVocabularyDeletionService
             variables: [Variable(id)],
           )
           .get();
+      final retryRows =
+          await (database.select(database.retryObligations)..where(
+                (retry) => retry.itemId.isIn(learning.map((item) => item.id)),
+              ))
+              .get();
+      for (final retry in retryRows) {
+        final record = _retryRecord(retry);
+        final origins = reviewRows.where(
+          (row) => row.read<String>('id') == record.originReviewId,
+        );
+        final owners = learning.where(
+          (item) =>
+              item.id == record.itemId && item.generation == record.generation,
+        );
+        if (owners.length != 1 ||
+            origins.length != 1 ||
+            origins.single.read<int>('item_id') != record.itemId ||
+            origins.single.read<int>('generation') != record.generation ||
+            origins.single.read<String>('rating') != 'again' ||
+            DateTime.tryParse(origins.single.read<String>('reviewed_at')) !=
+                record.createdAt) {
+          throw const FormatException('Invalid retry snapshot origin');
+        }
+      }
+      await (database.delete(
+        database.vocabularyEntries,
+      )..where((item) => item.id.equals(id))).go();
+      database.notifyUpdates({
+        TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
+        TableUpdate.onTable(database.regularReviews, kind: UpdateKind.delete),
+        TableUpdate.onTable(database.retryObligations, kind: UpdateKind.delete),
+      });
+      // Deadline/receipt construction belongs to the transaction: a fallible
+      // clock cannot commit a deletion without issuing its Undo capability.
+      final deleteAt = clock.now().toUtc();
       final snapshot = _Snapshot(
         row.read<int>('original_rowid'),
         entry,
@@ -139,16 +182,12 @@ final class SqliteVocabularyDeletionService
         List.unmodifiable(
           reviewRows.map((row) => database.regularReviews.map(row.data)),
         ),
+        List.unmodifiable(
+          retryRows.where(
+            (retry) => deleteAt.isBefore(_retryRecord(retry).expiresAt),
+          ),
+        ),
       );
-      await (database.delete(
-        database.vocabularyEntries,
-      )..where((item) => item.id.equals(id))).go();
-      database.notifyUpdates({
-        TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
-        TableUpdate.onTable(database.regularReviews, kind: UpdateKind.delete),
-      });
-      // Deadline/receipt construction belongs to the transaction: a fallible
-      // clock cannot commit a deletion without issuing its Undo capability.
       return _Receipt(
         issuer: _issuer,
         entry: VocabularyRecord(
@@ -157,7 +196,7 @@ final class SqliteVocabularyDeletionService
           targetText: entry.targetText,
           nativeText: entry.nativeText,
         ),
-        expiresAt: clock.now().toUtc().add(undoDuration),
+        expiresAt: deleteAt.add(undoDuration),
         snapshot: snapshot,
       );
     });
@@ -195,7 +234,8 @@ final class SqliteVocabularyDeletionService
       await database.transaction(() async {
         _ensureActive();
         if (receipt.forgotten) throw VocabularyUndoFailure.invalidReceipt;
-        if (!clock.now().toUtc().isBefore(receipt.expiresAt)) {
+        final now = clock.now().toUtc();
+        if (!now.isBefore(receipt.expiresAt)) {
           throw VocabularyUndoFailure.expired;
         }
         final snapshot = receipt.snapshot!;
@@ -227,6 +267,17 @@ final class SqliteVocabularyDeletionService
             )..where((row) => row.id.isIn(reviewIds))).get()).isNotEmpty) {
           throw VocabularyUndoFailure.identityConflict;
         }
+        // Undo never resets a retry deadline or recreates an expired obligation.
+        final retries = snapshot.retries
+            .where((retry) => now.isBefore(_retryRecord(retry).expiresAt))
+            .toList(growable: false);
+        final retryIds = retries.map((retry) => retry.id).toList();
+        if (retryIds.isNotEmpty &&
+            (await (database.select(
+              database.retryObligations,
+            )..where((row) => row.id.isIn(retryIds))).get()).isNotEmpty) {
+          throw VocabularyUndoFailure.identityConflict;
+        }
         await database.customInsert(
           'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key) VALUES (?, ?, ?, ?, ?, ?, ?)',
           variables: [
@@ -247,6 +298,9 @@ final class SqliteVocabularyDeletionService
         // item's history order without making physical rowid a domain identity.
         for (final review in snapshot.reviews) {
           await database.into(database.regularReviews).insert(review);
+        }
+        for (final retry in retries) {
+          await database.into(database.retryObligations).insert(retry);
         }
       });
       receipt.used = true;
@@ -283,4 +337,15 @@ final class SqliteVocabularyDeletionService
       }
     }
   }
+
+  RetryObligation _retryRecord(StoredRetryObligation row) =>
+      RetryObligation.fromStored(
+        id: row.id,
+        itemId: row.itemId,
+        generation: row.generation,
+        revision: row.revision,
+        originReviewId: row.originReviewId,
+        createdAt: row.createdAt,
+        expiresAt: row.expiresAt,
+      );
 }

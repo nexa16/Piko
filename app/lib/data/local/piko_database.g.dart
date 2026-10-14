@@ -1792,6 +1792,480 @@ class RegularReviewsCompanion extends UpdateCompanion<RegularReview> {
   }
 }
 
+class $RetryObligationsTable extends RetryObligations
+    with TableInfo<$RetryObligationsTable, StoredRetryObligation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RetryObligationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES learning_items (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _generationMeta = const VerificationMeta(
+    'generation',
+  );
+  @override
+  late final GeneratedColumn<int> generation = GeneratedColumn<int>(
+    'generation',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _originReviewIdMeta = const VerificationMeta(
+    'originReviewId',
+  );
+  @override
+  late final GeneratedColumn<String> originReviewId = GeneratedColumn<String>(
+    'origin_review_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES regular_reviews (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<String> expiresAt = GeneratedColumn<String>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    itemId,
+    generation,
+    revision,
+    originReviewId,
+    createdAt,
+    expiresAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'retry_obligations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredRetryObligation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('generation')) {
+      context.handle(
+        _generationMeta,
+        generation.isAcceptableOrUnknown(data['generation']!, _generationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_generationMeta);
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('origin_review_id')) {
+      context.handle(
+        _originReviewIdMeta,
+        originReviewId.isAcceptableOrUnknown(
+          data['origin_review_id']!,
+          _originReviewIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originReviewIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StoredRetryObligation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredRetryObligation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_id'],
+      )!,
+      generation: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}generation'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      originReviewId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin_review_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expires_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RetryObligationsTable createAlias(String alias) {
+    return $RetryObligationsTable(attachedDatabase, alias);
+  }
+}
+
+class StoredRetryObligation extends DataClass
+    implements Insertable<StoredRetryObligation> {
+  final String id;
+  final int itemId;
+  final int generation;
+  final int revision;
+  final String originReviewId;
+  final String createdAt;
+  final String expiresAt;
+  const StoredRetryObligation({
+    required this.id,
+    required this.itemId,
+    required this.generation,
+    required this.revision,
+    required this.originReviewId,
+    required this.createdAt,
+    required this.expiresAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['item_id'] = Variable<int>(itemId);
+    map['generation'] = Variable<int>(generation);
+    map['revision'] = Variable<int>(revision);
+    map['origin_review_id'] = Variable<String>(originReviewId);
+    map['created_at'] = Variable<String>(createdAt);
+    map['expires_at'] = Variable<String>(expiresAt);
+    return map;
+  }
+
+  RetryObligationsCompanion toCompanion(bool nullToAbsent) {
+    return RetryObligationsCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      generation: Value(generation),
+      revision: Value(revision),
+      originReviewId: Value(originReviewId),
+      createdAt: Value(createdAt),
+      expiresAt: Value(expiresAt),
+    );
+  }
+
+  factory StoredRetryObligation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredRetryObligation(
+      id: serializer.fromJson<String>(json['id']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      generation: serializer.fromJson<int>(json['generation']),
+      revision: serializer.fromJson<int>(json['revision']),
+      originReviewId: serializer.fromJson<String>(json['originReviewId']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      expiresAt: serializer.fromJson<String>(json['expiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'itemId': serializer.toJson<int>(itemId),
+      'generation': serializer.toJson<int>(generation),
+      'revision': serializer.toJson<int>(revision),
+      'originReviewId': serializer.toJson<String>(originReviewId),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'expiresAt': serializer.toJson<String>(expiresAt),
+    };
+  }
+
+  StoredRetryObligation copyWith({
+    String? id,
+    int? itemId,
+    int? generation,
+    int? revision,
+    String? originReviewId,
+    String? createdAt,
+    String? expiresAt,
+  }) => StoredRetryObligation(
+    id: id ?? this.id,
+    itemId: itemId ?? this.itemId,
+    generation: generation ?? this.generation,
+    revision: revision ?? this.revision,
+    originReviewId: originReviewId ?? this.originReviewId,
+    createdAt: createdAt ?? this.createdAt,
+    expiresAt: expiresAt ?? this.expiresAt,
+  );
+  StoredRetryObligation copyWithCompanion(RetryObligationsCompanion data) {
+    return StoredRetryObligation(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      generation: data.generation.present
+          ? data.generation.value
+          : this.generation,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      originReviewId: data.originReviewId.present
+          ? data.originReviewId.value
+          : this.originReviewId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredRetryObligation(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('generation: $generation, ')
+          ..write('revision: $revision, ')
+          ..write('originReviewId: $originReviewId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    itemId,
+    generation,
+    revision,
+    originReviewId,
+    createdAt,
+    expiresAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredRetryObligation &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.generation == this.generation &&
+          other.revision == this.revision &&
+          other.originReviewId == this.originReviewId &&
+          other.createdAt == this.createdAt &&
+          other.expiresAt == this.expiresAt);
+}
+
+class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
+  final Value<String> id;
+  final Value<int> itemId;
+  final Value<int> generation;
+  final Value<int> revision;
+  final Value<String> originReviewId;
+  final Value<String> createdAt;
+  final Value<String> expiresAt;
+  final Value<int> rowid;
+  const RetryObligationsCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.generation = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.originReviewId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RetryObligationsCompanion.insert({
+    required String id,
+    required int itemId,
+    required int generation,
+    this.revision = const Value.absent(),
+    required String originReviewId,
+    required String createdAt,
+    required String expiresAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       itemId = Value(itemId),
+       generation = Value(generation),
+       originReviewId = Value(originReviewId),
+       createdAt = Value(createdAt),
+       expiresAt = Value(expiresAt);
+  static Insertable<StoredRetryObligation> custom({
+    Expression<String>? id,
+    Expression<int>? itemId,
+    Expression<int>? generation,
+    Expression<int>? revision,
+    Expression<String>? originReviewId,
+    Expression<String>? createdAt,
+    Expression<String>? expiresAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (generation != null) 'generation': generation,
+      if (revision != null) 'revision': revision,
+      if (originReviewId != null) 'origin_review_id': originReviewId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RetryObligationsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? itemId,
+    Value<int>? generation,
+    Value<int>? revision,
+    Value<String>? originReviewId,
+    Value<String>? createdAt,
+    Value<String>? expiresAt,
+    Value<int>? rowid,
+  }) {
+    return RetryObligationsCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      generation: generation ?? this.generation,
+      revision: revision ?? this.revision,
+      originReviewId: originReviewId ?? this.originReviewId,
+      createdAt: createdAt ?? this.createdAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (generation.present) {
+      map['generation'] = Variable<int>(generation.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (originReviewId.present) {
+      map['origin_review_id'] = Variable<String>(originReviewId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<String>(expiresAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RetryObligationsCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('generation: $generation, ')
+          ..write('revision: $revision, ')
+          ..write('originReviewId: $originReviewId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LearningIdentitySequenceTable extends LearningIdentitySequence
     with
         TableInfo<
@@ -2231,6 +2705,9 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
       $VocabularyEntriesTable(this);
   late final $LearningItemsTable learningItems = $LearningItemsTable(this);
   late final $RegularReviewsTable regularReviews = $RegularReviewsTable(this);
+  late final $RetryObligationsTable retryObligations = $RetryObligationsTable(
+    this,
+  );
   late final $LearningIdentitySequenceTable learningIdentitySequence =
       $LearningIdentitySequenceTable(this);
   late final $VocabularyOrderSequenceTable vocabularyOrderSequence =
@@ -2245,6 +2722,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     vocabularyEntries,
     learningItems,
     regularReviews,
+    retryObligations,
     learningIdentitySequence,
     vocabularyOrderSequence,
   ];
@@ -2270,6 +2748,20 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('regular_reviews', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'learning_items',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('retry_obligations', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'regular_reviews',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('retry_obligations', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3230,6 +3722,30 @@ final class $$LearningItemsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $RetryObligationsTable,
+    List<StoredRetryObligation>
+  >
+  _retryObligationsRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.retryObligations,
+        aliasName: 'learning_items__id__retry_obligations__item_id',
+      );
+
+  $$RetryObligationsTableProcessedTableManager get retryObligationsRefs {
+    final manager = $$RetryObligationsTableTableManager(
+      $_db,
+      $_db.retryObligations,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _retryObligationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$LearningItemsTableFilterComposer
@@ -3310,6 +3826,31 @@ class $$LearningItemsTableFilterComposer
           }) => $$RegularReviewsTableFilterComposer(
             $db: $db,
             $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> retryObligationsRefs(
+    Expression<bool> Function($$RetryObligationsTableFilterComposer f) f,
+  ) {
+    final $$RetryObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.retryObligations,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RetryObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.retryObligations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3464,6 +4005,31 @@ class $$LearningItemsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> retryObligationsRefs<T extends Object>(
+    Expression<T> Function($$RetryObligationsTableAnnotationComposer a) f,
+  ) {
+    final $$RetryObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.retryObligations,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RetryObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.retryObligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$LearningItemsTableTableManager
@@ -3479,7 +4045,11 @@ class $$LearningItemsTableTableManager
           $$LearningItemsTableUpdateCompanionBuilder,
           (LearningItem, $$LearningItemsTableReferences),
           LearningItem,
-          PrefetchHooks Function({bool entryId, bool regularReviewsRefs})
+          PrefetchHooks Function({
+            bool entryId,
+            bool regularReviewsRefs,
+            bool retryObligationsRefs,
+          })
         > {
   $$LearningItemsTableTableManager(_$PikoDatabase db, $LearningItemsTable table)
     : super(
@@ -3537,11 +4107,16 @@ class $$LearningItemsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({entryId = false, regularReviewsRefs = false}) {
+              ({
+                entryId = false,
+                regularReviewsRefs = false,
+                retryObligationsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (regularReviewsRefs) db.regularReviews,
+                    if (retryObligationsRefs) db.retryObligations,
                   ],
                   addJoins:
                       <
@@ -3600,6 +4175,27 @@ class $$LearningItemsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (retryObligationsRefs)
+                        await $_getPrefetchedData<
+                          LearningItem,
+                          $LearningItemsTable,
+                          StoredRetryObligation
+                        >(
+                          currentTable: table,
+                          referencedTable: $$LearningItemsTableReferences
+                              ._retryObligationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$LearningItemsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).retryObligationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.itemId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3620,7 +4216,11 @@ typedef $$LearningItemsTableProcessedTableManager =
       $$LearningItemsTableUpdateCompanionBuilder,
       (LearningItem, $$LearningItemsTableReferences),
       LearningItem,
-      PrefetchHooks Function({bool entryId, bool regularReviewsRefs})
+      PrefetchHooks Function({
+        bool entryId,
+        bool regularReviewsRefs,
+        bool retryObligationsRefs,
+      })
     >;
 typedef $$RegularReviewsTableCreateCompanionBuilder =
     RegularReviewsCompanion Function({
@@ -3664,6 +4264,30 @@ final class $$RegularReviewsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $RetryObligationsTable,
+    List<StoredRetryObligation>
+  >
+  _retryObligationsRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.retryObligations,
+        aliasName: 'regular_reviews__id__retry_obligations__origin_review_id',
+      );
+
+  $$RetryObligationsTableProcessedTableManager get retryObligationsRefs {
+    final manager = $$RetryObligationsTableTableManager(
+      $_db,
+      $_db.retryObligations,
+    ).filter((f) => f.originReviewId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _retryObligationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -3718,6 +4342,31 @@ class $$RegularReviewsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> retryObligationsRefs(
+    Expression<bool> Function($$RetryObligationsTableFilterComposer f) f,
+  ) {
+    final $$RetryObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.retryObligations,
+      getReferencedColumn: (t) => t.originReviewId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RetryObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.retryObligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -3821,6 +4470,31 @@ class $$RegularReviewsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> retryObligationsRefs<T extends Object>(
+    Expression<T> Function($$RetryObligationsTableAnnotationComposer a) f,
+  ) {
+    final $$RetryObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.retryObligations,
+      getReferencedColumn: (t) => t.originReviewId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RetryObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.retryObligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RegularReviewsTableTableManager
@@ -3836,7 +4510,7 @@ class $$RegularReviewsTableTableManager
           $$RegularReviewsTableUpdateCompanionBuilder,
           (RegularReview, $$RegularReviewsTableReferences),
           RegularReview,
-          PrefetchHooks Function({bool itemId})
+          PrefetchHooks Function({bool itemId, bool retryObligationsRefs})
         > {
   $$RegularReviewsTableTableManager(
     _$PikoDatabase db,
@@ -3891,7 +4565,478 @@ class $$RegularReviewsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({itemId = false}) {
+          prefetchHooksCallback:
+              ({itemId = false, retryObligationsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (retryObligationsRefs) db.retryObligations,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (itemId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.itemId,
+                                    referencedTable:
+                                        $$RegularReviewsTableReferences
+                                            ._itemIdTable(db),
+                                    referencedColumn:
+                                        $$RegularReviewsTableReferences
+                                            ._itemIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (retryObligationsRefs)
+                        await $_getPrefetchedData<
+                          RegularReview,
+                          $RegularReviewsTable,
+                          StoredRetryObligation
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegularReviewsTableReferences
+                              ._retryObligationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegularReviewsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).retryObligationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.originReviewId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$RegularReviewsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $RegularReviewsTable,
+      RegularReview,
+      $$RegularReviewsTableFilterComposer,
+      $$RegularReviewsTableOrderingComposer,
+      $$RegularReviewsTableAnnotationComposer,
+      $$RegularReviewsTableCreateCompanionBuilder,
+      $$RegularReviewsTableUpdateCompanionBuilder,
+      (RegularReview, $$RegularReviewsTableReferences),
+      RegularReview,
+      PrefetchHooks Function({bool itemId, bool retryObligationsRefs})
+    >;
+typedef $$RetryObligationsTableCreateCompanionBuilder =
+    RetryObligationsCompanion Function({
+      required String id,
+      required int itemId,
+      required int generation,
+      Value<int> revision,
+      required String originReviewId,
+      required String createdAt,
+      required String expiresAt,
+      Value<int> rowid,
+    });
+typedef $$RetryObligationsTableUpdateCompanionBuilder =
+    RetryObligationsCompanion Function({
+      Value<String> id,
+      Value<int> itemId,
+      Value<int> generation,
+      Value<int> revision,
+      Value<String> originReviewId,
+      Value<String> createdAt,
+      Value<String> expiresAt,
+      Value<int> rowid,
+    });
+
+final class $$RetryObligationsTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $RetryObligationsTable,
+          StoredRetryObligation
+        > {
+  $$RetryObligationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $LearningItemsTable _itemIdTable(_$PikoDatabase db) => db.learningItems
+      .createAlias('retry_obligations__item_id__learning_items__id');
+
+  $$LearningItemsTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<int>('item_id')!;
+
+    final manager = $$LearningItemsTableTableManager(
+      $_db,
+      $_db.learningItems,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegularReviewsTable _originReviewIdTable(_$PikoDatabase db) => db
+      .regularReviews
+      .createAlias('retry_obligations__origin_review_id__regular_reviews__id');
+
+  $$RegularReviewsTableProcessedTableManager get originReviewId {
+    final $_column = $_itemColumn<String>('origin_review_id')!;
+
+    final manager = $$RegularReviewsTableTableManager(
+      $_db,
+      $_db.regularReviews,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_originReviewIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RetryObligationsTableFilterComposer
+    extends Composer<_$PikoDatabase, $RetryObligationsTable> {
+  $$RetryObligationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$LearningItemsTableFilterComposer get itemId {
+    final $$LearningItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegularReviewsTableFilterComposer get originReviewId {
+    final $$RegularReviewsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.originReviewId,
+      referencedTable: $db.regularReviews,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegularReviewsTableFilterComposer(
+            $db: $db,
+            $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetryObligationsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $RetryObligationsTable> {
+  $$RetryObligationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$LearningItemsTableOrderingComposer get itemId {
+    final $$LearningItemsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableOrderingComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegularReviewsTableOrderingComposer get originReviewId {
+    final $$RegularReviewsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.originReviewId,
+      referencedTable: $db.regularReviews,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegularReviewsTableOrderingComposer(
+            $db: $db,
+            $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetryObligationsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $RetryObligationsTable> {
+  $$RetryObligationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get generation => $composableBuilder(
+    column: $table.generation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  $$LearningItemsTableAnnotationComposer get itemId {
+    final $$LearningItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.learningItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.learningItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegularReviewsTableAnnotationComposer get originReviewId {
+    final $$RegularReviewsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.originReviewId,
+      referencedTable: $db.regularReviews,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegularReviewsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.regularReviews,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RetryObligationsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $RetryObligationsTable,
+          StoredRetryObligation,
+          $$RetryObligationsTableFilterComposer,
+          $$RetryObligationsTableOrderingComposer,
+          $$RetryObligationsTableAnnotationComposer,
+          $$RetryObligationsTableCreateCompanionBuilder,
+          $$RetryObligationsTableUpdateCompanionBuilder,
+          (StoredRetryObligation, $$RetryObligationsTableReferences),
+          StoredRetryObligation,
+          PrefetchHooks Function({bool itemId, bool originReviewId})
+        > {
+  $$RetryObligationsTableTableManager(
+    _$PikoDatabase db,
+    $RetryObligationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RetryObligationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RetryObligationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RetryObligationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> itemId = const Value.absent(),
+                Value<int> generation = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> originReviewId = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> expiresAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RetryObligationsCompanion(
+                id: id,
+                itemId: itemId,
+                generation: generation,
+                revision: revision,
+                originReviewId: originReviewId,
+                createdAt: createdAt,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int itemId,
+                required int generation,
+                Value<int> revision = const Value.absent(),
+                required String originReviewId,
+                required String createdAt,
+                required String expiresAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RetryObligationsCompanion.insert(
+                id: id,
+                itemId: itemId,
+                generation: generation,
+                revision: revision,
+                originReviewId: originReviewId,
+                createdAt: createdAt,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RetryObligationsTable, StoredRetryObligation>(
+                    table,
+                  ),
+                  $$RetryObligationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false, originReviewId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3916,11 +5061,27 @@ class $$RegularReviewsTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.itemId,
-                                referencedTable: $$RegularReviewsTableReferences
-                                    ._itemIdTable(db),
+                                referencedTable:
+                                    $$RetryObligationsTableReferences
+                                        ._itemIdTable(db),
                                 referencedColumn:
-                                    $$RegularReviewsTableReferences
+                                    $$RetryObligationsTableReferences
                                         ._itemIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (originReviewId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.originReviewId,
+                                referencedTable:
+                                    $$RetryObligationsTableReferences
+                                        ._originReviewIdTable(db),
+                                referencedColumn:
+                                    $$RetryObligationsTableReferences
+                                        ._originReviewIdTable(db)
                                         .id,
                               )
                               as T;
@@ -3937,19 +5098,19 @@ class $$RegularReviewsTableTableManager
       );
 }
 
-typedef $$RegularReviewsTableProcessedTableManager =
+typedef $$RetryObligationsTableProcessedTableManager =
     ProcessedTableManager<
       _$PikoDatabase,
-      $RegularReviewsTable,
-      RegularReview,
-      $$RegularReviewsTableFilterComposer,
-      $$RegularReviewsTableOrderingComposer,
-      $$RegularReviewsTableAnnotationComposer,
-      $$RegularReviewsTableCreateCompanionBuilder,
-      $$RegularReviewsTableUpdateCompanionBuilder,
-      (RegularReview, $$RegularReviewsTableReferences),
-      RegularReview,
-      PrefetchHooks Function({bool itemId})
+      $RetryObligationsTable,
+      StoredRetryObligation,
+      $$RetryObligationsTableFilterComposer,
+      $$RetryObligationsTableOrderingComposer,
+      $$RetryObligationsTableAnnotationComposer,
+      $$RetryObligationsTableCreateCompanionBuilder,
+      $$RetryObligationsTableUpdateCompanionBuilder,
+      (StoredRetryObligation, $$RetryObligationsTableReferences),
+      StoredRetryObligation,
+      PrefetchHooks Function({bool itemId, bool originReviewId})
     >;
 typedef $$LearningIdentitySequenceTableCreateCompanionBuilder =
     LearningIdentitySequenceCompanion Function({
@@ -4301,6 +5462,8 @@ class $PikoDatabaseManager {
       $$LearningItemsTableTableManager(_db, _db.learningItems);
   $$RegularReviewsTableTableManager get regularReviews =>
       $$RegularReviewsTableTableManager(_db, _db.regularReviews);
+  $$RetryObligationsTableTableManager get retryObligations =>
+      $$RetryObligationsTableTableManager(_db, _db.retryObligations);
   $$LearningIdentitySequenceTableTableManager get learningIdentitySequence =>
       $$LearningIdentitySequenceTableTableManager(
         _db,

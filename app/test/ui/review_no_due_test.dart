@@ -18,6 +18,7 @@ Future<List<Object?>> snapshot(Fixture f) => Future.wait([
     'vocabulary_entries',
     'learning_items',
     'regular_reviews',
+    'retry_obligations',
     'app_settings',
     'learning_identity_sequence',
     'vocabulary_order_sequence',

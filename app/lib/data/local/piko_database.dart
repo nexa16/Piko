@@ -87,6 +87,30 @@ class RegularReviews extends Table {
   ];
 }
 
+@DataClassName('StoredRetryObligation')
+class RetryObligations extends Table {
+  TextColumn get id => text()();
+  IntColumn get itemId =>
+      integer().references(LearningItems, #id, onDelete: KeyAction.cascade)();
+  IntColumn get generation => integer()();
+  IntColumn get revision => integer().withDefault(const Constant(0))();
+  TextColumn get originReviewId =>
+      text().references(RegularReviews, #id, onDelete: KeyAction.cascade)();
+  TextColumn get createdAt => text()();
+  TextColumn get expiresAt => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(id)) > 0)',
+    'CHECK(generation >= 0)',
+    'CHECK(revision >= 0)',
+    'UNIQUE(item_id, generation)',
+    "CHECK(substr(created_at, -1) = 'Z')",
+    "CHECK(substr(expires_at, -1) = 'Z')",
+  ];
+}
+
 /// High-water mark survives deletion and future Undo restoration.
 class LearningIdentitySequence extends Table {
   IntColumn get singleton => integer()();
@@ -120,6 +144,7 @@ class VocabularyOrderSequence extends Table {
     VocabularyEntries,
     LearningItems,
     RegularReviews,
+    RetryObligations,
     LearningIdentitySequence,
     VocabularyOrderSequence,
   ],
@@ -129,7 +154,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -181,6 +206,7 @@ class PikoDatabase extends _$PikoDatabase {
           }
           await m.createTable(regularReviews);
         }
+        if (from < 8) await m.createTable(retryObligations);
       });
     },
     beforeOpen: (_) async {

@@ -1,4 +1,5 @@
 import 'learning_item.dart';
+import 'retry_obligation.dart';
 import '../features/learning/learning_scheduler.dart';
 
 /// Reinforcement is processed separately and must not enter regular review history.
@@ -42,10 +43,16 @@ final class RegularReviewReceipt {
     required this.prior,
     required this.next,
     required this.event,
+    this.retryPrior,
+    this.retryNext,
   });
   final LearningItemRecord prior;
   final LearningItemRecord next;
   final RegularReviewRecord event;
+
+  /// Exact same-transaction correction context; never a post-receipt queue read.
+  final RetryObligation? retryPrior;
+  final RetryObligation? retryNext;
 }
 
 enum RegularReviewFailure {

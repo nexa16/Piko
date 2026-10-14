@@ -3,6 +3,8 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:uuid/uuid.dart';
 import '../learning_item.dart';
 import '../regular_review.dart';
+import '../retry_obligation.dart';
+import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import 'piko_database.dart';
 
@@ -57,6 +59,155 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     );
     record.card;
     return record;
+  }
+
+  Future<RetryObligation> _retryRecord(
+    StoredRetryObligation row,
+    LearningItemRecord item,
+  ) async {
+    final retry = RetryObligation.fromStored(
+      id: row.id,
+      itemId: row.itemId,
+      generation: row.generation,
+      revision: row.revision,
+      originReviewId: row.originReviewId,
+      createdAt: row.createdAt,
+      expiresAt: row.expiresAt,
+    );
+    final origin =
+        await (database.select(database.regularReviews)
+              ..where((event) => event.id.equals(retry.originReviewId)))
+            .getSingleOrNull();
+    if (retry.itemId != item.id ||
+        retry.generation != item.generation ||
+        origin == null ||
+        origin.itemId != item.id ||
+        origin.generation != item.generation ||
+        origin.rating != LearningRating.again.name ||
+        DateTime.tryParse(origin.reviewedAt) != retry.createdAt) {
+      throw const FormatException(
+        'Invalid retry origin or learning generation',
+      );
+    }
+    return retry;
+  }
+
+  Future<RetryObligation?> _retryFor(LearningItemRecord item) async {
+    final row =
+        await (database.select(database.retryObligations)..where(
+              (retry) =>
+                  retry.itemId.equals(item.id) &
+                  retry.generation.equals(item.generation),
+            ))
+            .getSingleOrNull();
+    return row == null ? null : _retryRecord(row, item);
+  }
+
+  /// This read may expire validated scoped rows. Its caller owns/awaits storage
+  /// lifetime; runtime preparation registers the whole operation before reading.
+  Future<List<RetryObligation>> _pendingRetries(
+    CollectionReviewGateway scope,
+    DateTime at,
+  ) => database.transaction(() async {
+    if (!at.isUtc) throw ArgumentError.value(at, 'at', 'Must be UTC');
+    await _scopedItems(
+      scope,
+    ); // Validate the actual owner, including empty scope.
+    final retries = database.retryObligations,
+        items = database.learningItems,
+        entries = database.vocabularyEntries;
+    final rows =
+        await (database.select(retries).join([
+                innerJoin(items, items.id.equalsExp(retries.itemId)),
+                innerJoin(entries, entries.id.equalsExp(items.entryId)),
+              ])
+              ..where(
+                entries.collectionId.equals(scope.collectionId) &
+                    items.direction.equals(scope.direction.name),
+              )
+              ..orderBy([OrderingTerm(expression: items.id)]))
+            .get();
+    // Validate all rows before any expiry cleanup; corruption fails closed.
+    final validated = <RetryObligation>[];
+    for (final row in rows) {
+      validated.add(
+        await _retryRecord(
+          row.readTable(retries),
+          _record(row.readTable(items)),
+        ),
+      );
+    }
+    final active = <RetryObligation>[];
+    for (final retry in validated) {
+      if (!at.isBefore(retry.expiresAt)) {
+        await (database.delete(
+          retries,
+        )..where((row) => row.id.equals(retry.id))).go();
+      } else {
+        active.add(retry);
+      }
+    }
+    return List.unmodifiable(active);
+  });
+
+  Future<List<LearningItemRecord>> _dueItems(
+    CollectionReviewGateway scope,
+    DateTime cutoff,
+  ) async {
+    final due = await database.transaction<List<LearningItemRecord>?>(() async {
+      if (!cutoff.isUtc) {
+        throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
+      }
+      if ((await _pendingRetries(scope, cutoff)).isNotEmpty) {
+        // Until the session consumes reinforcement, never silently show no-due
+        // or launch a second regular grade of a pending round.
+        return null;
+      }
+      final items = await _scopedItems(scope);
+      return List.unmodifiable(
+        items.where((item) => !item.card.due.isAfter(cutoff)),
+      );
+    });
+    // Expiry cleanup commits even if another active retry blocks preparation.
+    if (due == null) throw RetryFailure.processingRequired;
+    return due;
+  }
+
+  Future<void> _completeSuccessfulRetry(
+    CollectionReviewGateway scope,
+    RetryObligation expected,
+    DateTime answeredAt,
+  ) async {
+    expected.validate();
+    if (!answeredAt.isUtc || answeredAt.isBefore(expected.createdAt)) {
+      throw ArgumentError.value(
+        answeredAt,
+        'answeredAt',
+        'Must be UTC and not before the round',
+      );
+    }
+    await database.transaction(() async {
+      final items = await _scopedItems(scope);
+      final matches = items.where((item) => item.id == expected.itemId);
+      if (matches.length != 1) throw RegularReviewFailure.outOfScope;
+      final item = matches.single;
+      if (item.generation != expected.generation) throw RetryFailure.staleState;
+      final actual = await _retryFor(item);
+      if (actual == null) throw RetryFailure.notFound;
+      if (!actual.sameStateAs(expected)) throw RetryFailure.staleState;
+      if (!answeredAt.isBefore(actual.expiresAt)) {
+        // Commit observed expiry, but never count it as a successful answer.
+        await (database.delete(
+          database.retryObligations,
+        )..where((row) => row.id.equals(actual.id))).go();
+        return;
+      }
+      await (database.delete(
+        database.retryObligations,
+      )..where((row) => row.id.equals(actual.id))).go();
+    });
+    // Expiration is reported after its owned transaction can commit the removal.
+    if (!answeredAt.isBefore(expected.expiresAt)) throw RetryFailure.expired;
   }
 
   /// Accepts one regular review of exactly the caller's displayed prior state.
@@ -114,6 +265,23 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           prior.cardJson != expectedPrior.cardJson) {
         throw RegularReviewFailure.staleState;
       }
+      final lastReview = prior.card.lastReview;
+      if (lastReview != null && reviewedAt.isBefore(lastReview)) {
+        throw ArgumentError.value(
+          reviewedAt,
+          'reviewedAt',
+          'Must not precede the last review',
+        );
+      }
+      final retryPrior = await _retryFor(prior);
+      if (retryPrior != null) {
+        if (reviewedAt.isBefore(retryPrior.expiresAt)) {
+          throw RetryFailure.processingRequired;
+        }
+        await (database.delete(
+          database.retryObligations,
+        )..where((row) => row.id.equals(retryPrior.id))).go();
+      }
       final transition = _scheduler.review(
         prior,
         rating: rating,
@@ -147,6 +315,33 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             ),
           );
       if (count != 1) throw RegularReviewFailure.itemNotFound;
+      final RetryObligation? retryNext;
+      if (rating == LearningRating.again) {
+        retryNext = RetryObligation(
+          id: const Uuid().v4(),
+          itemId: prior.id,
+          generation: prior.generation,
+          revision: 0,
+          originReviewId: event.id,
+          createdAt: reviewedAt,
+          expiresAt: LearningDay.nextBoundaryUtc(reviewedAt),
+        );
+        retryNext.validate();
+        await database
+            .into(database.retryObligations)
+            .insert(
+              RetryObligationsCompanion.insert(
+                id: retryNext.id,
+                itemId: retryNext.itemId,
+                generation: retryNext.generation,
+                originReviewId: retryNext.originReviewId,
+                createdAt: retryNext.createdAt.toIso8601String(),
+                expiresAt: retryNext.expiresAt.toIso8601String(),
+              ),
+            );
+      } else {
+        retryNext = null;
+      }
       return RegularReviewReceipt(
         prior: transition.prior,
         next: LearningItemRecord(
@@ -159,6 +354,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           reviewRevision: prior.reviewRevision + 1,
         ),
         event: event,
+        retryPrior: retryPrior,
+        retryNext: retryNext,
       );
     });
   }
@@ -245,15 +442,19 @@ final class CollectionReviewGateway implements ScopedReviewSource {
 
   /// Decode UTC instants; valid stored timestamp spellings need not sort lexically.
   @override
-  Future<List<LearningItemRecord>> dueItems({required DateTime cutoff}) async {
-    if (!cutoff.isUtc) {
-      throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
-    }
-    final scoped = await items();
-    return List.unmodifiable(
-      scoped.where((item) => !item.card.due.isAfter(cutoff)),
-    );
-  }
+  Future<List<LearningItemRecord>> dueItems({required DateTime cutoff}) =>
+      _repository._dueItems(this, cutoff);
+
+  /// Caller-owned awaited read/cleanup; active same-day retry rounds only.
+  Future<List<RetryObligation>> pendingRetries({required DateTime at}) =>
+      _repository._pendingRetries(this, at);
+
+  /// Storage boundary only: future reinforcement processing owns answer policy.
+  /// This removes current-round state, never writes FSRS or regular history.
+  Future<void> completeSuccessfulRetry({
+    required RetryObligation expected,
+    required DateTime answeredAt,
+  }) => _repository._completeSuccessfulRetry(this, expected, answeredAt);
 
   @override
   Future<RegularReviewReceipt> review({
