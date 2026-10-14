@@ -750,4 +750,32 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  launch.testWidgets(
+    'natural completion shows the exact session summary and safe dismissal returns to the Collection',
+    (tester) async {
+      final h = await open(tester), copy = PikoCopy('en');
+      for (var index = 0; index < 2; index++) {
+        await reveal(tester);
+        await tester.tap(gradeButton(AnswerGrade.correct));
+        await h.finish(tester);
+      }
+      expect(find.text(copy.text('summary.title')), findsOneWidget);
+      expect(find.text(copy.text('learn.summaryEncouragement')), findsOneWidget);
+      expect(find.text('2'), findsNWidgets(2));
+      expect(h.sessions.single.progress.completed, 2);
+      expect(h.sessions.single.progress.firstTryCorrect, 2);
+      final close = find.byWidgetPredicate(
+        (widget) =>
+            widget is PikoIconButton &&
+            widget.semanticLabel == copy.text('common.close'),
+      );
+      await tester.tap(close);
+      await tester.pumpAndSettle();
+      expect(find.byType(ReviewSessionRoute), findsNothing);
+      expect(find.byType(CollectionDetail), findsOneWidget);
+      expect(h.sessions.single.isStopped, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

@@ -514,6 +514,12 @@ The owner extends the close-X pattern to all dialogs, including Collection delet
 
 The owner aligns review setup with summary: shared title/close-X header, Escape and backdrop dismissal, with Start remaining the setup's bottom action and no redundant Cancel. Closing setup never launches a session. UX-DIALOG-001 is First. Destructive confirmation cancellation is not removed or implicitly redesigned.
 
+## REVIEW-003 — natural completion summary lifecycle — 2026-10-14
+
+Open the immutable learned/completed and first-try summary only after actual captured work is exhausted and no retry remains. Do not treat no-due, voluntary Exit, a pending write, correction or failed selection as completion. Dismissing the modal safely drains/stops that session and returns to the underlying Collection.
+
+One real-route completion/dismissal case passes with the separate eight-case UX-REVIEW-004 popup acceptance. Android remains pending.
+
 ## First-release session summary popup — 2026-10-13
 
 The owner accepts a session summary popup containing learned/completed vocabulary count and first-try-correct count. REVIEW-003 and UX-REVIEW-004 are First. Normal close X, Escape or backdrop dismiss it over the Collection; no Back to Collection button or separate summary page. Studio shortcut previews illustrative 30/23 counts without changing a review session's grades. This supersedes the earlier proposed summary page and content disclaimer; prototype data remain explicitly labelled as samples.

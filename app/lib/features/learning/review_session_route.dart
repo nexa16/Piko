@@ -7,6 +7,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_card.dart';
+import '../../ui/components/piko_dialog.dart';
 import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_launch.dart';
@@ -15,6 +16,7 @@ import 'regular_grading_coordinator.dart';
 import 'hard_modifier.dart';
 import 'learning_scheduler.dart';
 import 'review_progress.dart';
+import 'review_summary_dialog.dart';
 
 /// Stored self-assessment card and regular grades; reinforcement follows separately.
 class ReviewSessionRoute extends StatefulWidget {
@@ -82,6 +84,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
   }
 
   bool _exiting = false;
+  bool _summaryScheduled = false, _summaryShown = false;
   GradingCardHandle? _preAdmissionError;
   Future<void> _grade(
     DueLearningSession session,
@@ -255,6 +258,48 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
     }
   }
 
+  bool _summaryReady(DueLearningSession session) =>
+      session.hasInitialWork &&
+      !session.isStopped &&
+      !session.isSubmitting &&
+      !session.isCorrecting &&
+      !session.selectionFailed &&
+      session.current == null &&
+      session.regularItemsExhausted &&
+      !session.hasPendingRetryWork;
+
+  void _maybeScheduleSummary(DueLearningSession session) {
+    if (_summaryScheduled || _summaryShown || !_summaryReady(session)) return;
+    _summaryScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _summaryScheduled = false;
+      if (!mounted ||
+          _exiting ||
+          !identical(session, widget.session) ||
+          ModalRoute.of(context)?.isCurrent != true ||
+          !_summaryReady(session)) {
+        return;
+      }
+      _summaryShown = true;
+      unawaited(_showSummary(session));
+    });
+  }
+
+  Future<void> _showSummary(DueLearningSession session) async {
+    final progress = session.progress;
+    await showPikoDialog<void>(
+      context,
+      builder: (_) => ReviewSummaryDialog(progress: progress),
+      canRestoreFocus: () => mounted && identical(session, widget.session),
+    );
+    if (mounted &&
+        !_exiting &&
+        identical(session, widget.session) &&
+        ModalRoute.of(context)?.isCurrent == true) {
+      await _exit(session);
+    }
+  }
+
   @override
   void didUpdateWidget(ReviewSessionRoute oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -262,6 +307,8 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
       unawaited(oldWidget.session.stop());
       oldWidget.session.dispose();
       _exiting = false;
+      _summaryScheduled = false;
+      _summaryShown = false;
       _preAdmissionError = null;
       _syncActivity();
     }
@@ -281,7 +328,9 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
     final sessionForBuild = widget.session;
     return ListenableBuilder(
       listenable: sessionForBuild,
-      builder: (_, _) => PopScope(
+      builder: (_, _) {
+        _maybeScheduleSummary(sessionForBuild);
+        return PopScope(
         canPop: !_exiting && widget.session.isStopped,
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop) unawaited(_exit(sessionForBuild));
@@ -452,7 +501,8 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
             ),
           ),
         ),
-      ),
+        );
+      },
     );
   }
 }
