@@ -148,6 +148,9 @@ class LiveVocabulary implements VocabularyRepository {
 }
 
 class LiveCollections implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   final streams = <StreamController<CollectionRecord?>>[];
   CollectionRecord current = owner;
   @override

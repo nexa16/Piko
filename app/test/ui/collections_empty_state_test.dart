@@ -14,6 +14,9 @@ import 'package:piko/shared/catalogs.dart';
 final copy = const PikoCopy('en');
 
 class ControlledEmptyRepository implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   final watches = <StreamController<List<CollectionRecord>>>[];
   @override
   Stream<List<CollectionRecord>> watchAll() {

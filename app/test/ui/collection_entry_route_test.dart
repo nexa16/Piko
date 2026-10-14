@@ -95,6 +95,9 @@ Finder field(bool target) => find.descendant(
 );
 
 class LiveCollections implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   final detail = StreamController<CollectionRecord?>.broadcast();
   @override
   Stream<CollectionRecord?> watchById(String id) => detail.stream;

@@ -9,6 +9,9 @@ import 'package:piko/ui/components/piko_language_badge.dart';
 import 'package:piko/ui/piko_theme.dart';
 
 class BadgeRepository implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   var watches = 0;
   final records = [
     for (final language in VocabularyLanguage.values)

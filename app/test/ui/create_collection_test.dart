@@ -11,6 +11,9 @@ import 'package:piko/main.dart';
 
 class PendingRepository implements CollectionsRepository {
   @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
+  @override
   Stream<List<CollectionRecord>> watchAll() => Stream.value([]);
   @override
   Stream<CollectionRecord?> watchById(String id) => Stream.value(null);

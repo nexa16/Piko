@@ -7,6 +7,26 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
   SqliteCollectionsRepository(this.database);
   final PikoDatabase database;
 
+  @override
+  Future<CollectionRecord> rename({
+    required String id,
+    required String name,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) throw CollectionValidation.requiredName;
+    return database.transaction(() async {
+      final count =
+          await (database.update(database.collections)
+                ..where((row) => row.id.equals(id)))
+              .write(CollectionsCompanion(name: Value(trimmed)));
+      if (count != 1) throw CollectionValidation.collectionNotFound;
+      final row = await (database.select(
+        database.collections,
+      )..where((row) => row.id.equals(id))).getSingle();
+      return _record(row);
+    });
+  }
+
   CollectionRecord _record(Collection row) => CollectionRecord(
     id: row.id,
     name: row.name,

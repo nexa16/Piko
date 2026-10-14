@@ -22,9 +22,11 @@ final class CollectionRecord {
   final VocabularyLanguage nativeLanguage;
 }
 
-enum CollectionValidation { requiredName, sameLanguage }
+enum CollectionValidation { requiredName, sameLanguage, collectionNotFound }
 
 abstract interface class CollectionsRepository {
+  /// Changes only the existing Collection's name; storage remains caller-owned.
+  Future<CollectionRecord> rename({required String id, required String name});
   Stream<List<CollectionRecord>> watchAll();
   Stream<CollectionRecord?> watchById(String id);
   Future<CollectionRecord> create({

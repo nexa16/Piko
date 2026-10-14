@@ -28,6 +28,9 @@ const second = CollectionRecord(
 
 /// New watch calls return distinct streams, so retry must really resubscribe.
 class NavigationRepository implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   NavigationRepository({this.records = const [], this.seed = true});
   List<CollectionRecord> records;
   final bool seed;
@@ -208,7 +211,9 @@ void main() {
       );
       expect(tester.widget<PikoCard>(focusedCard).focused, isTrue);
       final container = tester.widget<Container>(
-        find.descendant(of: focusedCard, matching: find.byType(Container)).first,
+        find
+            .descendant(of: focusedCard, matching: find.byType(Container))
+            .first,
       );
       final border = (container.decoration! as BoxDecoration).border! as Border;
       expect(border.top.color, pikoDesign.color('primary'));

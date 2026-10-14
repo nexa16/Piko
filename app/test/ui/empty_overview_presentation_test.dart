@@ -13,6 +13,9 @@ import 'package:piko/ui/components/piko_card.dart';
 import 'package:piko/ui/piko_theme.dart';
 
 class EmptyOverviewRepository implements CollectionsRepository {
+  @override
+  Future<CollectionRecord> rename({required String id, required String name}) =>
+      throw UnimplementedError();
   var watches = 0;
   @override
   Stream<List<CollectionRecord>> watchAll() {

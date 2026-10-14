@@ -1,5 +1,11 @@
 # Decision log
 
+## COLL-012 — name-only Collection repository mutation — 2026-10-14
+
+Add an explicit identity-addressed rename operation to the existing Collections Repository. Trim names as on creation, retain duplicate-name support and distinguish required-name from missing-Collection validation. The SQLite transaction changes only `name` and reads the resulting same-ID/language record before commit. It does not replace the Collection row, normalize vocabulary, initialize learning, allocate identities or alter schema. Successful watches/reopen retain insertion order and the new name; a post-update storage failure rolls back the name and actual trigger side effects.
+
+Four focused storage tests compare exact row snapshots (including vocabulary legacy display bytes/comparison keys, rowids, complete divergent directional JSON, settings and both allocator marks), verify existing overview/detail subscriptions, matching names, Unicode-edge trimming, typed invalid/missing failures, transient retry and file reopen. Repository-issued opening rollback and existing deletion Undo capabilities still resolve through the unchanged owner UUID after rename. UI fakes receive interface adapters only; no rename control or deletion behavior is introduced. Visible inline controls remain UX-COLL-007; actual Android Collection-management acceptance remains pending.
+
 ## UX-COLL-012 — distinct Finish and Discard controls — 2026-10-14
 
 Before a change, show one collapse X; after a change, keep the existing Finish check and append a separate Discard X. Shared icon buttons supply canonical minimum targets, localized names/tooltips, visible focus and keyboard activation. Use only InlineVocabularyEditController.changedSinceOpening: pending/committed differences matter even when raw text appears to have returned to opening values. No widget-local rollback snapshot or comparison replaces the repository-issued opening boundary.
