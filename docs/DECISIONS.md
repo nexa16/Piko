@@ -522,6 +522,10 @@ The owner accepts a session summary popup containing learned/completed vocabular
 
 Accepted: required Collection names default to the selected target language in the interface language; owner customization is preserved and multiple same-language Collections remain allowed (COLL-017, First). Saved vocabulary deletion with mobile swipe discovery, explicit Delete and time-limited Undo is First (ENTRY-009, UX-VOCAB-DELETE-001). Exact production Undo timing remains open. A future trash/recovery area is Later with retention undecided (VOCAB-TRASH-001); prototype Undo timing does not specify retention.
 
+## UX-REVIEW-003 — hide correction after reveal — 2026-10-14
+
+Render Previous Review only for the exact hidden current presentation. Reveal removes it immediately, and a callback captured before reveal rechecks that state and cannot enter correction afterward. The prior-answer correction presentation starts revealed and contains no nested Previous action. One focused real-route visibility/cached-callback case passes alongside the correction presentation case. Android remains pending.
+
 ## First-release retry gaps and review correction visibility — 2026-10-13
 
 The owner confirms retry gaps 20, 10, 5, 3, then 1 for the fifth and subsequent errors in the current round. RETRY-001–002 move from Undecided to First. Exact counting/off-by-one conventions, short-wait duration and FSRS interaction remain open; these decisions are not inferred from the sequence. Previous-grade correction is available only before revealing the current card's answer, not after reveal. The studio adds a direct sample-summary preview for design discussion; it is a planning-tool shortcut and does not approve summary content or add a production application shortcut.

@@ -673,6 +673,34 @@ void main() {
   }
 
   launch.testWidgets(
+    'previous-review action is distinct from Exit and disappears as soon as the current answer is revealed',
+    (tester) async {
+      final h = await open(tester);
+      await reveal(tester);
+      await tester.tap(gradeButton(AnswerGrade.correct));
+      await h.finish(tester);
+      final previous = find.byKey(
+        const ValueKey('review-correct-previous'),
+      );
+      expect(previous, findsOneWidget);
+      expect(
+        find.widgetWithText(PikoButton, PikoCopy('en').text('learn.exit')),
+        findsOneWidget,
+      );
+      final stale = tester.widget<PikoButton>(previous).onPressed!;
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      expect(previous, findsNothing);
+      stale();
+      await tester.pump();
+      expect(h.sessions.single.isCorrecting, isFalse);
+      expect(actions, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  launch.testWidgets(
     'previous-review presentation shows prior answer and grade, then replacement returns to the unanswered card',
     (tester) async {
       final h = await open(tester), session = h.sessions.single;

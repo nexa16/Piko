@@ -121,7 +121,7 @@ Before deletion implementation, LEARN-002 precedes ENTRY-009 so Undo restores ac
 | 80 | CARD-UI-020 | Consistent scheduler and retry correction | Implemented | Reversible latest progress context and corrected-round-only queue reconciliation with registered drainage | Three real-SQLite session cases cover Good→Again, Again→Good, exact counter reversal/reapply, same displayed retry retirement and unrelated armed-round preservation. Correction suspends wake-up and drains accepted bookkeeping through lifecycle. Host implemented; Android pending. |
 | 81 | CARD-UI-019 | Only immediately preceding grade is correctable | Implemented | Retained unanswered current handle plus revealed latest-answer correction presentation | Two real-route cases verify latest prior answer/grade, same grading controls, stale/lifetime guards and return to the retained hidden card. Older answers have no entry point. Host implemented; Android pending. |
 | 82 | UX-CARD-010 | Distinct previous-review navigation | Pending | — | — |
-| 83 | UX-REVIEW-003 | Hide correction after reveal | Pending | — | — |
+| 83 | UX-REVIEW-003 | Hide correction after reveal | Implemented | Hidden-side-only real correction action with exact presentation guard | One route case verifies reveal removes the action immediately and its cached callback cannot enter correction; correction itself starts revealed and contains no nested Previous. Host implemented; Android pending. |
 | 84 | UX-REVIEW-001 | Integrated self-assessment layout | Pending | — | — |
 | 85 | UX-REVIEW-002 | Answer emphasis and accessible Hard target | Pending | — | — |
 | 86 | UX-COLL-008 | Actual due-count card and compact vocabulary rows | Pending | — | — |
