@@ -1,5 +1,9 @@
 # Decision log
 
+## UNDO-001 — Android correction and downstream acceptance — 2026-10-14
+
+Two isolated Android real-runtime flows pass in English target→native and German native→target. Hard changes actual FSRS/history, correction replaces that same event as Good at its original instant, then another Incorrect answer waits and completes through Hard reinforcement without an extra regular event. Summary reports two completed and one first-try success; dismissal, file reopen and exact opposite-direction state are verified. An injected clock advances the persisted ten-second wait; this is not an Android DST or termination test. No-uninstall preserves the marker and the normal current-schema APK is restored/cold-launched. Exhaustive transitions and concurrency remain covered by the 27 host cases.
+
 ## UX-REVIEW-002 — answer emphasis and usable Hard target — 2026-10-14
 
 Reuse the real reveal/Hard acceptance rather than introducing another presentation: the revealed translation is primary, its prompt smaller/muted, and the cue disappears. The full-width right-column Hard label remains clickable with the established checkbox geometry. Localized enlarged-text host cases and actual Android reveal/Hard flows pass; direction remains fixed and previous correction uses a distinct back arrow. Red-outline treatment remains the binding prototype trial, not a new finalized color decision. Final whole-release accessibility review is still separate.
