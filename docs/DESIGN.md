@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Default tag policy — CARD-004
+
+Neither the real hidden nor revealed default card adds category pills, tags or placeholder labels. Preserve literal stored vocabulary, even if it resembles a UI heading or hashtag; do not sanitize it as metadata. The hidden side contains its stored prompt and the accepted reveal cue, while the revealed side contains only the two stored language values. Four English/German, both-direction host route tests verify exact text/semantics and unchanged storage through return/relaunch. No visual/token change or category feature is introduced; Android acceptance remains pending.
+
 ## Real card reveal — CARD-UI-007
 
 The whole hidden card is one reveal target; use the existing localized cue with a muted book icon near the lower-right corner, not a separate button. Canonical `components.learningCard` now owns the binding 58px bottom padding, 12px/400 cue, 16px icon, 7px gap and 18px-right/16px-bottom offsets. Flutter constrains and measures wrapped cue text so enlarged labels remain inside the card without overlapping the prompt; normal binding geometry stays unchanged. The keyboard focus outline overlays the shared card rather than moving its contents.

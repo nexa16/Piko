@@ -1,5 +1,11 @@
 # Decision log
 
+## CARD-004 — default tag omission without vocabulary filtering — 2026-10-14
+
+Reconcile CARD-004 to First under the accepted implementation plan: default learning cards omit Category Tag UI on both hidden and revealed sides. This is a presentation rule, not a text filter. Literal stored vocabulary containing Question, Answer or hashtag-like text remains intact and readable in either fixed direction. Do not add a category placeholder, synthetic tag metadata, category schema or visibility control to establish this policy; categories remain later scope.
+
+No production change is needed: the actual stored card already follows the policy. Four new real-SQLite route tests cover English/German and both directions with literal `Question #topic` / `Answer #Thema` vocabulary. Exact hidden/revealed text and semantic labels/hints, absence of chip/button/header/extra semantic presentation, and exact full storage preservation through reveal, Exit and relaunch establish the host boundary. All 29 relevant policy/prompt/reveal tests pass with clean analysis; shared generation remains current. Android acceptance remains pending. CARD-UI-004 retains its separate closure commit; grading/progress/retry/correction scope and DATA-001/CARD-UI-001 follow-ups are unchanged.
+
 ## CARD-UI-007 — real card reveal and subordinate cue — 2026-10-14
 
 Extend the real current stored card rather than adding a sample or separate Show Answer button. Its entire surface, including the prompt text, exposes one pointer/semantic/Enter/Space action while hidden. Reveal removes the cue/action and shows the original prompt smaller and muted above the emphasized stored translation, in the fixed session direction. No grading, memory or history write occurs on reveal; no redundant headings, tag placeholder or revealed-status label is added.
