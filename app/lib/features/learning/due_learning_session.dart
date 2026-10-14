@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../core/clock.dart';
 import '../../data/learning_item.dart';
@@ -50,6 +51,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     void Function(Future<void>)? onPendingWrites,
     Timer Function(Duration, void Function()) timerFactory = Timer.new,
     bool presentationActive = true,
+    Random? orderRandom,
   }) async {
     if (!cutoff.isUtc) {
       throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
@@ -57,9 +59,15 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     final selection = source is RetryReviewSource
         ? await source.initialSelection(cutoff: cutoff)
         : null;
-    final members = List<LearningItemRecord>.unmodifiable(
+    final ordered = List<LearningItemRecord>.of(
       selection?.regular ?? await source.dueItems(cutoff: cutoff),
     );
+    // Rebuild a resumed question order, never restore a persisted sequence.
+    // Eligible captured retries still take priority independently of this order.
+    if (selection?.retries.rounds.isNotEmpty ?? false) {
+      ordered.shuffle(orderRandom);
+    }
+    final members = List<LearningItemRecord>.unmodifiable(ordered);
     final session = DueLearningSession._(
       source,
       cutoff,

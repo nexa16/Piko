@@ -1,5 +1,11 @@
 # Decision log
 
+## SESSION-019 — newly generated resumed question order — 2026-10-14
+
+When initial discovery contains pending same-day retries, generate a fresh shuffled order for the complete captured regular membership rather than restoring a previous sequence. Eligible captured retries retain priority; ineligible rounds never bypass their earned gap/persisted wait. Keep ordinary launches unchanged, with no stored sequence, schema, filler or repeated due discovery. An optional Random input makes ordering acceptance deterministic; production uses the platform generator. A random launch is not required to differ from every prior permutation.
+
+Two new host cases verify two deterministic launch orders contain every member exactly once, preserve storage and pending eligibility, prioritize an eligible retry before the generated regular order, and exclude a later-created due item from captured membership. They pass in the same 15-case resume/order batch with clean analysis. SESSION-019 is First-release as accepted in the implementation ledger; Android and separate progress/correction acceptance remain pending. No additional full-suite run is claimed beyond the prior RETRY-005 baseline.
+
 ## RETRY-003 — same-day resume retention — 2026-10-14
 
 Resume reads the authoritative current round and same-Collection/direction ordinal, never resetting the remaining gap, wait or original 04:00 expiry. Three new host cases cover actual Exit/relaunch with 17 of 20 answers still required and revealed unanswered work retaining the entire database; file-reopened sessions before/matured wait with real regular work and eligible retry priority; and exact original-day expiry removing only the selected scope's obligation without success/history/card/count changes or later clock-rollback resurrection.
