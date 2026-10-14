@@ -1,5 +1,9 @@
 # Decision log
 
+## COLL-012 — Android rename preservation — 2026-10-14
+
+English/German emulator acceptance now verifies blank validation, dismissal without changes, trimmed rename and exact preservation of collection identity, vocabulary and divergent directional learning state through file reopen. Both isolated real-runtime cases pass. No-uninstall runner cleanup leaves the production database and preservation marker unchanged; the normal same-schema APK was restored and cold-launched. This closes scoped rename verification without claiming the remaining release gates.
+
 ## VOCAB-EDIT-002 — Android inline-edit acceptance — 2026-10-14
 
 Two English/German emulator cases exercise the real inline editor, keyboard, valid auto-save/Finish, rejected incomplete/duplicate Finish and exact opening-value Discard. Identity, row order, independent full directional state and reopened fixture storage remain correct. Tests inject isolated files and use --no-uninstall; existing production database and sentinel fingerprints were unchanged after cleanup. The normal current-schema APK was restored with an in-place install and successful cold launch. This verifies the inline-edit scope, not every release gate.
