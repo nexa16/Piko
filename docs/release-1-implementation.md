@@ -176,11 +176,11 @@ Completion remains unproven until evidence covers the full scope, including real
 | Dependency and canonical requirement reconciliation | Pending | — |
 | Focused automated tests for every implemented behavior | Pending | — |
 | Complete relevant regression suite and static analysis | Passed at 52bb050 | All 682 Flutter tests pass after production distinct-word count wiring; 19 Node adapter tests and canonical generation check pass; static analysis reports no issues. Rerun impacted checks after subsequent changes. |
-| Android build, installation and launch | Pending | — |
+| Android build, installation and launch | Passed at 285bf0e | Current-schema normal debug APK builds and installs in place; explicit cold launch reports success. Existing storage marker survives. Development signing remains unsuitable for store publication. |
 | Empty start, collection create/rename/delete and restart durability | Pending | — |
 | Focused entry stack with keyboard, scrolling, validation and draft exit | Pending | — |
 | Inline editing, finish/discard, swipe deletion and Undo with progress | Passed scoped Android flow | Existing EN/DE real-runtime editor cases verify keyboard, valid Finish, invalid retention and exact opening Discard. Android swipe reveals without mutation; explicit deletion and Undo restore vocabulary identity/text/original row order, full directional cards and logical history/retry state, with unrelated rows and file reopen exact. Physical SQLite history rowids are not domain identities. Isolated storage and no-uninstall preserve the pre-existing marker; joined release smoke remains separate. |
-| Offline save, restart and confirmed-entry termination durability | Pending | — |
+| Offline save, restart and confirmed-entry termination durability | Partial: final-schema termination passed | ENTRY-008 schema10 rerun reaches production UI confirmation with a raw unfinished draft, externally verified live PID and abrupt force-stop. Normal APK cold-launch succeeds; verification checks exact saved UUID/text/keys/owner/order and both directional cards, fresh blank draft and guarded cleanup. Baseline domain tables were empty; nonempty unrelated-data preservation remains host coverage. Earlier isolated offline storage evidence remains scoped; joined offline UI smoke is still pending. |
 | Independent directions, real FSRS ratings, retries, wait, resume and day expiry | Pending | — |
 | Previous-grade replacement, counters and dismissible summary | Pending | — |
 | English/German, large text, accessible controls and reduced motion | Pending | — |
