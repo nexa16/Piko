@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-REVIEW-001 — integrated self-assessment acceptance — 2026-10-14
+
+Close the composition requirement only after its real grading, Hard alignment, direction, progress, no-due and previous-review components work together. Reuse their passing localized host geometry/lifecycle cases rather than duplicate the suite. Two Android real-runtime flows also pass grading, same-event correction, retry waiting/success and actual summary in opposite directions. Dynamic typed-answer action widths and Skip remain excluded; whole-release visual/accessibility verification stays a separate gate.
+
 ## COLL-014 — Android cascade and safe dismissal — 2026-10-14
 
 The isolated real-runtime Android fixture creates both directions of actual regular review, FSRS, retry and scope-ordinal state in two Collections. Dismissing the confirmation preserves everything; confirming removes only the selected owner's descendants. Unrelated rows, settings and allocator high-water marks survive exactly, including after file reopen. The case passes with no-uninstall and unchanged production DB/sentinel fingerprints; the normal same-schema APK was restored and cold-launched. No broader release-gate completion is inferred.
