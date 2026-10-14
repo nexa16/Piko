@@ -1,5 +1,11 @@
 # Decision log
 
+## DATA-001 — explicit regular/reinforcement retention boundary — 2026-10-14
+
+Require `ReviewKind.regular` or `ReviewKind.reinforcement` at the regular-review recording API. Reject reinforcement with `reinforcementNotRetained` before any card validation, scheduling or storage access. Existing regular-review callers explicitly select regular; no default can silently classify a future retry. This guard records no attempt timestamps, retry events, typed answers or additional tables, and introduces no retry-processing model.
+
+Three focused host tests exercise repeated reinforcement in both directions for every supported grade against memory and file-backed SQLite. Complete memory/generation/revision and regular-event payloads remain exact, file reopen retains them and subsequent regular acceptance still works. Closed storage with invalid prior/time input also yields the early typed kind rejection. This establishes a recording boundary, not integrated retry behavior: DATA-001 remains In progress, and RETRY-006 must consume the boundary and verify actual reinforcement flow without extra regular events. Current-round retry eligibility/count/expiry belongs to the separate retry service and does not require an attempt-event log. DATA-002/003 do not expand this first-release work.
+
 ## DATA-004 — atomic regular-review history and stale guards — 2026-10-14
 
 Schema 7 adds `regular_reviews` with UUID event identity, cascading Learning Item ownership, nonnegative generation, constrained Again/Hard/Good names and UTC ISO text retaining microseconds. Learning Items gain generation and review revision, both default zero with column-level nonnegative checks that also apply to versions 5/6 `ADD COLUMN` migrations. Earlier upgrades create the latest table directly. Preserve existing exact card JSON/IDs, vocabulary row positions/display bytes, settings and both high-water sequences; never synthesize past events. No generation-reset action or durable prior/next card snapshots are introduced.

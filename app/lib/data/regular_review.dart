@@ -1,6 +1,9 @@
 import 'learning_item.dart';
 import '../features/learning/learning_scheduler.dart';
 
+/// Reinforcement is processed separately and must not enter regular review history.
+enum ReviewKind { regular, reinforcement }
+
 final class RegularReviewRecord {
   const RegularReviewRecord({
     required this.id,
@@ -28,4 +31,4 @@ final class RegularReviewReceipt {
   final RegularReviewRecord event;
 }
 
-enum RegularReviewFailure { itemNotFound, staleState }
+enum RegularReviewFailure { itemNotFound, staleState, reinforcementNotRetained }

@@ -27,10 +27,15 @@ final class SqliteLearningRepository {
 
   /// Accepts one regular review of exactly the caller's displayed prior state.
   Future<RegularReviewReceipt> review({
+    required ReviewKind kind,
     required LearningItemRecord expectedPrior,
     required LearningRating rating,
     required DateTime reviewedAt,
   }) async {
+    // Reject reinforcement at the boundary, before storage or FSRS calculation.
+    if (kind != ReviewKind.regular) {
+      throw RegularReviewFailure.reinforcementNotRetained;
+    }
     expectedPrior.card;
     if (!reviewedAt.isUtc) {
       throw ArgumentError.value(reviewedAt, 'reviewedAt', 'Must be UTC');

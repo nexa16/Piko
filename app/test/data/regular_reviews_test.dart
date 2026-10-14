@@ -90,6 +90,7 @@ class Fixture {
     LearningRating rating = LearningRating.good,
     DateTime? at,
   }) async => learning.review(
+    kind: ReviewKind.regular,
     expectedPrior: await current(word, reverse),
     rating: rating,
     reviewedAt: at ?? instant,
@@ -144,6 +145,7 @@ void main() {
           expect(events.map((event) => event.generation), [9, 9]);
         }
         final next = await learning.review(
+          kind: ReviewKind.regular,
           expectedPrior: reopened.first,
           rating: LearningRating.good,
           reviewedAt: instant.add(const Duration(days: 1)),
@@ -208,6 +210,7 @@ void main() {
         reviewedAt: instant,
       );
       final receipt = await f.learning.review(
+        kind: ReviewKind.regular,
         expectedPrior: initial,
         rating: LearningRating.hard,
         reviewedAt: instant,
@@ -286,6 +289,7 @@ void main() {
         List.generate(2, (_) async {
           try {
             return await f.learning.review(
+              kind: ReviewKind.regular,
               expectedPrior: before,
               rating: LearningRating.good,
               reviewedAt: instant,
@@ -304,6 +308,7 @@ void main() {
       expect((await f.current()).reviewRevision, 1);
       await expectLater(
         f.learning.review(
+          kind: ReviewKind.regular,
           expectedPrior: before,
           rating: LearningRating.good,
           reviewedAt: instant,
@@ -353,6 +358,7 @@ void main() {
         );
         await expectLater(
           f.learning.review(
+            kind: ReviewKind.regular,
             expectedPrior: before,
             rating: LearningRating.good,
             reviewedAt: instant,
@@ -392,6 +398,7 @@ void main() {
       ]) {
         await expectLater(
           f.learning.review(
+            kind: ReviewKind.regular,
             expectedPrior: invalid,
             rating: LearningRating.good,
             reviewedAt: instant,
@@ -408,6 +415,7 @@ void main() {
       ]) {
         await expectLater(
           f.learning.review(
+            kind: ReviewKind.regular,
             expectedPrior: invalid,
             rating: LearningRating.good,
             reviewedAt: instant,
@@ -417,6 +425,7 @@ void main() {
       }
       await expectLater(
         f.learning.review(
+          kind: ReviewKind.regular,
           expectedPrior: before,
           rating: LearningRating.good,
           reviewedAt: instant.toLocal(),
@@ -427,6 +436,7 @@ void main() {
       final current = await f.current();
       await expectLater(
         f.learning.review(
+          kind: ReviewKind.regular,
           expectedPrior: current,
           rating: LearningRating.good,
           reviewedAt: instant.subtract(const Duration(microseconds: 1)),
@@ -438,6 +448,7 @@ void main() {
       await deletion.delete(f.entry.id);
       await expectLater(
         f.learning.review(
+          kind: ReviewKind.regular,
           expectedPrior: current,
           rating: LearningRating.good,
           reviewedAt: instant,
