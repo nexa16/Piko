@@ -25,14 +25,50 @@ import 'review_correction_android_test.dart' as review;
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 
 const _fixturePrefix = 'piko-visual-semantics-verification-';
-const _screenshots = <String>[
-  'piko-visual-home-de-200.png',
-  'piko-visual-detail-de-200.png',
-  'piko-visual-direction-de-200.png',
-  'piko-visual-review-hidden-de-200.png',
-  'piko-visual-review-revealed-de-200.png',
-  'piko-visual-summary-de-200.png',
-  'piko-visual-settings-de-200.png',
+const _verificationModeName = String.fromEnvironment(
+  'PIKO_VISUAL_MODE',
+  defaultValue: 'injected200',
+);
+const _baselineTextSize = 10.0;
+
+enum _VerificationMode { injected200, normal, platform }
+
+_VerificationMode _verificationMode() => switch (_verificationModeName) {
+  'injected200' => _VerificationMode.injected200,
+  'normal' => _VerificationMode.normal,
+  'platform' => _VerificationMode.platform,
+  _ => throw ArgumentError.value(
+    _verificationModeName,
+    'PIKO_VISUAL_MODE',
+    'Expected injected200, normal, or platform',
+  ),
+};
+
+extension on _VerificationMode {
+  String get testLabel => switch (this) {
+    _VerificationMode.injected200 => 'injected 200%',
+    _VerificationMode.normal => 'normal platform',
+    _VerificationMode.platform => 'platform accessibility',
+  };
+
+  String get screenshotSuffix => switch (this) {
+    _VerificationMode.injected200 => 'de-200',
+    _VerificationMode.normal => 'de-normal',
+    _VerificationMode.platform => 'de-platform',
+  };
+}
+
+List<String> _screenshotsFor(_VerificationMode mode) => <String>[
+  for (final screen in <String>[
+    'home',
+    'detail',
+    'direction',
+    'review-hidden',
+    'review-revealed',
+    'summary',
+    'settings',
+  ])
+    'piko-visual-$screen-${mode.screenshotSuffix}.png',
 ];
 
 Finder _button(String label) => find.widgetWithText(PikoButton, label);
@@ -99,27 +135,32 @@ String _answerFor(String prompt) => switch (prompt) {
   _ => throw StateError('Unexpected visual-review prompt: $prompt'),
 };
 
-/// Synthetic Android visual and semantics acceptance. The PNGs intentionally
-/// remain in the application-support root for host retrieval after a
-/// `--no-uninstall` run; the owned database directory is still removed.
-/// Text scale and reduced motion are injected only into this test process.
+/// Android visual and semantics acceptance. The default mode injects 200% text
+/// and reduced motion into this test process. The `normal` and `platform`
+/// modes observe the device configuration without overriding accessibility.
+/// PNGs intentionally remain in the application-support root for host
+/// retrieval after a `--no-uninstall` run; the owned database is still removed.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final mode = _verificationMode();
+  final screenshots = _screenshotsFor(mode);
 
   testWidgets(
-    'Android German 200% key screens keep real visuals and semantic targets',
+    'Android German ${mode.testLabel} key screens keep real visuals and semantic targets',
     (tester) async {
       expect(binding.registerTestTextInput, isFalse);
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
-      tester.platformDispatcher.accessibilityFeaturesTestValue =
-          const FakeAccessibilityFeatures(disableAnimations: true);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      addTearDown(
-        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
-      );
+      if (mode == _VerificationMode.injected200) {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        tester.platformDispatcher.accessibilityFeaturesTestValue =
+            const FakeAccessibilityFeatures(disableAnimations: true);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        addTearDown(
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+        );
+      }
 
       final support = await getApplicationSupportDirectory();
-      for (final name in _screenshots) {
+      for (final name in screenshots) {
         if (await File('${support.path}/$name').exists()) {
           throw StateError(
             'Refusing to overwrite an existing visual artifact: $name',
@@ -168,11 +209,21 @@ void main() {
           description: 'Home review count',
         );
         final home = find.byType(CollectionsHome);
-        expect(
-          MediaQuery.textScalerOf(tester.element(home)).scale(10),
-          closeTo(20, .01),
-        );
-        expect(MediaQuery.disableAnimationsOf(tester.element(home)), isTrue);
+        final homeContext = tester.element(home);
+        final effectiveTextSize = MediaQuery.textScalerOf(
+          homeContext,
+        ).scale(_baselineTextSize);
+        final disableAnimations = MediaQuery.disableAnimationsOf(homeContext);
+        switch (mode) {
+          case _VerificationMode.injected200:
+            expect(effectiveTextSize, closeTo(20, .01));
+            expect(disableAnimations, isTrue);
+          case _VerificationMode.normal:
+            break;
+          case _VerificationMode.platform:
+            expect(effectiveTextSize, greaterThan(_baselineTextSize));
+            expect(disableAnimations, isTrue);
+        }
         _expectSemanticLabel(
           tester,
           _button(copy.text('nav.settings')),
@@ -184,7 +235,7 @@ void main() {
         );
         await binding.convertFlutterSurfaceToImage();
         await tester.pump();
-        await _capture(binding, tester, support, _screenshots[0]);
+        await _capture(binding, tester, support, screenshots[0]);
 
         await review.tapVisible(
           tester,
@@ -209,7 +260,7 @@ void main() {
           ),
           findsOneWidget,
         );
-        await _capture(binding, tester, support, _screenshots[1]);
+        await _capture(binding, tester, support, screenshots[1]);
 
         await review.tapVisible(
           tester,
@@ -230,7 +281,7 @@ void main() {
           _closeButton(copy.text('common.close')),
           copy.text('common.close'),
         );
-        await _capture(binding, tester, support, _screenshots[2]);
+        await _capture(binding, tester, support, screenshots[2]);
 
         await review.tapVisible(tester, _button(copy.text('learn.start')));
         await review.waitUntil(
@@ -245,7 +296,7 @@ void main() {
         final hiddenSemantics = tester.getSemantics(review.revealTarget);
         expect(hiddenSemantics.label, prompt);
         expect(hiddenSemantics.hint, copy.text('learn.revealCue'));
-        await _capture(binding, tester, support, _screenshots[3]);
+        await _capture(binding, tester, support, screenshots[3]);
 
         await review.reveal(tester);
         expect(find.text(answer), findsOneWidget);
@@ -263,7 +314,7 @@ void main() {
           find.byKey(const ValueKey('review-grade-correct')),
           copy.text('action.correct'),
         );
-        await _capture(binding, tester, support, _screenshots[4]);
+        await _capture(binding, tester, support, screenshots[4]);
 
         await review.tapVisible(
           tester,
@@ -295,7 +346,7 @@ void main() {
           find.byKey(const ValueKey('summary-first-try')),
           '2 ${copy.text('summary.firstTryCorrect')}',
         );
-        await _capture(binding, tester, support, _screenshots[5]);
+        await _capture(binding, tester, support, screenshots[5]);
 
         await review.tapVisible(
           tester,
@@ -326,7 +377,7 @@ void main() {
               .value,
           const Locale('de'),
         );
-        await _capture(binding, tester, support, _screenshots[6]);
+        await _capture(binding, tester, support, screenshots[6]);
         expect(tester.takeException(), isNull);
 
         await tester.pumpWidget(const SizedBox());
