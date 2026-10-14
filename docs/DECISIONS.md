@@ -1,5 +1,9 @@
 # Decision log
 
+## CARD-UI-023 — pending until success or original expiry — 2026-10-14
+
+The existing integrated session retains one incorrectly graded item as pending through repeated retries; only accepted correct reinforcement or the original local-04:00 expiry removes the obligation. One additional real-SQLite acceptance case verifies this transition without regular-history duplication or expiry success. It passes in the related 19-case batch with clean analysis. This is host acceptance of the implemented flow, not new schema/policy; Android remains pending.
+
 ## UX-CARD-012 — real readable unique progress — 2026-10-14
 
 Render actual per-launch completed/total and first-try counts above the card, with one fixed direction and an ink/tint determinate bar. Lift existing binding geometry into canonical context/progress adapters: 7px bar, 9px radius, 16px vertical margin; 14px context gap, compact 8px/12px metadata at 400px. Numeric min/max/value progress semantics carry the localized readable description. Do not show a per-question mistake clue.
