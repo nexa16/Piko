@@ -1,5 +1,13 @@
 # Decision log
 
+## REVIEW-002 — honest initial no-due view — 2026-10-14
+
+The real session route displays `learn.noDueTitle` and `learn.noDueBody` only when the selected scoped session's initial membership is empty. Keep the fixed direction context and one existing safe Back returning to the same Collection. Do not manufacture a question, grade, completion result or progress. Never use regular-membership exhaustion as the empty discriminator: an Incorrect review can exhaust regular items while later reinforcement remains unresolved. When retry integration ships, pending same-day retries must take precedence before this no-due presentation is chosen; this step does not implement that queue or mark DATA-001 complete.
+
+Use the shared card, canonical 20px top spacing, body-size bold heading and semantic muted description. Promote the binding review-empty description's 15px size to `components.emptyState.descriptionSize`, reusing its existing 1.6 line height; CSS/browser variables and generated Flutter share those values. No wording is duplicated or changed. Enlarged-text tests set the actual app-level scale so dialogs and pushed routes, not just the Collection subtree, receive 200%.
+
+Eight real-SQLite host widget tests cover zero-entry Collection, all-future cards, reverse empty while forward is due, Back/relaunch with exact full storage snapshots, enlarged English/German width/semantics/reachable Back, authoritative missing/corrupt preparation failures and nonempty Incorrect/exhaustion never becoming no-due. Existing seventeen launch cases still pass under the corrected global scale. All 433 Flutter and 14 Node tests pass with clean analysis, generator, browser syntax and diff checks. No-due presentation is implemented for current regular-scope launch; pending-retry precedence, full card/reveal/grading/correction flow and Android acceptance remain pending.
+
 ## REVIEW-001 — explicit fixed-direction runtime launch — 2026-10-14
 
 Collection Detail now opens the shared direction popup through its runtime-supplied review factory. Match the binding mockup: localized title/select/Start and close X, exactly Target → Native and Native → Target using that Collection's language codes, with initial Target → Native selected and focused. Only explicit Start launches; X/Escape/backdrop returns safely without a grade. Preserve the chosen enum through locale rebuilds and preparation failure/retry; pending Start is single-flight and disables the select. Keep readiness eligibility separate from live ownership: not-ready Collection streams disable Start and stale callbacks, while recovery preserves the owned popup and choice. Key the outer launch slot so inserted stream feedback cannot retire it accidentally.

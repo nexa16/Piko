@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Initial no-due review card — REVIEW-002
+
+The initial empty selected-direction session uses the shared card, one existing Back and fixed direction context. The binding heading matches global body-size bold h2; description uses semantic muted, canonical `components.emptyState.descriptionSize` (15px) and existing `descriptionLineHeight` (1.6), with `spacing.5` (20px) top margin. Browser/Flutter adapters consume these values together, without changing the existing homepage description size. English/German content wraps at actual app-level 200% scale and 392px width, and Back remains reachable. No sample question, grading or completion view is added; Android and future pending-retry presentation checks remain separate.
+
 ## Explicit review direction popup — REVIEW-001
 
 Use the binding mockup's shared popup with localized `learn.setup`, `settings.direction`, `learn.start` and close X. The growable shared dropdown has exactly the Collection's two code-arrow-code directions, using the canonical 8px label/control gap and existing dropdown geometry. It receives initial focus through an optional shared autofocus adapter; native Space/arrow/Enter selection and Tab/Enter Start are host-tested. Selection survives English/German rebuilds. Preparation wording/failure lives only in shared copy, and pending/readiness states disable Start without introducing an alternate design source. X/Escape/backdrop remain safe dismissal of read-only setup.

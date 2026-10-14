@@ -5,10 +5,12 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
+import '../../ui/components/piko_card.dart';
+import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_launch.dart';
 
-/// Interim actual session route; card/reveal/grading and no-due UI follow separately.
+/// Actual fixed session and initial no-due presentation; card/grading UI follows.
 class ReviewSessionRoute extends StatefulWidget {
   const ReviewSessionRoute({
     super.key,
@@ -81,6 +83,49 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                 ),
                 key: const ValueKey('review-fixed-direction'),
               ),
+              // Initial empty membership is not regular exhaustion after grades.
+              // Retry integration must also check pending reinforcement first.
+              if (widget.session.members.isEmpty)
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: pikoDesign.dimension('spacing.5'),
+                  ),
+                  child: PikoCard(
+                    key: const ValueKey('review-no-due'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Semantics(
+                          header: true,
+                          headingLevel: 2,
+                          child: Text(
+                            copy.text('learn.noDueTitle'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension('typography.body'),
+                              fontWeight: pikoDesign.weight(
+                                'typography.titleWeight',
+                              ),
+                              color: pikoDesign.color('ink'),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: pikoDesign.dimension('spacing.3')),
+                        Text(
+                          copy.text('learn.noDueBody'),
+                          style: TextStyle(
+                            fontSize: pikoDesign.dimension(
+                              'components.emptyState.descriptionSize',
+                            ),
+                            height: pikoDesign.dimension(
+                              'components.emptyState.descriptionLineHeight',
+                            ),
+                            color: pikoDesign.color('muted'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

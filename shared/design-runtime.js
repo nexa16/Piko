@@ -22,6 +22,7 @@
  for(const [name,key] of [['size','size'],['top-margin','topMargin'],['bottom-margin','bottomMargin'],['gap','gap']])dimension('--section-heading-'+name,section[key],0,100);
  dimension('--section-heading-weight',section.weight,100,900,'');
  dimension('--empty-description-line-height',config.components.emptyState.descriptionLineHeight,1,3,'');
+ dimension('--empty-description-size',config.components.emptyState.descriptionSize,10,32,'px');
  const badge=config.components.languageBadge;
  dimension('--language-badge-size',badge.size,0,100);
  dimension('--language-badge-radius',badge.radius,0,100);

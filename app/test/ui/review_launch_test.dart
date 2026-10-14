@@ -137,6 +137,8 @@ class Harness {
 
   Future<void> mount(WidgetTester tester, {double scale = 1}) async {
     activeHarness = this;
+    tester.platformDispatcher.textScaleFactorTestValue = scale;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     tester.view.physicalSize = const Size(392, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);

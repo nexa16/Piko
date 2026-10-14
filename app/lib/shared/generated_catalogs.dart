@@ -43,6 +43,7 @@ const designCatalog = <String, Object?>{
 },
 "emptyState": <String, Object?>{
 "descriptionLineHeight": 1.6,
+"descriptionSize": 15,
 },
 "entryHeader": <String, Object?>{
 "actionPadding": 10,
