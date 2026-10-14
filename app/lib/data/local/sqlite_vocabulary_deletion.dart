@@ -349,5 +349,6 @@ final class SqliteVocabularyDeletionService
         expiresAt: row.expiresAt,
         errorCount: row.errorCount,
         dueOrdinal: row.dueOrdinal,
+        waitEligibleAt: row.waitEligibleAt,
       );
 }

@@ -150,6 +150,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       cutoff: database.clock.now().toUtc(),
       clock: database.clock,
       onPendingWrites: trackWrites,
+      presentationActive: false,
     );
   }
 

@@ -1878,6 +1878,20 @@ class $RetryObligationsTable extends RetryObligations
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _waitEligibleAtMeta = const VerificationMeta(
+    'waitEligibleAt',
+  );
+  @override
+  late final GeneratedColumn<String> waitEligibleAt = GeneratedColumn<String>(
+    'wait_eligible_at',
+    aliasedName,
+    true,
+    check: () => const CustomExpression<bool>(
+      "wait_eligible_at IS NULL OR substr(wait_eligible_at, -1) = 'Z'",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _errorCountMeta = const VerificationMeta(
     'errorCount',
   );
@@ -1913,6 +1927,7 @@ class $RetryObligationsTable extends RetryObligations
     originReviewId,
     createdAt,
     expiresAt,
+    waitEligibleAt,
     errorCount,
     dueOrdinal,
   ];
@@ -1982,6 +1997,15 @@ class $RetryObligationsTable extends RetryObligations
     } else if (isInserting) {
       context.missing(_expiresAtMeta);
     }
+    if (data.containsKey('wait_eligible_at')) {
+      context.handle(
+        _waitEligibleAtMeta,
+        waitEligibleAt.isAcceptableOrUnknown(
+          data['wait_eligible_at']!,
+          _waitEligibleAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('error_count')) {
       context.handle(
         _errorCountMeta,
@@ -2031,6 +2055,10 @@ class $RetryObligationsTable extends RetryObligations
         DriftSqlType.string,
         data['${effectivePrefix}expires_at'],
       )!,
+      waitEligibleAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}wait_eligible_at'],
+      ),
       errorCount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}error_count'],
@@ -2057,6 +2085,7 @@ class StoredRetryObligation extends DataClass
   final String originReviewId;
   final String createdAt;
   final String expiresAt;
+  final String? waitEligibleAt;
   final int errorCount;
   final int dueOrdinal;
   const StoredRetryObligation({
@@ -2067,6 +2096,7 @@ class StoredRetryObligation extends DataClass
     required this.originReviewId,
     required this.createdAt,
     required this.expiresAt,
+    this.waitEligibleAt,
     required this.errorCount,
     required this.dueOrdinal,
   });
@@ -2080,6 +2110,9 @@ class StoredRetryObligation extends DataClass
     map['origin_review_id'] = Variable<String>(originReviewId);
     map['created_at'] = Variable<String>(createdAt);
     map['expires_at'] = Variable<String>(expiresAt);
+    if (!nullToAbsent || waitEligibleAt != null) {
+      map['wait_eligible_at'] = Variable<String>(waitEligibleAt);
+    }
     map['error_count'] = Variable<int>(errorCount);
     map['due_ordinal'] = Variable<int>(dueOrdinal);
     return map;
@@ -2094,6 +2127,9 @@ class StoredRetryObligation extends DataClass
       originReviewId: Value(originReviewId),
       createdAt: Value(createdAt),
       expiresAt: Value(expiresAt),
+      waitEligibleAt: waitEligibleAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(waitEligibleAt),
       errorCount: Value(errorCount),
       dueOrdinal: Value(dueOrdinal),
     );
@@ -2112,6 +2148,7 @@ class StoredRetryObligation extends DataClass
       originReviewId: serializer.fromJson<String>(json['originReviewId']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       expiresAt: serializer.fromJson<String>(json['expiresAt']),
+      waitEligibleAt: serializer.fromJson<String?>(json['waitEligibleAt']),
       errorCount: serializer.fromJson<int>(json['errorCount']),
       dueOrdinal: serializer.fromJson<int>(json['dueOrdinal']),
     );
@@ -2127,6 +2164,7 @@ class StoredRetryObligation extends DataClass
       'originReviewId': serializer.toJson<String>(originReviewId),
       'createdAt': serializer.toJson<String>(createdAt),
       'expiresAt': serializer.toJson<String>(expiresAt),
+      'waitEligibleAt': serializer.toJson<String?>(waitEligibleAt),
       'errorCount': serializer.toJson<int>(errorCount),
       'dueOrdinal': serializer.toJson<int>(dueOrdinal),
     };
@@ -2140,6 +2178,7 @@ class StoredRetryObligation extends DataClass
     String? originReviewId,
     String? createdAt,
     String? expiresAt,
+    Value<String?> waitEligibleAt = const Value.absent(),
     int? errorCount,
     int? dueOrdinal,
   }) => StoredRetryObligation(
@@ -2150,6 +2189,9 @@ class StoredRetryObligation extends DataClass
     originReviewId: originReviewId ?? this.originReviewId,
     createdAt: createdAt ?? this.createdAt,
     expiresAt: expiresAt ?? this.expiresAt,
+    waitEligibleAt: waitEligibleAt.present
+        ? waitEligibleAt.value
+        : this.waitEligibleAt,
     errorCount: errorCount ?? this.errorCount,
     dueOrdinal: dueOrdinal ?? this.dueOrdinal,
   );
@@ -2166,6 +2208,9 @@ class StoredRetryObligation extends DataClass
           : this.originReviewId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      waitEligibleAt: data.waitEligibleAt.present
+          ? data.waitEligibleAt.value
+          : this.waitEligibleAt,
       errorCount: data.errorCount.present
           ? data.errorCount.value
           : this.errorCount,
@@ -2185,6 +2230,7 @@ class StoredRetryObligation extends DataClass
           ..write('originReviewId: $originReviewId, ')
           ..write('createdAt: $createdAt, ')
           ..write('expiresAt: $expiresAt, ')
+          ..write('waitEligibleAt: $waitEligibleAt, ')
           ..write('errorCount: $errorCount, ')
           ..write('dueOrdinal: $dueOrdinal')
           ..write(')'))
@@ -2200,6 +2246,7 @@ class StoredRetryObligation extends DataClass
     originReviewId,
     createdAt,
     expiresAt,
+    waitEligibleAt,
     errorCount,
     dueOrdinal,
   );
@@ -2214,6 +2261,7 @@ class StoredRetryObligation extends DataClass
           other.originReviewId == this.originReviewId &&
           other.createdAt == this.createdAt &&
           other.expiresAt == this.expiresAt &&
+          other.waitEligibleAt == this.waitEligibleAt &&
           other.errorCount == this.errorCount &&
           other.dueOrdinal == this.dueOrdinal);
 }
@@ -2226,6 +2274,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
   final Value<String> originReviewId;
   final Value<String> createdAt;
   final Value<String> expiresAt;
+  final Value<String?> waitEligibleAt;
   final Value<int> errorCount;
   final Value<int> dueOrdinal;
   final Value<int> rowid;
@@ -2237,6 +2286,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     this.originReviewId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.expiresAt = const Value.absent(),
+    this.waitEligibleAt = const Value.absent(),
     this.errorCount = const Value.absent(),
     this.dueOrdinal = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2249,6 +2299,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     required String originReviewId,
     required String createdAt,
     required String expiresAt,
+    this.waitEligibleAt = const Value.absent(),
     this.errorCount = const Value.absent(),
     this.dueOrdinal = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2266,6 +2317,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     Expression<String>? originReviewId,
     Expression<String>? createdAt,
     Expression<String>? expiresAt,
+    Expression<String>? waitEligibleAt,
     Expression<int>? errorCount,
     Expression<int>? dueOrdinal,
     Expression<int>? rowid,
@@ -2278,6 +2330,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
       if (originReviewId != null) 'origin_review_id': originReviewId,
       if (createdAt != null) 'created_at': createdAt,
       if (expiresAt != null) 'expires_at': expiresAt,
+      if (waitEligibleAt != null) 'wait_eligible_at': waitEligibleAt,
       if (errorCount != null) 'error_count': errorCount,
       if (dueOrdinal != null) 'due_ordinal': dueOrdinal,
       if (rowid != null) 'rowid': rowid,
@@ -2292,6 +2345,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     Value<String>? originReviewId,
     Value<String>? createdAt,
     Value<String>? expiresAt,
+    Value<String?>? waitEligibleAt,
     Value<int>? errorCount,
     Value<int>? dueOrdinal,
     Value<int>? rowid,
@@ -2304,6 +2358,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
       originReviewId: originReviewId ?? this.originReviewId,
       createdAt: createdAt ?? this.createdAt,
       expiresAt: expiresAt ?? this.expiresAt,
+      waitEligibleAt: waitEligibleAt ?? this.waitEligibleAt,
       errorCount: errorCount ?? this.errorCount,
       dueOrdinal: dueOrdinal ?? this.dueOrdinal,
       rowid: rowid ?? this.rowid,
@@ -2334,6 +2389,9 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
     if (expiresAt.present) {
       map['expires_at'] = Variable<String>(expiresAt.value);
     }
+    if (waitEligibleAt.present) {
+      map['wait_eligible_at'] = Variable<String>(waitEligibleAt.value);
+    }
     if (errorCount.present) {
       map['error_count'] = Variable<int>(errorCount.value);
     }
@@ -2356,6 +2414,7 @@ class RetryObligationsCompanion extends UpdateCompanion<StoredRetryObligation> {
           ..write('originReviewId: $originReviewId, ')
           ..write('createdAt: $createdAt, ')
           ..write('expiresAt: $expiresAt, ')
+          ..write('waitEligibleAt: $waitEligibleAt, ')
           ..write('errorCount: $errorCount, ')
           ..write('dueOrdinal: $dueOrdinal, ')
           ..write('rowid: $rowid')
@@ -5204,6 +5263,7 @@ typedef $$RetryObligationsTableCreateCompanionBuilder =
       required String originReviewId,
       required String createdAt,
       required String expiresAt,
+      Value<String?> waitEligibleAt,
       Value<int> errorCount,
       Value<int> dueOrdinal,
       Value<int> rowid,
@@ -5217,6 +5277,7 @@ typedef $$RetryObligationsTableUpdateCompanionBuilder =
       Value<String> originReviewId,
       Value<String> createdAt,
       Value<String> expiresAt,
+      Value<String?> waitEligibleAt,
       Value<int> errorCount,
       Value<int> dueOrdinal,
       Value<int> rowid,
@@ -5302,6 +5363,11 @@ class $$RetryObligationsTableFilterComposer
 
   ColumnFilters<String> get expiresAt => $composableBuilder(
     column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get waitEligibleAt => $composableBuilder(
+    column: $table.waitEligibleAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5396,6 +5462,11 @@ class $$RetryObligationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get waitEligibleAt => $composableBuilder(
+    column: $table.waitEligibleAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get errorCount => $composableBuilder(
     column: $table.errorCount,
     builder: (column) => ColumnOrderings(column),
@@ -5478,6 +5549,11 @@ class $$RetryObligationsTableAnnotationComposer
 
   GeneratedColumn<String> get expiresAt =>
       $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<String> get waitEligibleAt => $composableBuilder(
+    column: $table.waitEligibleAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get errorCount => $composableBuilder(
     column: $table.errorCount,
@@ -5573,6 +5649,7 @@ class $$RetryObligationsTableTableManager
                 Value<String> originReviewId = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> expiresAt = const Value.absent(),
+                Value<String?> waitEligibleAt = const Value.absent(),
                 Value<int> errorCount = const Value.absent(),
                 Value<int> dueOrdinal = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5584,6 +5661,7 @@ class $$RetryObligationsTableTableManager
                 originReviewId: originReviewId,
                 createdAt: createdAt,
                 expiresAt: expiresAt,
+                waitEligibleAt: waitEligibleAt,
                 errorCount: errorCount,
                 dueOrdinal: dueOrdinal,
                 rowid: rowid,
@@ -5597,6 +5675,7 @@ class $$RetryObligationsTableTableManager
                 required String originReviewId,
                 required String createdAt,
                 required String expiresAt,
+                Value<String?> waitEligibleAt = const Value.absent(),
                 Value<int> errorCount = const Value.absent(),
                 Value<int> dueOrdinal = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5608,6 +5687,7 @@ class $$RetryObligationsTableTableManager
                 originReviewId: originReviewId,
                 createdAt: createdAt,
                 expiresAt: expiresAt,
+                waitEligibleAt: waitEligibleAt,
                 errorCount: errorCount,
                 dueOrdinal: dueOrdinal,
                 rowid: rowid,

@@ -733,6 +733,10 @@ const copyCatalog = <String, Object?>{
 "de": "Vor der Wiederholung sind weitere bewertete Antworten in dieser Sammlung und Richtung nötig. Du kannst die Sitzung verlassen und später zurückkehren.",
 "en": "More graded answers in this Collection and direction are needed before retrying. You can leave and return later.",
 },
+"learn.retryWaiting": <String, Object?>{
+"de": "Warten auf die nächste Wiederholung…",
+"en": "Waiting for the next retry…",
+},
 "learn.revealCue": <String, Object?>{
 "de": "Zum Aufdecken antippen",
 "en": "Tap to reveal",

@@ -7,12 +7,33 @@ import '../features/learning/learning_scheduler.dart';
 abstract interface class RetryReviewSource implements ScopedReviewSource {
   Future<RetrySelection> initialSelection({required DateTime cutoff});
   Future<RetryState> retryState({required DateTime at});
+  Future<RetryWaitResult> armBlockedWaits({
+    required List<RetryObligation> expectedRounds,
+    required List<LearningItemRecord> remainingRegular,
+    required DateTime at,
+  });
   Future<RetryAnswerReceipt> answerRetry({
     required LearningItemRecord expectedPrior,
     required RetryObligation expectedRetry,
     required LearningRating rating,
     required DateTime answeredAt,
   });
+}
+
+/// Short-lived correction context for read/selection mutations, not answer events.
+final class RetryWaitMutation {
+  const RetryWaitMutation({required this.prior, required this.next});
+  final RetryObligation prior;
+  final RetryObligation next;
+}
+
+final class RetryWaitResult {
+  RetryWaitResult({
+    required this.state,
+    required List<RetryWaitMutation> mutations,
+  }) : mutations = List.unmodifiable(mutations);
+  final RetryState state;
+  final List<RetryWaitMutation> mutations;
 }
 
 final class RetryState {

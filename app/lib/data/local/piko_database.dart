@@ -98,6 +98,11 @@ class RetryObligations extends Table {
       text().references(RegularReviews, #id, onDelete: KeyAction.cascade)();
   TextColumn get createdAt => text()();
   TextColumn get expiresAt => text()();
+  TextColumn get waitEligibleAt => text().nullable().check(
+    const CustomExpression<bool>(
+      "wait_eligible_at IS NULL OR substr(wait_eligible_at, -1) = 'Z'",
+    ),
+  )();
   IntColumn get errorCount => integer()
       .withDefault(const Constant(1))
       .check(const CustomExpression<bool>('error_count >= 1'))();
@@ -178,7 +183,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -240,6 +245,9 @@ class PikoDatabase extends _$PikoDatabase {
             await m.addColumn(retryObligations, retryObligations.dueOrdinal);
           }
           await m.createTable(scopeAnswerOrdinals);
+        }
+        if (from < 10 && from >= 8) {
+          await m.addColumn(retryObligations, retryObligations.waitEligibleAt);
         }
       });
     },

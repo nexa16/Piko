@@ -246,7 +246,12 @@ void main() {
             expect(actual, [
               for (final row in expected)
                 if (table == 'retry_obligations')
-                  {...row, 'error_count': 1, 'due_ordinal': 20}
+                  {
+                    ...row,
+                    'error_count': 1,
+                    'due_ordinal': 20,
+                    'wait_eligible_at': null,
+                  }
                 else
                   row,
             ], reason: '$table survives schema8 migration/reopen exactly');
@@ -269,7 +274,7 @@ void main() {
           expect(
             (await current.customSelect('PRAGMA user_version').getSingle())
                 .read<int>('user_version'),
-            9,
+            current.schemaVersion,
           );
           expect(
             await current.customSelect('PRAGMA foreign_key_check').get(),

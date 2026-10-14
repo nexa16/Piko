@@ -417,6 +417,7 @@ globalThis.PIKO_COPY = {
     "settings.languageEnglish": {"en": "English", "de": "English"},
     "learn.retryPending": {"en": "More graded answers in this Collection and direction are needed before retrying. You can leave and return later.", "de": "Vor der Wiederholung sind weitere bewertete Antworten in dieser Sammlung und Richtung nötig. Du kannst die Sitzung verlassen und später zurückkehren."},
     "learn.retryLoadFailed": {"en": "Retry state could not be loaded. Try again.", "de": "Der Wiederholungsstand konnte nicht geladen werden. Bitte erneut versuchen."},
+    "learn.retryWaiting": {"en": "Waiting for the next retry…", "de": "Warten auf die nächste Wiederholung…"},
     "settings.languageGerman": {"en": "Deutsch", "de": "Deutsch"},
     "settings.loading": {"en": "Loading app language…", "de": "App-Sprache wird geladen…"},
     "settings.loadFailed": {"en": "App language could not be loaded. Try again.", "de": "Die App-Sprache konnte nicht geladen werden. Bitte erneut versuchen."},

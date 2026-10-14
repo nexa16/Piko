@@ -17,6 +17,8 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     this._clock,
     void Function(Future<void>)? register,
     RetrySelection? selection,
+    this._timerFactory,
+    this._presentationActive,
   ) : collectionId = source.collectionId,
       direction = source.direction,
       _source = source,
@@ -35,7 +37,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       for (final round in selection.retries.rounds) {
         _rounds[round.id] = round;
       }
-      _select(selection.retries.items);
+      _select(selection.retries.items, cutoff);
     } else if (members.isNotEmpty) {
       _grading.activate(members.first);
     }
@@ -46,6 +48,8 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     required DateTime cutoff,
     PikoClock clock = const SystemPikoClock(),
     void Function(Future<void>)? onPendingWrites,
+    Timer Function(Duration, void Function()) timerFactory = Timer.new,
+    bool presentationActive = true,
   }) async {
     if (!cutoff.isUtc) {
       throw ArgumentError.value(cutoff, 'cutoff', 'Must be UTC');
@@ -56,14 +60,22 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     final members = List<LearningItemRecord>.unmodifiable(
       selection?.regular ?? await source.dueItems(cutoff: cutoff),
     );
-    return DueLearningSession._(
+    final session = DueLearningSession._(
       source,
       cutoff,
       members,
       clock,
       onPendingWrites,
       selection,
+      timerFactory,
+      presentationActive,
     );
+    if (session.current == null && session.hasPendingRetryWork) {
+      await session.refreshRetries();
+    } else {
+      session._scheduleWake();
+    }
+    return session;
   }
 
   final String collectionId;
@@ -74,6 +86,14 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   final ScopedReviewSource _source;
   final void Function(Future<void>)? _register;
   final bool hasInitialWork;
+  final Timer Function(Duration, void Function()) _timerFactory;
+  bool _presentationActive;
+  bool Function()? _presentationGuard;
+  Timer? _wakeTimer;
+  int _wakeIdentity = 0;
+  final List<RetryWaitMutation> _waitMutations = [];
+  List<RetryWaitMutation> get waitMutations =>
+      List.unmodifiable(_waitMutations);
   late final GradingCoordinator<LearningAnswerReceipt> _grading;
   final Map<String, RetryObligation> _rounds = {};
   ScopeAnswerState? _scopeState;
@@ -152,12 +172,16 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     );
   }
 
-  void _select(List<LearningItemRecord> items) {
+  void _select(List<LearningItemRecord> items, DateTime at) {
     if (_stopped || _disposed) return;
     _currentRetry = null;
-    final ordinal = _scopeState?.ordinal ?? 0;
     final eligible =
-        _rounds.values.where((round) => round.dueOrdinal <= ordinal).toList()
+        _rounds.values
+            .where(
+              (round) =>
+                  _scopeState != null && round.eligibleAt(_scopeState!, at),
+            )
+            .toList()
           ..sort((a, b) {
             final order = a.dueOrdinal.compareTo(b.dueOrdinal);
             return order != 0 ? order : a.itemId.compareTo(b.itemId);
@@ -181,7 +205,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   Future<void> _refreshAndSelect(DateTime at) async {
     final source = _source;
     if (source is RetryReviewSource) {
-      final state = await source.retryState(at: at);
+      var state = await source.retryState(at: at);
       if (_stopped || _disposed) return;
       _scopeState = state.scope;
       final observed = {for (final round in state.rounds) round.id: round};
@@ -194,9 +218,32 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
           _rounds[id] = round;
         }
       }
-      _select(state.items);
+      if (regularItemsExhausted &&
+          _rounds.isNotEmpty &&
+          !_rounds.values.any((round) => round.eligibleAt(state.scope, at))) {
+        final armed = await source.armBlockedWaits(
+          expectedRounds: List.unmodifiable(_rounds.values),
+          remainingRegular: unreviewedMembers,
+          at: at,
+        );
+        // Accepted wait mutations must survive exit, just like grade receipts.
+        _waitMutations.addAll(armed.mutations);
+        if (_stopped || _disposed) return;
+        state = armed.state;
+        _scopeState = state.scope;
+        final armedRounds = {for (final round in state.rounds) round.id: round};
+        for (final id in _rounds.keys.toList()) {
+          final round = armedRounds[id];
+          if (round == null) {
+            _rounds.remove(id);
+          } else {
+            _rounds[id] = round;
+          }
+        }
+      }
+      _select(state.items, at);
     } else {
-      _select(members);
+      _select(members, at);
     }
   }
 
@@ -224,6 +271,90 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       _pending = null;
       result.complete(null);
       _changed();
+      _scheduleWake();
+    }
+  }
+
+  /// Presentation owns wake-ups; storage and a fresh clock own eligibility.
+  /// Covering/backgrounding cancels wake-ups without cancelling admitted work.
+  void setPresentationActive(bool active, {bool Function()? isCurrent}) {
+    if (_stopped || _disposed) return;
+    _presentationGuard = isCurrent;
+    final resumed = active && !_presentationActive;
+    _presentationActive = active;
+    _cancelWake();
+    if (resumed) {
+      unawaited(_wake());
+    } else {
+      _scheduleWake();
+    }
+  }
+
+  bool get _canWake =>
+      !_stopped &&
+      !_disposed &&
+      _presentationActive &&
+      (_presentationGuard?.call() ?? true);
+
+  void _cancelWake() {
+    _wakeIdentity++;
+    _wakeTimer?.cancel();
+    _wakeTimer = null;
+  }
+
+  void _scheduleWake() {
+    _cancelWake();
+    if (!_canWake || isSubmitting || selectionFailed || _rounds.isEmpty) return;
+    try {
+      final now = _clock.now().toUtc();
+      DateTime? earliest;
+      void consider(DateTime at) {
+        if (earliest == null || at.isBefore(earliest!)) earliest = at;
+      }
+
+      if (_currentRetry case final round?) {
+        consider(round.expiresAt);
+      } else if (current == null) {
+        for (final round in _rounds.values) {
+          consider(round.expiresAt);
+          if (round.waitEligibleAt case final wait?) consider(wait);
+        }
+      }
+      if (earliest == null) return;
+      final identity = _wakeIdentity;
+      _wakeTimer = _timerFactory(
+        earliest!.isAfter(now) ? earliest!.difference(now) : Duration.zero,
+        () {
+          if (identity == _wakeIdentity && _canWake) unawaited(_wake());
+        },
+      );
+    } catch (error) {
+      _selectionError = error;
+      _changed();
+    }
+  }
+
+  Future<void> _wake() async {
+    if (!_canWake || isSubmitting) return;
+    try {
+      final now = _clock.now().toUtc();
+      // Never replace a displayed unanswered card merely because a wait elapsed.
+      if (current != null) {
+        final round = _currentRetry;
+        if (round == null || now.isBefore(round.expiresAt)) {
+          _scheduleWake();
+          return;
+        }
+        final handle = current!;
+        _currentRetry = null;
+        _grading.retireExpired(handle);
+      }
+      await refreshRetries();
+    } catch (error) {
+      if (_canWake) {
+        _selectionError = error;
+        _changed();
+      }
     }
   }
 
@@ -277,6 +408,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     // Install the session drain before coordinator registration can reenter stop.
     final result = Completer<LearningAnswerReceipt?>();
     _pending = result.future;
+    _cancelWake();
     unawaited(_submit(handle, grade, reviewedAt, result));
     return result.future;
   }
@@ -338,6 +470,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     } finally {
       if (identical(_pending, result.future)) _pending = null;
       _changed();
+      _scheduleWake();
     }
   }
 
@@ -345,6 +478,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   Future<void> stop() {
     if (!_stopped) {
       _stopped = true;
+      _cancelWake();
       _grading.removeListener(_changed);
       // Stop may be called by a listener inside the coordinator's notification.
       // Remove forwarding now, but never dispose a notifier on its own stack.

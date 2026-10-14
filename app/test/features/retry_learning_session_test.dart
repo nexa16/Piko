@@ -33,6 +33,17 @@ class ControlledRetrySource implements RetryReviewSource {
   }
 
   @override
+  Future<RetryWaitResult> armBlockedWaits({
+    required List<RetryObligation> expectedRounds,
+    required List<LearningItemRecord> remainingRegular,
+    required DateTime at,
+  }) => real.armBlockedWaits(
+    expectedRounds: expectedRounds,
+    remainingRegular: remainingRegular,
+    at: at,
+  );
+
+  @override
   Future<List<LearningItemRecord>> dueItems({required DateTime cutoff}) =>
       real.dueItems(cutoff: cutoff);
   @override

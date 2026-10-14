@@ -29,7 +29,56 @@ class ReviewSessionRoute extends StatefulWidget {
   State<ReviewSessionRoute> createState() => _ReviewSessionRouteState();
 }
 
-class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
+class _ReviewSessionRouteState extends State<ReviewSessionRoute>
+    with WidgetsBindingObserver {
+  bool _foreground = true;
+  bool _activityScheduled = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _foreground =
+        WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+  }
+
+  bool _isPresentationCurrent(DueLearningSession session) =>
+      mounted &&
+      identical(widget.session, session) &&
+      _foreground &&
+      !_exiting &&
+      ModalRoute.of(context)?.isCurrent == true;
+
+  void _syncActivity() {
+    if (_activityScheduled) return;
+    _activityScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _activityScheduled = false;
+      if (!mounted) return;
+      final session = widget.session;
+      session.setPresentationActive(
+        _isPresentationCurrent(session),
+        isCurrent: () => _isPresentationCurrent(session),
+      );
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncActivity();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    final session = widget.session;
+    session.setPresentationActive(
+      _isPresentationCurrent(session),
+      isCurrent: () => _isPresentationCurrent(session),
+    );
+  }
+
   bool _exiting = false;
   GradingCardHandle? _preAdmissionError;
   Future<void> _grade(
@@ -172,11 +221,13 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
       oldWidget.session.dispose();
       _exiting = false;
       _preAdmissionError = null;
+      _syncActivity();
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(widget.session.stop());
     widget.session.dispose();
     super.dispose();
@@ -299,7 +350,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                         Text(
                           copy.text(
                             sessionForBuild.error == null
-                                ? 'learn.retryPending'
+                                ? 'learn.retryWaiting'
                                 : 'learn.retryLoadFailed',
                           ),
                         ),

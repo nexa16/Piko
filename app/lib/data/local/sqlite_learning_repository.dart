@@ -77,6 +77,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       expiresAt: row.expiresAt,
       errorCount: row.errorCount,
       dueOrdinal: row.dueOrdinal,
+      waitEligibleAt: row.waitEligibleAt,
     );
     final origin =
         await (database.select(database.regularReviews)
@@ -247,6 +248,89 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     );
   });
 
+  Future<RetryWaitResult> _armBlockedWaits(
+    CollectionReviewGateway scope,
+    List<RetryObligation> expected,
+    List<LearningItemRecord> remaining,
+    DateTime at,
+  ) async {
+    if (!at.isUtc) throw ArgumentError.value(at, 'at', 'Must be UTC');
+    if (expected.map((round) => round.id).toSet().length != expected.length) {
+      throw ArgumentError('Duplicate captured retry identity');
+    }
+    for (final round in expected) {
+      round.validate();
+    }
+    for (final item in remaining) {
+      item.card;
+    }
+    return database.transaction(() async {
+      final state = await _retryState(scope, at);
+      for (final item in remaining) {
+        final actual = state.items
+            .where((row) => row.id == item.id)
+            .firstOrNull;
+        if (actual == null) throw RegularReviewFailure.outOfScope;
+        if (!_sameItem(actual, item)) throw RegularReviewFailure.staleState;
+      }
+      final captured = <RetryObligation>[];
+      for (final round in expected) {
+        final item = state.items
+            .where((item) => item.id == round.itemId)
+            .firstOrNull;
+        if (item == null) throw RegularReviewFailure.outOfScope;
+        if (item.generation != round.generation) throw RetryFailure.staleState;
+        final actual = state.rounds
+            .where((row) => row.id == round.id)
+            .firstOrNull;
+        if (actual == null) {
+          if (!at.isBefore(round.expiresAt)) continue;
+          throw RetryFailure.notFound;
+        }
+        if (!actual.sameStateAs(round)) throw RetryFailure.staleState;
+        if (at.isBefore(actual.createdAt)) {
+          throw ArgumentError.value(at, 'at', 'Must not precede round');
+        }
+        captured.add(actual);
+      }
+      final mutations = <RetryWaitMutation>[];
+      // Existing captured work must be consumed; do not arm waits just because
+      // the originally requested ordinal gap exceeds the available pool size.
+      if (remaining.isEmpty &&
+          !captured.any((round) => round.eligibleAt(state.scope, at))) {
+        for (final round in captured) {
+          if (round.waitEligibleAt != null) continue;
+          final next = RetryObligation(
+            id: round.id,
+            itemId: round.itemId,
+            generation: round.generation,
+            revision: round.revision + 1,
+            originReviewId: round.originReviewId,
+            createdAt: round.createdAt,
+            expiresAt: round.expiresAt,
+            errorCount: round.errorCount,
+            dueOrdinal: round.dueOrdinal,
+            waitEligibleAt: at.add(const Duration(seconds: 10)),
+          );
+          next.validate();
+          await (database.update(
+            database.retryObligations,
+          )..where((row) => row.id.equals(round.id))).write(
+            RetryObligationsCompanion(
+              revision: Value(next.revision),
+              waitEligibleAt: Value(next.waitEligibleAt!.toIso8601String()),
+            ),
+          );
+          mutations.add(RetryWaitMutation(prior: round, next: next));
+        }
+      }
+      return RetryWaitResult(
+        state: await _retryState(scope, at),
+        mutations: mutations,
+      );
+    });
+  }
+
   bool _sameItem(LearningItemRecord actual, LearningItemRecord expected) =>
       actual.id == expected.id &&
       actual.entryId == expected.entryId &&
@@ -300,7 +384,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         );
       }
       final before = await _scopeState(scope.collectionId, scope.direction);
-      if (before.ordinal < actual.dueOrdinal) throw RetryFailure.notEligible;
+      if (!actual.eligibleAt(before, at)) throw RetryFailure.notEligible;
       final after = await _advanceScope(before);
       final RetryObligation? next;
       if (rating == LearningRating.again) {
@@ -315,6 +399,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           expiresAt: actual.expiresAt,
           errorCount: errors,
           dueOrdinal: after.ordinal + retryGapAfterError(errors),
+          waitEligibleAt: null,
         );
         next.validate();
         await (database.update(
@@ -324,6 +409,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             revision: Value(next.revision),
             errorCount: Value(next.errorCount),
             dueOrdinal: Value(next.dueOrdinal),
+            waitEligibleAt: const Value(null),
           ),
         );
       } else {
@@ -609,6 +695,13 @@ final class CollectionReviewGateway implements RetryReviewSource {
   @override
   Future<RetryState> retryState({required DateTime at}) =>
       _repository._retryState(this, at);
+  @override
+  Future<RetryWaitResult> armBlockedWaits({
+    required List<RetryObligation> expectedRounds,
+    required List<LearningItemRecord> remainingRegular,
+    required DateTime at,
+  }) =>
+      _repository._armBlockedWaits(this, expectedRounds, remainingRegular, at);
   @override
   Future<RetrySelection> initialSelection({required DateTime cutoff}) =>
       _repository._initialSelection(this, cutoff);

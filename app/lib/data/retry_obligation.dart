@@ -12,6 +12,7 @@ final class RetryObligation {
     required this.expiresAt,
     required this.errorCount,
     required this.dueOrdinal,
+    this.waitEligibleAt,
   });
   final String id;
   final int itemId;
@@ -22,6 +23,7 @@ final class RetryObligation {
   final DateTime expiresAt;
   final int errorCount;
   final int dueOrdinal;
+  final DateTime? waitEligibleAt;
 
   factory RetryObligation.fromStored({
     required String id,
@@ -33,11 +35,18 @@ final class RetryObligation {
     required String expiresAt,
     required int errorCount,
     required int dueOrdinal,
+    required String? waitEligibleAt,
   }) {
     final created = DateTime.tryParse(createdAt),
         expires = DateTime.tryParse(expiresAt);
     if (created == null || expires == null) {
       throw const FormatException('Invalid retry UTC timestamps');
+    }
+    final wait = waitEligibleAt == null
+        ? null
+        : DateTime.tryParse(waitEligibleAt);
+    if (waitEligibleAt != null && wait == null) {
+      throw const FormatException('Invalid retry wait timestamp');
     }
     final record = RetryObligation(
       id: id,
@@ -49,6 +58,7 @@ final class RetryObligation {
       expiresAt: expires,
       errorCount: errorCount,
       dueOrdinal: dueOrdinal,
+      waitEligibleAt: wait,
     );
     record.validate();
     return record;
@@ -62,6 +72,8 @@ final class RetryObligation {
         revision < 0 ||
         errorCount < 1 ||
         dueOrdinal < 0 ||
+        waitEligibleAt != null &&
+            (!waitEligibleAt!.isUtc || waitEligibleAt!.isBefore(createdAt)) ||
         !createdAt.isUtc ||
         !expiresAt.isUtc ||
         !expiresAt.isAfter(createdAt)) {
@@ -77,8 +89,14 @@ final class RetryObligation {
       originReviewId == other.originReviewId &&
       errorCount == other.errorCount &&
       dueOrdinal == other.dueOrdinal &&
+      waitEligibleAt == other.waitEligibleAt &&
       createdAt == other.createdAt &&
       expiresAt == other.expiresAt;
+
+  bool eligibleAt(ScopeAnswerState scope, DateTime at) =>
+      at.isBefore(expiresAt) &&
+      (scope.ordinal >= dueOrdinal ||
+          waitEligibleAt != null && !at.isBefore(waitEligibleAt!));
 }
 
 enum RetryFailure {

@@ -66,6 +66,7 @@ RetryObligation changed(
   expiresAt: expires ?? value.expiresAt,
   errorCount: value.errorCount,
   dueOrdinal: value.dueOrdinal,
+  waitEligibleAt: value.waitEligibleAt,
 );
 
 void main() {

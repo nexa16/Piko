@@ -7,11 +7,12 @@ import 'package:piko/shared/catalogs.dart';
 import 'review_launch_test.dart' as launch;
 import 'review_no_due_test.dart' show snapshot;
 import 'review_prompt_test.dart' show card, text;
+import '../support/mutable_clock.dart';
 
 void main() {
   for (final language in ['en', 'de']) {
     launch.testWidgets(
-      '$language active ineligible retry launches honest pending work with Exit, not no-due or another regular card; opposite direction remains isolated',
+      '$language insufficient pool arms one wait, wakes automatically without grading, and preserves opposite direction',
       (tester) async {
         final f = launch.fixture();
         await tester.runAsync(f.initialize);
@@ -23,14 +24,50 @@ void main() {
         await h.open(tester);
         await tester.tap(launch.button(copy.text('learn.start')));
         await h.finish(tester);
-        expect(find.text(copy.text('learn.retryPending')), findsOneWidget);
+        expect(find.text(copy.text('learn.retryWaiting')), findsOneWidget);
         expect(find.text(copy.text('learn.prepareFailed')), findsNothing);
         expect(find.byType(ReviewSessionRoute), findsOneWidget);
         expect(find.byKey(const ValueKey('review-no-due')), findsNothing);
         expect(card, findsNothing);
         expect(h.sessions.single.hasInitialWork, isTrue);
         expect(h.sessions.single.members, isEmpty);
-        expect(await tester.runAsync(() => snapshot(f)), before);
+        final armed = await tester.runAsync(() => snapshot(f));
+        expect(
+          [
+            for (var i = 0; i < armed!.length; i++)
+              if (i != 4) armed[i],
+          ],
+          [
+            for (var i = 0; i < before!.length; i++)
+              if (i != 4) before[i],
+          ],
+        );
+        final wait = h.sessions.single.waitMutations.single;
+        expect(
+          wait.next.waitEligibleAt,
+          wait.prior.createdAt.add(const Duration(seconds: 10)),
+        );
+        expect(wait.next.revision, wait.prior.revision + 1);
+        final clock = f.db.clock as MutablePikoClock;
+        clock.advance(const Duration(seconds: 9));
+        await tester.pump(const Duration(seconds: 9));
+        await h.finish(tester);
+        expect(card, findsNothing);
+        await tester.tap(launch.button(copy.text('learn.exit')));
+        await h.finish(tester);
+        await h.open(tester);
+        await tester.tap(launch.button(copy.text('learn.start')));
+        await h.finish(tester);
+        expect(h.sessions.last.waitMutations, isEmpty);
+        expect(card, findsNothing);
+        expect(await tester.runAsync(() => snapshot(f)), armed);
+        clock.advance(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+        await h.finish(tester);
+        await h.flush(tester);
+        expect(text(card, tester), ['One']);
+        expect(h.sessions.last.currentIsRetry, isTrue);
+        expect(await tester.runAsync(() => snapshot(f)), armed);
         await tester.tap(launch.button(copy.text('learn.exit')));
         await h.finish(tester);
         await h.open(tester);
@@ -41,10 +78,10 @@ void main() {
         expect(find.byType(ReviewSessionRoute), findsOneWidget);
         expect(h.sessions.last.direction, LearningDirection.nativeToTarget);
         expect(text(card, tester), ['Eins']);
-        expect(await tester.runAsync(() => snapshot(f)), before);
+        expect(await tester.runAsync(() => snapshot(f)), armed);
         await tester.tap(launch.button(copy.text('learn.exit')));
         await h.finish(tester);
-        expect(await tester.runAsync(() => snapshot(f)), before);
+        expect(await tester.runAsync(() => snapshot(f)), armed);
         expect(tester.takeException(), isNull);
       },
     );
