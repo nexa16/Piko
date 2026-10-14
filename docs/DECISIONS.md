@@ -4,6 +4,8 @@
 
 The owner requests a JSON import/export capability containing all currently used/stored vocabulary-associated data, within Import new vocabulary, with clipboard copying. No implementation is authorized by this request. IMPORT-JSON-001 records the current data inventory and a proposed versioned format; UX-IMPORT-JSON-001 records the placement and proposed file/paste/export/copy actions. Format details, progress import defaults, merge behavior and release placement remain proposals/open decisions, not additions to the running first-release implementation goal.
 
+Follow-up: the owner authorizes an interactive HTML mockup only. The JSON area supports file/paste, review-before-apply, duplicate skipping, sample-word import, download/copy and copying a word-only template. Exports reflect the mockup's actual sample pairs, not invented FSRS history. Learning-bearing input requires explicit word-only acknowledgement; restoration remains unimplemented. Prototype limits are one matching-language Collection, 1,000 entries and 1 MB; these are not accepted production limits. The production feature remains outside the current first release.
+
 ## UX-SYSTEM-001 — mockups guide, usability takes precedence — 2026-10-14
 
 The owner clarified that the mockups may be imperfect: do not enforce an incorrect or awkward design just to match them. Preserve explicit accepted choices and use the mockups as the reference, while improving readability, accessibility and coherent interaction where necessary. Record meaningful deviations; ask only when a change materially alters the intended design. This supersedes earlier literal “binding” or exact-parity interpretations without changing first-release scope.

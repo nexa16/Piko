@@ -73,3 +73,4 @@ main{padding-top:var(--page-top);padding-inline:var(--page-padding)}
 /* Generated review context responsive adapter; edit shared/design-config.js only. */
 @media(max-width:400px){.review-context{gap:var(--space-2)}.review-context .meta{font-size:var(--review-context-compact-size)}}
 /* End generated review context responsive adapter. */
+.json-input{width:100%;box-sizing:border-box;resize:vertical;font-family:monospace}.json-file{max-width:100%;font:inherit}.json-file::file-selector-button{display:none}

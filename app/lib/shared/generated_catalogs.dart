@@ -688,6 +688,86 @@ const copyCatalog = <String, Object?>{
 "de": "Bild oder PDF hochladen",
 "en": "Upload image or PDF",
 },
+"json.analyze": <String, Object?>{
+"de": "JSON analysieren",
+"en": "Analyze JSON",
+},
+"json.applied": <String, Object?>{
+"de": "{count} Beispielvokabeln hinzugefügt. Bestehende Wörter wurden nicht überschrieben.",
+"en": "Added {count} sample words. Existing words were not overwritten.",
+},
+"json.clipboardFailed": <String, Object?>{
+"de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen.",
+"en": "Clipboard unavailable. Select and copy the JSON below, or paste manually.",
+},
+"json.copied": <String, Object?>{
+"de": "JSON kopiert.",
+"en": "JSON copied.",
+},
+"json.copy": <String, Object?>{
+"de": "JSON kopieren",
+"en": "Copy JSON",
+},
+"json.download": <String, Object?>{
+"de": "JSON herunterladen",
+"en": "Download JSON",
+},
+"json.example": <String, Object?>{
+"de": "JSON-Vorlage kopieren",
+"en": "Copy example JSON",
+},
+"json.export": <String, Object?>{
+"de": "Aktuelle Sammlung exportieren",
+"en": "Export current collection",
+},
+"json.file": <String, Object?>{
+"de": "JSON-Datei auswählen",
+"en": "Choose JSON file",
+},
+"json.input": <String, Object?>{
+"de": "JSON einfügen oder bearbeiten",
+"en": "Paste or edit JSON",
+},
+"json.invalid": <String, Object?>{
+"de": "Piko-JSON Version 1 mit einer Sammlung und 1–1.000 vollständigen Wortpaaren verwenden (maximal 1 MB).",
+"en": "Use version 1 Piko JSON with one collection and 1–1,000 nonempty word pairs (maximum 1 MB).",
+},
+"json.languages": <String, Object?>{
+"de": "Das Sprachpaar muss dieser Sammlung entsprechen.",
+"en": "The language pair must match this collection.",
+},
+"json.learning": <String, Object?>{
+"de": "Lerndaten erkannt. Dieser Prototyp importiert nur Wörter; Fortschritt wird nicht wiederhergestellt.",
+"en": "Learning data detected. This prototype imports words only; progress restoration is not implemented.",
+},
+"json.new": <String, Object?>{
+"de": "Neue Vokabel",
+"en": "New word",
+},
+"json.notice": <String, Object?>{
+"de": "Prototyp: Importe ändern Beispieldaten bis zum Neuladen. Exporte enthalten nur diese Beispielvokabeln, keinen echten Lernverlauf.",
+"en": "Prototype: imports change sample vocabulary until reload. Exports contain these sample words only, not real learning history.",
+},
+"json.paste": <String, Object?>{
+"de": "Aus Zwischenablage einfügen",
+"en": "Paste from clipboard",
+},
+"json.review": <String, Object?>{
+"de": "Vor dem Import prüfen",
+"en": "Review before importing",
+},
+"json.title": <String, Object?>{
+"de": "JSON importieren / exportieren",
+"en": "JSON import / export",
+},
+"json.unchanged": <String, Object?>{
+"de": "Unverändert — übersprungen",
+"en": "Unchanged — skipped",
+},
+"json.wordsOnly": <String, Object?>{
+"de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",
+"en": "Import vocabulary only (do not restore progress)",
+},
 "language.english": <String, Object?>{
 "de": "Englisch",
 "en": "English",

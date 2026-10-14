@@ -1,3 +1,31 @@
+/* Prototype interchange only: no production storage or scheduler. */
+globalThis.PikoJsonTransfer = {
+  envelope(name, codes, pairs) {
+    return {format:'piko-vocabulary',schemaVersion:1,collections:[{
+      name,targetLanguage:codes[0].toLowerCase(),nativeLanguage:codes[1].toLowerCase(),
+      entries:pairs.map(pair=>({targetText:pair[0],nativeText:pair[1]}))
+    }]};
+  },
+  analyze(text, codes, existing) {
+    if(text.length>1000000) throw new Error('json.invalid');
+    let value;try{value=JSON.parse(text);}catch{throw new Error('json.invalid');}
+    if(value?.format!=='piko-vocabulary'||value.schemaVersion!==1||!Array.isArray(value.collections)||value.collections.length!==1)throw new Error('json.invalid');
+    const collection=value.collections[0];
+    if(collection?.targetLanguage!==codes[0].toLowerCase()||collection?.nativeLanguage!==codes[1].toLowerCase())throw new Error('json.languages');
+    if(!Array.isArray(collection.entries)||!collection.entries.length||collection.entries.length>1000)throw new Error('json.invalid');
+    const key=text=>text.trim().normalize('NFC').toLowerCase();
+    const seen=new Set(existing.map(pair=>JSON.stringify(pair.map(key))));
+    let hasLearning=!!collection.reviewScopes;
+    const rows=collection.entries.map(entry=>{
+      if(typeof entry?.targetText!=='string'||typeof entry?.nativeText!=='string'||!entry.targetText.trim()||!entry.nativeText.trim())throw new Error('json.invalid');
+      hasLearning ||= entry.learning!=null;
+      const pair=[entry.targetText.trim(),entry.nativeText.trim()],signature=JSON.stringify(pair.map(key)),duplicate=seen.has(signature);
+      seen.add(signature);return {pair,duplicate};
+    });
+    return {rows,hasLearning};
+  }
+};
+/* End prototype JSON helper. */
 let catalog=globalThis.PIKO_COPY;
 let locale=catalog.defaultLocale;
 let scope='minimum';
@@ -19,7 +47,7 @@ function collectionForm(mode){collectionAutoName=true;const name='<div class="fi
 function createCollection(){const name=document.getElementById('collection-name').value.trim(),target=document.getElementById('collection-target').value,native=document.getElementById('collection-native').value,error=document.getElementById('collection-error');if(!name){error.textContent=raw('collection.requiredName');return;}if(target===native){error.textContent=raw('collection.sameLanguage');return;}const book=[name,'',({korean:'KO',french:'FR',english:'EN',german:'DE'})[target],0,0,0];book.sampleEntryCount=0;books.push(book);collectionEntries.set(book,[]);collectionLanguages.set(book,[target,native]);s.book=books.length-1;emptyCollections=false;entrySession=null;s.modal='';go('detail');}
 function renameCollection(){const name=document.getElementById('collection-name').value.trim();if(!name){document.getElementById('collection-error').textContent=raw('collection.requiredName');return;}books[s.book][0]=name;s.modal='';render();}
 function deleteCollection(){const book=books[s.book];collectionEntries.delete(book);collectionLanguages.delete(book);books.splice(s.book,1);entrySession=null;reviewSession=null;s.book=0;s.modal='';go('collections');}
-let s={page:'collections',book:0,mode:'long',direction:'KO → DE',answer:'Self',revealed:false,search:'',compact:false,modal:'',modalName:'',importStep:0};
+let s={page:'collections',book:0,mode:'long',direction:'KO → DE',answer:'Self',revealed:false,search:'',compact:false,modal:'',modalName:'',importStep:0,importSampleOpen:false};
 const app=document.getElementById('app');
 function esc(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function raw(key,params={}) {
@@ -129,10 +157,23 @@ function bindEntryStack(){
  for(const card of stack.querySelectorAll('.entry-card'))for(const control of card.querySelectorAll('input,button'))control.tabIndex=card.classList.contains('is-active')?0:-1;
 }
 function categories(){return back('detail')+title('category.settings',t('action.categories'),t('category.description'))+'<div class="stack">'+['topic','unit','source','difficulty'].map(key=>'<div class="card row click" onclick="popup(\'dialog.category\',\'category.'+key+'\')"><strong>'+t('category.'+key)+'</strong>'+uiIcon('chevron')+'</div>').join('')+'</div><div class="actions">'+button('category.addDimension',"popup('dialog.newDimension')",'tint',uiIcon('plus')+' ')+'</div>';}
-function imports(){
+let jsonDraft='',jsonReview=null,jsonMessage='';
+function jsonPayload(example=false){const pairs=getCollectionEntries(),sample=pairs.length?pairs.slice(0,1):[[raw('language.'+getCollectionLanguages()[0]),raw('language.'+getCollectionLanguages()[1])]];return JSON.stringify(PikoJsonTransfer.envelope(books[s.book][0],getCollectionCodes(),example?sample:pairs),null,2);}
+function editJson(value){jsonDraft=value;jsonReview=null;document.getElementById('json-review').innerHTML='';}
+async function copyJson(example=false){const text=jsonPayload(example);try{await navigator.clipboard.writeText(text);jsonMessage=raw('json.copied');}catch{jsonDraft=text;jsonReview=null;jsonMessage=raw('json.clipboardFailed');}render();}
+async function pasteJson(){try{jsonDraft=await navigator.clipboard.readText();jsonReview=null;jsonMessage='';}catch{jsonMessage=raw('json.clipboardFailed');}render();}
+async function readJsonFile(input){const file=input.files[0];if(!file)return;try{if(file.size>1000000)throw Error();jsonDraft=await file.text();jsonReview=null;jsonMessage='';}catch{jsonMessage=raw('json.invalid');}render();}
+function analyzeJson(){try{jsonReview=PikoJsonTransfer.analyze(jsonDraft,getCollectionCodes(),getCollectionEntries());jsonMessage='';}catch(error){jsonReview=null;jsonMessage=raw(error.message);}render();document.getElementById('json-review')?.scrollIntoView({block:'nearest'});}
+function applyJson(){if(!jsonReview)return;const progressChoice=document.getElementById('json-words-only');if(progressChoice&&!progressChoice.checked)return;let fresh;try{fresh=PikoJsonTransfer.analyze(jsonDraft,getCollectionCodes(),getCollectionEntries());}catch{jsonMessage=raw('json.invalid');jsonReview=null;render();return;}const additions=fresh.rows.filter(row=>!row.duplicate).map(row=>row.pair);getCollectionEntries().push(...additions);jsonMessage=raw('json.applied',{count:additions.length});jsonReview=null;render();}
+function downloadJson(){const url=URL.createObjectURL(new Blob([jsonPayload()],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='piko-vocabulary.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function sampleImportDisclosure(){
  const start='<div class="placeholder" style="margin-top:16px">'+uiIcon('upload')+'<h3>'+t('import.upload')+'</h3><p>'+t('import.prototype')+'</p>'+button('import.sample',"change('importStep',1)",'tint')+'</div>';
  const review=metrics([['12','import.new'],['8','import.additions'],['2','import.conflicts']])+'<div class="card" style="margin-top:16px"><strong>사과 — Apfel</strong><p class="sub">'+t('import.proposed')+'</p>'+button('import.differences',"popup('import.differences')")+'</div><div class="actions">'+button('import.confirm',"popup('import.confirm')",'primary')+'</div>';
- return back('detail')+title('action.import',t('import.title'),t('import.description'))+'<div class="actions">'+button('import.select',"change('importStep',0)",s.importStep===0?'primary':'')+button('import.review',"change('importStep',1)",s.importStep===1?'primary':'')+'</div>'+(s.importStep===0?start:review);
+ return '<details class="card" style="margin-top:16px" '+(s.importSampleOpen?'open':'')+' ontoggle="s.importSampleOpen=this.open"><summary><strong>'+t('import.title')+'</strong></summary><p class="caption">'+t('import.description')+'</p><div class="actions">'+button('import.select',"change('importStep',0)",s.importStep===0?'primary':'')+button('import.review',"change('importStep',1)",s.importStep===1?'primary':'')+'</div>'+(s.importStep===0?start:review)+'</details>';
+}
+function imports(){
+ const review=jsonReview?'<h2>'+t('json.review')+'</h2>'+jsonReview.rows.map(row=>'<div class="card"><strong>'+esc(row.pair.join(' — '))+'</strong><div class="meta">'+t(row.duplicate?'json.unchanged':'json.new')+'</div></div>').join('')+(jsonReview.hasLearning?'<p>'+t('json.learning')+'</p><label class="review-hard"><input id="json-words-only" type="checkbox" onchange="document.getElementById(\'json-confirm\').disabled=!this.checked">'+t('json.wordsOnly')+'</label>':'')+'<div class="actions"><button id="json-confirm" class="btn primary" onclick="applyJson()" '+(jsonReview.hasLearning?'disabled':'')+'>'+t('import.confirm')+'</button></div>':'';
+ return back('detail')+'<h1>'+t('json.title')+'</h1><p class="meta">'+esc(books[s.book][0])+' · '+esc(collectionPair())+'</p><p class="caption">'+t('json.notice')+'</p><section class="card"><div class="actions"><label class="btn tint">'+t('json.file')+'<input type="file" accept=".json,application/json" class="json-file" onchange="readJsonFile(this)"></label>'+button('json.paste','pasteJson()')+button('json.example','copyJson(true)','ghost')+'</div><div class="field"><label for="json-input">'+t('json.input')+'</label><textarea id="json-input" class="input json-input" rows="10" spellcheck="false" oninput="editJson(this.value)">'+esc(jsonDraft)+'</textarea></div><div class="actions">'+button('json.analyze','analyzeJson()','primary')+'</div></section><p role="status">'+esc(jsonMessage)+'</p><section id="json-review" class="stack">'+review+'</section>'+sampleImportDisclosure()+'<section class="card"><h2>'+t('json.export')+'</h2><div class="actions">'+button('json.download','downloadJson()','tint')+button('json.copy','copyJson()')+'</div></section>';
 }
 function stats(){
  const dates=[t('metric.today')+' · Oct 13',t('stats.yesterday')+' · Oct 12','Oct 11'];
@@ -182,4 +223,5 @@ window.addEventListener('message',event=>{
  if(data.previewView==='summary')previewSessionSummary();
  render();
 });
+if(new URLSearchParams(location.search).get('page')==='import'){scope='expanded';s.page='import';}
 render();if(parent!==window)parent.postMessage({type:'piko-preview-ready'},'*');
