@@ -105,6 +105,10 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
                       repository: widget.vocabularyRepository,
                       collectionId: sessionForBuild.collectionId,
                       direction: sessionForBuild.direction,
+                      canReveal: (handle) =>
+                          !sessionForBuild.isStopped &&
+                          !sessionForBuild.isSubmitting &&
+                          identical(sessionForBuild.current, handle),
                     ),
                   ),
                 // Initial empty membership is not regular exhaustion after grades.

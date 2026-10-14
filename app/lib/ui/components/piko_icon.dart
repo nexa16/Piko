@@ -47,16 +47,17 @@ void registerPikoIconLicenses() {
 
 /// Decorative by default. Actions receive their names from PikoIconButton.
 class PikoIcon extends StatelessWidget {
-  const PikoIcon(this.name, {this.semanticLabel, super.key});
+  const PikoIcon(this.name, {this.semanticLabel, this.size, super.key});
 
   final PikoIconName name;
   final String? semanticLabel;
+  final double? size;
 
   @override
   Widget build(BuildContext context) => SvgPicture.asset(
     name.assetPath,
-    width: pikoDesign.dimension('components.icons.size'),
-    height: pikoDesign.dimension('components.icons.size'),
+    width: size ?? pikoDesign.dimension('components.icons.size'),
+    height: size ?? pikoDesign.dimension('components.icons.size'),
     colorFilter: ColorFilter.mode(
       context
               .dependOnInheritedWidgetOfExactType<IconTheme>()

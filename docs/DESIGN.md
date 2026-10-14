@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Real card reveal — CARD-UI-007
+
+The whole hidden card is one reveal target; use the existing localized cue with a muted book icon near the lower-right corner, not a separate button. Canonical `components.learningCard` now owns the binding 58px bottom padding, 12px/400 cue, 16px icon, 7px gap and 18px-right/16px-bottom offsets. Flutter constrains and measures wrapped cue text so enlarged labels remain inside the card without overlapping the prompt; normal binding geometry stays unchanged. The keyboard focus outline overlays the shared card rather than moving its contents.
+
+On reveal, remove the cue and action. Center the stored original prompt at 22px/500 muted, then the 64%-width divider with 15% ink, 18px gaps and the primary translation at 37px/650 ink. Browser CSS and Flutter consume the same configuration, including the accepted numeric-weight adapter. No Question/Answer heading, revealed-status label or category placeholder appears. Host tests establish both-direction content, focus geometry and English/German 320px/200% cue containment; Android, grading/progress and independent default-tag acceptance remain separate.
+
 ## Stored uncluttered prompt card — CARD-UI-004
 
 The real current-entry card centers only the selected direction's stored prompt. Reuse shared card padding/radius/border/surface and ink text; promote the existing binding `.learning` 290px minimum and `.word` 37px/750 style to `components.learningCard.minHeight`, `promptSize` and `promptWeight`. Browser and Flutter adapters consume those values; Flutter's accepted numeric-weight mapping still applies. Minimum height grows for long text rather than clipping 392px/200% English/German content.

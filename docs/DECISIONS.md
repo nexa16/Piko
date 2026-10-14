@@ -1,5 +1,15 @@
 # Decision log
 
+## CARD-UI-007 — real card reveal and subordinate cue — 2026-10-14
+
+Extend the real current stored card rather than adding a sample or separate Show Answer button. Its entire surface, including the prompt text, exposes one pointer/semantic/Enter/Space action while hidden. Reveal removes the cue/action and shows the original prompt smaller and muted above the emphasized stored translation, in the fixed session direction. No grading, memory or history write occurs on reveal; no redundant headings, tag placeholder or revealed-status label is added.
+
+Reveal belongs to the current presentation handle. Locale rebuild and same-handle read retry retain it; accepted advancement or text-owner replacement resets it. Failed grades retain it. Callbacks check the actual session's current/pending/stopped state synchronously, exact displayed entry, repository/revision ownership and current route before acting, including before a Flutter rebuild. Covered/disposed or old-text callbacks cannot reveal a different card.
+
+Lift the binding lower-right book/cue and revealed-answer dimensions into canonical `components.learningCard`; browser and generated Flutter adapters share them. Keep the binding 58px bottom reserve at normal size, but measure wrapped cue text and grow that reserve when needed. The focus outline overlays the card without changing layout, and focus semantics reflect actual focus; revealed content has no activation/focus promise. The shared icon supports an optional explicit size without changing its canonical default.
+
+Twelve new real-SQLite route tests cover both directions, prompt/surface taps, Enter/Space and semantic focus/action removal, unchanged full storage snapshots, repeated/stale/covered/disposed actions, locale/live text/read retry, failed grade and actual advance, pending/stop guards, and 320px/200% English/German cue containment and answer hierarchy. All 463 Flutter and 15 Node tests pass; analysis, generator, browser syntax and diff checks are clean. CARD-UI-007 is implemented at host level. CARD-UI-004 now has revealed-side heading/tag absence evidence but retains its separate follow-up; CARD-004 owns independent default-tag policy. Grading layout, progress, retry/correction and Android acceptance remain pending; DATA-001/CARD-UI-001 follow-ups are unchanged.
+
 ## CARD-UI-004 — real uncluttered prompt side, answer acceptance pending — 2026-10-14
 
 Extend the actual review route with its current stored vocabulary prompt, not another sample or detached card preview. Pass the runtime's existing Vocabulary Repository through Collection Detail and launch; do not expand the FSRS/source API or schema. A handle-keyed stream widget reads the current entry UUID, verifies entry/Collection/direction identity and selects target or native text from the fixed session direction. The route listens to real session advancement. Locale rebuild retains the owned subscription, and live stored vocabulary edits update the current prompt without changing memory/history.

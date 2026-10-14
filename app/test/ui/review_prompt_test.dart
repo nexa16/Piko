@@ -278,6 +278,9 @@ void main() {
                 repository: repository,
                 collectionId: f.owner.id,
                 direction: handle.item.direction,
+                canReveal: (handle) =>
+                    identical(coordinator.current, handle) &&
+                    !coordinator.isSubmitting,
               ),
             ),
           ),

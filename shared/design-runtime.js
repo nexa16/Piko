@@ -27,6 +27,10 @@
  dimension('--learning-card-min-height',learningCard.minHeight,44,1000);
  dimension('--learning-card-prompt-size',learningCard.promptSize,8,100);
  dimension('--learning-card-prompt-weight',learningCard.promptWeight,100,900,'');
+ for(const [name,key] of [['bottom-padding','bottomPadding'],['answer-prompt-size','answerPromptSize'],['answer-size','answerSize'],['answer-gap','answerGap'],['cue-size','cueSize'],['cue-icon-size','cueIconSize'],['cue-gap','cueGap'],['cue-right','cueRight'],['cue-bottom','cueBottom']])dimension('--learning-card-'+name,learningCard[key],0,200);
+ for(const [name,key] of [['answer-prompt-weight','answerPromptWeight'],['answer-weight','answerWeight'],['cue-weight','cueWeight']])dimension('--learning-card-'+name,learningCard[key],100,900,'');
+ dimension('--learning-card-divider-width',learningCard.dividerWidthFactor*100,0,100,'%');
+ dimension('--learning-card-divider-ink-opacity',learningCard.dividerInkOpacity*100,0,100,'%');
  const badge=config.components.languageBadge;
  dimension('--language-badge-size',badge.size,0,100);
  dimension('--language-badge-radius',badge.radius,0,100);

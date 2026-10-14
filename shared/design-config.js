@@ -15,7 +15,7 @@ globalThis.PIKO_DESIGN = {
     headings: {titleMargin:7},
     sectionHeading: {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12},
     emptyState: {descriptionLineHeight:1.6,descriptionSize:15},
-    learningCard: {minHeight:290,promptSize:37,promptWeight:750},
+    learningCard: {minHeight:290,promptSize:37,promptWeight:750,bottomPadding:58,answerPromptSize:22,answerPromptWeight:500,answerSize:37,answerWeight:650,answerGap:18,dividerWidthFactor:0.64,dividerInkOpacity:0.15,cueSize:12,cueWeight:400,cueIconSize:16,cueGap:7,cueRight:18,cueBottom:16},
     languageBadge: {size:42,radius:12,fontSize:15,weight:800,letterSpacingEm:0.03},
     entryStack: {previewGap:5,previewTop:14,numberSize:12,statusSize:11,compactMinHeight:100,metaLineHeight:1.5,stateMotionMs:200},
     entryHeader: {gap:10,titleSize:22,compactTitleSize:18,actionPadding:10,compactBreakpoint:400,backWeight:750,titleLetterSpacing:-1},

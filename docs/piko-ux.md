@@ -23,6 +23,9 @@ Inline `[Flow: collection]`, `[Flow: entry]`, `[Flow: review]`, and `[Flow: sett
 - **UX-CARD-003:** [Flow: review] Show the vocabulary and example sentence(s) on the question side in the question language; on the answer side show the answer and example pairs in both languages. Do not show redundant Question/Answer labels or Category Tags. (CARD-UI-003–004, EXAMPLE-005)
 - **UX-CARD-004:** [Flow: review] Center the Hint within the card. Hidden Hints are revealed once per question and cannot be hidden again during that attempt. (CARD-UI-005, VOCAB-007–011)
 - **UX-CARD-005:** [Flow: review] Display a small, visually secondary icon and 'Tap to reveal' affordance near the bottom-right corner of a Self Assessment question card, visually distinct from the example sentence. (CARD-UI-007)
+
+CARD-UI-007 host evidence: the real stored card now has one whole-card/text/keyboard reveal action and subordinate localized book cue; the answer removes the cue and presents the original prompt smaller/muted above the emphasized translation. Actual focus semantics and a non-layout focus outline are tested. The cue wraps inside the card at English/German 320px/200% without overlapping the prompt. This does not implement optional examples/hints, grading placement, progress, correction or Android acceptance; those retain their owning requirements.
+
 - **UX-CARD-006:** [Flow: review] Show the Self/Type switch only on the question side. Switching answer mode during the session is supported. (CARD-UI-008, CARD-UI-018)
 - **UX-CARD-007:** [Flow: review] After Typed Answer submission, show the user's answer and expected answer when different; avoid duplicate identical text. The keyboard closes for grading. (CARD-UI-012–013, MATCH-001–004)
 - **UX-CARD-008:** [Flow: review] Place Incorrect on the left in red and Correct on the right in green. Their widths dynamically favor the automatically suggested grade; the user can always choose either. (CARD-UI-014, ANSWER-001–006)
