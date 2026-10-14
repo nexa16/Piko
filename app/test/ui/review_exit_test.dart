@@ -46,7 +46,8 @@ void main() {
         final beforeExit = await tester.runAsync(() => snapshot(f));
         expect(session.unreviewedMembers, hasLength(1));
         expect(launch.button(copy.text('learn.exit')), findsOneWidget);
-        expect(launch.button(copy.text('learn.correctPrevious')), findsNothing);
+        // A real prior answer is now correctable, independently of Exit.
+        expect(launch.button(copy.text('learn.correctPrevious')), findsOneWidget);
         expect(launch.button(copy.text('common.back')), findsNothing);
         final semantics = tester.ensureSemantics();
         try {
