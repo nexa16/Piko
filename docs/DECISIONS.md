@@ -1,5 +1,13 @@
 # Decision log
 
+## UX-SETTINGS-001 — real language-only presentation acceptance — 2026-10-14
+
+Verify the implemented Settings route rather than extending its functional storage behavior. One semantic level-one title, usable Back and one labelled English/Deutsch dropdown are the entire first-release preference view. Five new actual-runtime host tests cover normal binding geometry and English/German at 320px/392px with 200% text, contained ≥44px Back/select/menu targets, keyboard language selection and Back preserving Home identity. A visible-text/control allowlist excludes learning/direction/Hint/developer/theme content. Existing Settings persistence/error/lifetime tests remain unchanged.
+
+Measured binding geometry is a 23px title-to-card gap after CSS margin collapse, plus a 37px card-edge-to-field inset from 19px padding, 1px border and 17px outer field margin. The previous Flutter values were 27px and 20px. Correct only those differences: existing heading 7px plus `spacing.4` 16px supplies the outside gap; scoped browser Settings content consumes the same sum instead of a literal 23px. New canonical `components.settings.fieldMarginY` supplies the existing 17px field margin to both scoped browser fields and the Flutter Settings wrapper. Shared PikoField and other product layouts are unchanged.
+
+The five new cases and nine existing Settings route cases pass together; all 554 final Flutter tests pass with clean analysis. Seventeen Node tests, canonical generation and browser syntax checks pass; adapter acceptance verifies the scoped field token and shared outside-gap consumption. A fresh rendering of the modified binding mockup preserves the measured 23px gap and 37px top/bottom field insets. This normal browser-box evidence does not establish font raster parity, Android rendering/native input or whole-release accessibility. No retry counting, integration or other requirement is changed in this specification commit.
+
 ## SETTINGS-001 — live retained interface language — 2026-10-14
 
 Implement the accepted First-release language-only setting through the real home and Settings route, using shared controls and canonical English/Deutsch option keys. The app owns one internal interface-locale controller unless the caller injects one; injected controllers stay caller-owned. MaterialApp, Navigator and runtime identities remain stable during locale changes. The runtime owns the existing SQLite settings repository, reads the `locale` key before normal content, and treats exact `en`/`de` as retained preferences. Missing/unsupported values fall back to English without repair writes; read failure instead exposes a distinct retry state.

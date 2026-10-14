@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Language-only Settings presentation — UX-SETTINGS-001
+
+Use one shared level-one page title, ghost Back and language card/dropdown; English and Deutsch are the canonical option autonyms. No learning, direction, Hint, developer or theme preference appears in the first-release route. Growable shared controls and page scrolling retain keyboard and touch access at English/German 320px/392px with 200% text; host tests verify single heading, menu/control containment, ≥44px targets and return to the same Home.
+
+Actual binding measurements identified a 23px title-content-to-card gap (collapsed h1/card margins), not a literal 23px extra Flutter spacer. Reuse the canonical heading margin 7px plus `spacing.4` 16px; scoped browser Settings content uses the same sum. The binding card has 19px padding/1px border and a field with 17px outer vertical margins. Lift only that Settings field margin to `components.settings.fieldMarginY` and apply it around the Flutter dropdown, without changing shared PikoField or other screens. The resulting card-edge/field inset is 37px on both sides. This corrects measured host box geometry; font raster/glyph metrics and Android acceptance are not inferred from it.
+
 ## Hard aligned above real Correct — CARD-UI-015
 
 The revealed card's action block has an empty left half and the shared Hard target in the right half, directly above Correct with the canonical grading gap. Align the full clickable label target, not the inset visual box: left/right edges and width equal Correct; the existing 8px inset remains. Labels wrap and targets grow at English/German 320px/200%; the decorative checkbox still renders 24px. The two grade buttons stretch to their maximum natural row height, preserving a common top/bottom when localized labels wrap differently, as the binding grid does. No new tokens, separate grade button or dynamic-width policy is added.

@@ -119,6 +119,9 @@ const designCatalog = <String, Object?>{
 "topMargin": 27,
 "weight": 700,
 },
+"settings": <String, Object?>{
+"fieldMarginY": 17,
+},
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
 "revealDistance": 60,

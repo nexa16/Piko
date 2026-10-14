@@ -53,7 +53,7 @@ class SettingsRoute extends StatelessWidget {
                       },
                     ),
                   ),
-                  SizedBox(height: pikoDesign.dimension('spacing.5')),
+                  SizedBox(height: pikoDesign.dimension('spacing.4')),
                   if (!controller.ready)
                     Text(
                       copy.text(
@@ -64,30 +64,37 @@ class SettingsRoute extends StatelessWidget {
                     ),
                   if (controller.ready)
                     PikoCard(
-                      child: PikoDropdown<Locale>(
-                        label: copy.text('settings.language'),
-                        value: controller.locale.value,
-                        items: [
-                          for (final locale
-                              in InterfaceLocaleController.supportedLocales)
-                            DropdownMenuItem(
-                              value: locale,
-                              child: Text(
-                                copy.text(
-                                  locale.languageCode == 'de'
-                                      ? 'settings.languageGerman'
-                                      : 'settings.languageEnglish',
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: pikoDesign.dimension(
+                            'components.settings.fieldMarginY',
+                          ),
+                        ),
+                        child: PikoDropdown<Locale>(
+                          label: copy.text('settings.language'),
+                          value: controller.locale.value,
+                          items: [
+                            for (final locale
+                                in InterfaceLocaleController.supportedLocales)
+                              DropdownMenuItem(
+                                value: locale,
+                                child: Text(
+                                  copy.text(
+                                    locale.languageCode == 'de'
+                                        ? 'settings.languageGerman'
+                                        : 'settings.languageEnglish',
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                        onChanged: controller.canSelect
-                            ? (selected) {
-                                if (selected != null && current()) {
-                                  controller.select(selected);
+                          ],
+                          onChanged: controller.canSelect
+                              ? (selected) {
+                                  if (selected != null && current()) {
+                                    controller.select(selected);
+                                  }
                                 }
-                              }
-                            : null,
+                              : null,
+                        ),
                       ),
                     ),
                   if (controller.ready && controller.pending)

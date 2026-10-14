@@ -7,6 +7,8 @@
 
 /* Shared component primitives, accepted collection refinements. */
 .field{gap:var(--field-label-gap)}.field label{display:grid;gap:var(--field-label-gap)}
+.settings-language-card .field{margin:var(--settings-field-margin-y) 0}
+.settings-content{margin-top:calc(var(--heading-title-margin) + var(--space-4))}
 select.input{min-height:var(--select-height);border-radius:var(--select-radius);padding:9px var(--select-padding-x);font-weight:var(--select-weight)}
 /* Optional studio drafts; semantic grading colors and fixed widths stay intact. */
 .btn{font-weight:var(--button-weight);padding-inline:var(--button-padding-x)}

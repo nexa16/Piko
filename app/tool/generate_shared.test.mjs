@@ -7,6 +7,22 @@ import vm from 'node:vm';
 import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
+test('Settings-only field margin adapts canonical binding inset', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.settings.fieldMarginY = 18;
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN: config, document: {documentElement: {dataset: {}, style: {setProperty: (key, value) => properties.set(key, value)}}}
+  });
+  assert.equal(properties.get('--settings-field-margin-y'), '18px');
+  const generated = generate(config, {schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"fieldMarginY": 18,'));
+  const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');
+  assert.ok(css.includes('.settings-language-card .field{margin:var(--settings-field-margin-y) 0}'));
+  assert.ok(css.includes('.settings-content{margin-top:calc(var(--heading-title-margin) + var(--space-4))}'));
+  const mockup = fs.readFileSync(new URL('../../mockups/mockup.js', import.meta.url), 'utf8');
+  assert.equal((mockup.match(/card settings-language-card/g) || []).length, 2);
+});
 test('grading browser and Flutter adapters consume canonical geometry and weight', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.reviewGrading = {gap:11,topMargin:19,paddingX:9,paddingY:13,weight:700};

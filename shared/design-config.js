@@ -14,6 +14,7 @@ globalThis.PIKO_DESIGN = {
     checkboxes: {size:24,paddingY:10},
     reviewGrading: {gap:10,topMargin:18,paddingX:8,paddingY:12,weight:650},
     headings: {titleMargin:7},
+    settings: {fieldMarginY:17},
     sectionHeading: {size:17,weight:700,topMargin:27,bottomMargin:14,gap:12},
     emptyState: {descriptionLineHeight:1.6,descriptionSize:15},
     learningCard: {minHeight:290,promptSize:37,promptWeight:750,bottomPadding:58,answerPromptSize:22,answerPromptWeight:500,answerSize:37,answerWeight:650,answerGap:18,dividerWidthFactor:0.64,dividerInkOpacity:0.15,cueSize:12,cueWeight:400,cueIconSize:16,cueGap:7,cueRight:18,cueBottom:16},
