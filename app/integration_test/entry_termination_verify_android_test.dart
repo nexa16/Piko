@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:piko/main.dart';
-import 'package:piko/shared/catalogs.dart';
 import 'support/entry_termination_fixture.dart';
 
 void main() {
@@ -26,6 +25,7 @@ void main() {
         ownedCollection: owner['id'] as String,
         ownedEntry: entry['id'] as String,
       );
+      expectOwned(checkpoint, state);
       expect(
         (state['collections'] as List)
             .where((row) => (row as Map)['id'] == owner['id'])
@@ -44,8 +44,8 @@ void main() {
             .toList(),
         checkpoint['learning'],
       );
-      const copy = PikoCopy('en');
       await tester.pumpWidget(const PikoApp());
+      final copy = await hydratedRuntimeCopy(tester);
       await tapVisible(tester, find.text(collectionName));
       await tapVisible(tester, find.byTooltip(copy.text('action.addEntry')));
       expect(

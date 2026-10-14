@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:piko/main.dart';
-import 'package:piko/shared/catalogs.dart';
 import 'package:piko/data/vocabulary_normalization.dart';
 import 'package:piko/data/collections_repository.dart';
 import 'support/entry_termination_fixture.dart';
@@ -24,8 +23,8 @@ void main() {
         'run': runId,
         'baseline': baseline,
       });
-      const copy = PikoCopy('en');
       await tester.pumpWidget(const PikoApp());
+      final copy = await hydratedRuntimeCopy(tester);
       await tapVisible(tester, find.text(copy.text('action.new')));
       await tester.enterText(find.byType(TextField), collectionName);
       await tapVisible(tester, find.text(copy.text('action.create')));
@@ -72,15 +71,18 @@ void main() {
         ownedCollection: owner['id'] as String,
         ownedEntry: entry['id'] as String,
       );
-      await writeCheckpoint(file, {
+      final checkpoint = <String, dynamic>{
         'phase': 'ready',
         'run': runId,
         'baseline': baseline,
         'owner': owner,
         'entry': entry,
         'learning': learning,
+        'ungraded': {for (final table in ungradedTables) table: <Object?>[]},
         'draft': draftTarget,
-      });
+      };
+      expectOwned(checkpoint, state);
+      await writeCheckpoint(file, checkpoint);
       // External coordinator kills the still-live process; deliberately no close,
       // route pop, completed test or finally cleanup before that abrupt boundary.
       // ignore: avoid_print

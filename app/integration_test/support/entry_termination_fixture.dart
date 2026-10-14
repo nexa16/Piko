@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:piko/data/local/database_connection.dart';
 import 'package:piko/data/local/piko_database.dart';
+import 'package:piko/features/collections/collections_home.dart';
+import 'package:piko/shared/catalogs.dart';
+import 'package:piko/shared/copy_scope.dart';
 
 /// Test-only protocol. Run identity must be supplied by the external coordinator.
 const runId = String.fromEnvironment('PIKO_TERMINATION_RUN');
@@ -13,6 +16,14 @@ const tables = [
   'collections',
   'vocabulary_entries',
   'learning_items',
+  'regular_reviews',
+  'retry_obligations',
+  'scope_answer_ordinals',
+];
+const ungradedTables = [
+  'regular_reviews',
+  'retry_obligations',
+  'scope_answer_ordinals',
 ];
 const sequences = ['learning_identity_sequence', 'vocabulary_order_sequence'];
 String get collectionName => 'Termination verification $runId';
@@ -29,23 +40,25 @@ Future<File> checkpointFile() async {
 
 PikoDatabase productionObserver() => PikoDatabase(openPikoDatabase());
 
-Future<Map<String, Object?>> snapshot(PikoDatabase db) async {
-  final result = <String, Object?>{};
-  for (final table in [...tables, ...sequences]) {
-    result[table] = [
-      for (final row
-          in await db
-              .customSelect(
-                'SELECT rowid AS stored_rowid, * FROM $table ORDER BY rowid',
-              )
-              .get())
-        row.data,
-    ];
-  }
-  result['schema'] =
-      (await db.customSelect('PRAGMA user_version').getSingle()).data;
-  return result;
-}
+Future<Map<String, Object?>> snapshot(PikoDatabase db) => db.transaction(
+  () async {
+    final result = <String, Object?>{};
+    for (final table in [...tables, ...sequences]) {
+      result[table] = [
+        for (final row
+            in await db
+                .customSelect(
+                  'SELECT rowid AS stored_rowid, * FROM $table ORDER BY rowid',
+                )
+                .get())
+          row.data,
+      ];
+    }
+    result['schema'] =
+        (await db.customSelect('PRAGMA user_version').getSingle()).data;
+    return result;
+  },
+);
 
 Future<void> writeCheckpoint(File file, Map<String, Object?> value) =>
     file.writeAsString(jsonEncode(value), flush: true);
@@ -56,6 +69,15 @@ Future<void> waitFor(WidgetTester tester, bool Function() ready) async {
     if (ready()) return;
   }
   throw StateError('Expected production UI did not become ready.');
+}
+
+/// Normal content appears only after production language hydration completes.
+Future<PikoCopy> hydratedRuntimeCopy(WidgetTester tester) async {
+  await waitFor(
+    tester,
+    () => find.byType(CollectionsHome).evaluate().isNotEmpty,
+  );
+  return PikoCopyScope.of(tester.element(find.byType(CollectionsHome)));
 }
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
@@ -77,12 +99,23 @@ void expectBaseline(
   String? ownedCollection,
   String? ownedEntry,
 }) {
+  final ownedItemIds = (after['learning_items'] as List)
+      .cast<Map>()
+      .where((row) => ownedEntry != null && row['entry_id'] == ownedEntry)
+      .map((row) => row['id'])
+      .toSet();
   for (final table in tables) {
     final rows = (after[table] as List).where((row) {
       final data = row as Map;
       if (table == 'collections') return data['id'] != ownedCollection;
       if (table == 'vocabulary_entries') return data['id'] != ownedEntry;
       if (table == 'learning_items') return data['entry_id'] != ownedEntry;
+      if (table == 'regular_reviews' || table == 'retry_obligations') {
+        return !ownedItemIds.contains(data['item_id']);
+      }
+      if (table == 'scope_answer_ordinals') {
+        return data['collection_id'] != ownedCollection;
+      }
       return true;
     }).toList();
     expect(
@@ -126,6 +159,27 @@ void expectOwned(Map<String, dynamic> checkpoint, Map<String, Object?> state) {
         .toList(),
     checkpoint['learning'],
   );
+  final ownedItemIds = (checkpoint['learning'] as List)
+      .cast<Map>()
+      .map((row) => row['id'])
+      .toSet();
+  // ENTRY-008 never grades. Refuse newly added descendants rather than
+  // silently destroying them when the synthetic Collection is cascaded.
+  final ungraded = checkpoint['ungraded'] as Map;
+  for (final table in ungradedTables) {
+    expect(ungraded[table], isEmpty, reason: 'Checkpoint $table is ungraded');
+    final ownedRows = (state[table] as List).cast<Map>().where((row) {
+      if (table == 'scope_answer_ordinals') {
+        return row['collection_id'] == owner['id'];
+      }
+      return ownedItemIds.contains(row['item_id']);
+    }).toList();
+    expect(
+      ownedRows,
+      ungraded[table],
+      reason: 'Owned $table must remain empty',
+    );
+  }
 }
 
 Future<void> cleanupOwned(PikoDatabase db, Map<String, dynamic> checkpoint) =>
