@@ -17,6 +17,7 @@ import 'create_collection.dart';
 import '../entry/entry_session_route.dart';
 import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
+import 'collection_entry_count.dart';
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -194,6 +195,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                         child: _CollectionTile(
                           collection: collection,
                           key: ValueKey('collection-${collection.id}'),
+                          vocabularyRepository: widget.vocabularyRepository,
                           reviewAction:
                               widget.reviewSessionFactory != null &&
                                   widget.vocabularyRepository != null &&
@@ -235,11 +237,13 @@ class _CollectionTile extends StatefulWidget {
   const _CollectionTile({
     required this.collection,
     required this.onTap,
+    required this.vocabularyRepository,
     this.reviewAction,
     super.key,
   });
   final CollectionRecord collection;
   final VoidCallback onTap;
+  final VocabularyRepository? vocabularyRepository;
   final Widget? reviewAction;
   @override
   State<_CollectionTile> createState() => _CollectionTileState();
@@ -249,7 +253,21 @@ class _CollectionTileState extends State<_CollectionTile> {
   bool focused = false;
   @override
   Widget build(BuildContext context) {
-    final languages = collectionLanguagePair(context, widget.collection);
+    final repository = widget.vocabularyRepository;
+    if (repository == null) return _buildTile(context, null);
+    return CollectionEntryCount(
+      repository: repository,
+      collectionId: widget.collection.id,
+      builder: _buildTile,
+    );
+  }
+
+  Widget _buildTile(BuildContext context, int? entryCount) {
+    final metadata = collectionEntryMetadata(
+      context,
+      widget.collection,
+      entryCount,
+    );
     if (widget.reviewAction != null) {
       return PikoCard(
         padding: EdgeInsets.zero,
@@ -262,7 +280,7 @@ class _CollectionTileState extends State<_CollectionTile> {
               onTap: widget.onTap,
               label: PikoCopyScope.of(context).text('collection.open', {
                 'name': widget.collection.name,
-                'languages': languages,
+                'languages': metadata,
               }),
               child: Material(
                 color: Colors.transparent,
@@ -298,7 +316,7 @@ class _CollectionTileState extends State<_CollectionTile> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(widget.collection.name),
-                                Text(languages),
+                                Text(metadata),
                               ],
                             ),
                           ),
@@ -336,7 +354,7 @@ class _CollectionTileState extends State<_CollectionTile> {
       onTap: widget.onTap,
       label: PikoCopyScope.of(context).text('collection.open', {
         'name': widget.collection.name,
-        'languages': languages,
+        'languages': metadata,
       }),
       child: Material(
         color: Colors.transparent,
@@ -359,7 +377,7 @@ class _CollectionTileState extends State<_CollectionTile> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [Text(widget.collection.name), Text(languages)],
+                      children: [Text(widget.collection.name), Text(metadata)],
                     ),
                   ),
                 ],
