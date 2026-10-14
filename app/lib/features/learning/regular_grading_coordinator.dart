@@ -12,8 +12,17 @@ final class GradingCardHandle {
   final LearningItemRecord item;
 }
 
+/// Modifier-only view; session consumers cannot access its private coordinator.
+abstract interface class HardSelection implements Listenable {
+  GradingCardHandle? get current;
+  bool get hard;
+  bool canSetHard(GradingCardHandle handle);
+  bool setHard(GradingCardHandle handle, bool selected);
+}
+
 /// Owns a regular card's modifier and one accepted write; storage stays caller-owned.
-final class RegularGradingCoordinator extends ChangeNotifier {
+final class RegularGradingCoordinator extends ChangeNotifier
+    implements HardSelection {
   RegularGradingCoordinator({
     required RegularReviewWriter repository,
     void Function(Future<void>)? onPendingWrites,
@@ -28,7 +37,9 @@ final class RegularGradingCoordinator extends ChangeNotifier {
   Object? _error;
   RegularReviewReceipt? _accepted;
   Future<RegularReviewReceipt?>? _pending;
+  @override
   GradingCardHandle? get current => _current;
+  @override
   bool get hard => _hard;
   bool get isSubmitting => _pending != null;
   Object? get error => _error;
@@ -47,11 +58,16 @@ final class RegularGradingCoordinator extends ChangeNotifier {
     return handle;
   }
 
+  @override
+  bool canSetHard(GradingCardHandle handle) =>
+      !_disposed &&
+      identical(_current, handle) &&
+      !isSubmitting &&
+      _accepted == null;
+
+  @override
   bool setHard(GradingCardHandle handle, bool selected) {
-    if (_disposed ||
-        !identical(_current, handle) ||
-        isSubmitting ||
-        _accepted != null) {
+    if (!canSetHard(handle)) {
       return false;
     }
     if (_hard != selected) {

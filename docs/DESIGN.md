@@ -1,5 +1,11 @@
 # Design foundations and shared copy
 
+## Hard aligned above real Correct — CARD-UI-015
+
+The revealed card's action block has an empty left half and the shared Hard target in the right half, directly above Correct with the canonical grading gap. Align the full clickable label target, not the inset visual box: left/right edges and width equal Correct; the existing 8px inset remains. Labels wrap and targets grow at English/German 320px/200%; the decorative checkbox still renders 24px. The two grade buttons stretch to their maximum natural row height, preserving a common top/bottom when localized labels wrap differently, as the binding grid does. No new tokens, separate grade button or dynamic-width policy is added.
+
+One semantic checkbox and Tab/Space/Enter control the modifier only. The actual session port disables pending/stale actions, while the child-owned successful revealed snapshot guards read/owner/covered lifetime changes. Failed grading retains selected Hard; next-card activation resets it. Host route acceptance is implemented, not Android or the later retry/progress/correction layout.
+
 ## Real equal-width grading — CARD-UI-025
 
 Below a successful revealed card, use one equal-column row: solid semantic danger Incorrect left and success Correct right, with existing onPrimary contrast and shared growable 48px targets. `components.reviewGrading` lifts the binding 10px gap, 18px top margin, 8px/12px padding and numeric 650 weight into the canonical adapters. The effective browser label is the later `.btn` 14px font-label override, which matches Flutter. English/German 392px/200% tests verify equal physical widths, order, reachable targets, colors and semantics.

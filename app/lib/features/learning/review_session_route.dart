@@ -12,6 +12,7 @@ import 'due_learning_session.dart';
 import 'review_launch.dart';
 import 'review_prompt_card.dart';
 import 'regular_grading_coordinator.dart';
+import 'hard_modifier.dart';
 
 /// Stored self-assessment card and regular grades; reinforcement follows separately.
 class ReviewSessionRoute extends StatefulWidget {
@@ -98,12 +99,34 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            key: const ValueKey('review-grading'),
             children: [
-              action(AnswerGrade.incorrect),
+              const Expanded(child: SizedBox()),
               SizedBox(width: d.dimension('components.reviewGrading.gap')),
-              action(AnswerGrade.correct),
+              Expanded(
+                child: HardModifier(
+                  key: const ValueKey('review-hard'),
+                  coordinator: session,
+                  handle: handle,
+                  canChange: () =>
+                      mounted &&
+                      !_exiting &&
+                      identical(session, widget.session) &&
+                      canSubmit(),
+                ),
+              ),
             ],
+          ),
+          SizedBox(height: d.dimension('components.reviewGrading.gap')),
+          IntrinsicHeight(
+            child: Row(
+              key: const ValueKey('review-grading'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                action(AnswerGrade.incorrect),
+                SizedBox(width: d.dimension('components.reviewGrading.gap')),
+                action(AnswerGrade.correct),
+              ],
+            ),
           ),
           if (session.isSubmitting ||
               session.error != null ||

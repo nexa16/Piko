@@ -6,7 +6,7 @@ import '../../data/regular_review.dart';
 import 'regular_grading_coordinator.dart';
 
 /// Owns the captured all-due regular-review membership, not reinforcement retries.
-final class DueLearningSession extends ChangeNotifier {
+final class DueLearningSession extends ChangeNotifier implements HardSelection {
   DueLearningSession._(
     ScopedReviewSource source,
     this.cutoff,
@@ -61,7 +61,9 @@ final class DueLearningSession extends ChangeNotifier {
   bool get isSubmitting => _pending != null;
   // Exhausting regular membership does not imply retries or learning are complete.
   bool get regularItemsExhausted => _index == members.length;
+  @override
   GradingCardHandle? get current => _stopped ? null : _grading.current;
+  @override
   bool get hard => _grading.hard;
   Object? get error => _grading.error;
   List<RegularReviewReceipt> get acceptedReviews =>
@@ -83,8 +85,13 @@ final class DueLearningSession extends ChangeNotifier {
     }
   }
 
+  @override
+  bool canSetHard(GradingCardHandle handle) =>
+      !_stopped && !_disposed && !isSubmitting && _grading.canSetHard(handle);
+
+  @override
   bool setHard(GradingCardHandle handle, bool selected) =>
-      !_stopped && !_disposed && _grading.setHard(handle, selected);
+      canSetHard(handle) && _grading.setHard(handle, selected);
 
   /// UI admission uses the current runtime instant, never the launch cutoff.
   Future<RegularReviewReceipt?> submitNow(

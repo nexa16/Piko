@@ -650,10 +650,10 @@ void main() {
               pikoDesign.dimension('typography.label'),
             );
           }
-          expect(find.byType(Checkbox), findsNothing);
+          expect(find.byType(Checkbox), findsOneWidget);
           expect(
             find.text(PikoCopy(language).text('learn.hard')),
-            findsNothing,
+            findsOneWidget,
           );
           await tester.ensureVisible(gradeButton(AnswerGrade.incorrect));
           await tester.tap(gradeButton(AnswerGrade.incorrect));
