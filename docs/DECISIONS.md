@@ -1,5 +1,9 @@
 # Decision log
 
+## CARD-UI-004 — revealed-side acceptance closure — 2026-10-14
+
+The previously deferred answer-side check is now supported by CARD-UI-007's twelve reveal tests and CARD-004's four bilingual, both-direction policy cases, alongside the thirteen original prompt tests. All 29 focused tests pass. Exact widget text and semantic content show no synthetic Question/Answer headings or category UI on either side while preserving identically named or hashtag-like user vocabulary. Mark the host requirement implemented; no production change or new product decision is introduced by this evidence reconciliation. Android and the remaining grading/retry/correction acceptance are still pending.
+
 ## CARD-004 — default tag omission without vocabulary filtering — 2026-10-14
 
 Reconcile CARD-004 to First under the accepted implementation plan: default learning cards omit Category Tag UI on both hidden and revealed sides. This is a presentation rule, not a text filter. Literal stored vocabulary containing Question, Answer or hashtag-like text remains intact and readable in either fixed direction. Do not add a category placeholder, synthetic tag metadata, category schema or visibility control to establish this policy; categories remain later scope.
