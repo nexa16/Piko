@@ -429,6 +429,7 @@ void main() {
         tester.view.physicalSize = const Size(320, 900);
         await tester.pumpAndSettle();
         await start(tester, h, language: language);
+        await tester.ensureVisible(card);
         final cardRect = tester.getRect(card),
             cueRect = tester.getRect(cue),
             wordRect = tester.getRect(
