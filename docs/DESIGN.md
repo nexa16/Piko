@@ -1,5 +1,9 @@
 # Design foundations and shared copy
 
+## Reference fidelity and usability — UX-SYSTEM-001
+
+Owner clarification, 2026-10-14: the mockups are useful design references, not pixel-perfect requirements. Preserve confirmed choices such as soft-filled rounded buttons, shared tokens, Lucide icons and safe top-right popup dismissal. Do not reproduce a layout merely because it exists in the mockup when it is awkward, incorrect or less usable. Prefer readable, accessible, consistent production layouts; record meaningful deviations and ask before materially changing the intended design. Earlier “binding” wording describes the reference and accepted interaction intent, not a requirement to preserve its defects.
+
 ## Actual session counters and progress — UX-CARD-012
 
 Above each real hidden/revealed card and pending wait, retain a single fixed direction, completed/total unique launch members and first-try correct text. Use existing shared copy and semantic muted text; do not expose the current round's error count. Canonical `components.reviewContext` and `components.progress` adapt the binding's context gap/type/breakpoint and 7px ink-on-tint bar with 9px radius and 16px margins. Narrow metadata wraps naturally without clipping. Numeric progress-bar semantics include min/max/value and localized description.

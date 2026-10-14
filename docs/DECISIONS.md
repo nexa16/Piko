@@ -1,5 +1,9 @@
 # Decision log
 
+## UX-SYSTEM-001 — mockups guide, usability takes precedence — 2026-10-14
+
+The owner clarified that the mockups may be imperfect: do not enforce an incorrect or awkward design just to match them. Preserve explicit accepted choices and use the mockups as the reference, while improving readability, accessibility and coherent interaction where necessary. Record meaningful deviations; ask only when a change materially alters the intended design. This supersedes earlier literal “binding” or exact-parity interpretations without changing first-release scope.
+
 ## UX-COLL-008 — count distinct due vocabulary across directions — 2026-10-14
 
 For Collection Home and Detail review entry points, one vocabulary entry counts as one due word when it is due in either or both translation directions. Do not count the two directional Learning Items as two words. The runtime reads both fixed-direction scopes passively and aggregates by vocabulary-entry identity with the explicit `distinctVocabulary` policy; this does not create a session, arm a wait, expire retry state or alter the separately selected session direction. Counting due-direction cards was considered and rejected for the visible word count.
