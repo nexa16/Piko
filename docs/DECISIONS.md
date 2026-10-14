@@ -186,13 +186,13 @@ Use the existing localized Previous Review copy with the Lucide rotate-back icon
 
 Two real-route correction/visibility cases pass. Android remains pending.
 
-## CARD-UI-001 — explicit session Exit, correction portion pending — 2026-10-14
+## CARD-UI-001 — explicit Exit and distinct correction control — 2026-10-14
 
 Nonempty real review sessions use the canonical `learn.exit` label (Exit review / Wiederholung beenden) for the app-level leave action, with the existing shared ghost button and Lucide navigation arrow. Initial no-due return keeps Back. Align the binding mockup's nonempty navigation label while leaving its sample correction behavior unchanged. Exit stops and drains admitted work; it never grades an unanswered card, erases an accepted review or invokes correction.
 
 Capture the displayed session in both visible and system Back callbacks. Before stopping anything, reject disposed, covered or replaced-session callbacks; after drainage, only the same current route may pop. An old callback cannot end a newly installed session or navigate an unrelated route. Five new real-SQLite host widget tests cover English/German enlarged semantic/keyboard Exit, exact accepted-receipt/history/unanswered preservation, system Back, covered callbacks and same-State replacement. Existing pending-grade Exit/coverage/drain tests remain passing. All 438 Flutter and 14 Node tests pass with clean analysis, generator, browser syntax and diff checks.
 
-CARD-UI-001 remains In progress because its required separation from a working immediately-previous correction control is not yet integrated. Do not render a fake or disabled correction promise, add a speculative entrypoint interface, or claim rollback from Exit acceptance. UNDO-001 and CARD-UI-019/020 must provide the real correction action and complete the visible separation check; full card/retry/correction and Android acceptance remain pending.
+CARD-UI-001 is now implemented at host level: the real hidden question shows a separate Previous Review action after an accepted answer while the heading retains Exit; correction never reuses app navigation and Exit never rewrites history. The two correction-route cases complete the visible separation evidence in addition to the existing five Exit lifecycle cases. Android remains pending.
 
 ## REVIEW-002 — honest initial no-due view — 2026-10-14
 
