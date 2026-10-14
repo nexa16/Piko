@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:piko/data/collections_repository.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/learning/review_launch.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/piko_theme.dart';
 
 const collection = CollectionRecord(
   id: 'collection',
@@ -78,6 +80,15 @@ void main() {
       expect(icons, hasLength(2));
       expect(
         icons.every((icon) => icon.name == PikoIconName.rotateCcw),
+        isTrue,
+      );
+      final rendered = tester.widgetList<SvgPicture>(find.byType(SvgPicture));
+      expect(
+        rendered.every(
+          (icon) =>
+              icon.colorFilter ==
+              ColorFilter.mode(pikoDesign.color('primary'), BlendMode.srcIn),
+        ),
         isTrue,
       );
     },

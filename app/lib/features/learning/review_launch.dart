@@ -283,7 +283,10 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                       ),
                     ),
                     SizedBox(width: pikoDesign.dimension('spacing.3')),
-                    const PikoIcon(PikoIconName.rotateCcw),
+                    IconTheme(
+                      data: IconThemeData(color: pikoDesign.color('primary')),
+                      child: const PikoIcon(PikoIconName.rotateCcw),
+                    ),
                   ],
                 ),
               ),
