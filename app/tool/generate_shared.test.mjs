@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive, reviewContextResponsive } from './generate_shared.mjs';
+import { androidStringResources, generate, readCatalog, update, updateIcons, entryHeaderResponsive, inlineVocabularyResponsive, reviewContextResponsive } from './generate_shared.mjs';
 
 const design = { schemaVersion: 1, nested: { width: 24, extra: 'future token' } };
 test('review context and progress adapters share binding geometry and responsive policy', () => {
@@ -184,6 +184,58 @@ test('generation preserves fields and escapes Dart interpolation', () => {
   assert.ok(result.includes('preserved'));
   assert.ok(result.includes('\\$'));
   assert.ok(result.includes('\\"quote\\"'));
+});
+test('Android application labels are generated from canonical localized app.name', () => {
+  const canonical = {
+    schemaVersion: 1,
+    defaultLocale: 'en',
+    entries: {
+      'app.name': {
+        en: 'Piko & "Study"',
+        de: "Piko <Lernen>",
+      },
+    },
+  };
+  assert.match(
+    androidStringResources(canonical, 'en'),
+    /<string name="app_name">Piko &amp; &quot;Study&quot;<\/string>/,
+  );
+  assert.match(
+    androidStringResources(canonical, 'de'),
+    /<string name="app_name">Piko &lt;Lernen&gt;<\/string>/,
+  );
+  assert.throws(() => androidStringResources(canonical, 'fr'));
+  assert.throws(() =>
+    androidStringResources(
+      {...canonical, entries: {'app.name': {en: 'Piko'}}},
+      'de',
+    ),
+  );
+
+  const source = readCatalog(
+    new URL('../../shared/copy.js', import.meta.url),
+    'PIKO_COPY',
+  );
+  const manifest = fs.readFileSync(
+    new URL('../android/app/src/main/AndroidManifest.xml', import.meta.url),
+    'utf8',
+  );
+  assert.match(manifest, /android:label="@string\/app_name"/);
+  for (const [locale, qualifier] of [
+    ['en', 'values'],
+    ['de', 'values-de'],
+  ]) {
+    assert.equal(
+      fs.readFileSync(
+        new URL(
+          `../android/app/src/main/res/${qualifier}/generated_copy.xml`,
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+      androidStringResources(source, locale),
+    );
+  }
 });
 test('missing translations, mismatched placeholders and nonfinite numbers fail', () => {
   assert.throws(() => generate(design, { ...copy, entries: { test: { en: 'a' } } }));
