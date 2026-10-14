@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
@@ -10,6 +11,8 @@ import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_language_badge.dart';
 import '../../ui/piko_theme.dart';
 import 'collection_detail.dart';
+import 'collection_review_count.dart';
+import 'collection_review_entry_point.dart';
 import 'create_collection.dart';
 import '../entry/entry_session_route.dart';
 import '../learning/review_launch.dart';
@@ -23,15 +26,21 @@ class CollectionsHome extends StatefulWidget {
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
     this.reviewSessionFactory,
+    this.reviewMembershipLoader,
+    this.reviewCountPolicy,
+    this.reviewCountClock = const SystemPikoClock(),
     this.onOpenSettings,
     super.key,
-  });
+  }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
   final ReviewSessionFactory? reviewSessionFactory;
+  final CollectionReviewMembershipLoader? reviewMembershipLoader;
+  final CollectionReviewCountPolicy? reviewCountPolicy;
+  final PikoClock reviewCountClock;
   final VoidCallback? onOpenSettings;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
@@ -39,6 +48,7 @@ class CollectionsHome extends StatefulWidget {
 
 class _CollectionsHomeState extends State<CollectionsHome> {
   late Stream<List<CollectionRecord>> _collections;
+  int _reviewIdentity = 0;
   @override
   void initState() {
     super.initState();
@@ -69,6 +79,26 @@ class _CollectionsHomeState extends State<CollectionsHome> {
         ),
       );
     }
+  }
+
+  Future<void> _openCollection(CollectionRecord collection) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CollectionDetail(
+          repository: widget.repository,
+          collectionId: collection.id,
+          entrySessionFactory: widget.entrySessionFactory,
+          reviewSessionFactory: widget.reviewSessionFactory,
+          reviewMembershipLoader: widget.reviewMembershipLoader,
+          reviewCountPolicy: widget.reviewCountPolicy,
+          reviewCountClock: widget.reviewCountClock,
+          vocabularyRepository: widget.vocabularyRepository,
+          onPendingVocabularyWrites: widget.onPendingVocabularyWrites,
+          vocabularyMutationsFactory: widget.vocabularyMutationsFactory,
+        ),
+      ),
+    );
+    if (mounted) setState(() => _reviewIdentity++);
   }
 
   @override
@@ -164,23 +194,30 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                         child: _CollectionTile(
                           collection: collection,
                           key: ValueKey('collection-${collection.id}'),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => CollectionDetail(
-                                repository: widget.repository,
-                                collectionId: collection.id,
-                                entrySessionFactory: widget.entrySessionFactory,
-                                reviewSessionFactory:
-                                    widget.reviewSessionFactory,
-                                vocabularyRepository:
-                                    widget.vocabularyRepository,
-                                onPendingVocabularyWrites:
-                                    widget.onPendingVocabularyWrites,
-                                vocabularyMutationsFactory:
-                                    widget.vocabularyMutationsFactory,
-                              ),
-                            ),
-                          ),
+                          reviewAction:
+                              widget.reviewSessionFactory != null &&
+                                  widget.vocabularyRepository != null &&
+                                  widget.reviewMembershipLoader != null
+                              ? CollectionReviewEntryPoint(
+                                  key: ValueKey(
+                                    'collection-review-home-${collection.id}-$_reviewIdentity',
+                                  ),
+                                  collection: collection,
+                                  loader: widget.reviewMembershipLoader!,
+                                  policy: widget.reviewCountPolicy!,
+                                  clock: widget.reviewCountClock,
+                                  factory: widget.reviewSessionFactory!,
+                                  vocabularyRepository:
+                                      widget.vocabularyRepository!,
+                                  beforeLaunch: () async {},
+                                  onPendingWrites:
+                                      widget.onPendingVocabularyWrites,
+                                  onBusyChanged: (_) {},
+                                  presentation:
+                                      ReviewLaunchPresentation.collectionQuick,
+                                )
+                              : null,
+                          onTap: () => _openCollection(collection),
                         ),
                       ),
                   ],
@@ -198,10 +235,12 @@ class _CollectionTile extends StatefulWidget {
   const _CollectionTile({
     required this.collection,
     required this.onTap,
+    this.reviewAction,
     super.key,
   });
   final CollectionRecord collection;
   final VoidCallback onTap;
+  final Widget? reviewAction;
   @override
   State<_CollectionTile> createState() => _CollectionTileState();
 }
@@ -211,6 +250,87 @@ class _CollectionTileState extends State<_CollectionTile> {
   @override
   Widget build(BuildContext context) {
     final languages = collectionLanguagePair(context, widget.collection);
+    if (widget.reviewAction != null) {
+      return PikoCard(
+        padding: EdgeInsets.zero,
+        focused: focused,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              button: true,
+              onTap: widget.onTap,
+              label: PikoCopyScope.of(context).text('collection.open', {
+                'name': widget.collection.name,
+                'languages': languages,
+              }),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  excludeFromSemantics: true,
+                  borderRadius: BorderRadius.circular(
+                    pikoDesign.dimension('radii.card'),
+                  ),
+                  onTap: widget.onTap,
+                  onFocusChange: (value) => setState(() => focused = value),
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        pikoDesign.dimension(
+                          'components.collectionReview.quickHorizontal',
+                        ),
+                        pikoDesign.dimension(
+                          'components.collectionReview.quickOpenTop',
+                        ),
+                        pikoDesign.dimension(
+                          'components.collectionReview.quickHorizontal',
+                        ),
+                        pikoDesign.dimension(
+                          'components.collectionReview.quickOpenBottom',
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          PikoLanguageBadge(widget.collection.targetLanguage),
+                          SizedBox(width: pikoDesign.dimension('spacing.3')),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(widget.collection.name),
+                                Text(languages),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                pikoDesign.dimension(
+                  'components.collectionReview.quickHorizontal',
+                ),
+                0,
+                pikoDesign.dimension(
+                  'components.collectionReview.quickHorizontal',
+                ),
+                pikoDesign.dimension(
+                  'components.collectionReview.quickActionsBottom',
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: widget.reviewAction!,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Semantics(
       button: true,
       onTap: widget.onTap,
