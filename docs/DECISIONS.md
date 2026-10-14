@@ -1,5 +1,11 @@
 # Decision log
 
+## UX-CARD-005 — lower-right subordinate reveal cue acceptance — 2026-10-14
+
+Reconcile UX-CARD-005 to First as the accepted reveal affordance. The existing real hidden card uses canonical localized `learn.revealCue`, a muted Lucide book-open icon and smaller/lighter cue text near the lower-right corner; reveal removes it rather than adding a revealed-status label. Canonical 12px/400 cue, 16px icon, 7px gap and 18px-right/16px-bottom offsets are shared with the binding mockup. Wrapped enlarged text stays within the card with an adaptive bottom reserve, not a clipped separate button.
+
+No new production change or duplicate test is needed. Audit of the existing twelve real-SQLite reveal tests confirms both locales' 320px/200% physical offsets, containment/non-overlap, icon/text dimensions and disappearance on reveal; source inspection confirms book-open/muted/light styling. The previously executed 15 Node tests verify canonical adapter consumption. Latest focused policy/prompt/reveal run passed 29 tests with clean analysis; the last full production run passed 463 at CARD-UI-007. These are existing evidence, not new full-suite claims. Host cue acceptance is implemented; optional examples remain later scope, so no example-distinction integration is claimed. Android acceptance and other grading/progress/retry/correction requirements remain separate.
+
 ## CARD-UI-004 — revealed-side acceptance closure — 2026-10-14
 
 The previously deferred answer-side check is now supported by CARD-UI-007's twelve reveal tests and CARD-004's four bilingual, both-direction policy cases, alongside the thirteen original prompt tests. All 29 focused tests pass. Exact widget text and semantic content show no synthetic Question/Answer headings or category UI on either side while preserving identically named or hashtag-like user vocabulary. Mark the host requirement implemented; no production change or new product decision is introduced by this evidence reconciliation. Android and the remaining grading/retry/correction acceptance are still pending.
