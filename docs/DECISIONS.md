@@ -1,5 +1,13 @@
 # Decision log
 
+## RETRY-003 — same-day resume retention — 2026-10-14
+
+Resume reads the authoritative current round and same-Collection/direction ordinal, never resetting the remaining gap, wait or original 04:00 expiry. Three new host cases cover actual Exit/relaunch with 17 of 20 answers still required and revealed unanswered work retaining the entire database; file-reopened sessions before/matured wait with real regular work and eligible retry priority; and exact original-day expiry removing only the selected scope's obligation without success/history/card/count changes or later clock-rollback resurrection.
+
+Existing RETRY-005 cases already cover English/German nine-second Exit/relaunch, persisted wait/Undo, clock movement and cover/background wake/drain. RETRY-006 proves repeated reinforcement retention and legitimate next ordinary due scheduling. Together these satisfy RETRY-001's full current-round entry/reinforcement/resume behavior at host level. Learned/first-try counters, correction and Android remain independent; no retry-attempt log or new schema is added.
+
+The related RETRY-003/SESSION-019 batch passes 15 focused tests with clean analysis, following the accepted grouped-verification cadence. The last full regression remains 601 at RETRY-005, not an unrun new full-suite claim. RETRY-003 changes tests/documentation only; newly generated order belongs to the separate SESSION-019 commit.
+
 ## RETRY-006 — integrated FSRS/history separation — 2026-10-14
 
 Reconcile the legacy proposal with the accepted First-release implementation: a regular grade advances the pinned FSRS schedule and records one regular event; reinforcement grades update only current-round/scope state. They never independently reschedule FSRS, increment the Learning Item review revision or append regular/retry-attempt history. Existing explicit regular/reinforcement recording kinds remain distinct. Current error/gap/wait/deadline state and the latest immediate-correction receipt are not a complete retry-attempt log.
