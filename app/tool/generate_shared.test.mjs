@@ -42,6 +42,19 @@ test('Collection review browser and Flutter adapters share binding geometry', ()
     assert.ok(css.includes('var(--collection-review-'+name+')'));
   }
 });
+test('Home hierarchy adapters share binding typography and spacing', () => {
+  const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
+  config.components.homeHeader = {brandSize:24,brandWeight:700,brandLetterSpacing:-0.5,sectionGap:28};
+  const properties = new Map();
+  vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
+    PIKO_DESIGN:config,document:{documentElement:{dataset:{},style:{setProperty:(key,value)=>properties.set(key,value)}}}
+  });
+  for(const [name,value] of [['--home-brand-size','24px'],['--home-brand-weight','700'],['--home-brand-letter-spacing','-0.5px'],['--home-section-gap','28px']])assert.equal(properties.get(name),value);
+  const generated=generate(config,{schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.ok(generated.includes('"homeHeader": <String, Object?>{'));
+  const css=fs.readFileSync(new URL('../../shared/components.css',import.meta.url),'utf8');
+  for(const name of ['home-brand-size','home-brand-weight','home-brand-letter-spacing','home-section-gap'])assert.ok(css.includes('var(--'+name+')'));
+});
 test('Settings-only field margin adapts canonical binding inset', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
   config.components.settings.fieldMarginY = 18;

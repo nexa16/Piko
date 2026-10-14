@@ -608,6 +608,8 @@ The owner accepted create/name/language pair, multiple Collections including mat
 
 ## Homepage review summary — 2026-10-13
 
+The accepted Home hierarchy remains the compact Piko identity and top-right Settings action followed by the 17px Collection section heading and ghost New action. Removing the global review summary does not promote My Collections to the shared large page-title treatment. Collection-specific review controls remain below that section heading.
+
 | Date | Decision | Status | Context | Alternatives | Reason | Consequences |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-13 | Remove the global Ready to review information block; keep review counts and actions per Collection. | Accepted | Owner finds the global block redundant with collection-level information. | Keep the global due-review summary. | Let users start directly from their Collection. | Supersedes the earlier Minimum homepage summary decision; Expanded activity exploration remains separate. |

@@ -92,6 +92,12 @@ const designCatalog = <String, Object?>{
 "inlineVocabulary": <String, Object?>{
 "captionSize": 11,
 "compactBreakpoint": 420,
+"homeHeader": <String, Object?>{
+"brandLetterSpacing": -0.7,
+"brandSize": 23,
+"brandWeight": 800,
+"sectionGap": 26,
+},
 },
 "languageBadge": <String, Object?>{
 "fontSize": 15,

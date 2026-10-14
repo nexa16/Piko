@@ -110,32 +110,79 @@ class _CollectionsHomeState extends State<CollectionsHome> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoHeading(
-              title: copy.text('home.collections'),
-              actions: widget.onOpenSettings == null
-                  ? const []
-                  : [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: PikoButton(
-                            label: copy.text('nav.settings'),
-                            icon: const PikoIcon(PikoIconName.settings),
-                            variant: PikoButtonVariant.ghost,
-                            onPressed: widget.onOpenSettings,
-                          ),
-                        ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    copy.text('app.name'),
+                    key: const ValueKey('home-brand'),
+                    style: TextStyle(
+                      fontSize: pikoDesign.dimension(
+                        'components.homeHeader.brandSize',
                       ),
-                    ],
+                      fontWeight: pikoDesign.weight(
+                        'components.homeHeader.brandWeight',
+                      ),
+                      letterSpacing: pikoDesign.dimension(
+                        'components.homeHeader.brandLetterSpacing',
+                      ),
+                      color: pikoDesign.color('ink'),
+                    ),
+                  ),
+                ),
+                if (widget.onOpenSettings != null) ...[
+                  SizedBox(width: pikoDesign.dimension('spacing.3')),
+                  Flexible(
+                    flex: 3,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: PikoButton(
+                        label: copy.text('nav.settings'),
+                        icon: const PikoIcon(PikoIconName.settings),
+                        variant: PikoButtonVariant.ghost,
+                        onPressed: widget.onOpenSettings,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: PikoButton(
-                label: copy.text('action.new'),
-                icon: const PikoIcon(PikoIconName.plus),
-                onPressed: _createCollection,
-              ),
+            SizedBox(
+              height: pikoDesign.dimension('components.homeHeader.sectionGap'),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    headingLevel: 1,
+                    child: Text(
+                      copy.text('home.collections'),
+                      key: const ValueKey('home-collections-heading'),
+                      style: TextStyle(
+                        fontSize: pikoDesign.dimension(
+                          'components.sectionHeading.size',
+                        ),
+                        fontWeight: pikoDesign.weight(
+                          'components.sectionHeading.weight',
+                        ),
+                        color: pikoDesign.color('ink'),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: pikoDesign.dimension('components.sectionHeading.gap'),
+                ),
+                PikoButton(
+                  label: copy.text('action.new'),
+                  icon: const PikoIcon(PikoIconName.plus),
+                  variant: PikoButtonVariant.ghost,
+                  onPressed: _createCollection,
+                ),
+              ],
             ),
             StreamBuilder<List<CollectionRecord>>(
               stream: _collections,

@@ -18,6 +18,11 @@
  dimension('--dialog-max-width',dialog.maxWidth,280,2000);
  dimension('--dialog-title-size',dialog.titleSize,8,100);
  dimension('--heading-title-margin',config.components.headings.titleMargin,0,100);
+ const homeHeader=config.components.homeHeader;
+ dimension('--home-brand-size',homeHeader.brandSize,8,100);
+ dimension('--home-brand-weight',homeHeader.brandWeight,100,900,'');
+ dimension('--home-brand-letter-spacing',homeHeader.brandLetterSpacing,-10,10);
+ dimension('--home-section-gap',homeHeader.sectionGap,0,100);
  dimension('--settings-field-margin-y',config.components.settings.fieldMarginY,0,100);
  const section=config.components.sectionHeading;
  for(const [name,key] of [['size','size'],['top-margin','topMargin'],['bottom-margin','bottomMargin'],['gap','gap']])dimension('--section-heading-'+name,section[key],0,100);
