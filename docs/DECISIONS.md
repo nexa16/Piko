@@ -1,5 +1,11 @@
 # Decision log
 
+## RETRY-006 — integrated FSRS/history separation — 2026-10-14
+
+Reconcile the legacy proposal with the accepted First-release implementation: a regular grade advances the pinned FSRS schedule and records one regular event; reinforcement grades update only current-round/scope state. They never independently reschedule FSRS, increment the Learning Item review revision or append regular/retry-attempt history. Existing explicit regular/reinforcement recording kinds remain distinct. Current error/gap/wait/deadline state and the latest immediate-correction receipt are not a complete retry-attempt log.
+
+Four new actual-route SQLite cases cover both directions and final Correct→Hard/Good after repeated Incorrect retries with automatic waits. They compare the complete first and next regular card JSON directly with configured fsrs 2.0.1, retain the exact first regular event/card/revision through every retry, verify no-write modifier selection, and prove the next ordinary session is empty immediately before the real due instant but performs a legitimate new regular review at due. Existing earned-gap and retention cases complement the wait path. All ten focused cases pass; no production change or full-suite rerun is needed for this acceptance increment. DATA-001's integrated no-history follow-up is now satisfied at host level. The last full regression remains RETRY-005's 601 passing cases; broader resume/expiry/counter/correction and Android acceptance remain separately owned.
+
 ## RETRY-005 — durable ten-second insufficient-pool wait — 2026-10-14
 
 Use the accepted ten-second fallback without filler vocabulary. Start it once when authoritative selection has neither an eligible captured retry nor an unanswered captured regular item; this start interpretation is an implementation choice, not an additional owner quote. Schema 10 adds nullable UTC `wait_eligible_at`, with legacy rows remaining null. Arming validates captured scope/items/rounds transactionally, increments only the round revision, and returns exact immutable before/after context. Eligibility is earned ordinal OR elapsed persisted wait, always before the original local-04:00 expiry. Incorrect reinforcement clears its own wait while setting the next gap, never extending that original deadline.
