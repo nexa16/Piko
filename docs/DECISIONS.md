@@ -1,5 +1,11 @@
 # Decision log
 
+## LEARN-003 — continuous-memory sequence acceptance — 2026-10-14
+
+The existing scheduler, complete-card codec and directional repository already retain fractional FSRS stability/difficulty. Add acceptance rather than a second production mechanism: feed each returned card into successive regular-review calculations, comparing all fields to the directly configured pinned library. Mixed Good/Hard/Again sequences retain distinct continuous estimates while the internal state remains review; matching Good counts with different elapsed times produce different stability and relative review intervals. This makes no monotonic-progress promise and assigns no user-facing level to library states.
+
+A real SQLite fixture stores successive transitions, closes/reopens the file and continues against the same reference sequence without rounding or reinitializing estimates. Exact opposite-direction and unrelated-entry cards, vocabulary rows/order, Collection identity and learning allocator remain unchanged by these fixture writes. A subsequent vocabulary text edit retains all complete learning rows through another reopen; mutable card clones cannot change retained estimates. Three focused host tests verify this existing behavior. `saveCard` is used as an isolated persistence fixture, not as the future production regular-review transaction: DATA-004 owns atomic review/history persistence, and product/Android integration remains pending. Descriptive labels and thresholds remain deferred under LEARN-004–007 and OPEN-LEARN-004.
+
 ## LEARN-001 — pinned offline scheduling adapter — 2026-10-14
 
 Use the installed `fsrs` 2.0.1 `Scheduler.reviewCard` directly, with required explicit UTC review time and the first release's domain Again/Hard/Good ratings. Keep the scheduler private: its library parameter list is mutable despite a final field. Explicit empty learning/relearning steps, disabled fuzz and desired retention 0.9 retain the pinned library's default mathematical parameters and maximum interval of 36500 days. Source inspection confirms new cards, review lapses and legacy relearning use day-based review scheduling under this configuration; short-term reinforcement remains a separate product mechanism. No custom FSRS formula or implicit wall-clock fallback is introduced. Package source: https://pub.dev/packages/fsrs/versions/2.0.1
