@@ -33,7 +33,7 @@ String input(
       'targetLanguage': 'fr',
       'nativeLanguage': 'de',
       'entries': entries,
-      if (definitions != null) 'categoryDimensions': definitions,
+      'categoryDimensions': ?definitions,
       ...?source,
     },
   ],
@@ -877,50 +877,86 @@ void main() {
     },
   );
 
-  test('empty replacement groups reject a valid new row with an actionable issue and no writes', () async {
-    final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
-    final before = await completeSnapshot(f.db);
-    final preview = await service.analyzeImport(
-      collectionId: f.owner.id,
-      groups: {},
-      json: input([{'targetText': 'New', 'nativeText': 'Neu'}]),
-    );
-    expect(preview.canApply, isFalse);
-    expect(preview.issues.single.code, VocabularyJsonIssueCode.groupsRequired);
-    expect(preview.issues.single.path, 'groups');
-    await expectLater(service.applyImport(preview), throwsA(VocabularyJsonApplyFailure.invalidPreview));
-    expect(await completeSnapshot(f.db), before);
-  });
+  test(
+    'empty replacement groups reject a valid new row with an actionable issue and no writes',
+    () async {
+      final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
+      final before = await completeSnapshot(f.db);
+      final preview = await service.analyzeImport(
+        collectionId: f.owner.id,
+        groups: {},
+        json: input([
+          {'targetText': 'New', 'nativeText': 'Neu'},
+        ]),
+      );
+      expect(preview.canApply, isFalse);
+      expect(
+        preview.issues.single.code,
+        VocabularyJsonIssueCode.groupsRequired,
+      );
+      expect(preview.issues.single.path, 'groups');
+      await expectLater(
+        service.applyImport(preview),
+        throwsA(VocabularyJsonApplyFailure.invalidPreview),
+      );
+      expect(await completeSnapshot(f.db), before);
+    },
+  );
 
-  test('failure during the second directional learning insertion rolls back the complete import and leaves its preview retryable', () async {
-    final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
-    await f.review(rating: LearningRating.again);
-    final before = await completeSnapshot(f.db);
-    final preview = await service.analyzeImport(
-      collectionId: f.owner.id,
-      json: input([
-        {'id': f.entry.id, 'targetText': 'Changed', 'categoryAssignments': assignment()},
-        {'id': newId, 'targetText': 'New', 'nativeText': 'Neu'},
-      ], definitions: [definition()]),
-    );
-    expect(preview.canApply, isTrue);
-    await f.db.customStatement(
-      "CREATE TRIGGER second_learning_failure BEFORE INSERT ON learning_items "
-      "WHEN NEW.direction = 'nativeToTarget' "
-      "BEGIN SELECT RAISE(FAIL,'injected second learning insertion failure'); END",
-    );
-    await expectLater(service.applyImport(preview), throwsA(isA<sqlite.SqliteException>()));
-    expect(await completeSnapshot(f.db), before);
-    await f.db.customStatement('DROP TRIGGER second_learning_failure');
-    final applied = await service.applyImport(preview);
-    expect(applied.newCount, 1);
-    expect(applied.updatedCount, 1);
-    expect(await f.learning.forEntry(newId), hasLength(2));
-    final committed = await completeSnapshot(f.db);
-    final oldIds = (before['learning_items'] as List).cast<Map>().map((row) => row['id']).toSet();
-    expect((committed['learning_items'] as List).cast<Map>().where((row) => oldIds.contains(row['id'])).toList(), before['learning_items']);
-    await expectLater(service.applyImport(preview), throwsA(VocabularyJsonApplyFailure.alreadyApplied));
-  });
+  test(
+    'failure during the second directional learning insertion rolls back the complete import and leaves its preview retryable',
+    () async {
+      final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
+      await f.review(rating: LearningRating.again);
+      final before = await completeSnapshot(f.db);
+      final preview = await service.analyzeImport(
+        collectionId: f.owner.id,
+        json: input(
+          [
+            {
+              'id': f.entry.id,
+              'targetText': 'Changed',
+              'categoryAssignments': assignment(),
+            },
+            {'id': newId, 'targetText': 'New', 'nativeText': 'Neu'},
+          ],
+          definitions: [definition()],
+        ),
+      );
+      expect(preview.canApply, isTrue);
+      await f.db.customStatement(
+        "CREATE TRIGGER second_learning_failure BEFORE INSERT ON learning_items "
+        "WHEN NEW.direction = 'nativeToTarget' "
+        "BEGIN SELECT RAISE(FAIL,'injected second learning insertion failure'); END",
+      );
+      await expectLater(
+        service.applyImport(preview),
+        throwsA(isA<sqlite.SqliteException>()),
+      );
+      expect(await completeSnapshot(f.db), before);
+      await f.db.customStatement('DROP TRIGGER second_learning_failure');
+      final applied = await service.applyImport(preview);
+      expect(applied.newCount, 1);
+      expect(applied.updatedCount, 1);
+      expect(await f.learning.forEntry(newId), hasLength(2));
+      final committed = await completeSnapshot(f.db);
+      final oldIds = (before['learning_items'] as List)
+          .cast<Map>()
+          .map((row) => row['id'])
+          .toSet();
+      expect(
+        (committed['learning_items'] as List)
+            .cast<Map>()
+            .where((row) => oldIds.contains(row['id']))
+            .toList(),
+        before['learning_items'],
+      );
+      await expectLater(
+        service.applyImport(preview),
+        throwsA(VocabularyJsonApplyFailure.alreadyApplied),
+      );
+    },
+  );
 
   test(
     'committed import persists categories, UUID order and untouched learning across file reopen',
