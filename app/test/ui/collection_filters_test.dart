@@ -200,7 +200,7 @@ void main() {
       });
       h.service.value = definitions(empty: true);
       await h.mount(tester);
-      expect(find.text('No vocabulary matches these filters.'), findsOneWidget);
+      expect(find.text('No matching vocabulary.'), findsOneWidget);
       await tester.tap(
         find.byKey(const ValueKey('collection-no-matches-clear-filters')),
       );

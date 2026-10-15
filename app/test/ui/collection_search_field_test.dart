@@ -151,7 +151,7 @@ void main() {
       expect(service.filters, {
         'topic': {'food'},
       });
-      expect(find.text('No vocabulary matches these filters.'), findsOneWidget);
+      expect(find.text('No matching vocabulary.'), findsOneWidget);
       expect(tester.widget<TextField>(field).controller!.text, '  Straße  ');
       await tester.tap(find.byKey(const ValueKey('collection-clear-search')));
       await tester.pumpAndSettle();

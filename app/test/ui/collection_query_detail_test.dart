@@ -213,7 +213,7 @@ void main() {
       service.value = projection(visible: []);
       binding.refresh();
       await tester.pumpAndSettle();
-      expect(find.text('No vocabulary matches these filters.'), findsOneWidget);
+      expect(find.text('No matching vocabulary.'), findsOneWidget);
       service.value = projection(pending: true);
       binding.refresh();
       await tester.pumpAndSettle();

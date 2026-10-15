@@ -19,7 +19,7 @@ globalThis.PIKO_COPY = {
     "r2.menu":{"en":"Collection actions","de":"Sammlungsaktionen"},
     "r2.due":{"en":"{direction} · {count} to review","de":"{direction} · {count} zum Wiederholen"},
     "r2.caughtUp":{"en":"Great work! You're all caught up.","de":"Super, du hast alles gelernt!"},
-    "r2.noMatches":{"en":"No vocabulary matches these filters.","de":"Keine Vokabel passt zu diesen Filtern."},
+    "r2.noMatches":{"en":"No matching vocabulary.","de":"Keine passenden Vokabeln."},
     "r2.clear":{"en":"Clear search and filters","de":"Suche und Filter zurücksetzen"},
     "r2.clearFilters":{"en":"Clear filters","de":"Filter zurücksetzen"},
     "r2.clearSearch":{"en":"Clear search","de":"Suche löschen"},

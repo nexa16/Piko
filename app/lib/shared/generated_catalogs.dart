@@ -1348,8 +1348,8 @@ const copyCatalog = <String, Object?>{
 "en": "No categories yet. Add a dimension such as Topic.",
 },
 "r2.noMatches": <String, Object?>{
-"de": "Keine Vokabel passt zu diesen Filtern.",
-"en": "No vocabulary matches these filters.",
+"de": "Keine passenden Vokabeln.",
+"en": "No matching vocabulary.",
 },
 "r2.noValueMatches": <String, Object?>{
 "de": "Keine passenden Werte.",
