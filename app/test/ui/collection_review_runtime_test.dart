@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/local/piko_database.dart';
+import 'package:piko/data/learning_item.dart';
 import 'package:piko/features/collections/collection_review_count.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/main.dart';
@@ -55,6 +56,78 @@ Future<void> pumpRuntime(
 }
 
 void main() {
+  testWidgets(
+    'runtime retains Detail scope and prepares filtered membership without narrowing Overview',
+    (tester) async {
+      final db = RuntimeDatabase(MutablePikoClock(instant));
+      final f = Fixture(database: db);
+      await tester.runAsync(f.initialize);
+      final kept = await tester.runAsync(
+        () => f.vocabulary.create(
+          collectionId: f.owner.id,
+          targetText: 'Keep',
+          nativeText: 'Behalten',
+        ),
+      );
+      try {
+        await pumpRuntime(tester, db, f);
+        final home = tester.widget<CollectionsHome>(
+          find.byType(CollectionsHome),
+        );
+        final binding = home.queryBindingFactory!(f.owner.id);
+        binding.scope.setSearch('keep');
+        Future<void> settleQuery() async {
+          for (var attempt = 0; attempt < 12; attempt++) {
+            await tester.runAsync(() => db.customSelect('SELECT 1').get());
+            await tester.pumpAndSettle();
+            if (binding.ready) return;
+          }
+          fail('Collection query did not become ready');
+        }
+
+        await settleQuery();
+        expect(binding.snapshot!.entries.map((entry) => entry.id), [kept!.id]);
+        expect(binding.snapshot!.allEntries.length, 2);
+        final detail = await tester.runAsync(
+          () => home.detailReviewSessionFactory!(
+            f.owner.id,
+            LearningDirection.targetToNative,
+          ),
+        );
+        final overview = await tester.runAsync(
+          () => home.reviewSessionFactory!(
+            f.owner.id,
+            LearningDirection.targetToNative,
+          ),
+        );
+        expect(detail!.members.map((item) => item.entryId), [kept.id]);
+        expect(overview!.members.map((item) => item.entryId).toSet(), {
+          f.entry.id,
+          kept.id,
+        });
+        detail.dispose();
+        overview.dispose();
+        await tester.runAsync(
+          () => f.vocabulary.create(
+            collectionId: f.owner.id,
+            targetText: 'Keep another',
+            nativeText: 'Noch behalten',
+          ),
+        );
+        await settleQuery();
+        expect(binding.snapshot!.entries.length, 2);
+        expect(binding.snapshot!.allEntries.length, 3);
+        expect(home.queryBindingFactory!(f.owner.id), same(binding));
+        expect(binding.scope.search, 'keep');
+        expect(home.queryBindingFactory!(f.kept.id).scope.search, isEmpty);
+      } finally {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+        await tester.runAsync(() => db.closed.future);
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets('production runtime injects the accepted count composition', (
     tester,
   ) async {
