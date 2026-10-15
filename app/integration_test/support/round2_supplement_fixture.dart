@@ -46,6 +46,20 @@ const supplementPlan = <String, String>{
       'Overflow picker retains the search query with no matching values',
   'entry-duplicate':
       'Entry draft retains its duplicate pair with specific validation and no blind Retry',
+  'entry-inactive-empty-draft':
+      'Inactive empty next-entry card shows New vocabulary, not placeholder vocabulary',
+  'entry-inactive-partial-draft':
+      'Inactive partial draft previews only actual input while the saved editor stays active',
+  'entry-saved-duplicate':
+      'Saved-entry duplicate retains raw text and last valid persisted values without Retry',
+  'entry-saved-duplicate-reopened':
+      'Reopening a saved duplicate retains the specific reason while its conflict remains',
+  'entry-saved-duplicate-resolved':
+      'Reopening retained saved text after conflict removal clears feedback and autosaves',
+  'category-management-empty':
+      'Expanded Collection category management with no definitions and Add dimension',
+  'filters-empty':
+      'Filters popup with no category definitions, safe dismissal and no Apply',
 };
 
 Map<String, int> supplementSpecs(String id) {
@@ -53,6 +67,10 @@ Map<String, int> supplementSpecs(String id) {
     return {
       'ENTRY-001': 2,
       if (id == 'entry-duplicate') 'ENTRY-002': 1,
+      if (id.startsWith('entry-saved-duplicate')) 'ENTRY-005': 2,
+      if (id.startsWith('entry-saved-duplicate') || id == 'entry-duplicate')
+        'UX-ENTRY-003': 1,
+      if (id.startsWith('entry-inactive-')) 'UX-ENTRY-004': 1,
       'ENTRY-004': 1,
       'UX-ENTRY-001': 4,
       'UX-VOCAB-DELETE-001': 3,
@@ -73,7 +91,7 @@ Map<String, int> supplementSpecs(String id) {
   if (id.startsWith('category-')) {
     return {'CAT-001': 1, 'UX-CAT-001': 3};
   }
-  if (id == 'filtered-zero-detail') {
+  if (id == 'filtered-zero-detail' || id == 'filters-empty') {
     return {'FILTER-002': 3, 'UX-COLL-008': 3};
   }
   if (id == 'pending-retry-detail') {
@@ -90,7 +108,7 @@ Map<String, int> supplementSpecs(String id) {
 /// A separate immutable supplement, never an overwrite of the main catalogue.
 final class SupplementArtifacts {
   SupplementArtifacts._(this.configuration, this.directory);
-  static const fixture = 'round2-supplement-isolated-key-states-v2';
+  static const fixture = 'round2-supplement-isolated-key-states-v3';
   final CatalogueConfiguration configuration;
   final Directory directory;
   final captures = <Map<String, Object?>>[];

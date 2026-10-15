@@ -16,6 +16,8 @@ import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collections_home.dart';
+import 'package:piko/features/collections/filter_selection_dialog.dart';
+import 'package:piko/features/categories/category_management.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/features/learning/review_launch.dart';
 import 'package:piko/features/learning/review_session_route.dart';
@@ -190,6 +192,27 @@ void main() {
         'empty-detail',
         at: find.text(copy.text('collection.empty')),
       );
+      await tap(_key('collection-menu'));
+      await tap(find.text(copy.text('r2.editCategories')));
+      final emptyManagement = find.descendant(
+        of: find.byType(CategoryManagement),
+        matching: find.text(copy.text('r2.noCategories')),
+      );
+      await present(emptyManagement, 'category management without definitions');
+      await capture('category-management-empty', at: emptyManagement);
+      expect(await categories.dimensions(empty.id), isEmpty);
+      await tap(find.byTooltip(copy.text('common.close')));
+      await tap(_key('collection-filters'));
+      final emptyFilters = find.descendant(
+        of: find.byType(FilterSelectionDialog),
+        matching: find.text(copy.text('r2.noCategories')),
+      );
+      await present(emptyFilters, 'Filters without definitions');
+      expect(_button(copy.text('r2.apply')), findsNothing);
+      await capture('filters-empty', at: emptyFilters);
+      await tap(find.byTooltip(copy.text('common.close')));
+      expect(await categories.dimensions(empty.id), isEmpty);
+      expect(await learningSnapshot(), seededLearning);
       await tap(_button(copy.text('common.back')));
       await present(find.byType(CollectionsHome), 'Home after empty Detail');
       await open(caughtUp);
@@ -336,6 +359,63 @@ void main() {
       await tap(addedCard);
       final savedNative = _field('${added.id}-native');
       await present(savedNative, 'saved Entry editor');
+      final beforeInactiveDrafts = await learningSnapshot();
+      await wait(
+        () => entrySession.activeEntryId == added.id,
+        'saved editor owns the stack before compact draft capture',
+      );
+      final compactDraft = _key('entry-card-draft');
+      expect(
+        find.descendant(
+          of: compactDraft,
+          matching: find.text(copy.text('entry.newVocabulary')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: compactDraft, matching: find.byType(TextField)),
+        findsNothing,
+      );
+      await capture('entry-inactive-empty-draft', at: compactDraft);
+      expect(entrySession.activeEntryId, added.id);
+      await tap(compactDraft);
+      await enter(_field('draft-target'), '부분 fixture');
+      await tap(addedCard);
+      await wait(
+        () => entrySession.activeEntryId == added.id,
+        'partial draft remains inactive beside the saved editor',
+      );
+      expect(
+        find.descendant(of: compactDraft, matching: find.text('부분 fixture')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: compactDraft,
+          matching: find.text(copy.text('entry.newVocabulary')),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: compactDraft, matching: find.byType(TextField)),
+        findsNothing,
+      );
+      await capture('entry-inactive-partial-draft', at: compactDraft);
+      expect(entrySession.activeEntryId, added.id);
+      expect(entrySession.draft.nativeText, isEmpty);
+      await tap(compactDraft);
+      expect(
+        tester.widget<TextField>(_field('draft-target')).controller!.text,
+        '부분 fixture',
+      );
+      await enter(_field('draft-target'), '');
+      await tap(addedCard);
+      await present(
+        savedNative,
+        'saved editor after temporary draft is cleared',
+      );
+      expect(entrySession.confirmedEntries.length, 1);
+      expect(await learningSnapshot(), beforeInactiveDrafts);
       await enter(savedNative, 'Freund fixture');
       await wait(
         () async =>
@@ -647,6 +727,132 @@ void main() {
       await wait(
         () => find.byType(EntrySessionScreen).evaluate().isEmpty,
         'empty duplicate draft exits without a new vocabulary item',
+      );
+      await tap(_button(copy.text('common.back')));
+      final savedDuplicates = await create('Saved duplicate fixture');
+      await open(savedDuplicates);
+      await tap(_button(copy.text('action.new')));
+      await present(
+        find.byType(EntrySessionScreen),
+        'saved duplicate Entry route',
+      );
+      final duplicateSession = tester
+          .widget<EntrySessionScreen>(find.byType(EntrySessionScreen))
+          .session;
+      await enter(_field('draft-target'), '하나');
+      await enter(_field('draft-native'), 'Eins fixture');
+      await tap(find.byTooltip(copy.text('action.saveNext')));
+      await wait(
+        () =>
+            duplicateSession.confirmedEntries.length == 1 &&
+            !duplicateSession.isBusy,
+        'first conflict fixture confirmed',
+      );
+      await enter(_field('draft-target'), '둘');
+      await enter(_field('draft-native'), 'Zwei fixture');
+      await tap(find.byTooltip(copy.text('action.saveNext')));
+      await wait(
+        () =>
+            duplicateSession.confirmedEntries.length == 2 &&
+            !duplicateSession.isBusy,
+        'second conflict fixture confirmed',
+      );
+      final conflict = duplicateSession.confirmedEntries.first;
+      final edited = duplicateSession.confirmedEntries.last;
+      final conflictCard = _key('entry-card-${conflict.id}');
+      final editedCard = _key('entry-card-${edited.id}');
+      final duplicateLearning = await learningSnapshot();
+      await tap(editedCard);
+      await enter(_field('${edited.id}-target'), conflict.targetText);
+      await wait(
+        () async =>
+            (await vocabulary.watchById(edited.id).first)!.targetText ==
+            conflict.targetText,
+        'valid intermediate target edit drains before duplicate native text',
+      );
+      await enter(_field('${edited.id}-native'), conflict.nativeText);
+      final savedDuplicateError = find.descendant(
+        of: editedCard,
+        matching: find.text(copy.text('vocab.inlineDuplicate')),
+      );
+      await present(
+        savedDuplicateError,
+        'saved-entry specific duplicate feedback',
+      );
+      expect(
+        find.descendant(
+          of: editedCard,
+          matching: _button(copy.text('action.retry')),
+        ),
+        findsNothing,
+      );
+      expect(
+        (await vocabulary.watchById(edited.id).first)!.nativeText,
+        edited.nativeText,
+      );
+      await capture('entry-saved-duplicate', at: savedDuplicateError);
+      await tap(_key('entry-card-draft'));
+      await tap(editedCard);
+      await present(
+        _field('${edited.id}-native'),
+        'duplicate saved editor reopened',
+      );
+      await wait(
+        () => !duplicateSession.savedEntryState(edited.id).isSaving,
+        'unchanged duplicate revalidation settles',
+      );
+      expect(duplicateSession.savedEntryState(edited.id).error, isNotNull);
+      expect(
+        tester
+            .widget<TextField>(_field('${edited.id}-native'))
+            .controller!
+            .text,
+        conflict.nativeText,
+      );
+      expect(
+        find.descendant(
+          of: editedCard,
+          matching: _button(copy.text('action.retry')),
+        ),
+        findsNothing,
+      );
+      await capture('entry-saved-duplicate-reopened', at: savedDuplicateError);
+      await tap(conflictCard);
+      await enter(_field('${conflict.id}-native'), 'Eins geändert fixture');
+      await wait(
+        () async =>
+            (await vocabulary.watchById(conflict.id).first)!.nativeText ==
+            'Eins geändert fixture',
+        'conflicting saved entry changed and drained',
+      );
+      await tap(editedCard);
+      await present(
+        _field('${edited.id}-native'),
+        'retained saved edit reopened after conflict removal',
+      );
+      await wait(
+        () async =>
+            (await vocabulary.watchById(edited.id).first)!.nativeText ==
+                conflict.nativeText &&
+            !duplicateSession.savedEntryState(edited.id).isSaving &&
+            duplicateSession.savedEntryState(edited.id).error == null,
+        'retained saved edit revalidates and autosaves without retyping',
+      );
+      expect(savedDuplicateError, findsNothing);
+      await capture(
+        'entry-saved-duplicate-resolved',
+        at: _field('${edited.id}-native'),
+      );
+      expect(await learningSnapshot(), duplicateLearning);
+      await tap(_key('entry-card-draft'));
+      await tap(find.byTooltip(copy.text('entry.complete')));
+      await wait(
+        () => find.byType(EntrySessionScreen).evaluate().isEmpty,
+        'saved duplicate fixture exits without another draft save',
+      );
+      expect(
+        (await vocabulary.watchByCollection(savedDuplicates.id).first).length,
+        2,
       );
       expect(artifacts.captures.length, supplementPlan.length);
       expect(tester.takeException(), isNull);
