@@ -728,6 +728,10 @@ const copyCatalog = <String, Object?>{
 "de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen.",
 "en": "Clipboard unavailable. Select and copy the JSON below, or paste manually.",
 },
+"json.collectionNotice": <String, Object?>{
+"de": "Exporte enthalten die gespeicherten Vokabeln und den Lernstand dieser Sammlung.",
+"en": "Exports contain the saved vocabulary and learning from this collection.",
+},
 "json.copied": <String, Object?>{
 "de": "JSON kopiert.",
 "en": "JSON copied.",
@@ -744,13 +748,29 @@ const copyCatalog = <String, Object?>{
 "de": "JSON-Vorlage kopieren",
 "en": "Copy example JSON",
 },
+"json.exampleNotice": <String, Object?>{
+"de": "Die JSON-Vorlage enthält erfundene Beispieldaten.",
+"en": "Example JSON contains synthetic data.",
+},
 "json.export": <String, Object?>{
 "de": "Aktuelle Sammlung exportieren",
 "en": "Export current collection",
 },
+"json.exportFailed": <String, Object?>{
+"de": "Diese Sammlung konnte nicht exportiert werden. Versuche es erneut.",
+"en": "Couldn't export this collection. Try again.",
+},
 "json.file": <String, Object?>{
 "de": "JSON-Datei auswählen",
 "en": "Choose JSON file",
+},
+"json.fileFailed": <String, Object?>{
+"de": "Die JSON-Datei konnte nicht geöffnet werden. Versuche es erneut oder füge JSON ein.",
+"en": "Couldn't open the JSON file. Try again or paste the JSON.",
+},
+"json.fileSaved": <String, Object?>{
+"de": "JSON-Datei gespeichert.",
+"en": "JSON file saved.",
 },
 "json.input": <String, Object?>{
 "de": "JSON einfügen oder bearbeiten",
@@ -759,6 +779,10 @@ const copyCatalog = <String, Object?>{
 "json.invalid": <String, Object?>{
 "de": "Piko-JSON Version 1 mit einer Sammlung und 1–1.000 vollständigen Wortpaaren verwenden (maximal 1 MB).",
 "en": "Use version 1 Piko JSON with one collection and 1–1,000 nonempty word pairs (maximum 1 MB).",
+},
+"json.invalidUtf8": <String, Object?>{
+"de": "Die Datei muss gültigen UTF-8-Text enthalten.",
+"en": "The file must contain valid UTF-8 text.",
 },
 "json.languages": <String, Object?>{
 "de": "Das Sprachpaar muss dieser Sammlung entsprechen.",
@@ -784,9 +808,17 @@ const copyCatalog = <String, Object?>{
 "de": "Vor dem Import prüfen",
 "en": "Review before importing",
 },
+"json.saveFailed": <String, Object?>{
+"de": "Die Datei konnte nicht gespeichert werden. Dein JSON steht unten weiterhin zum Kopieren bereit.",
+"en": "Couldn't save the file. Your JSON is still available below to copy.",
+},
 "json.title": <String, Object?>{
 "de": "JSON importieren / exportieren",
 "en": "JSON import / export",
+},
+"json.tooLarge": <String, Object?>{
+"de": "JSON darf höchstens 1 MB groß sein (1.000.000 UTF-8-Bytes).",
+"en": "JSON must be no larger than 1 MB (1,000,000 UTF-8 bytes).",
 },
 "json.unchanged": <String, Object?>{
 "de": "Unverändert — übersprungen",
@@ -795,6 +827,10 @@ const copyCatalog = <String, Object?>{
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",
 "en": "Import vocabulary only (do not restore progress)",
+},
+"json.working": <String, Object?>{
+"de": "Wird verarbeitet…",
+"en": "Working…",
 },
 "language.english": <String, Object?>{
 "de": "Englisch",
