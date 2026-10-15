@@ -46,6 +46,16 @@ class CollectionReviewEntryPoint extends StatelessWidget {
     clock: clock,
     builder: (context, count, retry) {
       if (count.value != null) {
+        final total = count.directionCounts.values.fold(0, (a, b) => a + b);
+        if (total == 0) {
+          if (presentation == ReviewLaunchPresentation.collectionQuick) {
+            return const SizedBox.shrink();
+          }
+          // A retry obligation is never presented as successful completion.
+          return count.pendingRetryCount > 0
+              ? Text(PikoCopyScope.of(context).text('r2.pending'))
+              : const SizedBox.shrink();
+        }
         return ReviewLaunch(
           collection: collection,
           factory: factory,
@@ -54,7 +64,11 @@ class CollectionReviewEntryPoint extends StatelessWidget {
           onPendingWrites: onPendingWrites,
           onBusyChanged: onBusyChanged,
           presentation: presentation,
-          dueCount: count.value,
+          dueCount: total,
+          directionCounts: count.directionCounts,
+          directionCountsLoader: () async => directionalReviewCounts(
+            await loader(collectionId: collection.id, at: clock.now().toUtc()),
+          ),
           enabled: enabled,
           onSessionClosed: retry,
         );

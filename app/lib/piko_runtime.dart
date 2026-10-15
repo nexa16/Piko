@@ -9,6 +9,7 @@ import 'data/local/sqlite_vocabulary_deletion.dart';
 import 'data/local/sqlite_learning_repository.dart';
 import 'data/local/sqlite_settings_repository.dart';
 import 'data/local/sqlite_vocabulary_json_service.dart';
+import 'data/local/sqlite_collection_query.dart';
 import 'features/interchange/vocabulary_json_page.dart';
 import 'platform/vocabulary_json_platform.dart';
 import 'data/learning_item.dart';
@@ -55,6 +56,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final vocabulary = SqliteVocabularyRepository(database);
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
+  late final collectionQuery = SqliteCollectionQueryService(database);
   late final jsonPlatform =
       widget.jsonPlatform ?? SystemVocabularyJsonPlatform();
   late final settings =
@@ -175,27 +177,15 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     required String collectionId,
     required DateTime at,
   }) async {
-    final memberships = await Future.wait(
-      LearningDirection.values.map((direction) async {
-        final source = await learning.forCollection(
-          collectionId: collectionId,
-          direction: direction,
-        );
-        return source.dueMemberships(at: at);
-      }),
+    final snapshot = await collectionQuery.query(
+      collectionId: collectionId,
+      at: at,
     );
-    DateTime? nextChangeAt;
-    for (final group in memberships) {
-      final candidate = group.nextChangeAt;
-      final current = nextChangeAt;
-      if (candidate != null &&
-          (current == null || candidate.isBefore(current))) {
-        nextChangeAt = candidate;
-      }
-    }
     return ReviewDueMembershipSnapshot(
-      memberships: memberships.expand((group) => group),
-      nextChangeAt: nextChangeAt,
+      memberships: snapshot.directions.values.expand(
+        (direction) => direction.review,
+      ),
+      nextChangeAt: snapshot.nextChangeAt,
     );
   }
 
@@ -267,7 +257,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
             reviewMembershipLoader: _reviewDueMemberships,
-            reviewCountPolicy: CollectionReviewCountPolicy.distinctVocabulary,
+            reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,
             reviewCountClock: database.clock,
             onOpenSettings: _openSettings,
           ),

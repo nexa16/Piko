@@ -46,6 +46,9 @@ class ReviewLaunch extends StatefulWidget {
     this.presentation = ReviewLaunchPresentation.plain,
     this.dueCount,
     this.onSessionClosed,
+    this.fixedDirection,
+    this.directionCounts,
+    this.directionCountsLoader,
   }) : assert(
          presentation == ReviewLaunchPresentation.plain || dueCount != null,
        );
@@ -59,12 +62,16 @@ class ReviewLaunch extends StatefulWidget {
   final ReviewLaunchPresentation presentation;
   final int? dueCount;
   final VoidCallback? onSessionClosed;
+  final LearningDirection? fixedDirection;
+  final Map<LearningDirection, int>? directionCounts;
+  final Future<Map<LearningDirection, int>> Function()? directionCountsLoader;
   @override
   State<ReviewLaunch> createState() => _ReviewLaunchState();
 }
 
 class _ReviewLaunchState extends State<ReviewLaunch> {
   bool _opening = false;
+  Object? _launchError;
   int _identity = 0;
   late final _eligibility = ValueNotifier(widget.enabled);
   ModalRoute<DueLearningSession>? _dialog;
@@ -106,7 +113,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
     super.dispose();
   }
 
-  Future<void> _open() async {
+  Future<void> _open([LearningDirection? chosenDirection]) async {
     final route = ModalRoute.of(context);
     if (_opening || !widget.enabled || route?.isCurrent != true) return;
     final identity = _identity;
@@ -121,25 +128,62 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
         identity == _identity &&
         widget.factory == factory &&
         identical(widget.vocabularyRepository, vocabulary);
-    setState(() => _opening = true);
+    setState(() {
+      _opening = true;
+      _launchError = null;
+    });
     busy(true);
     DueLearningSession? session;
     try {
-      session = await showPikoDialog<DueLearningSession>(
-        context,
-        canRestoreFocus: () => current() && route?.isCurrent == true,
-        onRouteCreated: (owned) {
-          if (current()) _dialog = owned;
-        },
-        builder: (_) => ReviewDirectionDialog(
-          collection: collection,
-          factory: factory,
-          beforeLaunch: beforeLaunch,
-          onPendingWrites: register,
-          canLaunch: () => current() && widget.enabled,
-          eligibility: _eligibility,
-        ),
-      );
+      var counts = widget.directionCounts;
+      final explicit = chosenDirection ?? widget.fixedDirection;
+      if (counts != null || explicit != null) {
+        final done = Completer<void>();
+        register?.call(done.future);
+        try {
+          await beforeLaunch();
+          if (!current() || !widget.enabled || route?.isCurrent != true) return;
+          counts = await widget.directionCountsLoader?.call() ?? counts;
+          if (!current() || !widget.enabled || route?.isCurrent != true) return;
+          final available = counts?.entries
+              .where((entry) => entry.value > 0)
+              .toList();
+          final direction =
+              explicit ??
+              (available?.length == 1 ? available!.single.key : null);
+          if (direction != null) {
+            session = await factory(collection.id, direction);
+          } else if (available?.isEmpty == true) {
+            // The launch was valid when offered. Let authoritative preparation
+            // resolve this race into its existing no-due / retry-wait state.
+            final original = widget.directionCounts?.entries
+                .where((entry) => entry.value > 0)
+                .firstOrNull;
+            if (original == null) return;
+            session = await factory(collection.id, original.key);
+          }
+        } finally {
+          done.complete();
+        }
+      }
+      if (session == null)
+        session = await showPikoDialog<DueLearningSession>(
+          context,
+          canRestoreFocus: () => current() && route?.isCurrent == true,
+          onRouteCreated: (owned) {
+            if (current()) _dialog = owned;
+          },
+          builder: (_) => ReviewDirectionDialog(
+            collection: collection,
+            factory: factory,
+            beforeLaunch: beforeLaunch,
+            onPendingWrites: register,
+            canLaunch: () => current() && widget.enabled,
+            eligibility: _eligibility,
+            directionCounts: counts,
+            directionCountsLoader: widget.directionCountsLoader,
+          ),
+        );
       if (!mounted || !current()) return;
       _dialog = null;
       if (session == null || route?.isCurrent != true || !widget.enabled) {
@@ -157,6 +201,10 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
         ),
       );
       if (current()) widget.onSessionClosed?.call();
+    } catch (error) {
+      if (current() && route?.isCurrent == true) {
+        setState(() => _launchError = error);
+      }
     } finally {
       if (session != null) {
         await session.stop();
@@ -173,6 +221,46 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     final activate = widget.enabled && !_opening ? _open : null;
+    final counts = widget.directionCounts;
+    if (counts != null && counts.values.every((count) => count <= 0)) {
+      return const SizedBox.shrink();
+    }
+    if (counts != null &&
+        widget.presentation == ReviewLaunchPresentation.collectionCard) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final direction in LearningDirection.values)
+            if ((counts[direction] ?? 0) > 0)
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: pikoDesign.dimension('spacing.2'),
+                ),
+                child: PikoButton(
+                  key: ValueKey('collection-review-${direction.name}'),
+                  label: copy.text('r2.due', {
+                    'direction': reviewDirectionLabel(
+                      widget.collection,
+                      direction,
+                    ),
+                    'count': counts[direction]!,
+                  }),
+                  icon: const PikoIcon(PikoIconName.rotateCcw),
+                  onPressed: activate == null ? null : () => _open(direction),
+                ),
+              ),
+          if (_launchError != null) Text(copy.text('learn.prepareFailed')),
+        ],
+      );
+    }
+    if (_launchError != null) {
+      return Column(
+        children: [
+          Text(copy.text('learn.prepareFailed')),
+          PikoButton(label: copy.text('action.retry'), onPressed: activate),
+        ],
+      );
+    }
     return switch (widget.presentation) {
       ReviewLaunchPresentation.plain => PikoButton(
         label: copy.text('action.review'),
@@ -307,6 +395,8 @@ class ReviewDirectionDialog extends StatefulWidget {
     required this.onPendingWrites,
     required this.canLaunch,
     required this.eligibility,
+    this.directionCounts,
+    this.directionCountsLoader,
   });
   final CollectionRecord collection;
   final ReviewSessionFactory factory;
@@ -314,6 +404,8 @@ class ReviewDirectionDialog extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final bool Function() canLaunch;
   final ValueListenable<bool> eligibility;
+  final Map<LearningDirection, int>? directionCounts;
+  final Future<Map<LearningDirection, int>> Function()? directionCountsLoader;
   @override
   State<ReviewDirectionDialog> createState() => _ReviewDirectionDialogState();
 }
@@ -322,13 +414,13 @@ class _ReviewDirectionDialogState extends State<ReviewDirectionDialog> {
   LearningDirection _direction = LearningDirection.targetToNative;
   bool _pending = false;
   Object? _error;
-  Future<void> _start() async {
+  Future<void> _start([LearningDirection? selected]) async {
     final route = ModalRoute.of(context);
     if (_pending || !widget.canLaunch() || route?.isCurrent != true) return;
     final factory = widget.factory, register = widget.onPendingWrites;
     final before = widget.beforeLaunch;
     final collectionId = widget.collection.id;
-    final direction = _direction;
+    final direction = selected ?? _direction;
     bool current() => mounted && widget.canLaunch() && route?.isCurrent == true;
     setState(() {
       _pending = true;
@@ -339,6 +431,8 @@ class _ReviewDirectionDialogState extends State<ReviewDirectionDialog> {
       // Register the entire preparation before it can touch caller-owned storage.
       register?.call(done.future);
       await before();
+      if (!current()) return;
+      await widget.directionCountsLoader?.call();
       if (!current()) return;
       final session = await factory(collectionId, direction);
       if (!mounted || !current()) {
@@ -372,27 +466,48 @@ class _ReviewDirectionDialogState extends State<ReviewDirectionDialog> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoDropdown<LearningDirection>(
-              autofocus: true,
-              label: copy.text('settings.direction'),
-              value: _direction,
-              items: [
-                for (final direction in LearningDirection.values)
-                  DropdownMenuItem(
-                    value: direction,
-                    child: Text(
-                      reviewDirectionLabel(widget.collection, direction),
+            if (widget.directionCounts != null) ...[
+              for (final direction in LearningDirection.values)
+                if ((widget.directionCounts![direction] ?? 0) > 0)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: pikoDesign.dimension('spacing.2'),
+                    ),
+                    child: PikoButton(
+                      label: copy.text('r2.due', {
+                        'direction': reviewDirectionLabel(
+                          widget.collection,
+                          direction,
+                        ),
+                        'count': widget.directionCounts![direction]!,
+                      }),
+                      onPressed: _pending || !widget.canLaunch()
+                          ? null
+                          : () => _start(direction),
                     ),
                   ),
-              ],
-              onChanged: _pending
-                  ? null
-                  : (direction) {
-                      if (direction != null) {
-                        setState(() => _direction = direction);
-                      }
-                    },
-            ),
+            ] else
+              PikoDropdown<LearningDirection>(
+                autofocus: true,
+                label: copy.text('settings.direction'),
+                value: _direction,
+                items: [
+                  for (final direction in LearningDirection.values)
+                    DropdownMenuItem(
+                      value: direction,
+                      child: Text(
+                        reviewDirectionLabel(widget.collection, direction),
+                      ),
+                    ),
+                ],
+                onChanged: _pending
+                    ? null
+                    : (direction) {
+                        if (direction != null) {
+                          setState(() => _direction = direction);
+                        }
+                      },
+              ),
             if (_pending) Text(copy.text('learn.preparing')),
             if (_error != null)
               Semantics(
@@ -405,10 +520,11 @@ class _ReviewDirectionDialogState extends State<ReviewDirectionDialog> {
           ],
         ),
         actions: [
-          PikoDialogAction(
-            label: copy.text('learn.start'),
-            onPressed: _pending || !widget.canLaunch() ? null : _start,
-          ),
+          if (widget.directionCounts == null)
+            PikoDialogAction(
+              label: copy.text('learn.start'),
+              onPressed: _pending || !widget.canLaunch() ? null : _start,
+            ),
         ],
       ),
     );

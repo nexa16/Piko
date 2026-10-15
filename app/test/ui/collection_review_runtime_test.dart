@@ -38,7 +38,9 @@ Future<void> pumpRuntime(
   RuntimeDatabase db,
   Fixture fixture,
 ) async {
-  await tester.pumpWidget(PikoApp(home: PikoRuntime(databaseFactory: () => db)));
+  await tester.pumpWidget(
+    PikoApp(home: PikoRuntime(databaseFactory: () => db)),
+  );
   for (var attempt = 0; attempt < 8; attempt++) {
     await tester.runAsync(() => db.customSelect('SELECT 1').get());
     await tester.pumpAndSettle();
@@ -64,7 +66,7 @@ void main() {
       final home = tester.widget<CollectionsHome>(find.byType(CollectionsHome));
       expect(
         home.reviewCountPolicy,
-        CollectionReviewCountPolicy.distinctVocabulary,
+        CollectionReviewCountPolicy.dueDirectionCards,
       );
       expect(home.reviewMembershipLoader, isNotNull);
       expect(identical(home.reviewCountClock, db.clock), isTrue);
@@ -77,7 +79,7 @@ void main() {
   });
 
   testWidgets(
-    'production runtime counts one vocabulary due in both directions as one word',
+    'production runtime counts one vocabulary due in both directions as two repetitions',
     (tester) async {
       final db = RuntimeDatabase(MutablePikoClock(instant));
       final f = Fixture(database: db);
@@ -93,7 +95,7 @@ void main() {
         );
         expect(ownerReview, findsOneWidget);
         expect(
-          find.descendant(of: ownerReview, matching: find.text('1')),
+          find.descendant(of: ownerReview, matching: find.text('2')),
           findsOneWidget,
         );
         expect(await tester.runAsync(() => snapshot(f)), before);
@@ -104,17 +106,12 @@ void main() {
         for (var attempt = 0; attempt < 8; attempt++) {
           await tester.runAsync(() => db.customSelect('SELECT 1').get());
           await tester.pumpAndSettle();
-          if (find
-              .text('1 vocabulary items ready to review')
-              .evaluate()
-              .isNotEmpty) {
+          if (find.text('FR → DE · 1 to review').evaluate().isNotEmpty) {
             break;
           }
         }
-        expect(
-          find.text('1 vocabulary items ready to review'),
-          findsOneWidget,
-        );
+        expect(find.text('FR → DE · 1 to review'), findsOneWidget);
+        expect(find.text('DE → FR · 1 to review'), findsOneWidget);
         expect(await tester.runAsync(() => snapshot(f)), before);
       } finally {
         await tester.pumpWidget(const SizedBox());

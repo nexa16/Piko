@@ -67,7 +67,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-008 | 1 | Learning | Controller host-verified | Nine lifecycle/write-drain/stale-callback cases; joined Speed batch 20/20. Durable data callback and route integration pending. |
 | RETRY-005 | 2 | Learning | Host-verified | Deadline-based countdown, automatic eligibility refresh, expiry/coverage/lifecycle cases; joined batch 46/46 plus focused review fixes 23/23. Android pending. |
 | CARD-UI-026 | 1 | Learning | Pending | — |
-| REVIEW-001 | 2 | Collection | Pending | — |
+| REVIEW-001 | 2 | Collection | Launch host-verified | 36 count/launch/runtime/entrypoint cases: positive directional Detail launch, Overview sum/single-direction bypass/count picker, write drain and authoritative recheck. Filtered Detail wiring/Android pending. |
 | REVIEW-002 | 2 | Learning | Pending | — |
 | SETUP-008 | 2 | Learning | Pending | — |
 | IMPORT-JSON-001 | 1 | Data | Export host-verified | Seven raw snapshot/sample/export tests pass, including expired old-generation retries and exact learning preservation. File/clipboard/Android pending. |
