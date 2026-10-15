@@ -21,6 +21,7 @@ import 'collection_entry_count.dart';
 import 'collection_review_count.dart';
 import 'collection_review_entry_point.dart';
 import 'collection_query_binding.dart';
+import 'collection_search_field.dart';
 import '../speed/speed_launch.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
 
@@ -941,6 +942,21 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             ),
                           ),
                       ],
+                    ),
+                  ),
+                if (ready && widget.queryBinding != null)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: pikoDesign.dimension('spacing.3'),
+                    ),
+                    child: CollectionSearchField(
+                      scope: widget.queryBinding!.scope,
+                      enabled:
+                          _deleteRequest == null &&
+                          _renameRequest == null &&
+                          !_openingEntry &&
+                          !_learningBusy &&
+                          _mutations?.isBusy != true,
                     ),
                   ),
                 if (_lastReadyCollection != null &&
