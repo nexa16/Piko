@@ -88,7 +88,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-SETUP-002 | 4 | Learning | Pending | — |
 | UX-ENTRY-001 | 4 | Entry | Host-verified | Five EN/DE keyboard/200%/Next-Done cases plus stack/exit and category regression batch 39/39. Real IME pending. |
 | UX-ENTRY-003 | 1 | Entry | Host-verified | Four EN/DE error/reopen UI cases with 7 controller regressions; B02 31/31; Android pending. |
-| UX-ENTRY-004 | 1 | Entry | Pending | — |
+| UX-ENTRY-004 | 1 | Entry | Host-verified | Two EN/DE compact/partial-draft cases plus 8 keyboard/activation regressions pass; Android pending. |
 | UX-CAT-001 | 3 | Collection | Pending | — |
 | UX-IMPORT-JSON-001 | 1 | JSON UI | Pending | — |
 | UX-IMPORT-JSON-002 | 1 | JSON UI | Pending | — |

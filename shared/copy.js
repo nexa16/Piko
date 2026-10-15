@@ -337,6 +337,7 @@ globalThis.PIKO_COPY = {
     "entry.stackLabel": {"en":"Vocabulary cards · scroll to edit","de":"Vokabelkarten · zum Bearbeiten scrollen"},
     "entry.number": {"en":"Entry {count}","de":"Eintrag {count}"},
     "entry.new": {"en":"New","de":"Neu"},
+    "entry.newVocabulary": {"en":"New vocabulary","de":"Neue Vokabel"},
     "entry.saved": {"en":"Saved","de":"Gespeichert"},
     "entry.draft": {"en":"Not confirmed yet","de":"Noch nicht bestätigt"},
     "entry.autoSave": {"en":"Valid edits save automatically","de":"Gültige Änderungen werden automatisch gespeichert"},

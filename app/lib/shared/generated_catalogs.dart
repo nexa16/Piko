@@ -580,6 +580,10 @@ const copyCatalog = <String, Object?>{
 "de": "Neu",
 "en": "New",
 },
+"entry.newVocabulary": <String, Object?>{
+"de": "Neue Vokabel",
+"en": "New vocabulary",
+},
 "entry.notFound": <String, Object?>{
 "de": "Dieser Eintrag ist nicht mehr verfügbar.",
 "en": "This entry is no longer available.",

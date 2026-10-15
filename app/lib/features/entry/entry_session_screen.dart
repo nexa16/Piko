@@ -863,31 +863,49 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          values.targetText.isEmpty
-                              ? copy.text('entry.targetPlaceholder')
-                              : values.targetText,
-                          style: TextStyle(
-                            fontSize: pikoDesign.dimension('typography.body'),
-                            fontWeight: pikoDesign.weight(
-                              'typography.titleWeight',
+                        if (draft &&
+                            values.targetText.trim().isEmpty &&
+                            values.nativeText.trim().isEmpty)
+                          Text(
+                            copy.text('entry.newVocabulary'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension('typography.body'),
+                              fontWeight: pikoDesign.weight(
+                                'typography.titleWeight',
+                              ),
                             ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: pikoDesign.dimension(
-                            'components.entryStack.previewGap',
-                          ),
-                        ),
-                        Text(
-                          values.nativeText.isEmpty
-                              ? copy.text('entry.nativePlaceholder')
-                              : values.nativeText,
-                          style: TextStyle(
-                            fontSize: pikoDesign.dimension('typography.body'),
-                            color: pikoDesign.color('muted'),
-                          ),
-                        ),
+                          )
+                        else ...[
+                          if (values.targetText.trim().isNotEmpty)
+                            Text(
+                              values.targetText,
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'typography.body',
+                                ),
+                                fontWeight: pikoDesign.weight(
+                                  'typography.titleWeight',
+                                ),
+                              ),
+                            ),
+                          if (values.targetText.trim().isNotEmpty &&
+                              values.nativeText.trim().isNotEmpty)
+                            SizedBox(
+                              height: pikoDesign.dimension(
+                                'components.entryStack.previewGap',
+                              ),
+                            ),
+                          if (values.nativeText.trim().isNotEmpty)
+                            Text(
+                              values.nativeText,
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'typography.body',
+                                ),
+                                color: pikoDesign.color('muted'),
+                              ),
+                            ),
+                        ],
                         if (error != null)
                           Text(
                             copy.text(errorKey(error)),
