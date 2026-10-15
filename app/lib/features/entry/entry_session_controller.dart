@@ -306,7 +306,7 @@ final class EntrySessionController extends ChangeNotifier {
     while (true) {
       final worker = _savedWorkers[id];
       final pending = <Future<void>>[
-        if (worker != null) worker,
+        ?worker,
         for (final recheck in _rechecks.entries)
           if (recheck.key.startsWith('$id:')) recheck.value,
       ];
