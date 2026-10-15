@@ -27,11 +27,13 @@ Future<int?> showSpeedSetup(
   required LearningDirection direction,
   required int eligibleCount,
   bool Function()? canRestoreFocus,
+  ValueChanged<ModalRoute<int>>? onRouteCreated,
 }) {
   if (eligibleCount <= 0) return Future.value(null);
   return showPikoDialog<int>(
     context,
     canRestoreFocus: canRestoreFocus,
+    onRouteCreated: onRouteCreated,
     builder: (_) => SpeedSetupDialog(
       collection: collection,
       direction: direction,

@@ -85,7 +85,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-CARD-010 | 2 | Learning | Host-verified | Icon-only Back retains localized tooltip/semantics, large target and guarded drain. Joined exit/launch/grading batch 40/40; Android pending. |
 | UX-CARD-012 | 1 | Learning | Host-verified | 8 EN/DE route/paint cases at 320px and 200% text verify visible 0/50/100% width and nonzero fill height. Android pending. |
 | UX-SETUP-001 | 2 | Learning | Pending | — |
-| UX-SETUP-002 | 4 | Learning | Setup host-verified | Nine fixed-direction/pool-size/safe-dismissal cases including EN/DE 320px/200%; joined batch 32/32. Directional collection actions/session wiring/Android pending. |
+| UX-SETUP-002 | 4 | Learning | Launch host-verified | Nine fixed setup cases plus nine directional launch cases: positive-only Tint counts, stable half-width slots, fixed context, fresh snapshot revalidation, stale/disposed scope and recoverable failure. Latest joined runtime/Speed batch 26/26; collection wiring/Android pending. |
 | UX-ENTRY-001 | 4 | Entry | Host-verified | Five EN/DE keyboard/200%/Next-Done cases plus stack/exit and category regression batch 39/39. Real IME pending. |
 | UX-ENTRY-003 | 1 | Entry | Host-verified | Four EN/DE error/reopen UI cases with 7 controller regressions; B02 31/31; Android pending. |
 | UX-ENTRY-004 | 1 | Entry | Host-verified | Two EN/DE compact/partial-draft cases plus 8 keyboard/activation regressions pass; Android pending. |
