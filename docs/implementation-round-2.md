@@ -78,7 +78,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-011 | 1 | Learning | Pending | — |
 | SPEED-012 | 2 | Learning | Widget host-verified | Pure model plus EN/DE 320px/200% whole-pass, wrong-tap, stale-callback and keyboard cases pass; joined Speed/menu batch 37/37. Android pending. |
 | SPEED-013 | 2 | Learning | Traceability verified | Untimed widget assertions advance fake time by an hour without progress; implemented with SPEED-012, no duplicate behavior commit. Android pending. |
-| UX-BRAND-001 | 1 | Coordinator | Pending | — |
+| UX-BRAND-001 | 1 | Coordinator | Assets host-verified | Approved frame 1 exported without pixel changes; editable 64px foreground/background/composite masters. Two tests verify exact composition, approved palette, five Android densities and adaptive safe-circle containment. Installed launcher verification pending. |
 | UX-MASCOT-001 | 1 | Collection | Pending | — |
 | UX-DIALOG-001 | 3 | Coordinator | Host-verified | Purpose-based confirmations, safe focus, responsive footer/traversal and pending-write guard. Five new family cases plus existing dialog/create/delete/launch/exit regressions pass; Android pending. |
 | UX-REVIEW-001 | 4 | Learning | Speed route host-verified | Nine Speed route cases plus shared normal-review/card/paint regressions 35/35. Fixed direction, reveal/grade, guarded exit/drain and no Speed summary. Concrete minigame/collection wiring/Android pending. |
