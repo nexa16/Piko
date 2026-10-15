@@ -9,9 +9,16 @@ typedef EntrySessionFactory =
     EntrySessionResources Function(String collectionId);
 
 final class EntrySessionResources {
-  EntrySessionResources({required this.session, required this.deletionService});
+  EntrySessionResources({
+    required this.session,
+    required this.deletionService,
+    this.interchangeBuilder,
+    this.onPendingWrites,
+  });
   final EntrySessionController session;
   final VocabularyDeletionService deletionService;
+  final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
+  final ValueChanged<Future<void>>? onPendingWrites;
 
   void dispose() {
     session.dispose();
@@ -52,5 +59,16 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
   Widget build(BuildContext context) => EntrySessionScreen(
     collection: widget.collection,
     session: resources.session,
+    onOpenInterchange: resources.interchangeBuilder == null
+        ? null
+        : () async {
+            await Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (context) =>
+                    resources.interchangeBuilder!(context, widget.collection),
+              ),
+            );
+          },
+    onPendingWrites: resources.onPendingWrites,
   );
 }

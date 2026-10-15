@@ -239,6 +239,43 @@ final class EntrySessionController extends ChangeNotifier {
     }
   }
 
+  /// Reconcile this session's saved cards after an external confirmed import.
+  /// Unconfirmed/raw failed drafts remain owned by the editor, never re-saved
+  /// simply because another route changed the stored vocabulary.
+  Future<void> refreshSavedEntries() async {
+    await awaitSavedEdits();
+    if (_disposed) return;
+    final revisions = {
+      for (final e in _savedBuffers.entries) e.key: e.value.revision,
+    };
+    final rows = await _repository.watchByCollection(collectionId).first;
+    if (_disposed) return;
+    final byId = {for (final entry in rows) entry.id: entry};
+    for (var index = 0; index < _confirmedEntries.length; index++) {
+      final id = _confirmedEntries[index].id;
+      final buffer = _savedBuffers[id];
+      if (_savedWorkers.containsKey(id) ||
+          (buffer != null && buffer.revision != revisions[id]))
+        continue;
+      final updated = byId[id];
+      if (updated == null) {
+        if (buffer != null) buffer.error = VocabularyValidation.entryNotFound;
+        continue;
+      }
+      _confirmedEntries[index] = updated;
+      if (buffer != null) {
+        if (buffer.error == null) {
+          buffer.draft = EntryDraft(
+            targetText: updated.targetText,
+            nativeText: updated.nativeText,
+          );
+        }
+        buffer.committed = updated;
+      }
+    }
+    notifyListeners();
+  }
+
   /// Read-only validation never rewrites the user's raw buffer. The subsequent
   /// update remains authoritative if another writer races this snapshot.
   Future<Object?> _pairError(EntryDraft value, {String? excludingId}) async {

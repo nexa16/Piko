@@ -23,10 +23,14 @@ class EntrySessionScreen extends StatefulWidget {
   const EntrySessionScreen({
     required this.collection,
     required this.session,
+    this.onOpenInterchange,
+    this.onPendingWrites,
     super.key,
   });
   final CollectionRecord collection;
   final EntrySessionController session;
+  final Future<void> Function()? onOpenInterchange;
+  final ValueChanged<Future<void>>? onPendingWrites;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
@@ -599,6 +603,38 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
   }
 
+  Future<void> openInterchange() async {
+    final open = widget.onOpenInterchange;
+    if (open == null || exitDraining || exitRequest != null || session.isBusy)
+      return;
+    final owner = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    setState(() => exitDraining = true);
+    FocusScope.of(context).unfocus();
+    try {
+      final draining = owner.awaitSavedEdits();
+      widget.onPendingWrites?.call(draining);
+      await draining;
+      if (!mounted || session != owner || route?.isCurrent != true) return;
+      await open();
+      if (!mounted || session != owner || route?.isCurrent != true) return;
+      final refreshing = owner.refreshSavedEntries();
+      widget.onPendingWrites?.call(refreshing);
+      await refreshing;
+    } catch (_) {
+      if (mounted && session == owner && route?.isCurrent == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(PikoCopyScope.of(context).text('entry.saveFailed')),
+          ),
+        );
+      }
+    } finally {
+      if (mounted && session == owner) setState(() => exitDraining = false);
+    }
+  }
+
   Future<void> requestExit() async {
     if (exitRequest != null || session.isBusy || allowPop) return;
     final request = Object();
@@ -1078,6 +1114,20 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                               ? null
                               : complete,
                         ),
+                        if (widget.onOpenInterchange != null)
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: PikoButton(
+                              label: copy.text('json.title'),
+                              variant: PikoButtonVariant.ghost,
+                              onPressed:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : openInterchange,
+                            ),
+                          ),
                         Expanded(
                           child: session.isCompleted
                               ? Center(

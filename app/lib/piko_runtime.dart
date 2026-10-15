@@ -8,6 +8,9 @@ import 'data/local/sqlite_vocabulary_repository.dart';
 import 'data/local/sqlite_vocabulary_deletion.dart';
 import 'data/local/sqlite_learning_repository.dart';
 import 'data/local/sqlite_settings_repository.dart';
+import 'data/local/sqlite_vocabulary_json_service.dart';
+import 'features/interchange/vocabulary_json_page.dart';
+import 'platform/vocabulary_json_platform.dart';
 import 'data/learning_item.dart';
 import 'data/review_due_membership.dart';
 import 'data/settings_repository.dart';
@@ -31,6 +34,7 @@ class PikoRuntime extends StatefulWidget {
     super.key,
     this.databaseFactory,
     this.settingsRepositoryFactory,
+    this.jsonPlatform,
   });
 
   /// Test/composition injection; the runtime owns the returned database.
@@ -38,6 +42,7 @@ class PikoRuntime extends StatefulWidget {
 
   /// Composition seam; uses the same runtime-owned database, never a second store.
   final SettingsRepository Function(PikoDatabase)? settingsRepositoryFactory;
+  final VocabularyJsonPlatform? jsonPlatform;
   @override
   State<PikoRuntime> createState() => _PikoRuntimeState();
 }
@@ -49,6 +54,9 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final collections = SqliteCollectionsRepository(database);
   late final vocabulary = SqliteVocabularyRepository(database);
   late final learning = SqliteLearningRepository(database);
+  late final jsonService = SqliteVocabularyJsonService(database);
+  late final jsonPlatform =
+      widget.jsonPlatform ?? SystemVocabularyJsonPlatform();
   late final settings =
       widget.settingsRepositoryFactory?.call(database) ??
       SqliteSettingsRepository(database);
@@ -129,6 +137,13 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   EntrySessionResources _entrySession(String collectionId) {
     final deletion = SqliteVocabularyDeletionService(database);
     return EntrySessionResources(
+      interchangeBuilder: (_, collection) => VocabularyJsonPage(
+        collection: collection,
+        service: jsonService,
+        platform: jsonPlatform,
+        onPendingWrites: trackWrites,
+      ),
+      onPendingWrites: trackWrites,
       session: EntrySessionController(
         collectionId: collectionId,
         repository: vocabulary,
