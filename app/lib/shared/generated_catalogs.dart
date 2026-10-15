@@ -1312,8 +1312,8 @@ const copyCatalog = <String, Object?>{
 "en": "Matching IDs replace selected content. Learning is always preserved; imported learning is ignored. New words start fresh. Omitted words are not deleted.",
 },
 "r2.jsonSummary": <String, Object?>{
-"de": "{added} neu · {updated} aktualisiert · {unchanged} unverändert · {errors} Fehler",
-"en": "{added} new · {updated} updated · {unchanged} unchanged · {errors} errors",
+"de": "Neu: {added} · Aktualisiert: {updated} · Unverändert: {unchanged} · Fehler: {errors}",
+"en": "New: {added} · Updated: {updated} · Unchanged: {unchanged} · Errors: {errors}",
 },
 "r2.jsonText": <String, Object?>{
 "de": "Beide Vokabeltexte müssen ausgefüllt sein.",

@@ -40,7 +40,7 @@ globalThis.PIKO_COPY = {
     "r2.jsonDuplicate":{"en":"The result would contain duplicate vocabulary pairs.","de":"Das Ergebnis würde doppelte Vokabelpaare enthalten."},
     "r2.jsonNotice":{"en":"Matching IDs replace selected content. Learning is always preserved; imported learning is ignored. New words start fresh. Omitted words are not deleted.","de":"Gleiche IDs ersetzen die gewählten Inhalte. Der Lernstand bleibt immer erhalten; importierter Lernstand wird ignoriert. Neue Wörter starten frisch. Fehlende Wörter werden nicht gelöscht."},
     "r2.jsonMetadata":{"en":"Existing category names and settings are kept. Only assignments change.","de":"Bestehende Kategorienamen und Einstellungen bleiben erhalten. Nur Zuordnungen ändern sich."},
-    "r2.jsonSummary":{"en":"{added} new · {updated} updated · {unchanged} unchanged · {errors} errors","de":"{added} neu · {updated} aktualisiert · {unchanged} unverändert · {errors} Fehler"},
+    "r2.jsonSummary":{"en":"New: {added} · Updated: {updated} · Unchanged: {unchanged} · Errors: {errors}","de":"Neu: {added} · Aktualisiert: {updated} · Unverändert: {unchanged} · Fehler: {errors}"},
     "r2.jsonApplied":{"en":"Import applied to the sample collection.","de":"Import auf die Beispielsammlung angewendet."},
     "r2.jsonGroups":{"en":"Replace content (learning is excluded)","de":"Inhalte ersetzen (ohne Lernstand)"},
     "r2.targetText":{"en":"Target-language text","de":"Text der Lernsprache"},
