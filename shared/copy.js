@@ -364,6 +364,8 @@ globalThis.PIKO_COPY = {
     "entry.newVocabulary": {"en":"New vocabulary","de":"Neue Vokabel"},
     "learn.retryCountdown": {"en":"Next repetition in {seconds} seconds","de":"Nächste Wiederholung in {seconds} Sekunden"},
     "learn.startSpeed": {"en":"Start Speed","de":"Intensives Lernen starten"},
+    "learn.speedProgress": {"en":"{completed} / {total} completed","de":"{completed} / {total} abgeschlossen"},
+    "learn.exitSpeed": {"en":"Exit Speed","de":"Intensives Lernen beenden"},
     "category.loadFailed": {"en":"Couldn't load category values. Try again.","de":"Kategoriewerte konnten nicht geladen werden. Versuche es erneut."},
     "category.selectionInvalid": {"en":"Category values changed. Review the selection before applying.","de":"Kategoriewerte wurden geändert. Prüfe die Auswahl vor dem Übernehmen."},
     "category.emptyValues": {"en":"No values yet.","de":"Noch keine Werte."},

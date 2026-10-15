@@ -45,7 +45,7 @@ final class SpeedLearningSession extends ChangeNotifier {
 
   final Future<void> Function(SpeedCompletion) _commitCompletion;
   final void Function(Future<void>)? _register;
-  final bool Function()? _isPresentationCurrent;
+  bool Function()? _isPresentationCurrent;
   SpeedSession? _state;
   SpeedTurnHandle? _current;
   SpeedBreakHandle? _currentBreak;
@@ -73,7 +73,8 @@ final class SpeedLearningSession extends ChangeNotifier {
       (_isPresentationCurrent?.call() ?? true);
 
   /// App switches and locks suspend interaction but retain the same live round.
-  void setPresentationActive(bool active) {
+  void setPresentationActive(bool active, {bool Function()? isCurrent}) {
+    if (isCurrent != null) _isPresentationCurrent = isCurrent;
     if (_stopped || _disposed || active == _presentationActive) return;
     _presentationActive = active;
     notifyListeners();

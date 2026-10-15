@@ -81,7 +81,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-BRAND-001 | 1 | Coordinator | Pending | — |
 | UX-MASCOT-001 | 1 | Collection | Pending | — |
 | UX-DIALOG-001 | 3 | Coordinator | Host-verified | Purpose-based confirmations, safe focus, responsive footer/traversal and pending-write guard. Five new family cases plus existing dialog/create/delete/launch/exit regressions pass; Android pending. |
-| UX-REVIEW-001 | 4 | Learning | Pending | — |
+| UX-REVIEW-001 | 4 | Learning | Speed route host-verified | Nine Speed route cases plus shared normal-review/card/paint regressions 35/35. Fixed direction, reveal/grade, guarded exit/drain and no Speed summary. Concrete minigame/collection wiring/Android pending. |
 | UX-CARD-010 | 2 | Learning | Host-verified | Icon-only Back retains localized tooltip/semantics, large target and guarded drain. Joined exit/launch/grading batch 40/40; Android pending. |
 | UX-CARD-012 | 1 | Learning | Host-verified | 8 EN/DE route/paint cases at 320px and 200% text verify visible 0/50/100% width and nonzero fill height. Android pending. |
 | UX-SETUP-001 | 2 | Learning | Pending | — |

@@ -950,6 +950,10 @@ const copyCatalog = <String, Object?>{
 "de": "Wiederholung beenden",
 "en": "Exit review",
 },
+"learn.exitSpeed": <String, Object?>{
+"de": "Intensives Lernen beenden",
+"en": "Exit Speed",
+},
 "learn.gradeFailed": <String, Object?>{
 "de": "Diese Bewertung konnte nicht gespeichert werden. Wähle die Bewertung erneut, um es noch einmal zu versuchen.",
 "en": "Couldn't save this review. Choose its grade again to retry.",
@@ -1033,6 +1037,10 @@ const copyCatalog = <String, Object?>{
 "learn.setup": <String, Object?>{
 "de": "Lernrichtung wählen",
 "en": "Choose review direction",
+},
+"learn.speedProgress": <String, Object?>{
+"de": "{completed} / {total} abgeschlossen",
+"en": "{completed} / {total} completed",
 },
 "learn.speedTitle": <String, Object?>{
 "de": "Intensives Lernen",

@@ -1,8 +1,8 @@
-import 'dart:ui' show SemanticsRole;
 import 'package:flutter/material.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/piko_theme.dart';
 import 'learning_session_progress.dart';
+import 'learning_progress_bar.dart';
 
 /// Binding context and determinate unique-item success, independent of attempts.
 class ReviewProgress extends StatelessWidget {
@@ -67,37 +67,12 @@ class ReviewProgress extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               vertical: d.dimension('components.progress.marginY'),
             ),
-            child: Semantics(
+            child: LearningProgressBar(
               key: const ValueKey('review-progress'),
-              role: SemanticsRole.progressBar,
+              fillKey: const ValueKey('review-progress-fill'),
               label: '${copy.text('learn.progressLabel')} · $description',
-              value: '${progress.completed}',
-              minValue: '0',
-              maxValue: '${progress.total}',
-              child: ExcludeSemantics(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    d.dimension('components.progress.radius'),
-                  ),
-                  child: SizedBox(
-                    height: d.dimension('components.progress.height'),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: d.color('tint')),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: progress.fraction,
-                          heightFactor: 1,
-                          child: ColoredBox(
-                            key: const ValueKey('review-progress-fill'),
-                            color: d.color('ink'),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              completed: progress.completed,
+              total: progress.total,
             ),
           ),
         ],
