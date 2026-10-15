@@ -1,0 +1,288 @@
+import 'dart:async';
+import 'package:drift/drift.dart' show LazyDatabase;
+import 'package:flutter/material.dart';
+import 'data/local/database_connection.dart';
+import 'data/local/piko_database.dart';
+import 'data/local/sqlite_collections_repository.dart';
+import 'data/local/sqlite_vocabulary_repository.dart';
+import 'data/local/sqlite_vocabulary_deletion.dart';
+import 'data/local/sqlite_learning_repository.dart';
+import 'data/local/sqlite_settings_repository.dart';
+import 'data/learning_item.dart';
+import 'data/review_due_membership.dart';
+import 'data/settings_repository.dart';
+import 'features/collections/collection_review_count.dart';
+import 'features/learning/due_learning_session.dart';
+import 'features/collections/collections_home.dart';
+import 'features/entry/entry_session_controller.dart';
+import 'features/entry/entry_session_route.dart';
+import 'features/vocabulary/collection_vocabulary_mutations.dart';
+import 'features/settings/app_language_controller.dart';
+import 'features/settings/settings_route.dart';
+import 'shared/interface_locale.dart';
+import 'shared/copy_scope.dart';
+import 'ui/components/piko_button.dart';
+import 'ui/components/piko_page.dart';
+import 'ui/piko_theme.dart';
+
+/// Owns private runtime storage. Injected feature repositories remain caller-owned.
+class PikoRuntime extends StatefulWidget {
+  const PikoRuntime({
+    super.key,
+    this.databaseFactory,
+    this.settingsRepositoryFactory,
+  });
+
+  /// Test/composition injection; the runtime owns the returned database.
+  final PikoDatabase Function()? databaseFactory;
+
+  /// Composition seam; uses the same runtime-owned database, never a second store.
+  final SettingsRepository Function(PikoDatabase)? settingsRepositoryFactory;
+  @override
+  State<PikoRuntime> createState() => _PikoRuntimeState();
+}
+
+class _PikoRuntimeState extends State<PikoRuntime> {
+  late final database =
+      widget.databaseFactory?.call() ??
+      PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
+  late final collections = SqliteCollectionsRepository(database);
+  late final vocabulary = SqliteVocabularyRepository(database);
+  late final learning = SqliteLearningRepository(database);
+  late final settings =
+      widget.settingsRepositoryFactory?.call(database) ??
+      SqliteSettingsRepository(database);
+  AppLanguageController? _language;
+  final _languageBinding = ValueNotifier<AppLanguageController?>(null);
+  Future<void> _languageDependencies = Future<void>.value();
+  bool _bootstrapped = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = InterfaceLocaleScope.of(context);
+    if (_language?.locale == locale) return;
+    final previous = _language;
+    // Keep admitted work transitively even when an intermediate binding is
+    // replaced before its deferred load begins.
+    _languageDependencies = Future.wait<void>([
+      _languageDependencies,
+      if (previous != null) previous.awaitPending,
+    ]);
+    final after = _languageDependencies;
+    previous?.removeListener(_languageChanged);
+    previous?.dispose();
+    final binding = AppLanguageController(
+      repository: settings,
+      locale: locale,
+      registerPending: trackWrites,
+    );
+    _language = binding;
+    binding.addListener(_languageChanged);
+    // Defer notification of the app-wide controller until after this build.
+    scheduleMicrotask(() {
+      if (mounted && identical(_language, binding)) {
+        _languageBinding.value = binding;
+        binding.load(after: after);
+      }
+    });
+  }
+
+  void _languageChanged() {
+    if (!mounted) return;
+    setState(() {
+      _bootstrapped |= _language!.ready;
+    });
+  }
+
+  void _openSettings() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsRoute(binding: _languageBinding),
+      ),
+    );
+  }
+
+  final pendingVocabularyWrites = <Future<void>>{};
+  void trackWrites(Future<void> future) {
+    final tracked = future.then<void>(
+      (_) {},
+      onError: (Object error, StackTrace stack) {},
+    );
+    pendingVocabularyWrites.add(tracked);
+    unawaited(
+      tracked.whenComplete(() => pendingVocabularyWrites.remove(tracked)),
+    );
+  }
+
+  Future<void> closeDatabase() async {
+    // Sibling route disposal registers its accepted editor queues synchronously
+    // during the same unmount traversal, before this microtask continues.
+    await Future<void>.value();
+    while (pendingVocabularyWrites.isNotEmpty) {
+      await Future.wait(pendingVocabularyWrites.toList());
+    }
+    await database.close();
+  }
+
+  EntrySessionResources _entrySession(String collectionId) {
+    final deletion = SqliteVocabularyDeletionService(database);
+    return EntrySessionResources(
+      session: EntrySessionController(
+        collectionId: collectionId,
+        repository: vocabulary,
+        deletionService: deletion,
+        clock: database.clock,
+      ),
+      deletionService: deletion,
+    );
+  }
+
+  Future<DueLearningSession> _reviewSession(
+    String collectionId,
+    LearningDirection direction,
+  ) async {
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
+      onPendingWrites: trackWrites,
+      presentationActive: false,
+    );
+  }
+
+  Future<ReviewDueMembershipSnapshot> _reviewDueMemberships({
+    required String collectionId,
+    required DateTime at,
+  }) async {
+    final memberships = await Future.wait(
+      LearningDirection.values.map((direction) async {
+        final source = await learning.forCollection(
+          collectionId: collectionId,
+          direction: direction,
+        );
+        return source.dueMemberships(at: at);
+      }),
+    );
+    DateTime? nextChangeAt;
+    for (final group in memberships) {
+      final candidate = group.nextChangeAt;
+      final current = nextChangeAt;
+      if (candidate != null &&
+          (current == null || candidate.isBefore(current))) {
+        nextChangeAt = candidate;
+      }
+    }
+    return ReviewDueMembershipSnapshot(
+      memberships: memberships.expand((group) => group),
+      nextChangeAt: nextChangeAt,
+    );
+  }
+
+  CollectionVocabularyMutations _collectionMutations(String id) =>
+      CollectionVocabularyMutations(
+        collectionId: id,
+        service: SqliteVocabularyDeletionService(database),
+        clock: database.clock,
+      );
+
+  @override
+  void dispose() {
+    _language?.removeListener(_languageChanged);
+    _language?.dispose();
+    _languageBinding.dispose();
+    unawaited(closeDatabase());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_bootstrapped) {
+      final copy = PikoCopyScope.of(context);
+      final binding = _language!;
+      return Scaffold(
+        body: PikoPage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                copy.text(
+                  binding.error == null
+                      ? 'settings.loading'
+                      : 'settings.loadFailed',
+                ),
+              ),
+              if (binding.error != null)
+                PikoButton(
+                  label: copy.text('action.retry'),
+                  onPressed: binding.pending
+                      ? null
+                      : () {
+                          if (mounted && identical(_language, binding)) {
+                            binding.load();
+                          }
+                        },
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        _language!.ready
+            ? const SizedBox.shrink()
+            : Material(
+                child: Padding(
+                  padding: EdgeInsets.all(pikoDesign.dimension('spacing.3')),
+                  child: _replacementLanguageStatus(context),
+                ),
+              ),
+        Expanded(
+          child: CollectionsHome(
+            repository: collections,
+            entrySessionFactory: _entrySession,
+            vocabularyRepository: vocabulary,
+            onPendingVocabularyWrites: trackWrites,
+            vocabularyMutationsFactory: _collectionMutations,
+            reviewSessionFactory: _reviewSession,
+            reviewMembershipLoader: _reviewDueMemberships,
+            reviewCountPolicy: CollectionReviewCountPolicy.distinctVocabulary,
+            reviewCountClock: database.clock,
+            onOpenSettings: _openSettings,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _replacementLanguageStatus(BuildContext context) {
+    final copy = PikoCopyScope.of(context);
+    final binding = _language!;
+    return Column(
+      children: [
+        Text(
+          copy.text(
+            binding.error == null ? 'settings.loading' : 'settings.loadFailed',
+          ),
+        ),
+        if (binding.error != null)
+          PikoButton(
+            label: copy.text('action.retry'),
+            onPressed: () {
+              if (mounted &&
+                  identical(_language, binding) &&
+                  !binding.pending) {
+                binding.load();
+              }
+            },
+          ),
+      ],
+    );
+  }
+}

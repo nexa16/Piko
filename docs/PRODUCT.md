@@ -1,6 +1,8 @@
 # Product brief
 
-**Status: Discovery. Product definition is still being developed.**
+**Status: First-release implementation started. Product research and later scope remain open.**
+
+The owner has authorized Flutter implementation with a local-first approach and Android verification for the first release. FOUNDATION-001 establishes the empty application host under `app/`; it does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
 
 | Area | Current answer | Question to answer |
 | --- | --- | --- |
@@ -20,13 +22,13 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 
 ## Specifications and current phase
 
-First-release scope is being agreed block by block through inline Release tags. Collections and the scroll-focused manual entry stack (ENTRY-001–008, UX-ENTRY-001–002) are accepted; precise animation/deletion details and the review block still require decisions. The prototype demonstrates those interactions without production storage or persistence guarantees.
+The owner has authorized the first-release implementation plan: collections, focused manual entry, inline vocabulary editing, deletion with Undo, single-direction self-assessment with FSRS and reinforcement retries, previous-grade correction, a summary popup, and English/German language settings. The [implementation ledger](release-1-implementation.md) records the dependency order, accepted implementation constraints and verification evidence. Earlier discovery questions and incomplete Release tags do not override that accepted plan; each requirement's canonical detail is reconciled in its own implementation commit. The prototype itself remains illustrative and does not establish production persistence or scheduling.
 
 - [Functional specification](piko-functional.md): behavior, data, validation, learning rules, and open functional decisions.
 - [UX specification](piko-ux.md): screens, controls, interaction, and pending browser feedback.
 - [Navigation mockup](../mockups/piko-mockup.html): existing mobile-first, English prototype using sample data.
 
-The current product work is gradual UX refinement, beginning with Collection Overview. The prototype covers Collection Overview, Collection Detail, Learning, Entry Editor, Import Review, Statistics, Settings, and category management. Placeholder actions remain intentionally incomplete; there is no production persistence, AI, extraction, FSRS integration, or real statistics.
+Current product work implements and verifies the accepted first release against the binding mockup. The prototype also contains later-scope screens for import, statistics and category management; those screens do not expand this release. Production implementation status is recorded in the ledger, not inferred from the prototype.
 
 Requirement IDs remain stable. Confirmed requirements, proposals, and open questions are distinct. Newer explicit accepted decisions supersede older conflicting statements; superseded IDs remain documented for traceability. Functional behavior and UX presentation have separate specifications. The original handoff is retained locally and excluded from publication.
 

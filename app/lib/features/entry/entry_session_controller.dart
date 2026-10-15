@@ -1,0 +1,576 @@
+import 'package:flutter/foundation.dart';
+import 'dart:async';
+import '../../core/clock.dart';
+import '../../data/vocabulary_deletion.dart';
+import '../../data/vocabulary_repository.dart';
+import '../../data/vocabulary_normalization.dart';
+
+/// Raw editing values; persistence normalization never rewrites this buffer.
+@immutable
+final class EntryDraft {
+  const EntryDraft({this.targetText = '', this.nativeText = ''});
+  final String targetText;
+  final String nativeText;
+}
+
+@immutable
+final class SavedEntryEditState {
+  const SavedEntryEditState({
+    required this.draft,
+    required this.committed,
+    required this.isSaving,
+    this.error,
+  });
+  final EntryDraft draft;
+  final VocabularyRecord committed;
+  final bool isSaving;
+  final Object? error;
+}
+
+final class _SavedEntryBuffer {
+  _SavedEntryBuffer(this.committed)
+    : draft = EntryDraft(
+        targetText: committed.targetText,
+        nativeText: committed.nativeText,
+      );
+  VocabularyRecord committed;
+  EntryDraft draft;
+  int revision = 0;
+  Object? error;
+  (int, EntryDraft)? pending;
+}
+
+/// Completion preserves and activates a saved buffer that needs attention.
+final class SavedEntryCompletionBlocked implements Exception {
+  const SavedEntryCompletionBlocked(this.entryId, this.error);
+  final String entryId;
+  final Object error;
+}
+
+@immutable
+final class EntryUndoState {
+  const EntryUndoState(this.entry, this.expiresAt, this.error);
+  final VocabularyRecord entry;
+  final DateTime expiresAt;
+  final Object? error;
+}
+
+final class _SessionDeletion {
+  _SessionDeletion(this.receipt);
+  final VocabularyDeletionReceipt receipt;
+  Timer? timer;
+  Object? error;
+}
+
+/// One Collection's ephemeral session: new drafts require confirmation, while
+/// valid edits of this session's confirmed records save automatically.
+/// Text, focus and scroll controllers belong to the consuming widgets.
+final class EntrySessionController extends ChangeNotifier {
+  EntrySessionController({
+    required this.collectionId,
+    required VocabularyRepository repository,
+    VocabularyDeletionService? deletionService,
+    PikoClock? clock,
+    // Public injection name with a private dependency; not a UI-facing property.
+    // ignore: prefer_initializing_formals
+  }) : _repository = repository,
+       // Keep the public dependency name distinct from its private field.
+       // ignore: prefer_initializing_formals
+       _deletionService = deletionService,
+       _clock = clock ?? const SystemPikoClock();
+  final String collectionId;
+  final VocabularyRepository _repository;
+  final VocabularyDeletionService? _deletionService;
+  final PikoClock _clock;
+  final Map<String, int> _ordinals = {};
+  int _nextOrdinal = 0, _advancementRevision = 0;
+  final Map<String, _SessionDeletion> _deletions = {};
+  int _undoLifetime = 0;
+  Future<VocabularyDeletionReceipt>? _deleting;
+  Future<VocabularyRecord>? _restoring;
+  String? _deletingId, _restoringId;
+  bool get supportsDeletion => _deletionService != null;
+  int get advancementRevision => _advancementRevision;
+  bool get isMutating =>
+      !_disposed && (_deleting != null || _restoring != null);
+  List<EntryUndoState> get undoEntries => List.unmodifiable(
+    _deletions.values.map(
+      (value) => EntryUndoState(
+        value.receipt.entry,
+        value.receipt.expiresAt,
+        value.error,
+      ),
+    ),
+  );
+  EntryDraft _draft = const EntryDraft();
+  bool _disposed = false;
+  final List<VocabularyRecord> _confirmedEntries = [];
+  String? _activeEntryId;
+  Future<VocabularyRecord>? _pendingConfirmation;
+  Future<void>? _completion;
+  bool _completed = false, _completing = false;
+  final Map<String, _SavedEntryBuffer> _savedBuffers = {};
+  final Map<String, Future<void>> _savedWorkers = {};
+  bool get isConfirming => !_disposed && _pendingConfirmation != null;
+  bool get isCompleting => !_disposed && _completing;
+  bool get isBusy => isConfirming || isCompleting || isMutating;
+  bool get isCompleted => !_disposed && _completed;
+
+  EntryDraft get draft => _draft;
+  List<VocabularyRecord> get confirmedEntries =>
+      List.unmodifiable(_confirmedEntries);
+
+  /// Null identifies the in-progress draft; a UUID identifies a saved card.
+  String? get activeEntryId => _activeEntryId;
+
+  _SavedEntryBuffer _savedBuffer(String id) {
+    _ensureActive();
+    final record = _confirmedEntries
+        .where((entry) => entry.id == id)
+        .firstOrNull;
+    if (record == null) {
+      throw ArgumentError('Unknown entry in this entry session.');
+    }
+    return _savedBuffers.putIfAbsent(id, () => _SavedEntryBuffer(record));
+  }
+
+  SavedEntryEditState savedEntryState(String id) {
+    final buffer = _savedBuffer(id);
+    return SavedEntryEditState(
+      draft: buffer.draft,
+      committed: buffer.committed,
+      error: buffer.error,
+      isSaving: _savedWorkers.containsKey(id),
+    );
+  }
+
+  void editSavedEntry(String id, {String? targetText, String? nativeText}) {
+    _ensureEditable();
+    final buffer = _savedBuffer(id);
+    final target = targetText ?? buffer.draft.targetText;
+    final native = nativeText ?? buffer.draft.nativeText;
+    if (target == buffer.draft.targetText &&
+        native == buffer.draft.nativeText) {
+      return;
+    }
+    buffer.draft = EntryDraft(targetText: target, nativeText: native);
+    buffer.revision++;
+    if (normalizeVocabularyText(target).isEmpty) {
+      buffer.error = VocabularyValidation.requiredTarget;
+    } else if (normalizeVocabularyText(native).isEmpty) {
+      buffer.error = VocabularyValidation.requiredNative;
+    } else {
+      buffer.error = null;
+      buffer.pending = (buffer.revision, buffer.draft);
+      _startSavedWorker(id, buffer);
+    }
+    notifyListeners();
+  }
+
+  void _startSavedWorker(String id, _SavedEntryBuffer buffer) {
+    if (_savedWorkers.containsKey(id)) return;
+    final done = Completer<void>();
+    _savedWorkers[id] = done.future;
+    unawaited(_saveEntry(id, buffer, done));
+  }
+
+  /// Retries the current valid saved edit after a storage failure. This does
+  /// not confirm a new entry or duplicate an already running saved edit.
+  void retrySavedEntry(String id) {
+    _ensureEditable();
+    final buffer = _savedBuffer(id);
+    if (_savedWorkers.containsKey(id)) return;
+    if (normalizeVocabularyText(buffer.draft.targetText).isEmpty) {
+      buffer.error = VocabularyValidation.requiredTarget;
+    } else if (normalizeVocabularyText(buffer.draft.nativeText).isEmpty) {
+      buffer.error = VocabularyValidation.requiredNative;
+    } else {
+      buffer.revision++;
+      buffer.error = null;
+      buffer.pending = (buffer.revision, buffer.draft);
+      _startSavedWorker(id, buffer);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _saveEntry(
+    String id,
+    _SavedEntryBuffer buffer,
+    Completer<void> done,
+  ) async {
+    while (buffer.pending != null) {
+      final (revision, snapshot) = buffer.pending!;
+      buffer.pending = null;
+      try {
+        final saved = await _repository.update(
+          id: id,
+          targetText: snapshot.targetText,
+          nativeText: snapshot.nativeText,
+        );
+        if (saved.id != id || saved.collectionId != collectionId) {
+          throw StateError('Saved edit returned a different entry identity.');
+        }
+        buffer.committed = saved;
+        if (buffer.revision == revision) buffer.error = null;
+        if (!_disposed) {
+          final index = _confirmedEntries.indexWhere((entry) => entry.id == id);
+          if (index >= 0) _confirmedEntries[index] = saved;
+        }
+      } catch (error) {
+        if (buffer.revision == revision) buffer.error = error;
+      }
+      if (!_disposed) notifyListeners();
+    }
+    _savedWorkers.remove(id);
+    if (!_disposed) notifyListeners();
+    done.complete();
+  }
+
+  /// Resolves when all accepted saved-edit queues are idle, including additions
+  /// made while draining. Errors remain on each saved-entry state.
+  Future<void> awaitSavedEdits() async {
+    while (_savedWorkers.isNotEmpty) {
+      await Future.wait(_savedWorkers.values.toList(growable: false));
+    }
+  }
+
+  Future<VocabularyDeletionReceipt> deleteSavedEntry(String id) {
+    _ensureActive();
+    if (_deletingId == id && _deleting != null) return _deleting!;
+    _ensureEditable();
+    _savedBuffer(id); // Reject foreign/unknown IDs before any service mutation.
+    if (_deletionService == null) {
+      throw StateError('Deletion service is unavailable.');
+    }
+    final result = Completer<VocabularyDeletionReceipt>();
+    _deletingId = id;
+    _deleting = result.future;
+    notifyListeners();
+    unawaited(_deleteSavedEntry(id, _undoLifetime, result));
+    return result.future;
+  }
+
+  Future<void> _deleteSavedEntry(
+    String id,
+    int undoLifetime,
+    Completer<VocabularyDeletionReceipt> result,
+  ) async {
+    try {
+      while (_savedWorkers.containsKey(id)) {
+        await _savedWorkers[id];
+      }
+      if (_disposed) throw StateError('The entry session has ended.');
+      final startedAt = _clock.now().toUtc();
+      final receipt = await _deletionService!.delete(id);
+      if (receipt.entry.id != id ||
+          receipt.entry.collectionId != collectionId) {
+        _deletionService.forget(receipt);
+        throw StateError('Deletion returned a different entry identity.');
+      }
+      if (_disposed) {
+        _deletionService.forget(receipt);
+      } else {
+        final index = _confirmedEntries.indexWhere((entry) => entry.id == id);
+        _confirmedEntries.removeAt(index);
+        _savedBuffers.remove(id);
+        if (_activeEntryId == id) {
+          _activeEntryId = index < _confirmedEntries.length
+              ? _confirmedEntries[index].id
+              : null;
+        }
+        if (undoLifetime == _undoLifetime) {
+          final deleted = _SessionDeletion(receipt);
+          _deletions[id] = deleted;
+          _scheduleUndo(deleted, fallbackNow: startedAt);
+        } else {
+          _deletionService.forget(receipt);
+        }
+      }
+      result.complete(receipt);
+    } catch (error, stack) {
+      result.completeError(error, stack);
+    } finally {
+      _deleting = null;
+      _deletingId = null;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<VocabularyRecord> undoDeletion(String id) {
+    _ensureActive();
+    if (_restoringId == id && _restoring != null) return _restoring!;
+    _ensureEditable();
+    final deleted = _deletions[id];
+    if (deleted == null) throw VocabularyUndoFailure.invalidReceipt;
+    final result = Completer<VocabularyRecord>();
+    _restoringId = id;
+    _restoring = result.future;
+    deleted.error = null;
+    notifyListeners();
+    unawaited(_undoDeletion(id, deleted, result));
+    return result.future;
+  }
+
+  Future<void> _undoDeletion(
+    String id,
+    _SessionDeletion deleted,
+    Completer<VocabularyRecord> result,
+  ) async {
+    try {
+      final entry = await _deletionService!.restore(deleted.receipt);
+      if (entry.id != id || entry.collectionId != collectionId) {
+        throw StateError('Undo returned a different entry identity.');
+      }
+      if (!_disposed) {
+        if (!_confirmedEntries.any((value) => value.id == id)) {
+          _confirmedEntries.add(entry);
+        }
+        _confirmedEntries.sort(
+          (a, b) => _ordinals[a.id]!.compareTo(_ordinals[b.id]!),
+        );
+        _savedBuffers[id] = _SavedEntryBuffer(entry);
+        if (identical(_deletions[id], deleted)) _forgetUndo(id);
+      }
+      result.complete(entry);
+    } catch (error, stack) {
+      if (!_disposed && identical(_deletions[id], deleted)) {
+        deleted.error = error;
+      }
+      result.completeError(error, stack);
+    } finally {
+      _restoring = null;
+      _restoringId = null;
+      if (!_disposed) {
+        _expireUndo();
+        notifyListeners();
+      }
+    }
+  }
+
+  void _forgetUndo(String id) {
+    final deleted = _deletions.remove(id);
+    if (deleted == null) return;
+    deleted.timer?.cancel();
+    try {
+      _deletionService?.forget(deleted.receipt);
+    } catch (_) {
+      // The caller may already have ended the injected service lifetime.
+    }
+  }
+
+  void _expireUndo() {
+    if (_disposed) return;
+    try {
+      _deletionService?.expireUndo();
+      final now = _clock.now().toUtc();
+      for (final item in _deletions.entries.toList()) {
+        if (item.key != _restoringId) {
+          if (!now.isBefore(item.value.receipt.expiresAt)) {
+            _forgetUndo(item.key);
+          } else {
+            _scheduleUndo(item.value);
+          }
+        }
+      }
+    } catch (_) {
+      for (final id in _deletions.keys.toList()) {
+        if (id != _restoringId) _forgetUndo(id);
+      }
+    }
+    notifyListeners();
+  }
+
+  void _scheduleUndo(_SessionDeletion deleted, {DateTime? fallbackNow}) {
+    deleted.timer?.cancel();
+    DateTime now;
+    try {
+      now = _clock.now().toUtc();
+    } catch (_) {
+      // A fallible clock after commit must not report a failed deletion.
+      // Initial scheduling can use the captured pre-transaction instant;
+      // later expiry fails closed and releases owned capabilities.
+      if (fallbackNow == null) rethrow;
+      now = fallbackNow;
+    }
+    final remaining = deleted.receipt.expiresAt.difference(now);
+    deleted.timer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      _expireUndo,
+    );
+  }
+
+  /// Releases only this session's transient capabilities, not the caller's service.
+  void forgetUndo() {
+    _undoLifetime++;
+    for (final id in _deletions.keys.toList()) {
+      _forgetUndo(id);
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Pending writes freeze editing/navigation; widgets disable those controls
+  /// while [isConfirming]. Repeated confirmation shares one result.
+  Future<VocabularyRecord> confirmAndNext() {
+    _ensureActive();
+    final pending = _pendingConfirmation;
+    if (pending != null) return pending;
+    _ensureEditable();
+    final snapshot = _draft;
+    if (normalizeVocabularyText(snapshot.targetText).isEmpty) {
+      return Future.error(VocabularyValidation.requiredTarget);
+    }
+    if (normalizeVocabularyText(snapshot.nativeText).isEmpty) {
+      return Future.error(VocabularyValidation.requiredNative);
+    }
+    final result = Completer<VocabularyRecord>();
+    _pendingConfirmation = result.future;
+    notifyListeners();
+    unawaited(_confirm(snapshot, result));
+    return result.future;
+  }
+
+  /// Final confirmation ends this lifetime, without creating a fresh draft.
+  /// A successful result remains reusable when a covered route resumes exit.
+  Future<void> completeSession() {
+    _ensureActive();
+    if (_completion != null) return _completion!;
+    _ensureEditable();
+    final result = Completer<void>();
+    _completion = result.future;
+    _completing = true;
+    final snapshot = _draft;
+    notifyListeners();
+    unawaited(_completeSession(snapshot, result));
+    return result.future;
+  }
+
+  Future<void> _completeSession(
+    EntryDraft snapshot,
+    Completer<void> result,
+  ) async {
+    try {
+      await awaitSavedEdits();
+      // Disposal ends the lifetime; do not begin a new write after draining.
+      if (_disposed) throw StateError('The entry session has ended.');
+      for (final record in _confirmedEntries) {
+        final error = _savedBuffers[record.id]?.error;
+        if (error != null) {
+          _activeEntryId = record.id;
+          throw SavedEntryCompletionBlocked(record.id, error);
+        }
+      }
+      final target = normalizeVocabularyText(snapshot.targetText);
+      final native = normalizeVocabularyText(snapshot.nativeText);
+      if (target.isNotEmpty || native.isNotEmpty) {
+        _activeEntryId = null;
+        if (target.isEmpty) throw VocabularyValidation.requiredTarget;
+        if (native.isEmpty) throw VocabularyValidation.requiredNative;
+        final record = await _repository.create(
+          collectionId: collectionId,
+          targetText: snapshot.targetText,
+          nativeText: snapshot.nativeText,
+        );
+        if (record.collectionId != collectionId) {
+          throw StateError(
+            'Completion returned an entry from another Collection.',
+          );
+        }
+        if (!_disposed) {
+          _confirmedEntries.add(record);
+          _ordinals[record.id] = _nextOrdinal++;
+          _activeEntryId = record.id;
+        }
+      }
+      if (!_disposed) _completed = true;
+      _completing = false;
+      if (!_disposed) notifyListeners();
+      result.complete();
+    } catch (error, stack) {
+      _completion = null;
+      _completing = false;
+      if (!_disposed) notifyListeners();
+      result.completeError(error, stack);
+    }
+  }
+
+  Future<void> _confirm(
+    EntryDraft snapshot,
+    Completer<VocabularyRecord> result,
+  ) async {
+    try {
+      final record = await _repository.create(
+        collectionId: collectionId,
+        targetText: snapshot.targetText,
+        nativeText: snapshot.nativeText,
+      );
+      if (record.collectionId != collectionId) {
+        throw StateError(
+          'Confirmation returned an entry from another Collection.',
+        );
+      }
+      _pendingConfirmation = null;
+      if (!_disposed) {
+        _confirmedEntries.add(record);
+        _ordinals[record.id] = _nextOrdinal++;
+        _advancementRevision++;
+        _draft = const EntryDraft();
+        _activeEntryId = null;
+        notifyListeners();
+      }
+      result.complete(record);
+    } catch (error, stack) {
+      _pendingConfirmation = null;
+      if (!_disposed) notifyListeners();
+      result.completeError(error, stack);
+    }
+  }
+
+  void selectSavedEntry(String id) {
+    _ensureEditable();
+    if (!_confirmedEntries.any((entry) => entry.id == id)) {
+      throw ArgumentError('Unknown entry in this entry session.');
+    }
+    if (_activeEntryId == id) return;
+    _activeEntryId = id;
+    notifyListeners();
+  }
+
+  void selectDraft() {
+    _ensureEditable();
+    if (_activeEntryId == null) return;
+    _activeEntryId = null;
+    notifyListeners();
+  }
+
+  void _ensureActive() {
+    if (_disposed) throw StateError('The entry session has ended.');
+  }
+
+  void _ensureEditable() {
+    _ensureActive();
+    if (isBusy) throw StateError('Confirmation is in progress.');
+    if (_completed) throw StateError('The entry session has completed.');
+  }
+
+  void setTargetText(String text) => _setDraft(text, _draft.nativeText);
+  void setNativeText(String text) => _setDraft(_draft.targetText, text);
+
+  void _setDraft(String target, String native) {
+    _ensureEditable();
+    if (target == _draft.targetText && native == _draft.nativeText) return;
+    _draft = EntryDraft(targetText: target, nativeText: native);
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    forgetUndo();
+    _draft = const EntryDraft();
+    _confirmedEntries.clear();
+    _ordinals.clear();
+    _savedBuffers.clear();
+    _activeEntryId = null;
+    super.dispose();
+  }
+}

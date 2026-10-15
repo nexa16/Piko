@@ -1,8 +1,8 @@
 # Piko
 
-**Status: Discovery**
+**Status: First-release implementation started**
 
-> **Piko's product definition is still being developed.** Existing vocabulary-learning requirements and a navigation mockup provide a starting point; target users, validated outcomes, implementation scope, and technical foundation remain to be decided.
+The accepted first-release vocabulary flow is being implemented in Flutter with a local-first approach and Android verification. The HTML/CSS mockup remains the binding design reference; product research and later capabilities remain separately tracked.
 
 This repository contains Piko's product planning and future implementation.
 
@@ -10,6 +10,7 @@ This repository contains Piko's product planning and future implementation.
 
 - [Product brief](docs/PRODUCT.md)
 - [Roadmap](docs/ROADMAP.md)
+- [First-release implementation order and evidence](docs/release-1-implementation.md)
 - [Decision log](docs/DECISIONS.md)
 - [Research plan](docs/RESEARCH.md)
 - [Functional requirements](docs/piko-functional.md) and [UX requirements](docs/piko-ux.md)
@@ -20,7 +21,7 @@ This repository contains Piko's product planning and future implementation.
 
 ## Development
 
-No technical stack has been selected yet. Discovery and documented decisions will guide the first implementation milestone. See [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md).
+The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The initial Android scaffold now supports local collection creation; each feature requires its own tests and verification.
 
 Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly. The studio supports immediate draft previews and export; a future app will consume the same catalog through an adapter appropriate to its platform. See the design foundations document for persistence and synchronization limits.
 

@@ -1,0 +1,35 @@
+name: piko
+description: "Piko local-first vocabulary learning application."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  drift: ^2.35.0
+  drift_flutter: ^0.3.1
+  path_provider: ^2.1.6
+  uuid: ^4.5.1
+  unorm_dart: 0.3.3
+  sqlite3: ^3.5.2
+  flutter_svg: 2.3.0
+  fsrs: 2.0.1
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.35.0
+  build_runner: ^2.15.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/generated/lucide/
