@@ -357,6 +357,14 @@ const copyCatalog = <String, Object?>{
 "de": "Schwierigkeit",
 "en": "Difficulty",
 },
+"category.dimensionNameInvalid": <String, Object?>{
+"de": "Gib einen eindeutigen, nicht leeren Dimensionsnamen ein.",
+"en": "Enter a unique, nonempty dimension name.",
+},
+"category.dimensionSaveFailed": <String, Object?>{
+"de": "Diese Dimension konnte nicht gespeichert werden. Versuche es erneut.",
+"en": "Couldn't save this dimension. Try again.",
+},
 "category.emptyValues": <String, Object?>{
 "de": "Noch keine Werte.",
 "en": "No values yet.",
@@ -364,6 +372,10 @@ const copyCatalog = <String, Object?>{
 "category.loadFailed": <String, Object?>{
 "de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load category values. Try again.",
+},
+"category.saveDimension": <String, Object?>{
+"de": "Dimension speichern",
+"en": "Save dimension",
 },
 "category.selectionInvalid": <String, Object?>{
 "de": "Kategoriewerte wurden geändert. Prüfe die Auswahl vor dem Übernehmen.",
