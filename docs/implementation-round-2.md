@@ -65,7 +65,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-006 | 1 | Learning | Pending | — |
 | SPEED-007 | 2 | Learning | Host-verified | Seven short-pool/full-pass boundary cases including accepted shrinking example; joined batch 174/174. Game widget follows. |
 | SPEED-008 | 1 | Learning | Controller host-verified | Nine lifecycle/write-drain/stale-callback cases; joined Speed batch 20/20. Durable data callback and route integration pending. |
-| RETRY-005 | 2 | Learning | Pending | — |
+| RETRY-005 | 2 | Learning | Host-verified | Deadline-based countdown, automatic eligibility refresh, expiry/coverage/lifecycle cases; joined batch 46/46 plus focused review fixes 23/23. Android pending. |
 | CARD-UI-026 | 1 | Learning | Pending | — |
 | REVIEW-001 | 2 | Collection | Pending | — |
 | REVIEW-002 | 2 | Learning | Pending | — |

@@ -338,6 +338,7 @@ globalThis.PIKO_COPY = {
     "entry.number": {"en":"Entry {count}","de":"Eintrag {count}"},
     "entry.new": {"en":"New","de":"Neu"},
     "entry.newVocabulary": {"en":"New vocabulary","de":"Neue Vokabel"},
+    "learn.retryCountdown": {"en":"Next repetition in {seconds} seconds","de":"Nächste Wiederholung in {seconds} Sekunden"},
     "entry.saved": {"en":"Saved","de":"Gespeichert"},
     "entry.draft": {"en":"Not confirmed yet","de":"Noch nicht bestätigt"},
     "entry.autoSave": {"en":"Valid edits save automatically","de":"Gültige Änderungen werden automatisch gespeichert"},

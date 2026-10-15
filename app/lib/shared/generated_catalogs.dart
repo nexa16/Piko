@@ -884,6 +884,10 @@ const copyCatalog = <String, Object?>{
 "de": "Beispielwiederholung · Bewertungen und Fortschritt bleiben nur im Seitenspeicher. Keine echte Planung oder FSRS-Berechnung.",
 "en": "Sample review · grades and progress stay in page memory only. No real scheduling or FSRS calculations.",
 },
+"learn.retryCountdown": <String, Object?>{
+"de": "Nächste Wiederholung in {seconds} Sekunden",
+"en": "Next repetition in {seconds} seconds",
+},
 "learn.retryLoadFailed": <String, Object?>{
 "de": "Der Wiederholungsstand konnte nicht geladen werden. Bitte erneut versuchen.",
 "en": "Retry state could not be loaded. Try again.",

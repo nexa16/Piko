@@ -27,7 +27,7 @@ class HeldReadSource extends ControlledRetrySource {
 
 void main() {
   launch.testWidgets(
-    'original day expiry before wait removes waiting state, without retry, false no-due or success; Exit stays usable',
+      'original day expiry before wait removes waiting without success; safe summary dismissal returns without writes',
     (tester) async {
       final f = launch.fixture();
       await tester.runAsync(f.initialize);
@@ -48,7 +48,11 @@ void main() {
         session.waitMutations.single.next.waitEligibleAt,
         late.add(const Duration(seconds: 10)),
       );
-      expect(find.text(copy.text('learn.retryWaiting')), findsOneWidget);
+      expect(
+        find.text(copy.text('learn.retryCountdown', {'seconds': 10})),
+        findsOneWidget,
+      );
+      expect(launch.button(copy.text('action.retry')), findsNothing);
       (f.db.clock as MutablePikoClock).set(receipt.retryNext!.expiresAt);
       await tester.pump(const Duration(seconds: 5));
       await h.finish(tester);
@@ -64,14 +68,16 @@ void main() {
             if (i != 4) before[i],
         ],
       );
-      expect(find.text(copy.text('learn.retryWaiting')), findsNothing);
+      expect(find.byKey(const ValueKey('review-retry-wait')), findsNothing);
       expect(card, findsNothing);
       expect(find.byKey(const ValueKey('review-no-due')), findsNothing);
       expect(session.lastAnswer, isNull);
       expect(session.acceptedReviews, isEmpty);
-      await tester.tap(launch.button(copy.text('learn.exit')));
+      expect(session.progress.completed, 0);
+      await tester.tap(find.byTooltip(copy.text('common.close')));
       await h.finish(tester);
       expect(find.byType(ReviewSessionRoute), findsNothing);
+      expect(await tester.runAsync(() => snapshot(f)), after);
       expect(tester.takeException(), isNull);
     },
   );

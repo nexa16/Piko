@@ -153,6 +153,31 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   bool get hard => _correction?.hard ?? _grading.hard;
   Object? get error => _selectionError ?? _correction?.error ?? _grading.error;
   bool get selectionFailed => _selectionError != null;
+
+  /// Earliest persisted retry deadline while no question is displayed.
+  /// This presentation view never arms or extends a wait.
+  DateTime? get retryWaitDeadline {
+    if (_stopped || _disposed || selectionFailed || current != null) {
+      return null;
+    }
+    DateTime? earliest;
+    for (final round in _rounds.values) {
+      final wait = round.waitEligibleAt;
+      if (wait != null && (earliest == null || wait.isBefore(earliest))) {
+        earliest = wait;
+      }
+    }
+    return earliest;
+  }
+
+  /// Remaining whole seconds, rounded up from the actual stored UTC instant.
+  int? get retryWaitSeconds {
+    final deadline = retryWaitDeadline;
+    if (deadline == null) return null;
+    final remaining = deadline.difference(_clock.now().toUtc()).inMicroseconds;
+    return remaining <= 0 ? 0 : (remaining + 999999) ~/ 1000000;
+  }
+
   List<RegularReviewReceipt> get acceptedReviews =>
       List.unmodifiable(_receipts);
   List<LearningItemRecord> get unreviewedMembers =>
@@ -422,11 +447,20 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
         }
       }
       if (earliest == null) return;
+      final refreshAt = earliest!;
+      final remaining = retryWaitSeconds;
+      if (current == null && remaining != null && remaining > 0) {
+        // Wake only the presentation at the next whole-second boundary. The
+        // original persisted wait/expiry still controls the next storage read.
+        consider(retryWaitDeadline!.subtract(Duration(seconds: remaining - 1)));
+      }
       final identity = _wakeIdentity;
       _wakeTimer = _timerFactory(
         earliest!.isAfter(now) ? earliest!.difference(now) : Duration.zero,
         () {
-          if (identity == _wakeIdentity && _canWake) unawaited(_wake());
+          if (identity == _wakeIdentity && _canWake) {
+            unawaited(_wake(countdownBefore: refreshAt));
+          }
         },
       );
     } catch (error) {
@@ -435,10 +469,17 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     }
   }
 
-  Future<void> _wake() async {
+  Future<void> _wake({DateTime? countdownBefore}) async {
     if (!_canWake || isSubmitting) return;
     try {
       final now = _clock.now().toUtc();
+      if (current == null &&
+          countdownBefore != null &&
+          now.isBefore(countdownBefore)) {
+        _changed();
+        _scheduleWake();
+        return;
+      }
       // Never replace a displayed unanswered card merely because a wait elapsed.
       if (current != null) {
         final round = _currentRetry;
