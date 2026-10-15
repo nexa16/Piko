@@ -1,14 +1,188 @@
-import 'dart:ui' show PointerDeviceKind;
+import 'dart:ui' show ImageByteFormat, PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_card.dart';
 import 'package:piko/ui/components/piko_swipe_reveal.dart';
 import 'package:piko/ui/piko_theme.dart';
 
 void main() {
+  testWidgets(
+    'rounded closed and disabled cards have no danger halo; reveal and close retain a continuous danger underlay',
+    (t) async {
+      late StateSetter rebuild;
+      var enabled = true;
+      const actualKey = ValueKey('swipe-raster');
+      const referenceKey = ValueKey('plain-raster');
+      Widget foreground() => const SizedBox(
+        width: 280,
+        height: 140,
+        child: PikoCard(padding: EdgeInsets.zero, child: SizedBox.expand()),
+      );
+      await t.pumpWidget(
+        PikoApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RepaintBoundary(
+                        key: referenceKey,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            pikoDesign.dimension('radii.card'),
+                          ),
+                          child: foreground(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      RepaintBoundary(
+                        key: actualKey,
+                        child: SizedBox(
+                          width: 280,
+                          child: PikoSwipeReveal(
+                            enabled: enabled,
+                            label: 'Delete vocabulary',
+                            onDelete: () =>
+                                fail('raster verification must not delete'),
+                            child: foreground(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      final row = find.byType(PikoSwipeReveal);
+      final underlay = find
+          .descendant(of: row, matching: find.byType(ColoredBox))
+          .first;
+      final card = find.descendant(of: row, matching: find.byType(PikoCard));
+      double displacement() => t.getTopLeft(row).dx - t.getTopLeft(card).dx;
+      Future<Uint8List> raster(Key key) async {
+        final boundary = t.renderObject<RenderRepaintBoundary>(find.byKey(key));
+        return (await t.runAsync(() async {
+          final image = await boundary.toImage(pixelRatio: 1);
+          try {
+            final data = await image.toByteData(
+              format: ImageByteFormat.rawRgba,
+            );
+            return Uint8List.fromList(data!.buffer.asUint8List());
+          } finally {
+            image.dispose();
+          }
+        }))!;
+      }
+
+      final reference = await raster(referenceKey);
+      Future<void> closedWithoutHalo(String state) async {
+        expect(
+          t.widget<ColoredBox>(underlay).color,
+          Colors.transparent,
+          reason: '$state must not paint a hidden danger surface',
+        );
+        expect(displacement(), 0);
+        final actual = await raster(actualKey);
+        // Compare each antialiased rounded-edge pixel against the identical
+        // clipped production card with no swipe underlay, including alpha.
+        final radius = pikoDesign.dimension('radii.card').ceil();
+        final mismatches = <(int, int)>[];
+        for (var y = 0; y < 140; y++) {
+          for (var x = 0; x < 280; x++) {
+            if (x >= radius &&
+                x < 280 - radius &&
+                y >= radius &&
+                y < 140 - radius) {
+              continue;
+            }
+            final offset = (y * 280 + x) * 4;
+            if (actual[offset] != reference[offset] ||
+                actual[offset + 1] != reference[offset + 1] ||
+                actual[offset + 2] != reference[offset + 2] ||
+                actual[offset + 3] != reference[offset + 3]) {
+              mismatches.add((x, y));
+            }
+          }
+        }
+        expect(
+          mismatches,
+          isEmpty,
+          reason:
+              '$state rounded edges must match the card without red underpainting',
+        );
+      }
+
+      Future<void> continuousDanger(String state) async {
+        expect(
+          t.widget<ColoredBox>(underlay).color,
+          pikoDesign.color('danger'),
+          reason: '$state retains danger behind rounded foreground corners',
+        );
+        expect(
+          t.getSize(underlay),
+          t.getSize(row),
+          reason: 'The underlay covers the entire card throughout $state',
+        );
+        final pixels = await raster(actualKey);
+        final offset = (70 * 280 + 278) * 4;
+        final painted = Color.fromARGB(
+          pixels[offset + 3],
+          pixels[offset],
+          pixels[offset + 1],
+          pixels[offset + 2],
+        );
+        expect(
+          painted,
+          pikoDesign.color('danger'),
+          reason: '$state exposed right edge remains solid danger',
+        );
+      }
+
+      await closedWithoutHalo('initially closed');
+      final halfMotion = Duration(
+        milliseconds: (pikoDesign.dimension('controls.motionFastMs') / 2)
+            .round(),
+      );
+      await t.drag(row, const Offset(-100, 0));
+      await t.pump();
+      await t.pump(halfMotion);
+      final openingOffset = displacement();
+      expect(openingOffset, greaterThan(0));
+      await continuousDanger('partially opening');
+      await t.pumpAndSettle();
+      final fullOffset = displacement();
+      expect(fullOffset, greaterThan(openingOffset));
+      await continuousDanger('fully open');
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pump();
+      await t.pump(halfMotion);
+      expect(displacement(), greaterThan(0));
+      expect(displacement(), lessThan(fullOffset));
+      await continuousDanger('partially closing');
+      await t.pumpAndSettle();
+      await closedWithoutHalo('settled closed');
+      await t.drag(row, const Offset(-100, 0));
+      await t.pumpAndSettle();
+      rebuild(() => enabled = false);
+      await t.pumpAndSettle();
+      await closedWithoutHalo('disabled after opening');
+      expect(find.text('Delete vocabulary'), findsNothing);
+      expect(t.takeException(), isNull);
+    },
+  );
+
   Future<void> mount(
     WidgetTester t,
     VoidCallback delete, {

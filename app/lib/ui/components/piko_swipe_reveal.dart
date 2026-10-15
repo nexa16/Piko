@@ -203,7 +203,13 @@ class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: ColoredBox(color: d.color('danger')),
+                        // A closed card's antialiased border must not blend
+                        // with an otherwise hidden red deletion surface.
+                        child: ColoredBox(
+                          color: reveal > 0
+                              ? d.color('danger')
+                              : Colors.transparent,
+                        ),
                       ),
                       if (actionReady)
                         Positioned(
