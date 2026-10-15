@@ -46,6 +46,7 @@ final class SpeedSession {
     required Iterable<String> completedEntryIds,
     required Map<String, SpeedItemProgress> itemProgress,
     this.completion,
+    this.needsBreak = false,
   }) : entryIds = List.unmodifiable(entryIds),
        pool = List.unmodifiable(pool),
        waiting = List.unmodifiable(waiting),
@@ -121,9 +122,33 @@ final class SpeedSession {
   /// This intent does not itself write a marker, reset FSRS or record a review.
   final SpeedCompletion? completion;
 
+  /// A short pool has exhausted its pass and needs one completed minigame.
+  final bool needsBreak;
+
   String? get currentEntryId =>
       turnIndex < pass.length ? pass[turnIndex] : null;
   bool get isComplete => pool.isEmpty && waiting.isEmpty;
+
+  /// The minigame boundary unlocks one complete pass, never just one word.
+  /// Number-game content and its completion condition are supplied separately.
+  SpeedSession completeBreak() {
+    if (!needsBreak) {
+      throw StateError('No Speed break is awaiting completion');
+    }
+    return SpeedSession._(
+      collectionId: collectionId,
+      direction: direction,
+      poolSize: poolSize,
+      entryIds: entryIds,
+      pool: pool,
+      waiting: waiting,
+      pass: pool,
+      turnIndex: 0,
+      rotation: rotation + 1,
+      completedEntryIds: completedEntryIds,
+      itemProgress: itemProgress,
+    );
+  }
 
   /// Only an explicit Correct/Incorrect advances the pass or changes counters.
   SpeedSession answer({required String entryId, required SpeedAnswer answer}) {
@@ -150,7 +175,14 @@ final class SpeedSession {
       }
     }
     final nextTurn = turnIndex + 1;
-    final startsNextRotation = nextTurn == pass.length && nextPool.isNotEmpty;
+    final endedPass = nextTurn == pass.length;
+    final needsBreak =
+        endedPass &&
+        nextPool.isNotEmpty &&
+        poolSize > 1 &&
+        nextPool.length < poolSize &&
+        nextWaiting.isEmpty;
+    final startsNextRotation = endedPass && nextPool.isNotEmpty && !needsBreak;
     return SpeedSession._(
       collectionId: collectionId,
       direction: direction,
@@ -166,6 +198,7 @@ final class SpeedSession {
       completion: completed
           ? SpeedCompletion(entryId: entryId, errors: progress.errors)
           : null,
+      needsBreak: needsBreak,
     );
   }
 }

@@ -76,6 +76,8 @@ void main() {
         session = advance(session);
         expect(session.currentEntryId, 'c');
         session = advance(session, completed: true);
+        expect(session.needsBreak, isTrue);
+        session = session.completeBreak();
         expect(session.pass, ['b']);
         expect(session.currentEntryId, 'b');
         expect(session.completedEntryIds, {'a', 'c'});

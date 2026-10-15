@@ -63,7 +63,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-003 | 1 | Learning | Host-verified | Error-dependent streak/completion matrix plus pool/rotation regressions; shared/Speed batch 25/25. Persistence/UI pending. |
 | SPEED-005 | 3 | Data | Storage host-verified | Schema12 directional marker; 5 new eligibility/migration/preservation cases; data/learning/Speed batch 174/174. UI/Android pending. |
 | SPEED-006 | 1 | Learning | Pending | — |
-| SPEED-007 | 2 | Learning | Pending | — |
+| SPEED-007 | 2 | Learning | Host-verified | Seven short-pool/full-pass boundary cases including accepted shrinking example; joined batch 174/174. Game widget follows. |
 | SPEED-008 | 1 | Learning | Pending | — |
 | RETRY-005 | 2 | Learning | Pending | — |
 | CARD-UI-026 | 1 | Learning | Pending | — |
