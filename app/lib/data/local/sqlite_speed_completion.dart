@@ -63,8 +63,9 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
           alreadyApplied: true,
         );
       }
-      if (!_sameItem(current, expected))
+      if (!_sameItem(current, expected)) {
         throw SpeedCompletionFailure.staleState;
+      }
       if (errors > 0) {
         // Only this item's old generations become obsolete; no regular history
         // or Collection/direction answer counter is a Speed completion event.
