@@ -146,8 +146,9 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   void setNativeText(String value) => edit(nativeText: value);
 
   void setCategoryValues(String dimensionId, Set<String> valueIds) {
-    if (!supportsCategories)
+    if (!supportsCategories) {
       throw StateError('Category editing is unavailable.');
+    }
     edit(assignments: {..._draft.assignments, dimensionId: valueIds});
   }
 

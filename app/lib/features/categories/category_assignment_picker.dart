@@ -147,17 +147,19 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
               });
             },
             onError: (Object failure) {
-              if (owned(revision))
+              if (owned(revision)) {
                 setState(() {
                   error = failure;
                 });
+              }
             },
           );
     } catch (failure) {
-      if (owned(revision))
+      if (owned(revision)) {
         setState(() {
           error = failure;
         });
+      }
     }
   }
 
@@ -177,7 +179,7 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
     try {
       final actual = await widget.repository.dimensionById(dimension.id);
       final currentValues = await widget.repository.values(dimension.id);
-      if (!owned(revision)) return;
+      if (!mounted || !owned(revision)) return;
       if (ModalRoute.of(context)?.isCurrent != true) {
         setState(() {
           pending = false;
@@ -194,11 +196,12 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         CategoryAssignmentRecord(dimensionId: dimension.id, valueIds: result),
       );
     } catch (failure) {
-      if (owned(revision))
+      if (owned(revision)) {
         setState(() {
           pending = false;
           error = failure;
         });
+      }
     }
   }
 
@@ -218,7 +221,7 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
     });
     try {
       final actual = await widget.repository.dimensionById(dimension.id);
-      if (!owned(revision)) return;
+      if (!mounted || !owned(revision)) return;
       if (ModalRoute.of(context)?.isCurrent != true) {
         setState(() {
           pending = false;
@@ -233,8 +236,9 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         name: snapshot,
       );
       if (!owned(revision)) return;
-      if (saved.dimensionId != dimension.id)
+      if (saved.dimensionId != dimension.id) {
         throw CategoryValidation.invalidOwnership;
+      }
       setState(() {
         // Definition creation never changes the staged assignment set/query.
         if (!values.any((value) => value.id == saved.id)) {
@@ -246,11 +250,12 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
       });
       newValueFocus.unfocus();
     } catch (failure) {
-      if (owned(revision))
+      if (owned(revision)) {
         setState(() {
           pending = false;
           valueError = failure;
         });
+      }
     }
   }
 
@@ -468,8 +473,9 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
                                 textInputAction: TextInputAction.done,
                                 onEditingComplete: () {},
                                 onSubmitted: (_) {
-                                  if (owned(buildGeneration))
+                                  if (owned(buildGeneration)) {
                                     track(createValue());
+                                  }
                                 },
                                 onChanged: (_) => setState(() {
                                   valueError = null;
@@ -486,8 +492,9 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
                                 onPressed: pending
                                     ? null
                                     : () {
-                                        if (owned(buildGeneration))
+                                        if (owned(buildGeneration)) {
                                           track(createValue());
+                                        }
                                       },
                               ),
                             ],
@@ -540,8 +547,9 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
                                 WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
-                                  if (owned(buildGeneration) && creatingValue)
+                                  if (owned(buildGeneration) && creatingValue) {
                                     newValueFocus.requestFocus();
+                                  }
                                 });
                               },
                       ),

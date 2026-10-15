@@ -168,10 +168,11 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
         selection?.call(result);
       }
     } finally {
-      if (mounted && generation == revision)
+      if (mounted && generation == revision) {
         setState(() {
           popup = false;
         });
+      }
     }
   }
 
@@ -189,10 +190,11 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
         onPendingWrites: widget.onPendingWrites,
       );
     } finally {
-      if (mounted && generation == revision)
+      if (mounted && generation == revision) {
         setState(() {
           popup = false;
         });
+      }
     }
   }
 

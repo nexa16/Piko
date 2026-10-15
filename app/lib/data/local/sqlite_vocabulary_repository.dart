@@ -153,8 +153,9 @@ final class SqliteVocabularyRepository
       for (final group in snapshot.assignments.entries) {
         final dimension = await categories.dimensionById(group.key);
         if (dimension == null ||
-            dimension.collectionId != original.collectionId)
+            dimension.collectionId != original.collectionId) {
           continue;
+        }
         final surviving = <String>{};
         for (final id in group.value) {
           final value = await categories.valueById(id);
