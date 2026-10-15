@@ -4,6 +4,9 @@ import 'piko_focus_highlight.dart';
 
 enum PikoButtonVariant {
   primary,
+  tint,
+  reviewPrimary,
+  reviewSecondary,
   ghost,
   dangerGhost,
   dangerOutline,
@@ -57,7 +60,11 @@ class PikoButton extends StatelessWidget {
         variant == PikoButtonVariant.dangerOutline ||
         variant == PikoButtonVariant.dangerFilled ||
         variant == PikoButtonVariant.gradeIncorrect;
-    final color = grade || variant == PikoButtonVariant.dangerFilled
+    final color = variant == PikoButtonVariant.reviewPrimary
+        ? d.color('onPrimary')
+        : variant == PikoButtonVariant.reviewSecondary
+        ? d.color('onReviewSecondary')
+        : grade || variant == PikoButtonVariant.dangerFilled
         ? d.color(danger ? 'onDanger' : 'onSuccess')
         : primary && primaryStyle == 'flat'
         ? d.color('onPrimary')
@@ -68,7 +75,13 @@ class PikoButton extends StatelessWidget {
                 ? 'danger'
                 : 'primary',
           );
-    final background = grade || variant == PikoButtonVariant.dangerFilled
+    final background = variant == PikoButtonVariant.tint
+        ? d.color('tint')
+        : variant == PikoButtonVariant.reviewPrimary
+        ? d.color('primary')
+        : variant == PikoButtonVariant.reviewSecondary
+        ? d.color('reviewSecondary')
+        : grade || variant == PikoButtonVariant.dangerFilled
         ? d.color(danger ? 'danger' : 'success')
         : primary
         ? d.color(
