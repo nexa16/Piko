@@ -97,7 +97,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-COLL-007 | 3 | Collection | Pending | — |
 | UX-COLL-008 | 3 | Collection | Pending | — |
 | UX-COLL-004 | 2 | Collection | Pending | — |
-| UX-COLL-003 | 2 | Collection | Pending | — |
+| UX-COLL-003 | 2 | Collection | Host-verified | Shared ghost plus/New action with localized Add Entry semantics and keyboard access; joined route/query/Speed batch 32/32. Android pending. |
 | UX-LAB-001 | 2 | Coordinator | Snapshot | — |
 
 ## Batch evidence

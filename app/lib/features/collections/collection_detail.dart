@@ -720,18 +720,19 @@ class _CollectionDetailState extends State<CollectionDetail> {
                           ),
                         ),
                         if (widget.entrySessionFactory != null)
-                          SizedBox.square(
-                            dimension: pikoDesign.dimension(
-                              'components.buttons.height',
-                            ),
-                            child: PikoIconButton(
-                              icon: const PikoIcon(PikoIconName.plus),
-                              semanticLabel: copy.text('action.addEntry'),
-                              variant: PikoButtonVariant.primary,
-                              padding: EdgeInsets.all(
-                                pikoDesign.dimension('spacing.2'),
-                              ),
-                              onPressed:
+                          Tooltip(
+                            message: copy.text('action.addEntry'),
+                            excludeFromSemantics: true,
+                            child: Semantics(
+                              label: copy.text('action.addEntry'),
+                              button: true,
+                              enabled:
+                                  _deleteRequest == null &&
+                                  _renameRequest == null &&
+                                  !_openingEntry &&
+                                  !_openingReview &&
+                                  _mutations?.isBusy != true,
+                              onTap:
                                   _deleteRequest != null ||
                                       _renameRequest != null ||
                                       _openingEntry ||
@@ -739,6 +740,21 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                       _mutations?.isBusy == true
                                   ? null
                                   : _openEntry,
+                              child: ExcludeSemantics(
+                                child: PikoButton(
+                                  label: copy.text('action.new'),
+                                  icon: const PikoIcon(PikoIconName.plus),
+                                  variant: PikoButtonVariant.ghost,
+                                  onPressed:
+                                      _deleteRequest != null ||
+                                          _renameRequest != null ||
+                                          _openingEntry ||
+                                          _openingReview ||
+                                          _mutations?.isBusy == true
+                                      ? null
+                                      : _openEntry,
+                                ),
+                              ),
                             ),
                           ),
                       ],

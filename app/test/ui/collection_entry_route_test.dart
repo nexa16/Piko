@@ -154,8 +154,8 @@ void main() {
       final add = find.byTooltip('Add Entry');
       // A queued second activation of the same action cannot push another route.
       final activate = tester
-          .widget<PikoIconButton>(
-            find.ancestor(of: add, matching: find.byType(PikoIconButton)),
+          .widget<PikoButton>(
+            find.descendant(of: add, matching: find.byType(PikoButton)),
           )
           .onPressed!;
       await tester.tap(add);
@@ -289,7 +289,14 @@ void main() {
         of: add,
         matching: find.byType(TextButton),
       );
-      expect(tester.getSize(button), const Size(44, 44));
+      expect(tester.getSize(button).height, greaterThanOrEqualTo(44));
+      expect(tester.getSize(button).width, greaterThan(44));
+      final control = tester.widget<PikoButton>(
+        find.descendant(of: add, matching: find.byType(PikoButton)),
+      );
+      expect(control.label, 'Neu');
+      expect(control.variant, PikoButtonVariant.ghost);
+      expect(control.padding, isNull);
       expect(find.text('Vokabeln'), findsOneWidget);
       final heading = tester.widget<Text>(find.text('Vokabeln'));
       expect(heading.style!.fontSize, 17);
