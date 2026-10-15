@@ -104,8 +104,9 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
     _transitionScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _transitionScheduled = false;
-      if (!_isCurrent(session) || session.isSubmitting || session.isStopped)
+      if (!_isCurrent(session) || session.isSubmitting || session.isStopped) {
         return;
+      }
       if (session.isComplete) {
         unawaited(_exit(session));
       } else if (session.needsBreak && session.state?.numberGame == null) {
