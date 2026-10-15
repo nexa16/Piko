@@ -44,8 +44,8 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | Specification | Revision | Owner | State | Commit / verification |
 | --- | --- | --- | --- | --- |
 | MASCOT-001 | 1 | Collection | Pending | — |
-| SPEED-RESET-001 | 1 | Data | Pending | — |
-| SPEED-RESET-002 | 1 | Data | Pending | — |
+| SPEED-RESET-001 | 1 | Data | Storage host-verified | Eight completion transaction cases; joined Speed/JSON/scope batch 40/40. Exact preserved history/opposite/scopes, fresh studied generation, rollback and idempotent retry/reopen. UI/Android pending. |
+| SPEED-RESET-002 | 1 | Data | Storage host-verified | Opposite direction and retained review-history assertions covered by SPEED-RESET-001 owning transaction; no duplicate implementation. UI/Android pending. |
 | OPEN-FSRS-001 | 1 | Data | Traceability | — |
 | COLL-007 | 2 | Collection | Pending | — |
 | CAT-001 | 1 | Data | Host-verified | Schema11; 7 category cases plus cascade/Undo/migration/inventory batch 31/31; Android pending. |
@@ -62,7 +62,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-002 | 2 | Learning | Host-verified | Seven rotation/refill cases; B02 31/31. Replacements wait for next pass; streak/game specs follow. |
 | SPEED-003 | 1 | Learning | Host-verified | Error-dependent streak/completion matrix plus pool/rotation regressions; shared/Speed batch 25/25. Persistence/UI pending. |
 | SPEED-005 | 3 | Data | Storage host-verified | Schema12 directional marker; 5 new eligibility/migration/preservation cases; data/learning/Speed batch 174/174. UI/Android pending. |
-| SPEED-006 | 1 | Learning | Pending | — |
+| SPEED-006 | 1 | Learning | Storage host-verified | Zero-error marker-only completion covered by SPEED-RESET-001 owning transaction; all card/history/retry fields unchanged. Session integration/Android pending. |
 | SPEED-007 | 2 | Learning | Host-verified | Seven short-pool/full-pass boundary cases including accepted shrinking example; joined batch 174/174. Game widget follows. |
 | SPEED-008 | 1 | Learning | Controller host-verified | Nine lifecycle/write-drain/stale-callback cases; joined Speed batch 20/20. Durable data callback and route integration pending. |
 | RETRY-005 | 2 | Learning | Host-verified | Deadline-based countdown, automatic eligibility refresh, expiry/coverage/lifecycle cases; joined batch 46/46 plus focused review fixes 23/23. Android pending. |

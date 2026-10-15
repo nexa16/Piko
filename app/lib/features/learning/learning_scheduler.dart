@@ -27,6 +27,16 @@ final class LearningScheduler {
     enableFuzzing: false,
   );
 
+  /// Shared initial card for new vocabulary and a fresh Speed generation.
+  fsrs.Card initialCard({required int itemId, required DateTime at}) {
+    if (itemId <= 0 || !at.isUtc) {
+      throw ArgumentError(
+        'Initial card requires a positive identity and UTC time',
+      );
+    }
+    return fsrs.Card(cardId: itemId, due: at);
+  }
+
   LearningReviewTransition review(
     LearningItemRecord before, {
     required LearningRating rating,

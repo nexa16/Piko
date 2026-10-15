@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:fsrs/fsrs.dart' as fsrs;
 import '../../core/clock.dart';
+import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
 import '../vocabulary_normalization.dart';
 
@@ -245,6 +245,7 @@ class VocabularyOrderSequence extends Table {
 class PikoDatabase extends _$PikoDatabase {
   PikoDatabase(super.executor, {this.clock = const SystemPikoClock()});
   final PikoClock clock;
+  final _scheduler = LearningScheduler();
 
   @override
   int get schemaVersion => 12;
@@ -366,7 +367,7 @@ class PikoDatabase extends _$PikoDatabase {
           await (update(learningIdentitySequence)
                 ..where((row) => row.singleton.equals(1)))
               .write(LearningIdentitySequenceCompanion(nextId: Value(id + 1)));
-          final card = fsrs.Card(cardId: id, due: instant);
+          final card = _scheduler.initialCard(itemId: id, at: instant);
           await into(learningItems).insert(
             LearningItemsCompanion.insert(
               id: Value(id),

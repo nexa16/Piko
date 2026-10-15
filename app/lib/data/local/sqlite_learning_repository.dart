@@ -7,12 +7,14 @@ import '../retry_obligation.dart';
 import '../retry_answer.dart';
 import '../review_correction.dart';
 import '../review_due_membership.dart';
+import '../speed_completion.dart';
 import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
 
 part 'sqlite_review_correction.dart';
+part 'sqlite_speed_completion.dart';
 
 final class SqliteLearningRepository implements RegularReviewWriter {
   SqliteLearningRepository(this.database);
@@ -753,7 +755,10 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 
 /// Fixed Collection/direction boundary, not a due set or session launcher.
 final class CollectionReviewGateway
-    implements RetryReviewSource, ReviewCorrectionSource {
+    implements
+        RetryReviewSource,
+        ReviewCorrectionSource,
+        SpeedCompletionWriter {
   const CollectionReviewGateway._(
     this._repository,
     this.collectionId,
@@ -764,6 +769,14 @@ final class CollectionReviewGateway
   final String collectionId;
   @override
   final LearningDirection direction;
+
+  @override
+  Future<SpeedCompletionResult> completeSpeedItem({
+    required LearningItemRecord expectedPrior,
+    required int errors,
+    required DateTime completedAt,
+  }) =>
+      _repository._completeSpeedItem(this, expectedPrior, errors, completedAt);
 
   Future<List<LearningItemRecord>> newSpeedItems({Set<String>? entryIds}) =>
       _repository.newSpeedItems(
