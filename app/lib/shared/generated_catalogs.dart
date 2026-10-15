@@ -1470,8 +1470,8 @@ const copyCatalog = <String, Object?>{
 "en": "Discarding changes…",
 },
 "vocab.inlineDuplicate": <String, Object?>{
-"de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden.",
-"en": "This vocabulary pair already exists in this collection.",
+"de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden. Ändere dieses Paar oder den bereits gespeicherten Eintrag.",
+"en": "This vocabulary pair already exists in this collection. Change this pair or edit the conflicting saved entry.",
 },
 "vocab.inlineEdit": <String, Object?>{
 "de": "Vokabel bearbeiten",

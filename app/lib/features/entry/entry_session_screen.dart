@@ -66,7 +66,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   bool structuralAnchoring = false;
   String? anchorId;
   double? anchorCenter;
-  Object? confirmError;
   Object? deletionError, undoFeedback;
   String? deletionErrorId;
   Object? exitRequest;
@@ -76,7 +75,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   late String previousActiveId;
   late List<String> previousIds;
   (String?, Object?) previousUndo = (null, null);
-  late EntryDraft lastDraft;
   EntrySessionController get session => widget.session;
   String get activeId => session.activeEntryId ?? draftId;
   List<String> get ids => [
@@ -91,7 +89,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     advancementRevision = session.advancementRevision;
     previousActiveId = activeId;
     previousIds = ids;
-    lastDraft = session.draft;
     session.addListener(changed);
   }
 
@@ -106,7 +103,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       }
       editors.clear();
       cards.clear();
-      confirmError = null;
       deletionError = null;
       deletionErrorId = null;
       undoFeedback = null;
@@ -128,7 +124,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       previousIds = ids;
       previousUndo = (null, null);
       structuralAnchoring = false;
-      lastDraft = session.draft;
       centerRequested = true;
       session.addListener(changed);
     }
@@ -143,11 +138,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
 
   void changed() {
     if (!mounted) return;
-    if (lastDraft.targetText != session.draft.targetText ||
-        lastDraft.nativeText != session.draft.nativeText) {
-      confirmError = null;
-    }
-    lastDraft = session.draft;
     for (final id in editors.keys.where((id) => !ids.contains(id)).toList()) {
       final editor = editors.remove(id)!;
       cards.remove(id);
@@ -172,7 +162,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (advanced || (activeId != previousActiveId && !adjusting)) {
       advancementRevision = session.advancementRevision;
       centerRequested = true;
-      if (advanced) confirmError = null;
       structuralAnchoring = false;
     } else if (!adjusting && !structuralAnchoring) {
       anchorId = activeId;
@@ -370,17 +359,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   Future<void> confirm() async {
     if (exitDraining || exitRequest != null) return;
     final initiatingSession = session;
-    setState(() {
-      confirmError = null;
-    });
     try {
       await initiatingSession.confirmAndNext();
-    } catch (error) {
-      if (mounted && identical(session, initiatingSession)) {
-        setState(() {
-          confirmError = error;
-        });
-      }
+    } catch (_) {
+      // The controller owns revision-aware validation, including rechecks when
+      // reopening the same raw draft after a conflicting saved entry changes.
     }
   }
 
@@ -515,10 +498,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         return;
       }
       await requestExit();
-    } catch (error) {
+    } catch (_) {
       if (!mounted || !identical(session, initiatingSession)) return;
       setState(() {
-        if (error is! SavedEntryCompletionBlocked) confirmError = error;
         centerRequested = true;
       });
       scheduleLayout();
@@ -626,7 +608,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     final editor = editors.putIfAbsent(id, () => _Editors(values))
       ..sync(values);
     final active = id == activeId;
-    final error = draft ? confirmError : saved!.error;
+    final error = draft ? session.draftError : saved!.error;
     final metaStyle = TextStyle(
       color: pikoDesign.color('muted'),
       fontSize: pikoDesign.dimension('typography.small'),
@@ -871,13 +853,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ),
                               ),
                             ),
-                          if (!draft &&
-                              error != null &&
-                              error is! VocabularyValidation)
+                          if (error != null && error is! VocabularyValidation)
                             PikoButton(
                               label: copy.text('action.retry'),
                               onPressed: session.isBusy || exitDraining
                                   ? null
+                                  : draft
+                                  ? confirm
                                   : () => session.retrySavedEntry(id),
                             ),
                           if (!draft && session.supportsDeletion)

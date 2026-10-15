@@ -650,7 +650,7 @@ globalThis.PIKO_COPY = {
     "vocab.editPair": {"en":"Edit {target} · {native}","de":"{target} · {native} bearbeiten"},
     "vocab.loading": {"en":"Loading vocabulary…","de":"Vokabeln werden geladen…"},
     "vocab.loadFailed": {"en":"Couldn't load vocabulary. Please try again.","de":"Vokabeln konnten nicht geladen werden. Bitte versuche es erneut."},
-    "vocab.inlineDuplicate": {"en":"This vocabulary pair already exists in this collection.","de":"Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden."},
+    "vocab.inlineDuplicate": {"en":"This vocabulary pair already exists in this collection. Change this pair or edit the conflicting saved entry.","de":"Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden. Ändere dieses Paar oder den bereits gespeicherten Eintrag."},
     "vocab.delete": {"en":"Delete vocabulary","de":"Vokabel löschen"},
     "vocab.deleted": {"en":"Vocabulary deleted","de":"Vokabel gelöscht"},
     "vocab.deleteFailed": {"en":"Couldn't delete this vocabulary. Please try again.","de":"Diese Vokabel konnte nicht gelöscht werden. Bitte versuche es erneut."},
