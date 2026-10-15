@@ -13,6 +13,7 @@ import '../learning/learning_progress_bar.dart';
 import '../learning/learning_prompt_card.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
 import 'speed_learning_session.dart';
+import 'speed_numbers_break.dart';
 import 'speed_session.dart';
 
 typedef SpeedGameBuilder =
@@ -24,14 +25,14 @@ class SpeedSessionRoute extends StatefulWidget {
     required this.collection,
     required this.session,
     required this.vocabularyRepository,
-    required this.gameBuilder,
+    this.gameBuilder,
     super.key,
   });
 
   final CollectionRecord collection;
   final SpeedLearningSession session;
   final VocabularyRepository vocabularyRepository;
-  final SpeedGameBuilder gameBuilder;
+  final SpeedGameBuilder? gameBuilder;
 
   @override
   State<SpeedSessionRoute> createState() => _SpeedSessionRouteState();
@@ -319,7 +320,8 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                             _grades(context, session, handle, canSubmit),
                       )
                     else if (session.needsBreak)
-                      widget.gameBuilder(context, session),
+                      widget.gameBuilder?.call(context, session) ??
+                          SpeedNumbersBreak(session: session),
                   ],
                 ],
               ),

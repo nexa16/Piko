@@ -76,8 +76,8 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | PARAM-005 | 1 | Learning | Pending | — |
 | SPEED-010 | 2 | Learning | Boundary host-verified | Shared complete-pass/break transition covered by SPEED-007 b0db38a; no artificial duplicate implementation. UI pending. |
 | SPEED-011 | 1 | Learning | Pending | — |
-| SPEED-012 | 2 | Learning | Model host-verified | Five numbers-game tests plus membership/rotation/streak/pass regressions pass; tenth correct number unlocks next full pass. UI pending. |
-| SPEED-013 | 2 | Learning | Pending | — |
+| SPEED-012 | 2 | Learning | Widget host-verified | Pure model plus EN/DE 320px/200% whole-pass, wrong-tap, stale-callback and keyboard cases pass; joined Speed/menu batch 37/37. Android pending. |
+| SPEED-013 | 2 | Learning | Traceability verified | Untimed widget assertions advance fake time by an hour without progress; implemented with SPEED-012, no duplicate behavior commit. Android pending. |
 | UX-BRAND-001 | 1 | Coordinator | Pending | — |
 | UX-MASCOT-001 | 1 | Collection | Pending | — |
 | UX-DIALOG-001 | 3 | Coordinator | Host-verified | Purpose-based confirmations, safe focus, responsive footer/traversal and pending-write guard. Five new family cases plus existing dialog/create/delete/launch/exit regressions pass; Android pending. |

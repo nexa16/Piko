@@ -175,6 +175,9 @@ const designCatalog = <String, Object?>{
 "settings": <String, Object?>{
 "fieldMarginY": 17,
 },
+"speedGame": <String, Object?>{
+"columns": 5,
+},
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
 "revealDistance": 60,

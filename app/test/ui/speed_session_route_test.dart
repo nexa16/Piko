@@ -55,6 +55,7 @@ class SpeedHarness {
   SpeedHarness({
     this.language = 'en',
     this.direction = LearningDirection.targetToNative,
+    this.injectGame = true,
     int poolSize = 1,
   }) {
     session = SpeedLearningSession(
@@ -75,6 +76,7 @@ class SpeedHarness {
 
   final String language;
   final LearningDirection direction;
+  final bool injectGame;
   final repository = SpeedVocabulary();
   final durable = <SpeedCompletion>[];
   late final SpeedLearningSession session;
@@ -103,10 +105,12 @@ class SpeedHarness {
                     collection: owner,
                     session: session,
                     vocabularyRepository: repository,
-                    gameBuilder: (context, session) {
-                      gameBuilds++;
-                      return const Text('Injected numbers game');
-                    },
+                    gameBuilder: !injectGame
+                        ? null
+                        : (context, session) {
+                            gameBuilds++;
+                            return const Text('Injected numbers game');
+                          },
                   ),
                 ),
               ),
