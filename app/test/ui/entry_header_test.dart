@@ -9,6 +9,7 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_entry_header.dart';
 import 'package:piko/ui/piko_theme.dart';
+import 'entry_keyboard_layout_test.dart' show scrollActionIntoView;
 
 class HeaderRepository implements VocabularyRepository {
   @override
@@ -175,11 +176,21 @@ void main() {
             );
             expect(tester.getSemantics(icon).label, copy.text(label));
           }
-          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          // UX-ENTRY-001 opens the target field immediately. Start the header
+          // traversal explicitly at Back rather than assuming no initial focus.
+          expect(focusedWithin(tester, find.byType(TextField).first), isTrue);
+          Focus.of(
+            tester.element(
+              find.descendant(of: back, matching: find.byType(Text)).first,
+            ),
+          ).requestFocus();
+          await tester.pump();
           expect(focusedWithin(tester, back), isTrue);
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
           expect(focusedWithin(tester, global), isTrue);
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
           expect(
             FocusManager.instance.primaryFocus?.context?.widget,
             isA<Focus>(),
@@ -190,10 +201,13 @@ void main() {
             isNotNull,
           );
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
           expect(focusedWithin(tester, find.byType(TextField).first), isTrue);
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
           expect(focusedWithin(tester, find.byType(TextField).last), isTrue);
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
           expect(focusedWithin(tester, next), isTrue);
           expect(tester.takeException(), isNull);
         } finally {
@@ -232,17 +246,36 @@ void main() {
         find.byTooltip(const PikoCopy('de').text('entry.complete')),
       );
       final title = tester.getRect(find.text('Einträge hinzufügen'));
-      expect(title.left, greaterThanOrEqualTo(header.left));
-      expect(title.right, lessThanOrEqualTo(global.left));
+      final back = tester.getRect(
+        find.byTooltip(const PikoCopy('de').text('common.back')),
+      );
+      // Enlarged text uses a full-width title below the navigation row. Assert
+      // the reflow's separate tracks instead of the compact single-row bounds.
+      expect(title.left, closeTo(header.left, .01));
+      expect(title.right, closeTo(header.right, .01));
+      final titleMargin = pikoDesign.dimension(
+        'components.headings.titleMargin',
+      );
+      expect(title.top, greaterThanOrEqualTo(global.bottom + titleMargin));
+      expect(title.top, greaterThanOrEqualTo(back.bottom + titleMargin));
+      expect(title.bottom, lessThanOrEqualTo(header.bottom));
+      expect(back.right, lessThanOrEqualTo(global.left));
+      expect(global.right, closeTo(header.right, .01));
       expect(global.right, lessThanOrEqualTo(392));
       expect(
         global.size,
         Size.square(pikoDesign.dimension('controls.largeHeight')),
       );
+      expect(
+        find
+            .byTooltip(const PikoCopy('de').text('entry.complete'))
+            .hitTestable(),
+        findsOneWidget,
+      );
       final next = find.byTooltip(const PikoCopy('de').text('action.saveNext'));
-      await tester.ensureVisible(next);
-      await tester.pumpAndSettle();
+      await scrollActionIntoView(tester, next);
       expect(tester.getRect(next).bottom, lessThanOrEqualTo(1000));
+      expect(next.hitTestable(), findsOneWidget);
       expect(find.byType(AnimatedSize), findsNothing);
       expect(tester.takeException(), isNull);
     },
