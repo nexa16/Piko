@@ -373,6 +373,7 @@ globalThis.PIKO_COPY = {
     "category.saveDimension": {"en":"Save dimension","de":"Dimension speichern"},
     "category.dimensionSaveFailed": {"en":"Couldn't save this dimension. Try again.","de":"Diese Dimension konnte nicht gespeichert werden. Versuche es erneut."},
     "category.dimensionNameInvalid": {"en":"Enter a unique, nonempty dimension name.","de":"Gib einen eindeutigen, nicht leeren Dimensionsnamen ein."},
+    "collection.filteredNoReview": {"en":"Nothing to review in this selection right now.","de":"In dieser Auswahl gibt es gerade nichts zu wiederholen."},
     "entry.saved": {"en":"Saved","de":"Gespeichert"},
     "entry.draft": {"en":"Not confirmed yet","de":"Noch nicht bestätigt"},
     "entry.autoSave": {"en":"Valid edits save automatically","de":"Gültige Änderungen werden automatisch gespeichert"},

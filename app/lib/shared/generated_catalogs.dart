@@ -427,6 +427,10 @@ const copyCatalog = <String, Object?>{
 "de": "Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu.",
 "en": "No vocabulary yet. Add your first entry using the plus button.",
 },
+"collection.filteredNoReview": <String, Object?>{
+"de": "In dieser Auswahl gibt es gerade nichts zu wiederholen.",
+"en": "Nothing to review in this selection right now.",
+},
 "collection.languagePair": <String, Object?>{
 "de": "{target} · {native}",
 "en": "{target} · {native}",

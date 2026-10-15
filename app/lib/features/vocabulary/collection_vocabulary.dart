@@ -15,6 +15,7 @@ import '../../ui/piko_theme.dart';
 import 'inline_vocabulary_edit_controller.dart';
 import 'collection_vocabulary_mutations.dart';
 import '../collections/collection_write_barrier.dart';
+import '../collections/collection_query_binding.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -25,12 +26,14 @@ class CollectionVocabulary extends StatefulWidget {
     this.onPendingWrites,
     this.mutations,
     this.writeBarrier,
+    this.queryBinding,
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CollectionVocabularyMutations? mutations;
   final CollectionWriteBarrier? writeBarrier;
+  final CollectionQueryBinding? queryBinding;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
@@ -69,6 +72,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   int anchorRevision = 0;
   bool get actionBusy =>
       widget.writeBarrier?.frozen == true ||
+      widget.queryBinding != null && !widget.queryBinding!.ready ||
       switching ||
       editor?.edits.isDiscarding == true ||
       widget.mutations?.isBusy == true;
@@ -79,12 +83,18 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     widget.mutations?.addListener(changed);
     widget.writeBarrier?.addListener(barrierChanged);
     widget.writeBarrier?.attach(drainEditor);
+    widget.queryBinding?.addListener(projectionChanged);
     watch();
   }
 
   @override
   void didUpdateWidget(CollectionVocabulary oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.queryBinding != widget.queryBinding) {
+      oldWidget.queryBinding?.removeListener(projectionChanged);
+      widget.queryBinding?.addListener(projectionChanged);
+      watch();
+    }
     if (oldWidget.writeBarrier != widget.writeBarrier) {
       oldWidget.writeBarrier?.removeListener(barrierChanged);
       oldWidget.writeBarrier?.detach(drainEditor);
@@ -112,6 +122,13 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   }
 
   void watch() {
+    if (widget.queryBinding != null) {
+      ++generation;
+      unawaited(subscription?.cancel());
+      subscription = null;
+      applyProjection();
+      return;
+    }
     transition = null;
     switching = false;
     final version = ++generation;
@@ -156,6 +173,26 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             }
           },
         );
+  }
+
+  void projectionChanged() {
+    if (mounted) setState(applyProjection);
+  }
+
+  void applyProjection() {
+    final binding = widget.queryBinding!;
+    waiting = binding.loading;
+    loadError = binding.error;
+    final snapshot = binding.snapshot;
+    if (snapshot == null) return;
+    // A filter may temporarily hide an editor. Its raw draft and controller
+    // remain owned here until the user changes editor or the entry is deleted.
+    if (binding.ready &&
+        editor != null &&
+        !snapshot.allEntries.any((row) => row.id == editor!.edits.entryId)) {
+      retireEditor(widget.onPendingWrites);
+    }
+    rows = snapshot.entries;
   }
 
   void changed() {
@@ -816,11 +853,21 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                   widget.writeBarrier?.frozen == true ||
                       editor?.edits.isDiscarding == true
                   ? null
-                  : () => setState(watch),
+                  : widget.queryBinding?.refresh ?? () => setState(watch),
             ),
           ],
           if (!waiting && loadError == null && rows.isEmpty)
-            PikoCard(child: Text(copy.text('collection.empty'))),
+            PikoCard(
+              child: Text(
+                copy.text(
+                  widget.queryBinding?.snapshot?.allEntries.isNotEmpty ==
+                              true &&
+                          widget.queryBinding!.scope.restricted
+                      ? 'r2.noMatches'
+                      : 'collection.empty',
+                ),
+              ),
+            ),
           for (var index = 0; index < rows.length; index++) ...[
             if (index > 0) SizedBox(height: pikoDesign.dimension('spacing.3')),
             KeyedSubtree(
@@ -843,6 +890,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
 
   @override
   void dispose() {
+    widget.queryBinding?.removeListener(projectionChanged);
     generation++;
     widget.mutations?.removeListener(changed);
     widget.writeBarrier?.removeListener(barrierChanged);

@@ -18,6 +18,7 @@ import '../entry/entry_session_route.dart';
 import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_entry_count.dart';
+import 'collection_query_binding.dart';
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -30,6 +31,8 @@ class CollectionsHome extends StatefulWidget {
     this.reviewMembershipLoader,
     this.reviewCountPolicy,
     this.reviewCountClock = const SystemPikoClock(),
+    this.queryBindingFactory,
+    this.detailReviewSessionFactory,
     this.onOpenSettings,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
@@ -42,6 +45,9 @@ class CollectionsHome extends StatefulWidget {
   final CollectionReviewMembershipLoader? reviewMembershipLoader;
   final CollectionReviewCountPolicy? reviewCountPolicy;
   final PikoClock reviewCountClock;
+  final CollectionQueryBinding Function(String collectionId)?
+  queryBindingFactory;
+  final ReviewSessionFactory? detailReviewSessionFactory;
   final VoidCallback? onOpenSettings;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
@@ -83,13 +89,16 @@ class _CollectionsHomeState extends State<CollectionsHome> {
   }
 
   Future<void> _openCollection(CollectionRecord collection) async {
+    final queryBinding = widget.queryBindingFactory?.call(collection.id);
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => CollectionDetail(
           repository: widget.repository,
           collectionId: collection.id,
           entrySessionFactory: widget.entrySessionFactory,
-          reviewSessionFactory: widget.reviewSessionFactory,
+          reviewSessionFactory:
+              widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
+          queryBinding: queryBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,
           reviewCountPolicy: widget.reviewCountPolicy,
           reviewCountClock: widget.reviewCountClock,

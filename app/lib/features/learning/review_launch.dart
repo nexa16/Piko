@@ -227,28 +227,35 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
     }
     if (counts != null &&
         widget.presentation == ReviewLaunchPresentation.collectionCard) {
+      final available = LearningDirection.values
+          .where((direction) => (counts[direction] ?? 0) > 0)
+          .toList();
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final direction in LearningDirection.values)
-            if ((counts[direction] ?? 0) > 0)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: pikoDesign.dimension('spacing.2'),
-                ),
-                child: PikoButton(
-                  key: ValueKey('collection-review-${direction.name}'),
-                  label: copy.text('r2.due', {
-                    'direction': reviewDirectionLabel(
-                      widget.collection,
-                      direction,
-                    ),
-                    'count': counts[direction]!,
-                  }),
-                  icon: const PikoIcon(PikoIconName.rotateCcw),
-                  onPressed: activate == null ? null : () => _open(direction),
-                ),
+          for (final direction in available)
+            Padding(
+              padding: EdgeInsets.only(
+                top: direction == available.first
+                    ? 0
+                    : pikoDesign.dimension('spacing.2'),
               ),
+              child: PikoButton(
+                key: ValueKey('collection-review-${direction.name}'),
+                label: copy.text('r2.due', {
+                  'direction': reviewDirectionLabel(
+                    widget.collection,
+                    direction,
+                  ),
+                  'count': counts[direction]!,
+                }),
+                icon: const PikoIcon(PikoIconName.rotateCcw),
+                variant: direction == available.first
+                    ? PikoButtonVariant.reviewPrimary
+                    : PikoButtonVariant.reviewSecondary,
+                onPressed: activate == null ? null : () => _open(direction),
+              ),
+            ),
           if (_launchError != null) Text(copy.text('learn.prepareFailed')),
         ],
       );

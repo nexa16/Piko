@@ -16,6 +16,8 @@ import 'data/learning_item.dart';
 import 'data/review_due_membership.dart';
 import 'data/settings_repository.dart';
 import 'features/collections/collection_review_count.dart';
+import 'features/collections/collection_query_binding.dart';
+import 'features/collections/collection_view_scope.dart';
 import 'features/learning/due_learning_session.dart';
 import 'features/collections/collections_home.dart';
 import 'features/entry/entry_session_controller.dart';
@@ -66,6 +68,21 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   final _languageBinding = ValueNotifier<AppLanguageController?>(null);
   Future<void> _languageDependencies = Future<void>.value();
   bool _bootstrapped = false;
+  final _collectionScopes = CollectionViewScopes();
+  final _collectionBindings = <String, CollectionQueryBinding>{};
+
+  CollectionQueryBinding _collectionBinding(String id) =>
+      _collectionBindings.putIfAbsent(
+        id,
+        () => CollectionQueryBinding(
+          collectionId: id,
+          service: collectionQuery,
+          scope: _collectionScopes.forCollection(id),
+          invalidations: database.tableUpdates().map((_) {}),
+          clock: database.clock,
+          onPendingWrites: trackWrites,
+        ),
+      );
 
   @override
   void didChangeDependencies() {
@@ -173,6 +190,31 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  Future<DueLearningSession> _detailReviewSession(
+    String collectionId,
+    LearningDirection direction,
+  ) async {
+    final scope = _collectionScopes.forCollection(collectionId);
+    final snapshot = await collectionQuery.query(
+      collectionId: collectionId,
+      at: database.clock.now().toUtc(),
+      search: scope.search,
+      filters: scope.filters,
+    );
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+      entryIds: snapshot.entries.map((entry) => entry.id).toSet(),
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
+      onPendingWrites: trackWrites,
+      presentationActive: false,
+    );
+  }
+
   Future<ReviewDueMembershipSnapshot> _reviewDueMemberships({
     required String collectionId,
     required DateTime at,
@@ -198,6 +240,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
+    for (final binding in _collectionBindings.values) {
+      binding.dispose();
+    }
+    _collectionScopes.dispose();
     _language?.removeListener(_languageChanged);
     _language?.dispose();
     _languageBinding.dispose();
@@ -256,6 +302,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             onPendingVocabularyWrites: trackWrites,
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
+            detailReviewSessionFactory: _detailReviewSession,
+            queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,
             reviewCountClock: database.clock,
