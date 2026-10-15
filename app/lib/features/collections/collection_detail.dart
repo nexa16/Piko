@@ -47,6 +47,7 @@ class CollectionDetail extends StatefulWidget {
     this.reviewMembershipLoader,
     this.reviewCountPolicy,
     this.reviewCountClock = const SystemPikoClock(),
+    this.categoryManagementBuilder,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -59,6 +60,9 @@ class CollectionDetail extends StatefulWidget {
   final CollectionReviewMembershipLoader? reviewMembershipLoader;
   final CollectionReviewCountPolicy? reviewCountPolicy;
   final PikoClock reviewCountClock;
+
+  /// Category controls expand inside the Collection menu, retaining its route.
+  final WidgetBuilder? categoryManagementBuilder;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -78,6 +82,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
   bool _deleting = false;
   int _identity = 0;
   ModalRoute<bool>? _deleteDialog;
+  ModalRoute<bool>? _menuDialog;
+  Object? _menuRequest;
+  final _menuFocus = FocusNode();
   final _name = TextEditingController();
   late final _nameFocus = FocusNode(
     onKeyEvent: (_, event) {
@@ -318,6 +325,109 @@ class _CollectionDetailState extends State<CollectionDetail> {
     }
   }
 
+  void _closeMenu() {
+    final owned = _menuDialog;
+    _menuDialog = null;
+    _menuRequest = null;
+    if (owned != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (owned.isActive) owned.navigator?.removeRoute(owned);
+      });
+    }
+  }
+
+  Future<void> _openMenu() async {
+    final record = _currentCollection;
+    final route = ModalRoute.of(context);
+    if (record == null ||
+        _menuRequest != null ||
+        _deleteRequest != null ||
+        _renameRequest != null ||
+        _openingEntry ||
+        _openingReview ||
+        route?.isCurrent != true)
+      return;
+    final identity = _identity;
+    final request = Object();
+    final repository = widget.repository;
+    final categoryBuilder = widget.categoryManagementBuilder;
+    bool current() =>
+        mounted &&
+        identity == _identity &&
+        identical(_menuRequest, request) &&
+        identical(widget.repository, repository) &&
+        widget.collectionId == record.id;
+    setState(() => _menuRequest = request);
+    var consumed = false;
+    bool consume() {
+      if (!current() || consumed || _menuDialog?.isCurrent != true)
+        return false;
+      consumed = true;
+      return true;
+    }
+
+    try {
+      final delete = await showPikoDialog<bool>(
+        context,
+        canRestoreFocus: () => current() && route?.isCurrent == true,
+        canDismiss: consume,
+        onRouteCreated: (owned) {
+          if (current()) {
+            _menuDialog = owned;
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (owned.isActive) owned.navigator?.removeRoute(owned);
+            });
+          }
+        },
+        builder: (menuContext) {
+          final copy = PikoCopyScope.of(menuContext);
+          return Focus(
+            autofocus: true,
+            child: PikoDialog(
+            purpose: PikoDialogPurpose.directChoice,
+            title: copy.text('r2.more'),
+            onClose: () {
+              if (consume()) Navigator.of(menuContext).pop();
+            },
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (categoryBuilder != null)
+                  ExpansionTile(
+                    key: const ValueKey('collection-menu-categories'),
+                    leading: const PikoIcon(PikoIconName.layers),
+                    title: Text(copy.text('r2.editCategories')),
+                    children: [Builder(builder: categoryBuilder)],
+                  ),
+                PikoButton(
+                  key: const ValueKey('collection-menu-delete'),
+                  label: copy.text('collection.delete'),
+                  icon: const PikoIcon(PikoIconName.trash),
+                  variant: PikoButtonVariant.dangerGhost,
+                  onPressed: () {
+                    if (consume()) Navigator.of(menuContext).pop(true);
+                  },
+                ),
+              ],
+            ),
+            ),
+          );
+        },
+      );
+      if (!current()) return;
+      _menuDialog = null;
+      setState(() => _menuRequest = null);
+      if (delete == true &&
+          route?.isCurrent == true &&
+          _currentCollection?.id == record.id) {
+        await _deleteCollection();
+      }
+    } finally {
+      if (current()) setState(() => _menuRequest = null);
+    }
+  }
+
   Future<void> _deleteCollection() async {
     final record = _currentCollection;
     final route = ModalRoute.of(context);
@@ -522,6 +632,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
       _renameError = null;
       _name.clear();
       _closeDeleteDialog();
+      _closeMenu();
       _deleteRequest = null;
       _deleteError = null;
       _deleting = false;
@@ -552,7 +663,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
     _name.dispose();
     _nameFocus.dispose();
     _renameFocus.dispose();
+    _menuFocus.dispose();
     _closeDeleteDialog();
+    _closeMenu();
     _writeBarrier.dispose();
     _endMutations(widget.onPendingVocabularyWrites);
     super.dispose();
@@ -804,17 +917,20 @@ class _CollectionDetailState extends State<CollectionDetail> {
       titleMargin: _renaming ? pikoDesign.dimension('spacing.2') : null,
       actions: [
         if (ready)
-          PikoButton(
-            label: copy.text('collection.delete'),
-            icon: const PikoIcon(PikoIconName.trash),
-            variant: PikoButtonVariant.dangerGhost,
+          PikoIconButton(
+            key: const ValueKey('collection-menu'),
+            semanticLabel: copy.text('r2.more'),
+            icon: const PikoIcon(PikoIconName.ellipsis),
+            variant: PikoButtonVariant.neutral,
+            large: true,
+            focusNode: _menuFocus,
             onPressed:
                 _deleteRequest != null ||
                     _openingEntry ||
                     _openingReview ||
                     _renameRequest != null
                 ? null
-                : _deleteCollection,
+                : _openMenu,
           ),
       ],
     );

@@ -294,17 +294,15 @@ void main() {
       expect(tester.widget<TextField>(name).enabled, isFalse);
       expect(tester.widget<PikoIconButton>(cancel).onPressed, isNull);
       expect(
-        tester.widget<PikoButton>(button('Delete collection')).onPressed,
+        tester
+            .widget<PikoIconButton>(
+              find.byKey(const ValueKey('collection-menu')),
+            )
+            .onPressed,
         isNull,
       );
       expect(
-        tester
-            .widget<PikoIconButton>(
-              find.byWidgetPredicate(
-                (w) => w is PikoIconButton && w.semanticLabel == 'Add Entry',
-              ),
-            )
-            .onPressed,
+        tester.widget<PikoButton>(button('New')).onPressed,
         isNull,
       );
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -571,7 +569,7 @@ void main() {
   );
 
   testWidgets(
-    '392px German 200% long title wraps; Delete remains right and rename targets stay keyboard reachable',
+    '392px German 200% long title wraps; menu remains right and rename targets stay keyboard reachable',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -581,7 +579,7 @@ void main() {
       );
       final h = RenameHarness(f)..locale.value = 'de';
       await h.mount(tester, width: 392, scale: 2, keyboard: 300);
-      final deletion = button('Sammlung löschen');
+      final deletion = find.byKey(const ValueKey('collection-menu'));
       expect(tester.getRect(deletion).right, closeTo(392 - 18, 0.1));
       expect(
         tester.getRect(deletion).left,
