@@ -252,6 +252,8 @@ void main() {
                     'due_ordinal': 20,
                     'wait_eligible_at': null,
                   }
+                else if (table == 'learning_items')
+                  {...row, 'speed_completed': 0}
                 else
                   row,
             ], reason: '$table survives schema8 migration/reopen exactly');

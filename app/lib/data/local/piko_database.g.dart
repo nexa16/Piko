@@ -1050,6 +1050,21 @@ class $LearningItemsTable extends LearningItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _speedCompletedMeta = const VerificationMeta(
+    'speedCompleted',
+  );
+  @override
+  late final GeneratedColumn<bool> speedCompleted = GeneratedColumn<bool>(
+    'speed_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("speed_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1059,6 +1074,7 @@ class $LearningItemsTable extends LearningItems
     cardJson,
     generation,
     reviewRevision,
+    speedCompleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1125,6 +1141,15 @@ class $LearningItemsTable extends LearningItems
         ),
       );
     }
+    if (data.containsKey('speed_completed')) {
+      context.handle(
+        _speedCompletedMeta,
+        speedCompleted.isAcceptableOrUnknown(
+          data['speed_completed']!,
+          _speedCompletedMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1162,6 +1187,10 @@ class $LearningItemsTable extends LearningItems
         DriftSqlType.int,
         data['${effectivePrefix}review_revision'],
       )!,
+      speedCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}speed_completed'],
+      )!,
     );
   }
 
@@ -1179,6 +1208,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
   final String cardJson;
   final int generation;
   final int reviewRevision;
+  final bool speedCompleted;
   const LearningItem({
     required this.id,
     required this.entryId,
@@ -1187,6 +1217,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     required this.cardJson,
     required this.generation,
     required this.reviewRevision,
+    required this.speedCompleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1198,6 +1229,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     map['card_json'] = Variable<String>(cardJson);
     map['generation'] = Variable<int>(generation);
     map['review_revision'] = Variable<int>(reviewRevision);
+    map['speed_completed'] = Variable<bool>(speedCompleted);
     return map;
   }
 
@@ -1210,6 +1242,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       cardJson: Value(cardJson),
       generation: Value(generation),
       reviewRevision: Value(reviewRevision),
+      speedCompleted: Value(speedCompleted),
     );
   }
 
@@ -1226,6 +1259,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       cardJson: serializer.fromJson<String>(json['cardJson']),
       generation: serializer.fromJson<int>(json['generation']),
       reviewRevision: serializer.fromJson<int>(json['reviewRevision']),
+      speedCompleted: serializer.fromJson<bool>(json['speedCompleted']),
     );
   }
   @override
@@ -1239,6 +1273,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       'cardJson': serializer.toJson<String>(cardJson),
       'generation': serializer.toJson<int>(generation),
       'reviewRevision': serializer.toJson<int>(reviewRevision),
+      'speedCompleted': serializer.toJson<bool>(speedCompleted),
     };
   }
 
@@ -1250,6 +1285,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     String? cardJson,
     int? generation,
     int? reviewRevision,
+    bool? speedCompleted,
   }) => LearningItem(
     id: id ?? this.id,
     entryId: entryId ?? this.entryId,
@@ -1258,6 +1294,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     cardJson: cardJson ?? this.cardJson,
     generation: generation ?? this.generation,
     reviewRevision: reviewRevision ?? this.reviewRevision,
+    speedCompleted: speedCompleted ?? this.speedCompleted,
   );
   LearningItem copyWithCompanion(LearningItemsCompanion data) {
     return LearningItem(
@@ -1274,6 +1311,9 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
       reviewRevision: data.reviewRevision.present
           ? data.reviewRevision.value
           : this.reviewRevision,
+      speedCompleted: data.speedCompleted.present
+          ? data.speedCompleted.value
+          : this.speedCompleted,
     );
   }
 
@@ -1286,7 +1326,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
           ..write('formatVersion: $formatVersion, ')
           ..write('cardJson: $cardJson, ')
           ..write('generation: $generation, ')
-          ..write('reviewRevision: $reviewRevision')
+          ..write('reviewRevision: $reviewRevision, ')
+          ..write('speedCompleted: $speedCompleted')
           ..write(')'))
         .toString();
   }
@@ -1300,6 +1341,7 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
     cardJson,
     generation,
     reviewRevision,
+    speedCompleted,
   );
   @override
   bool operator ==(Object other) =>
@@ -1311,7 +1353,8 @@ class LearningItem extends DataClass implements Insertable<LearningItem> {
           other.formatVersion == this.formatVersion &&
           other.cardJson == this.cardJson &&
           other.generation == this.generation &&
-          other.reviewRevision == this.reviewRevision);
+          other.reviewRevision == this.reviewRevision &&
+          other.speedCompleted == this.speedCompleted);
 }
 
 class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
@@ -1322,6 +1365,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
   final Value<String> cardJson;
   final Value<int> generation;
   final Value<int> reviewRevision;
+  final Value<bool> speedCompleted;
   const LearningItemsCompanion({
     this.id = const Value.absent(),
     this.entryId = const Value.absent(),
@@ -1330,6 +1374,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     this.cardJson = const Value.absent(),
     this.generation = const Value.absent(),
     this.reviewRevision = const Value.absent(),
+    this.speedCompleted = const Value.absent(),
   });
   LearningItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -1339,6 +1384,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     required String cardJson,
     this.generation = const Value.absent(),
     this.reviewRevision = const Value.absent(),
+    this.speedCompleted = const Value.absent(),
   }) : entryId = Value(entryId),
        direction = Value(direction),
        formatVersion = Value(formatVersion),
@@ -1351,6 +1397,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     Expression<String>? cardJson,
     Expression<int>? generation,
     Expression<int>? reviewRevision,
+    Expression<bool>? speedCompleted,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1360,6 +1407,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
       if (cardJson != null) 'card_json': cardJson,
       if (generation != null) 'generation': generation,
       if (reviewRevision != null) 'review_revision': reviewRevision,
+      if (speedCompleted != null) 'speed_completed': speedCompleted,
     });
   }
 
@@ -1371,6 +1419,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     Value<String>? cardJson,
     Value<int>? generation,
     Value<int>? reviewRevision,
+    Value<bool>? speedCompleted,
   }) {
     return LearningItemsCompanion(
       id: id ?? this.id,
@@ -1380,6 +1429,7 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
       cardJson: cardJson ?? this.cardJson,
       generation: generation ?? this.generation,
       reviewRevision: reviewRevision ?? this.reviewRevision,
+      speedCompleted: speedCompleted ?? this.speedCompleted,
     );
   }
 
@@ -1407,6 +1457,9 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
     if (reviewRevision.present) {
       map['review_revision'] = Variable<int>(reviewRevision.value);
     }
+    if (speedCompleted.present) {
+      map['speed_completed'] = Variable<bool>(speedCompleted.value);
+    }
     return map;
   }
 
@@ -1419,7 +1472,8 @@ class LearningItemsCompanion extends UpdateCompanion<LearningItem> {
           ..write('formatVersion: $formatVersion, ')
           ..write('cardJson: $cardJson, ')
           ..write('generation: $generation, ')
-          ..write('reviewRevision: $reviewRevision')
+          ..write('reviewRevision: $reviewRevision, ')
+          ..write('speedCompleted: $speedCompleted')
           ..write(')'))
         .toString();
   }
@@ -5526,6 +5580,7 @@ typedef $$LearningItemsTableCreateCompanionBuilder =
       required String cardJson,
       Value<int> generation,
       Value<int> reviewRevision,
+      Value<bool> speedCompleted,
     });
 typedef $$LearningItemsTableUpdateCompanionBuilder =
     LearningItemsCompanion Function({
@@ -5536,6 +5591,7 @@ typedef $$LearningItemsTableUpdateCompanionBuilder =
       Value<String> cardJson,
       Value<int> generation,
       Value<int> reviewRevision,
+      Value<bool> speedCompleted,
     });
 
 final class $$LearningItemsTableReferences
@@ -5643,6 +5699,11 @@ class $$LearningItemsTableFilterComposer
 
   ColumnFilters<int> get reviewRevision => $composableBuilder(
     column: $table.reviewRevision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get speedCompleted => $composableBuilder(
+    column: $table.speedCompleted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5759,6 +5820,11 @@ class $$LearningItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get speedCompleted => $composableBuilder(
+    column: $table.speedCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$VocabularyEntriesTableOrderingComposer get entryId {
     final $$VocabularyEntriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5813,6 +5879,11 @@ class $$LearningItemsTableAnnotationComposer
 
   GeneratedColumn<int> get reviewRevision => $composableBuilder(
     column: $table.reviewRevision,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get speedCompleted => $composableBuilder(
+    column: $table.speedCompleted,
     builder: (column) => column,
   );
 
@@ -5930,6 +6001,7 @@ class $$LearningItemsTableTableManager
                 Value<String> cardJson = const Value.absent(),
                 Value<int> generation = const Value.absent(),
                 Value<int> reviewRevision = const Value.absent(),
+                Value<bool> speedCompleted = const Value.absent(),
               }) => LearningItemsCompanion(
                 id: id,
                 entryId: entryId,
@@ -5938,6 +6010,7 @@ class $$LearningItemsTableTableManager
                 cardJson: cardJson,
                 generation: generation,
                 reviewRevision: reviewRevision,
+                speedCompleted: speedCompleted,
               ),
           createCompanionCallback:
               ({
@@ -5948,6 +6021,7 @@ class $$LearningItemsTableTableManager
                 required String cardJson,
                 Value<int> generation = const Value.absent(),
                 Value<int> reviewRevision = const Value.absent(),
+                Value<bool> speedCompleted = const Value.absent(),
               }) => LearningItemsCompanion.insert(
                 id: id,
                 entryId: entryId,
@@ -5956,6 +6030,7 @@ class $$LearningItemsTableTableManager
                 cardJson: cardJson,
                 generation: generation,
                 reviewRevision: reviewRevision,
+                speedCompleted: speedCompleted,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -115,6 +115,8 @@ class LearningItems extends Table {
   IntColumn get reviewRevision => integer()
       .withDefault(const Constant(0))
       .check(const CustomExpression<bool>('review_revision >= 0'))();
+  BoolColumn get speedCompleted =>
+      boolean().withDefault(const Constant(false))();
   @override
   Set<Column<Object>> get primaryKey => {id};
   @override
@@ -245,7 +247,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -316,6 +318,10 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createTable(categoryDimensions);
           await m.createTable(categoryValues);
           await m.createTable(vocabularyCategoryAssignments);
+        }
+        // Pre-5 upgrades already create the latest LearningItems shape.
+        if (from < 12 && from >= 5) {
+          await m.addColumn(learningItems, learningItems.speedCompleted);
         }
       });
     },

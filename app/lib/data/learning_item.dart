@@ -95,6 +95,7 @@ final class LearningItemRecord {
     required this.formatVersion,
     this.generation = 0,
     this.reviewRevision = 0,
+    this.speedCompleted = false,
   });
   final int id;
   final String entryId;
@@ -103,6 +104,9 @@ final class LearningItemRecord {
   final int formatVersion;
   final int generation;
   final int reviewRevision;
+
+  /// Successful Speed completion is independent of the FSRS card state.
+  final bool speedCompleted;
 
   /// Returns an independent mutable library object, never shared with another item.
   fsrs.Card get card {

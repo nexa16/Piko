@@ -61,7 +61,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-001 | 2 | Learning | Foundation host-verified | Six immutable ordered-membership tests; B01 feature batch 29/29. Rotation and UI follow dependent specs. |
 | SPEED-002 | 2 | Learning | Host-verified | Seven rotation/refill cases; B02 31/31. Replacements wait for next pass; streak/game specs follow. |
 | SPEED-003 | 1 | Learning | Host-verified | Error-dependent streak/completion matrix plus pool/rotation regressions; shared/Speed batch 25/25. Persistence/UI pending. |
-| SPEED-005 | 3 | Learning | Pending | — |
+| SPEED-005 | 3 | Data | Storage host-verified | Schema12 directional marker; 5 new eligibility/migration/preservation cases; data/learning/Speed batch 174/174. UI/Android pending. |
 | SPEED-006 | 1 | Learning | Pending | — |
 | SPEED-007 | 2 | Learning | Pending | — |
 | SPEED-008 | 1 | Learning | Pending | — |

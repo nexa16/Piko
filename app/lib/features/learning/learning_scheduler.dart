@@ -73,6 +73,7 @@ final class LearningScheduler {
         formatVersion: before.formatVersion,
         generation: before.generation,
         reviewRevision: before.reviewRevision,
+        speedCompleted: before.speedCompleted,
       ),
       rating: rating,
       reviewedAt: reviewedAt,

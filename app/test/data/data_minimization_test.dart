@@ -30,6 +30,7 @@ const allowedColumns = <String, Set<String>>{
     'card_json',
     'generation',
     'review_revision',
+    'speed_completed',
   },
   'regular_reviews': {'id', 'item_id', 'generation', 'reviewed_at', 'rating'},
   'retry_obligations': {

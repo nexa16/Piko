@@ -30,6 +30,7 @@ LearningItemRecord changed(
   String? json,
   int? version,
   int? id,
+  bool? speedCompleted,
 }) => LearningItemRecord(
   id: id ?? before.id,
   entryId: entry ?? before.entryId,
@@ -38,6 +39,7 @@ LearningItemRecord changed(
   formatVersion: version ?? before.formatVersion,
   generation: generation ?? before.generation,
   reviewRevision: revision ?? before.reviewRevision,
+  speedCompleted: speedCompleted ?? before.speedCompleted,
 );
 Future<List<Map<String, Object?>>> rows(PikoDatabase db, String table) async =>
     (await db.customSelect('SELECT * FROM $table ORDER BY rowid').get())

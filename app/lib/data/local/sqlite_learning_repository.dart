@@ -62,6 +62,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       formatVersion: row.formatVersion,
       generation: row.generation,
       reviewRevision: row.reviewRevision,
+      speedCompleted: row.speedCompleted,
     );
     record.card;
     return record;
@@ -393,6 +394,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       actual.formatVersion == expected.formatVersion &&
       actual.generation == expected.generation &&
       actual.reviewRevision == expected.reviewRevision &&
+      actual.speedCompleted == expected.speedCompleted &&
       actual.cardJson == expected.cardJson;
 
   Future<RetryAnswerReceipt> _answerRetry(
@@ -545,6 +547,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           prior.formatVersion != expectedPrior.formatVersion ||
           prior.generation != expectedPrior.generation ||
           prior.reviewRevision != expectedPrior.reviewRevision ||
+          prior.speedCompleted != expectedPrior.speedCompleted ||
           prior.cardJson != expectedPrior.cardJson) {
         throw RegularReviewFailure.staleState;
       }
@@ -641,6 +644,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           formatVersion: transition.next.formatVersion,
           generation: transition.next.generation,
           reviewRevision: prior.reviewRevision + 1,
+          speedCompleted: prior.speedCompleted,
         ),
         event: event,
         retryPrior: retryPrior,
@@ -699,6 +703,39 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         .toList(growable: false);
   }
 
+  /// Authoritative SPEED-005 eligibility, independent of FSRS dates/state and
+  /// historical reviews from older generations. The optional scope is the
+  /// Collection's visible search/category subset; results retain display order.
+  Future<List<LearningItemRecord>> newSpeedItems({
+    required String collectionId,
+    required LearningDirection direction,
+    Set<String>? entryIds,
+  }) {
+    final visible = entryIds == null ? null : Set<String>.of(entryIds);
+    return database.transaction(() async {
+      final owner = await (database.select(
+        database.collections,
+      )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
+      if (owner == null) throw RegularReviewFailure.collectionNotFound;
+      final rows = await database
+          .customSelect(
+            'SELECT l.* FROM learning_items l '
+            'JOIN vocabulary_entries v ON v.id = l.entry_id '
+            'WHERE v.collection_id = ? AND l.direction = ? AND l.speed_completed = 0 '
+            'AND NOT EXISTS (SELECT 1 FROM regular_reviews r '
+            'WHERE r.item_id = l.id AND r.generation = l.generation) '
+            'ORDER BY v.rowid',
+            variables: [Variable(collectionId), Variable(direction.name)],
+          )
+          .get();
+      return List.unmodifiable(
+        rows
+            .map((row) => _record(database.learningItems.map(row.data)))
+            .where((item) => visible == null || visible.contains(item.entryId)),
+      );
+    });
+  }
+
   /// Direct state support for fixtures; production regular reviews must use [review]
   /// so their event, optimistic revision and complete card commit together.
   Future<void> saveCard(int id, fsrs.Card card) async {
@@ -727,6 +764,13 @@ final class CollectionReviewGateway
   final String collectionId;
   @override
   final LearningDirection direction;
+
+  Future<List<LearningItemRecord>> newSpeedItems({Set<String>? entryIds}) =>
+      _repository.newSpeedItems(
+        collectionId: collectionId,
+        direction: direction,
+        entryIds: entryIds,
+      );
 
   @override
   Future<LearningAnswerReceipt> replaceAnswer({

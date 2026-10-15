@@ -398,8 +398,13 @@ void main() {
             old.execute((group['sql'] as List).single['sql'] as String);
           }
           for (final table in before.entries) {
-            for (final row in table.value! as List) {
-              final columns = (row as Map<String, Object?>).keys
+            for (final stored in table.value! as List) {
+              final row = Map<String, Object?>.of(
+                stored as Map<String, Object?>,
+              );
+              // The v10 fixture predates the additive successful-Speed marker.
+              if (table.key == 'learning_items') row.remove('speed_completed');
+              final columns = row.keys
                   .map((key) => key == 'stored_rowid' ? 'rowid' : key)
                   .join(',');
               final placeholders = List.filled(row.length, '?').join(',');
