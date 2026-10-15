@@ -22,8 +22,9 @@ final class CollectionViewScope extends ChangeNotifier {
     if (next.length == _filters.length &&
         next.entries.every(
           (entry) => setEquals(entry.value, _filters[entry.key]),
-        ))
+        )) {
       return;
+    }
     _filters = Map.unmodifiable(next);
     notifyListeners();
   }
