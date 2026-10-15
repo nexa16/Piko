@@ -80,7 +80,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-013 | 2 | Learning | Pending | — |
 | UX-BRAND-001 | 1 | Coordinator | Pending | — |
 | UX-MASCOT-001 | 1 | Collection | Pending | — |
-| UX-DIALOG-001 | 3 | Coordinator | Pending | — |
+| UX-DIALOG-001 | 3 | Coordinator | Host-verified | Purpose-based confirmations, safe focus, responsive footer/traversal and pending-write guard. Five new family cases plus existing dialog/create/delete/launch/exit regressions pass; Android pending. |
 | UX-REVIEW-001 | 4 | Learning | Pending | — |
 | UX-CARD-010 | 2 | Learning | Pending | — |
 | UX-CARD-012 | 1 | Learning | Pending | — |

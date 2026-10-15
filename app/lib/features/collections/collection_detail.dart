@@ -372,6 +372,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         builder: (dialogContext) {
           final copy = PikoCopyScope.of(dialogContext);
           return PikoDialog(
+            purpose: PikoDialogPurpose.confirmation,
             onClose: () {
               if (consumeDialog()) Navigator.of(dialogContext).pop();
             },
@@ -380,10 +381,17 @@ class _CollectionDetailState extends State<CollectionDetail> {
               copy.text('collection.deleteWarning', {'name': record.name}),
             ),
             actions: [
-              PikoButton(
+              PikoDialogAction(
+                label: copy.text('action.cancel'),
+                role: PikoDialogActionRole.safe,
+                onPressed: () {
+                  if (consumeDialog()) Navigator.of(dialogContext).pop();
+                },
+              ),
+              PikoDialogAction(
                 label: copy.text('collection.delete'),
                 icon: const PikoIcon(PikoIconName.trash),
-                variant: PikoButtonVariant.dangerGhost,
+                role: PikoDialogActionRole.destructive,
                 onPressed: () {
                   if (consumeDialog()) Navigator.of(dialogContext).pop(true);
                 },

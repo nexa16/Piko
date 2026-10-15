@@ -217,13 +217,7 @@ void main() {
       await flush(tester, f);
       await openConfirmation(tester);
       final stale = tester.widget<PikoButton>(confirm()).onPressed!;
-      final staleClose = tester
-          .widget<PikoIconButton>(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          )
-          .onPressed!;
+      final staleClose = tester.widget<PikoButton>(button('Cancel')).onPressed!;
       identity.value = other.id;
       await flush(tester, f);
       expect(find.byType(PikoDialog), findsNothing);
@@ -333,7 +327,7 @@ void main() {
       await tester.runAsync(f.initialize);
       final repository = ControlledCollections(f.collections);
       await mount(tester, f, repository);
-      for (final mode in ['x', 'escape', 'backdrop', 'system']) {
+      for (final mode in ['cancel', 'escape', 'backdrop', 'system']) {
         final open = tester.widget<PikoButton>(deletion()).onPressed!;
         open();
         open();
@@ -345,12 +339,9 @@ void main() {
           ),
           findsOneWidget,
         );
-        if (mode == 'x') {
-          await tester.tap(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          );
+        expect(find.byTooltip('Close'), findsNothing);
+        if (mode == 'cancel') {
+          await tester.tap(button('Cancel'));
         } else if (mode == 'escape') {
           await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         } else if (mode == 'backdrop') {
@@ -377,7 +368,7 @@ void main() {
     },
   );
   testWidgets(
-    'duplicate names delete only captured UUID; stale confirm and X cannot pop Detail while storage is pending',
+    'duplicate names delete only captured UUID; stale confirm and Cancel cannot pop Detail while storage is pending',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -393,13 +384,7 @@ void main() {
       await mount(tester, f, repository);
       await openConfirmation(tester);
       final action = tester.widget<PikoButton>(confirm()).onPressed!;
-      final close = tester
-          .widget<PikoIconButton>(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          )
-          .onPressed!;
+      final close = tester.widget<PikoButton>(button('Cancel')).onPressed!;
       action();
       action();
       close();

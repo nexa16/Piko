@@ -32,14 +32,14 @@ void main() {
                       ).text('dialog.newCollection'),
                       body: TextField(controller: draft),
                       actions: [
-                        TextButton(
+                        PikoDialogAction(
                           onPressed: () {
                             positive++;
                             Navigator.of(context).pop('created');
                           },
-                          child: Text(
-                            PikoCopyScope.of(context).text('action.create'),
-                          ),
+                          label: PikoCopyScope.of(
+                            context,
+                          ).text('action.create'),
                         ),
                       ],
                     ),
@@ -147,11 +147,9 @@ void main() {
                     }),
                   ),
                   actions: [
-                    TextButton(
+                    PikoDialogAction(
                       onPressed: () {},
-                      child: Text(
-                        PikoCopyScope.of(context).text('action.create'),
-                      ),
+                      label: PikoCopyScope.of(context).text('action.create'),
                     ),
                   ],
                 ),

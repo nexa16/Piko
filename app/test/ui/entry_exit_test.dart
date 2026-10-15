@@ -13,6 +13,7 @@ import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/entry/entry_session_controller.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/main.dart';
+import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 
 class GatedRepository implements VocabularyRepository {
@@ -247,7 +248,7 @@ void main() {
       expect(find.byType(EntrySessionScreen), findsOneWidget);
       expect(f.session.draft.nativeText, 'SCHULE');
       expect(
-        find.text('This vocabulary pair already exists in this collection.'),
+        find.text(const PikoCopy('en').text('vocab.inlineDuplicate')),
         findsOneWidget,
       );
       expect(f.session.isCompleted, isFalse);
@@ -410,13 +411,7 @@ void main() {
     },
   );
 
-  for (final dismissal in [
-    'continue',
-    'close',
-    'escape',
-    'barrier',
-    'system',
-  ]) {
+  for (final dismissal in ['continue', 'escape', 'barrier', 'system']) {
     testWidgets(
       '$dismissal safely preserves raw draft, selection and editing focus',
       (tester) async {
@@ -435,8 +430,6 @@ void main() {
         switch (dismissal) {
           case 'continue':
             await tester.tap(find.text('Continue editing'));
-          case 'close':
-            await tester.tap(find.byTooltip('Close'));
           case 'escape':
             await tester.sendKeyEvent(LogicalKeyboardKey.escape);
           case 'barrier':

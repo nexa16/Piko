@@ -634,16 +634,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
             exitDialog = dialogRoute;
             final copy = PikoCopyScope.of(dialogContext);
             return PikoDialog(
+              purpose: PikoDialogPurpose.confirmation,
               title: copy.text('entry.exitTitle'),
               body: Text(copy.text('entry.exitWarning')),
               actions: [
-                PikoButton(
+                PikoDialogAction(
                   label: copy.text('entry.continue'),
+                  role: PikoDialogActionRole.safe,
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                 ),
-                PikoButton(
+                PikoDialogAction(
                   label: copy.text('entry.discard'),
-                  variant: PikoButtonVariant.dangerOutline,
+                  role: PikoDialogActionRole.destructive,
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                 ),
               ],

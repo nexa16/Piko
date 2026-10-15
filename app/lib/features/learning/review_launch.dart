@@ -405,7 +405,7 @@ class _ReviewDirectionDialogState extends State<ReviewDirectionDialog> {
           ],
         ),
         actions: [
-          PikoButton(
+          PikoDialogAction(
             label: copy.text('learn.start'),
             onPressed: _pending || !widget.canLaunch() ? null : _start,
           ),

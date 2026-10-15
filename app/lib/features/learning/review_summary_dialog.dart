@@ -46,6 +46,7 @@ class ReviewSummaryDialog extends StatelessWidget {
       ),
     );
     return PikoDialog(
+      purpose: PikoDialogPurpose.summary,
       title: copy.text('summary.title'),
       onClose: onClose,
       body: Column(
