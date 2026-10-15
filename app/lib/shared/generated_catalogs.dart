@@ -10,10 +10,13 @@ const designCatalog = <String, Object?>{
 "onDanger": "#FFFFFF",
 "onPrimary": "#FFFFFF",
 "onSuccess": "#FFFFFF",
+"onWarning": "#9A3412",
 "primary": "#2956B8",
 "success": "#166534",
 "surface": "#FFFFFF",
 "tint": "#E7EEFC",
+"warningBorder": "#FB923C",
+"warningSurface": "#FFF7ED",
 },
 "components": <String, Object?>{
 "buttons": <String, Object?>{
@@ -1023,6 +1026,10 @@ const copyCatalog = <String, Object?>{
 "learn.start": <String, Object?>{
 "de": "Wiederholung starten",
 "en": "Start review",
+},
+"learn.startSpeed": <String, Object?>{
+"de": "Intensives Lernen starten",
+"en": "Start Speed",
 },
 "learn.summaryEncouragement": <String, Object?>{
 "de": "Gut gemacht! Jede Wiederholung zählt.",
