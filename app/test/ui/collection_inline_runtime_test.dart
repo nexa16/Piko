@@ -140,7 +140,7 @@ void main() {
       expect(find.byType(EntrySessionScreen), findsNothing);
       await tester.tap(
         find.byWidgetPredicate(
-          (w) => w is PikoIconButton && w.semanticLabel == 'Add Entry',
+          (w) => w is PikoButton && w.label == 'New',
         ),
       );
       await tester.pumpAndSettle();
