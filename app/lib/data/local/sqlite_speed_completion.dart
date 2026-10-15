@@ -37,7 +37,8 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
       if (entry.collectionId != scope.collectionId ||
           row.direction != scope.direction.name ||
           expected.entryId != entry.id ||
-          expected.direction != scope.direction) {
+          expected.direction != scope.direction ||
+          scope.entryIds != null && !scope.entryIds!.contains(entry.id)) {
         throw SpeedCompletionFailure.outOfScope;
       }
       final current = _record(row);

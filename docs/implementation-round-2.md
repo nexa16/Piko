@@ -53,7 +53,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | CAT-004 | 1 | Collection | Pending | — |
 | CAT-005 | 1 | Collection | Pending | — |
 | CAT-009 | 3 | Collection | Pending | — |
-| FILTER-001 | 2 | Collection | Pending | — |
+| FILTER-001 | 2 | Data / Collection | Query host-verified | 12 consistent query/filtered gateway cases, joined Speed/JSON batch 35/35. OR within/AND across, ordered membership, original counters and hidden retries preserved. UI/Android pending. |
 | FILTER-002 | 3 | Collection | Pending | — |
 | FILTER-003 | 1 | Collection | Pending | — |
 | ENTRY-001 | 2 | Entry | Host-verified | Three draft focus/settled-scroll/save failure UI cases; joined category/entry batch 35/35. IME geometry follows UX-ENTRY-001; Android pending. |
