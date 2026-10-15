@@ -76,6 +76,11 @@ function Invoke-Adb([string[]]$Arguments, [switch]$AllowMissingProcess) {
 
 function Read-ProtectedFiles {
     $result = @{}
+    # A main-file hash alone is not a complete SQLite preservation boundary
+    # while a WAL or rollback journal exists. Do not open/checkpoint it here.
+    foreach ($sidecar in @('piko.sqlite-wal', 'piko.sqlite-shm', 'piko.sqlite-journal')) {
+        $null = Invoke-Adb -Arguments @('shell', "run-as $package sh -c 'if [ -e files/$sidecar ] || [ -L files/$sidecar ]; then exit 23; fi'")
+    }
     foreach ($name in @('piko.sqlite', 'release-final-sentinel.txt')) {
         # Fixed filenames only. Reject symlinks and non-files rather than treating
         # an unreadable original as absent. Both project baseline files must
@@ -108,6 +113,8 @@ try {
     # directory must stop here, never become a fresh-install/empty-data baseline.
     $null = Invoke-Adb -Arguments @('get-state')
     $null = Invoke-Adb -Arguments @('shell', 'am', 'force-stop', $package)
+    $remainingProcess = (Invoke-Adb -Arguments @('shell', 'pidof', '-s', $package) -AllowMissingProcess).Trim()
+    if ($remainingProcess) { throw 'Application is still running after force-stop; refusing acceptance.' }
     $baseline = Read-ProtectedFiles
     $abi = (Invoke-Adb -Arguments @('shell', 'getprop', 'ro.product.cpu.abi')).Trim()
     $targetPlatform = switch ($abi) {
