@@ -48,7 +48,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-RESET-002 | 1 | Data | Pending | — |
 | OPEN-FSRS-001 | 1 | Data | Traceability | — |
 | COLL-007 | 2 | Collection | Pending | — |
-| CAT-001 | 1 | Data | Pending | — |
+| CAT-001 | 1 | Data | Host-verified | Schema11; 7 category cases plus cascade/Undo/migration/inventory batch 31/31; Android pending. |
 | CAT-002 | 1 | Data | Pending | — |
 | CAT-004 | 1 | Collection | Pending | — |
 | CAT-005 | 1 | Collection | Pending | — |

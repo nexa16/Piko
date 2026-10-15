@@ -14,12 +14,14 @@ final class _Snapshot {
     this.learning,
     this.reviews,
     this.retries,
+    this.assignments,
   );
   final int rowId;
   final VocabularyEntry entry;
   final List<LearningItem> learning;
   final List<RegularReview> reviews;
   final List<StoredRetryObligation> retries;
+  final List<StoredCategoryAssignment> assignments;
 }
 
 final class _Receipt implements VocabularyDeletionReceipt {
@@ -145,6 +147,9 @@ final class SqliteVocabularyDeletionService
                 (retry) => retry.itemId.isIn(learning.map((item) => item.id)),
               ))
               .get();
+      final assignments = await (database.select(
+        database.vocabularyCategoryAssignments,
+      )..where((row) => row.entryId.equals(id))).get();
       for (final retry in retryRows) {
         final record = _retryRecord(retry);
         final origins = reviewRows.where(
@@ -171,6 +176,10 @@ final class SqliteVocabularyDeletionService
         TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
         TableUpdate.onTable(database.regularReviews, kind: UpdateKind.delete),
         TableUpdate.onTable(database.retryObligations, kind: UpdateKind.delete),
+        TableUpdate.onTable(
+          database.vocabularyCategoryAssignments,
+          kind: UpdateKind.delete,
+        ),
       });
       // Deadline/receipt construction belongs to the transaction: a fallible
       // clock cannot commit a deletion without issuing its Undo capability.
@@ -187,6 +196,7 @@ final class SqliteVocabularyDeletionService
             (retry) => deleteAt.isBefore(_retryRecord(retry).expiresAt),
           ),
         ),
+        List.unmodifiable(assignments),
       );
       return _Receipt(
         issuer: _issuer,
@@ -301,6 +311,26 @@ final class SqliteVocabularyDeletionService
         }
         for (final retry in retries) {
           await database.into(database.retryObligations).insert(retry);
+        }
+        for (final assignment in snapshot.assignments) {
+          // Explicit category deletion remains effective after vocabulary Undo.
+          // Restore exact assignments only while both original owners survive.
+          final surviving = await database
+              .customSelect(
+                'SELECT v.id FROM category_values v JOIN category_dimensions d ON d.id = v.dimension_id '
+                'WHERE v.id = ? AND d.id = ? AND d.collection_id = ?',
+                variables: [
+                  Variable(assignment.valueId),
+                  Variable(assignment.dimensionId),
+                  Variable(entry.collectionId),
+                ],
+              )
+              .getSingleOrNull();
+          if (surviving != null) {
+            await database
+                .into(database.vocabularyCategoryAssignments)
+                .insert(assignment);
+          }
         }
       });
       receipt.used = true;

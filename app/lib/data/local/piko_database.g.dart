@@ -3182,6 +3182,1135 @@ class VocabularyOrderSequenceCompanion
   }
 }
 
+class $CategoryDimensionsTable extends CategoryDimensions
+    with TableInfo<$CategoryDimensionsTable, StoredCategoryDimension> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryDimensionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES collections (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameKeyMeta = const VerificationMeta(
+    'nameKey',
+  );
+  @override
+  late final GeneratedColumn<String> nameKey = GeneratedColumn<String>(
+    'name_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    collectionId,
+    name,
+    nameKey,
+    mode,
+    position,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_dimensions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredCategoryDimension> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_key')) {
+      context.handle(
+        _nameKeyMeta,
+        nameKey.isAcceptableOrUnknown(data['name_key']!, _nameKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameKeyMeta);
+    }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_modeMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StoredCategoryDimension map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredCategoryDimension(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      nameKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_key'],
+      )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryDimensionsTable createAlias(String alias) {
+    return $CategoryDimensionsTable(attachedDatabase, alias);
+  }
+}
+
+class StoredCategoryDimension extends DataClass
+    implements Insertable<StoredCategoryDimension> {
+  final String id;
+  final String collectionId;
+  final String name;
+  final String nameKey;
+  final String mode;
+  final int position;
+  const StoredCategoryDimension({
+    required this.id,
+    required this.collectionId,
+    required this.name,
+    required this.nameKey,
+    required this.mode,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['collection_id'] = Variable<String>(collectionId);
+    map['name'] = Variable<String>(name);
+    map['name_key'] = Variable<String>(nameKey);
+    map['mode'] = Variable<String>(mode);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  CategoryDimensionsCompanion toCompanion(bool nullToAbsent) {
+    return CategoryDimensionsCompanion(
+      id: Value(id),
+      collectionId: Value(collectionId),
+      name: Value(name),
+      nameKey: Value(nameKey),
+      mode: Value(mode),
+      position: Value(position),
+    );
+  }
+
+  factory StoredCategoryDimension.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredCategoryDimension(
+      id: serializer.fromJson<String>(json['id']),
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+      name: serializer.fromJson<String>(json['name']),
+      nameKey: serializer.fromJson<String>(json['nameKey']),
+      mode: serializer.fromJson<String>(json['mode']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'collectionId': serializer.toJson<String>(collectionId),
+      'name': serializer.toJson<String>(name),
+      'nameKey': serializer.toJson<String>(nameKey),
+      'mode': serializer.toJson<String>(mode),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  StoredCategoryDimension copyWith({
+    String? id,
+    String? collectionId,
+    String? name,
+    String? nameKey,
+    String? mode,
+    int? position,
+  }) => StoredCategoryDimension(
+    id: id ?? this.id,
+    collectionId: collectionId ?? this.collectionId,
+    name: name ?? this.name,
+    nameKey: nameKey ?? this.nameKey,
+    mode: mode ?? this.mode,
+    position: position ?? this.position,
+  );
+  StoredCategoryDimension copyWithCompanion(CategoryDimensionsCompanion data) {
+    return StoredCategoryDimension(
+      id: data.id.present ? data.id.value : this.id,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      name: data.name.present ? data.name.value : this.name,
+      nameKey: data.nameKey.present ? data.nameKey.value : this.nameKey,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredCategoryDimension(')
+          ..write('id: $id, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('name: $name, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('mode: $mode, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, collectionId, name, nameKey, mode, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredCategoryDimension &&
+          other.id == this.id &&
+          other.collectionId == this.collectionId &&
+          other.name == this.name &&
+          other.nameKey == this.nameKey &&
+          other.mode == this.mode &&
+          other.position == this.position);
+}
+
+class CategoryDimensionsCompanion
+    extends UpdateCompanion<StoredCategoryDimension> {
+  final Value<String> id;
+  final Value<String> collectionId;
+  final Value<String> name;
+  final Value<String> nameKey;
+  final Value<String> mode;
+  final Value<int> position;
+  final Value<int> rowid;
+  const CategoryDimensionsCompanion({
+    this.id = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameKey = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryDimensionsCompanion.insert({
+    required String id,
+    required String collectionId,
+    required String name,
+    required String nameKey,
+    required String mode,
+    required int position,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       collectionId = Value(collectionId),
+       name = Value(name),
+       nameKey = Value(nameKey),
+       mode = Value(mode),
+       position = Value(position);
+  static Insertable<StoredCategoryDimension> custom({
+    Expression<String>? id,
+    Expression<String>? collectionId,
+    Expression<String>? name,
+    Expression<String>? nameKey,
+    Expression<String>? mode,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (name != null) 'name': name,
+      if (nameKey != null) 'name_key': nameKey,
+      if (mode != null) 'mode': mode,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryDimensionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? collectionId,
+    Value<String>? name,
+    Value<String>? nameKey,
+    Value<String>? mode,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return CategoryDimensionsCompanion(
+      id: id ?? this.id,
+      collectionId: collectionId ?? this.collectionId,
+      name: name ?? this.name,
+      nameKey: nameKey ?? this.nameKey,
+      mode: mode ?? this.mode,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameKey.present) {
+      map['name_key'] = Variable<String>(nameKey.value);
+    }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryDimensionsCompanion(')
+          ..write('id: $id, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('name: $name, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('mode: $mode, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CategoryValuesTable extends CategoryValues
+    with TableInfo<$CategoryValuesTable, StoredCategoryValue> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryValuesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dimensionIdMeta = const VerificationMeta(
+    'dimensionId',
+  );
+  @override
+  late final GeneratedColumn<String> dimensionId = GeneratedColumn<String>(
+    'dimension_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES category_dimensions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameKeyMeta = const VerificationMeta(
+    'nameKey',
+  );
+  @override
+  late final GeneratedColumn<String> nameKey = GeneratedColumn<String>(
+    'name_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dimensionId,
+    name,
+    nameKey,
+    position,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_values';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredCategoryValue> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+        _dimensionIdMeta,
+        dimensionId.isAcceptableOrUnknown(
+          data['dimension_id']!,
+          _dimensionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_key')) {
+      context.handle(
+        _nameKeyMeta,
+        nameKey.isAcceptableOrUnknown(data['name_key']!, _nameKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameKeyMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StoredCategoryValue map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredCategoryValue(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dimensionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dimension_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      nameKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_key'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryValuesTable createAlias(String alias) {
+    return $CategoryValuesTable(attachedDatabase, alias);
+  }
+}
+
+class StoredCategoryValue extends DataClass
+    implements Insertable<StoredCategoryValue> {
+  final String id;
+  final String dimensionId;
+  final String name;
+  final String nameKey;
+  final int position;
+  const StoredCategoryValue({
+    required this.id,
+    required this.dimensionId,
+    required this.name,
+    required this.nameKey,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['dimension_id'] = Variable<String>(dimensionId);
+    map['name'] = Variable<String>(name);
+    map['name_key'] = Variable<String>(nameKey);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  CategoryValuesCompanion toCompanion(bool nullToAbsent) {
+    return CategoryValuesCompanion(
+      id: Value(id),
+      dimensionId: Value(dimensionId),
+      name: Value(name),
+      nameKey: Value(nameKey),
+      position: Value(position),
+    );
+  }
+
+  factory StoredCategoryValue.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredCategoryValue(
+      id: serializer.fromJson<String>(json['id']),
+      dimensionId: serializer.fromJson<String>(json['dimensionId']),
+      name: serializer.fromJson<String>(json['name']),
+      nameKey: serializer.fromJson<String>(json['nameKey']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dimensionId': serializer.toJson<String>(dimensionId),
+      'name': serializer.toJson<String>(name),
+      'nameKey': serializer.toJson<String>(nameKey),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  StoredCategoryValue copyWith({
+    String? id,
+    String? dimensionId,
+    String? name,
+    String? nameKey,
+    int? position,
+  }) => StoredCategoryValue(
+    id: id ?? this.id,
+    dimensionId: dimensionId ?? this.dimensionId,
+    name: name ?? this.name,
+    nameKey: nameKey ?? this.nameKey,
+    position: position ?? this.position,
+  );
+  StoredCategoryValue copyWithCompanion(CategoryValuesCompanion data) {
+    return StoredCategoryValue(
+      id: data.id.present ? data.id.value : this.id,
+      dimensionId: data.dimensionId.present
+          ? data.dimensionId.value
+          : this.dimensionId,
+      name: data.name.present ? data.name.value : this.name,
+      nameKey: data.nameKey.present ? data.nameKey.value : this.nameKey,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredCategoryValue(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('name: $name, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, dimensionId, name, nameKey, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredCategoryValue &&
+          other.id == this.id &&
+          other.dimensionId == this.dimensionId &&
+          other.name == this.name &&
+          other.nameKey == this.nameKey &&
+          other.position == this.position);
+}
+
+class CategoryValuesCompanion extends UpdateCompanion<StoredCategoryValue> {
+  final Value<String> id;
+  final Value<String> dimensionId;
+  final Value<String> name;
+  final Value<String> nameKey;
+  final Value<int> position;
+  final Value<int> rowid;
+  const CategoryValuesCompanion({
+    this.id = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.nameKey = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryValuesCompanion.insert({
+    required String id,
+    required String dimensionId,
+    required String name,
+    required String nameKey,
+    required int position,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dimensionId = Value(dimensionId),
+       name = Value(name),
+       nameKey = Value(nameKey),
+       position = Value(position);
+  static Insertable<StoredCategoryValue> custom({
+    Expression<String>? id,
+    Expression<String>? dimensionId,
+    Expression<String>? name,
+    Expression<String>? nameKey,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (name != null) 'name': name,
+      if (nameKey != null) 'name_key': nameKey,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryValuesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? dimensionId,
+    Value<String>? name,
+    Value<String>? nameKey,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return CategoryValuesCompanion(
+      id: id ?? this.id,
+      dimensionId: dimensionId ?? this.dimensionId,
+      name: name ?? this.name,
+      nameKey: nameKey ?? this.nameKey,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<String>(dimensionId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (nameKey.present) {
+      map['name_key'] = Variable<String>(nameKey.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryValuesCompanion(')
+          ..write('id: $id, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('name: $name, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VocabularyCategoryAssignmentsTable extends VocabularyCategoryAssignments
+    with
+        TableInfo<
+          $VocabularyCategoryAssignmentsTable,
+          StoredCategoryAssignment
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VocabularyCategoryAssignmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dimensionIdMeta = const VerificationMeta(
+    'dimensionId',
+  );
+  @override
+  late final GeneratedColumn<String> dimensionId = GeneratedColumn<String>(
+    'dimension_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueIdMeta = const VerificationMeta(
+    'valueId',
+  );
+  @override
+  late final GeneratedColumn<String> valueId = GeneratedColumn<String>(
+    'value_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    entryId,
+    collectionId,
+    dimensionId,
+    valueId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vocabulary_category_assignments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StoredCategoryAssignment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+        _dimensionIdMeta,
+        dimensionId.isAcceptableOrUnknown(
+          data['dimension_id']!,
+          _dimensionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('value_id')) {
+      context.handle(
+        _valueIdMeta,
+        valueId.isAcceptableOrUnknown(data['value_id']!, _valueIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entryId, valueId};
+  @override
+  StoredCategoryAssignment map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StoredCategoryAssignment(
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+      dimensionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dimension_id'],
+      )!,
+      valueId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value_id'],
+      )!,
+    );
+  }
+
+  @override
+  $VocabularyCategoryAssignmentsTable createAlias(String alias) {
+    return $VocabularyCategoryAssignmentsTable(attachedDatabase, alias);
+  }
+}
+
+class StoredCategoryAssignment extends DataClass
+    implements Insertable<StoredCategoryAssignment> {
+  final String entryId;
+  final String collectionId;
+  final String dimensionId;
+  final String valueId;
+  const StoredCategoryAssignment({
+    required this.entryId,
+    required this.collectionId,
+    required this.dimensionId,
+    required this.valueId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entry_id'] = Variable<String>(entryId);
+    map['collection_id'] = Variable<String>(collectionId);
+    map['dimension_id'] = Variable<String>(dimensionId);
+    map['value_id'] = Variable<String>(valueId);
+    return map;
+  }
+
+  VocabularyCategoryAssignmentsCompanion toCompanion(bool nullToAbsent) {
+    return VocabularyCategoryAssignmentsCompanion(
+      entryId: Value(entryId),
+      collectionId: Value(collectionId),
+      dimensionId: Value(dimensionId),
+      valueId: Value(valueId),
+    );
+  }
+
+  factory StoredCategoryAssignment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StoredCategoryAssignment(
+      entryId: serializer.fromJson<String>(json['entryId']),
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+      dimensionId: serializer.fromJson<String>(json['dimensionId']),
+      valueId: serializer.fromJson<String>(json['valueId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entryId': serializer.toJson<String>(entryId),
+      'collectionId': serializer.toJson<String>(collectionId),
+      'dimensionId': serializer.toJson<String>(dimensionId),
+      'valueId': serializer.toJson<String>(valueId),
+    };
+  }
+
+  StoredCategoryAssignment copyWith({
+    String? entryId,
+    String? collectionId,
+    String? dimensionId,
+    String? valueId,
+  }) => StoredCategoryAssignment(
+    entryId: entryId ?? this.entryId,
+    collectionId: collectionId ?? this.collectionId,
+    dimensionId: dimensionId ?? this.dimensionId,
+    valueId: valueId ?? this.valueId,
+  );
+  StoredCategoryAssignment copyWithCompanion(
+    VocabularyCategoryAssignmentsCompanion data,
+  ) {
+    return StoredCategoryAssignment(
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      dimensionId: data.dimensionId.present
+          ? data.dimensionId.value
+          : this.dimensionId,
+      valueId: data.valueId.present ? data.valueId.value : this.valueId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StoredCategoryAssignment(')
+          ..write('entryId: $entryId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('valueId: $valueId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(entryId, collectionId, dimensionId, valueId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StoredCategoryAssignment &&
+          other.entryId == this.entryId &&
+          other.collectionId == this.collectionId &&
+          other.dimensionId == this.dimensionId &&
+          other.valueId == this.valueId);
+}
+
+class VocabularyCategoryAssignmentsCompanion
+    extends UpdateCompanion<StoredCategoryAssignment> {
+  final Value<String> entryId;
+  final Value<String> collectionId;
+  final Value<String> dimensionId;
+  final Value<String> valueId;
+  final Value<int> rowid;
+  const VocabularyCategoryAssignmentsCompanion({
+    this.entryId = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.dimensionId = const Value.absent(),
+    this.valueId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VocabularyCategoryAssignmentsCompanion.insert({
+    required String entryId,
+    required String collectionId,
+    required String dimensionId,
+    required String valueId,
+    this.rowid = const Value.absent(),
+  }) : entryId = Value(entryId),
+       collectionId = Value(collectionId),
+       dimensionId = Value(dimensionId),
+       valueId = Value(valueId);
+  static Insertable<StoredCategoryAssignment> custom({
+    Expression<String>? entryId,
+    Expression<String>? collectionId,
+    Expression<String>? dimensionId,
+    Expression<String>? valueId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entryId != null) 'entry_id': entryId,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (valueId != null) 'value_id': valueId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VocabularyCategoryAssignmentsCompanion copyWith({
+    Value<String>? entryId,
+    Value<String>? collectionId,
+    Value<String>? dimensionId,
+    Value<String>? valueId,
+    Value<int>? rowid,
+  }) {
+    return VocabularyCategoryAssignmentsCompanion(
+      entryId: entryId ?? this.entryId,
+      collectionId: collectionId ?? this.collectionId,
+      dimensionId: dimensionId ?? this.dimensionId,
+      valueId: valueId ?? this.valueId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<String>(dimensionId.value);
+    }
+    if (valueId.present) {
+      map['value_id'] = Variable<String>(valueId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyCategoryAssignmentsCompanion(')
+          ..write('entryId: $entryId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('valueId: $valueId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PikoDatabase extends GeneratedDatabase {
   _$PikoDatabase(QueryExecutor e) : super(e);
   $PikoDatabaseManager get managers => $PikoDatabaseManager(this);
@@ -3200,6 +4329,15 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
       $LearningIdentitySequenceTable(this);
   late final $VocabularyOrderSequenceTable vocabularyOrderSequence =
       $VocabularyOrderSequenceTable(this);
+  late final $CategoryDimensionsTable categoryDimensions =
+      $CategoryDimensionsTable(this);
+  late final $CategoryValuesTable categoryValues = $CategoryValuesTable(this);
+  late final $VocabularyCategoryAssignmentsTable vocabularyCategoryAssignments =
+      $VocabularyCategoryAssignmentsTable(this);
+  late final Index vocabularyEntryOwnership = Index(
+    'vocabulary_entry_ownership',
+    'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries (id, collection_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3214,6 +4352,10 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     scopeAnswerOrdinals,
     learningIdentitySequence,
     vocabularyOrderSequence,
+    categoryDimensions,
+    categoryValues,
+    vocabularyCategoryAssignments,
+    vocabularyEntryOwnership,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3258,6 +4400,20 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('scope_answer_ordinals', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'collections',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('category_dimensions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'category_dimensions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('category_values', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3475,6 +4631,30 @@ final class $$CollectionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $CategoryDimensionsTable,
+    List<StoredCategoryDimension>
+  >
+  _categoryDimensionsRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.categoryDimensions,
+        aliasName: 'collections__id__category_dimensions__collection_id',
+      );
+
+  $$CategoryDimensionsTableProcessedTableManager get categoryDimensionsRefs {
+    final manager = $$CategoryDimensionsTableTableManager(
+      $_db,
+      $_db.categoryDimensions,
+    ).filter((f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _categoryDimensionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CollectionsTableFilterComposer
@@ -3547,6 +4727,31 @@ class $$CollectionsTableFilterComposer
           }) => $$ScopeAnswerOrdinalsTableFilterComposer(
             $db: $db,
             $table: $db.scopeAnswerOrdinals,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> categoryDimensionsRefs(
+    Expression<bool> Function($$CategoryDimensionsTableFilterComposer f) f,
+  ) {
+    final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableFilterComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3663,6 +4868,32 @@ class $$CollectionsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> categoryDimensionsRefs<T extends Object>(
+    Expression<T> Function($$CategoryDimensionsTableAnnotationComposer a) f,
+  ) {
+    final $$CategoryDimensionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.categoryDimensions,
+          getReferencedColumn: (t) => t.collectionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryDimensionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryDimensions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CollectionsTableTableManager
@@ -3681,6 +4912,7 @@ class $$CollectionsTableTableManager
           PrefetchHooks Function({
             bool vocabularyEntriesRefs,
             bool scopeAnswerOrdinalsRefs,
+            bool categoryDimensionsRefs,
           })
         > {
   $$CollectionsTableTableManager(_$PikoDatabase db, $CollectionsTable table)
@@ -3734,12 +4966,14 @@ class $$CollectionsTableTableManager
               ({
                 vocabularyEntriesRefs = false,
                 scopeAnswerOrdinalsRefs = false,
+                categoryDimensionsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (vocabularyEntriesRefs) db.vocabularyEntries,
                     if (scopeAnswerOrdinalsRefs) db.scopeAnswerOrdinals,
+                    if (categoryDimensionsRefs) db.categoryDimensions,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3786,6 +5020,27 @@ class $$CollectionsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (categoryDimensionsRefs)
+                        await $_getPrefetchedData<
+                          Collection,
+                          $CollectionsTable,
+                          StoredCategoryDimension
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CollectionsTableReferences
+                              ._categoryDimensionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CollectionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).categoryDimensionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.collectionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3809,6 +5064,7 @@ typedef $$CollectionsTableProcessedTableManager =
       PrefetchHooks Function({
         bool vocabularyEntriesRefs,
         bool scopeAnswerOrdinalsRefs,
+        bool categoryDimensionsRefs,
       })
     >;
 typedef $$VocabularyEntriesTableCreateCompanionBuilder =
@@ -6434,6 +7690,1002 @@ typedef $$VocabularyOrderSequenceTableProcessedTableManager =
       VocabularyOrderSequenceData,
       PrefetchHooks Function()
     >;
+typedef $$CategoryDimensionsTableCreateCompanionBuilder =
+    CategoryDimensionsCompanion Function({
+      required String id,
+      required String collectionId,
+      required String name,
+      required String nameKey,
+      required String mode,
+      required int position,
+      Value<int> rowid,
+    });
+typedef $$CategoryDimensionsTableUpdateCompanionBuilder =
+    CategoryDimensionsCompanion Function({
+      Value<String> id,
+      Value<String> collectionId,
+      Value<String> name,
+      Value<String> nameKey,
+      Value<String> mode,
+      Value<int> position,
+      Value<int> rowid,
+    });
+
+final class $$CategoryDimensionsTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $CategoryDimensionsTable,
+          StoredCategoryDimension
+        > {
+  $$CategoryDimensionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CollectionsTable _collectionIdTable(_$PikoDatabase db) => db
+      .collections
+      .createAlias('category_dimensions__collection_id__collections__id');
+
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
+    final manager = $$CollectionsTableTableManager(
+      $_db,
+      $_db.collections,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$CategoryValuesTable, List<StoredCategoryValue>>
+  _categoryValuesRefsTable(_$PikoDatabase db) => MultiTypedResultKey.fromTable(
+    db.categoryValues,
+    aliasName: 'category_dimensions__id__category_values__dimension_id',
+  );
+
+  $$CategoryValuesTableProcessedTableManager get categoryValuesRefs {
+    final manager = $$CategoryValuesTableTableManager(
+      $_db,
+      $_db.categoryValues,
+    ).filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_categoryValuesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CategoryDimensionsTableFilterComposer
+    extends Composer<_$PikoDatabase, $CategoryDimensionsTable> {
+  $$CategoryDimensionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CollectionsTableFilterComposer get collectionId {
+    final $$CollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> categoryValuesRefs(
+    Expression<bool> Function($$CategoryValuesTableFilterComposer f) f,
+  ) {
+    final $$CategoryValuesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.categoryValues,
+      getReferencedColumn: (t) => t.dimensionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryValuesTableFilterComposer(
+            $db: $db,
+            $table: $db.categoryValues,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoryDimensionsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $CategoryDimensionsTable> {
+  $$CategoryDimensionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CollectionsTableOrderingComposer get collectionId {
+    final $$CollectionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryDimensionsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $CategoryDimensionsTable> {
+  $$CategoryDimensionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameKey =>
+      $composableBuilder(column: $table.nameKey, builder: (column) => column);
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  $$CollectionsTableAnnotationComposer get collectionId {
+    final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> categoryValuesRefs<T extends Object>(
+    Expression<T> Function($$CategoryValuesTableAnnotationComposer a) f,
+  ) {
+    final $$CategoryValuesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.categoryValues,
+      getReferencedColumn: (t) => t.dimensionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryValuesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categoryValues,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoryDimensionsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $CategoryDimensionsTable,
+          StoredCategoryDimension,
+          $$CategoryDimensionsTableFilterComposer,
+          $$CategoryDimensionsTableOrderingComposer,
+          $$CategoryDimensionsTableAnnotationComposer,
+          $$CategoryDimensionsTableCreateCompanionBuilder,
+          $$CategoryDimensionsTableUpdateCompanionBuilder,
+          (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
+          StoredCategoryDimension,
+          PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+        > {
+  $$CategoryDimensionsTableTableManager(
+    _$PikoDatabase db,
+    $CategoryDimensionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryDimensionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoryDimensionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoryDimensionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> collectionId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> nameKey = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryDimensionsCompanion(
+                id: id,
+                collectionId: collectionId,
+                name: name,
+                nameKey: nameKey,
+                mode: mode,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String collectionId,
+                required String name,
+                required String nameKey,
+                required String mode,
+                required int position,
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryDimensionsCompanion.insert(
+                id: id,
+                collectionId: collectionId,
+                name: name,
+                nameKey: nameKey,
+                mode: mode,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $CategoryDimensionsTable,
+                    StoredCategoryDimension
+                  >(table),
+                  $$CategoryDimensionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({collectionId = false, categoryValuesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (categoryValuesRefs) db.categoryValues,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (collectionId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.collectionId,
+                                    referencedTable:
+                                        $$CategoryDimensionsTableReferences
+                                            ._collectionIdTable(db),
+                                    referencedColumn:
+                                        $$CategoryDimensionsTableReferences
+                                            ._collectionIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (categoryValuesRefs)
+                        await $_getPrefetchedData<
+                          StoredCategoryDimension,
+                          $CategoryDimensionsTable,
+                          StoredCategoryValue
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoryDimensionsTableReferences
+                              ._categoryValuesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoryDimensionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).categoryValuesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.dimensionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$CategoryDimensionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $CategoryDimensionsTable,
+      StoredCategoryDimension,
+      $$CategoryDimensionsTableFilterComposer,
+      $$CategoryDimensionsTableOrderingComposer,
+      $$CategoryDimensionsTableAnnotationComposer,
+      $$CategoryDimensionsTableCreateCompanionBuilder,
+      $$CategoryDimensionsTableUpdateCompanionBuilder,
+      (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
+      StoredCategoryDimension,
+      PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+    >;
+typedef $$CategoryValuesTableCreateCompanionBuilder =
+    CategoryValuesCompanion Function({
+      required String id,
+      required String dimensionId,
+      required String name,
+      required String nameKey,
+      required int position,
+      Value<int> rowid,
+    });
+typedef $$CategoryValuesTableUpdateCompanionBuilder =
+    CategoryValuesCompanion Function({
+      Value<String> id,
+      Value<String> dimensionId,
+      Value<String> name,
+      Value<String> nameKey,
+      Value<int> position,
+      Value<int> rowid,
+    });
+
+final class $$CategoryValuesTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $CategoryValuesTable,
+          StoredCategoryValue
+        > {
+  $$CategoryValuesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CategoryDimensionsTable _dimensionIdTable(_$PikoDatabase db) => db
+      .categoryDimensions
+      .createAlias('category_values__dimension_id__category_dimensions__id');
+
+  $$CategoryDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<String>('dimension_id')!;
+
+    final manager = $$CategoryDimensionsTableTableManager(
+      $_db,
+      $_db.categoryDimensions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CategoryValuesTableFilterComposer
+    extends Composer<_$PikoDatabase, $CategoryValuesTable> {
+  $$CategoryValuesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CategoryDimensionsTableFilterComposer get dimensionId {
+    final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableFilterComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryValuesTableOrderingComposer
+    extends Composer<_$PikoDatabase, $CategoryValuesTable> {
+  $$CategoryValuesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CategoryDimensionsTableOrderingComposer get dimensionId {
+    final $$CategoryDimensionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryValuesTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $CategoryValuesTable> {
+  $$CategoryValuesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameKey =>
+      $composableBuilder(column: $table.nameKey, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  $$CategoryDimensionsTableAnnotationComposer get dimensionId {
+    final $$CategoryDimensionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.dimensionId,
+          referencedTable: $db.categoryDimensions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryDimensionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryDimensions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$CategoryValuesTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $CategoryValuesTable,
+          StoredCategoryValue,
+          $$CategoryValuesTableFilterComposer,
+          $$CategoryValuesTableOrderingComposer,
+          $$CategoryValuesTableAnnotationComposer,
+          $$CategoryValuesTableCreateCompanionBuilder,
+          $$CategoryValuesTableUpdateCompanionBuilder,
+          (StoredCategoryValue, $$CategoryValuesTableReferences),
+          StoredCategoryValue,
+          PrefetchHooks Function({bool dimensionId})
+        > {
+  $$CategoryValuesTableTableManager(
+    _$PikoDatabase db,
+    $CategoryValuesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryValuesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoryValuesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoryValuesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> dimensionId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> nameKey = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryValuesCompanion(
+                id: id,
+                dimensionId: dimensionId,
+                name: name,
+                nameKey: nameKey,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String dimensionId,
+                required String name,
+                required String nameKey,
+                required int position,
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryValuesCompanion.insert(
+                id: id,
+                dimensionId: dimensionId,
+                name: name,
+                nameKey: nameKey,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CategoryValuesTable, StoredCategoryValue>(table),
+                  $$CategoryValuesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({dimensionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (dimensionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.dimensionId,
+                                referencedTable: $$CategoryValuesTableReferences
+                                    ._dimensionIdTable(db),
+                                referencedColumn:
+                                    $$CategoryValuesTableReferences
+                                        ._dimensionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CategoryValuesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $CategoryValuesTable,
+      StoredCategoryValue,
+      $$CategoryValuesTableFilterComposer,
+      $$CategoryValuesTableOrderingComposer,
+      $$CategoryValuesTableAnnotationComposer,
+      $$CategoryValuesTableCreateCompanionBuilder,
+      $$CategoryValuesTableUpdateCompanionBuilder,
+      (StoredCategoryValue, $$CategoryValuesTableReferences),
+      StoredCategoryValue,
+      PrefetchHooks Function({bool dimensionId})
+    >;
+typedef $$VocabularyCategoryAssignmentsTableCreateCompanionBuilder =
+    VocabularyCategoryAssignmentsCompanion Function({
+      required String entryId,
+      required String collectionId,
+      required String dimensionId,
+      required String valueId,
+      Value<int> rowid,
+    });
+typedef $$VocabularyCategoryAssignmentsTableUpdateCompanionBuilder =
+    VocabularyCategoryAssignmentsCompanion Function({
+      Value<String> entryId,
+      Value<String> collectionId,
+      Value<String> dimensionId,
+      Value<String> valueId,
+      Value<int> rowid,
+    });
+
+class $$VocabularyCategoryAssignmentsTableFilterComposer
+    extends Composer<_$PikoDatabase, $VocabularyCategoryAssignmentsTable> {
+  $$VocabularyCategoryAssignmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dimensionId => $composableBuilder(
+    column: $table.dimensionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valueId => $composableBuilder(
+    column: $table.valueId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VocabularyCategoryAssignmentsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $VocabularyCategoryAssignmentsTable> {
+  $$VocabularyCategoryAssignmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dimensionId => $composableBuilder(
+    column: $table.dimensionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valueId => $composableBuilder(
+    column: $table.valueId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VocabularyCategoryAssignmentsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $VocabularyCategoryAssignmentsTable> {
+  $$VocabularyCategoryAssignmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get collectionId => $composableBuilder(
+    column: $table.collectionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dimensionId => $composableBuilder(
+    column: $table.dimensionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get valueId =>
+      $composableBuilder(column: $table.valueId, builder: (column) => column);
+}
+
+class $$VocabularyCategoryAssignmentsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $VocabularyCategoryAssignmentsTable,
+          StoredCategoryAssignment,
+          $$VocabularyCategoryAssignmentsTableFilterComposer,
+          $$VocabularyCategoryAssignmentsTableOrderingComposer,
+          $$VocabularyCategoryAssignmentsTableAnnotationComposer,
+          $$VocabularyCategoryAssignmentsTableCreateCompanionBuilder,
+          $$VocabularyCategoryAssignmentsTableUpdateCompanionBuilder,
+          (
+            StoredCategoryAssignment,
+            BaseReferences<
+              _$PikoDatabase,
+              $VocabularyCategoryAssignmentsTable,
+              StoredCategoryAssignment
+            >,
+          ),
+          StoredCategoryAssignment,
+          PrefetchHooks Function()
+        > {
+  $$VocabularyCategoryAssignmentsTableTableManager(
+    _$PikoDatabase db,
+    $VocabularyCategoryAssignmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VocabularyCategoryAssignmentsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$VocabularyCategoryAssignmentsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VocabularyCategoryAssignmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> entryId = const Value.absent(),
+                Value<String> collectionId = const Value.absent(),
+                Value<String> dimensionId = const Value.absent(),
+                Value<String> valueId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyCategoryAssignmentsCompanion(
+                entryId: entryId,
+                collectionId: collectionId,
+                dimensionId: dimensionId,
+                valueId: valueId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entryId,
+                required String collectionId,
+                required String dimensionId,
+                required String valueId,
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyCategoryAssignmentsCompanion.insert(
+                entryId: entryId,
+                collectionId: collectionId,
+                dimensionId: dimensionId,
+                valueId: valueId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $VocabularyCategoryAssignmentsTable,
+                    StoredCategoryAssignment
+                  >(table),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $VocabularyCategoryAssignmentsTable,
+                    StoredCategoryAssignment
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VocabularyCategoryAssignmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyCategoryAssignmentsTable,
+      StoredCategoryAssignment,
+      $$VocabularyCategoryAssignmentsTableFilterComposer,
+      $$VocabularyCategoryAssignmentsTableOrderingComposer,
+      $$VocabularyCategoryAssignmentsTableAnnotationComposer,
+      $$VocabularyCategoryAssignmentsTableCreateCompanionBuilder,
+      $$VocabularyCategoryAssignmentsTableUpdateCompanionBuilder,
+      (
+        StoredCategoryAssignment,
+        BaseReferences<
+          _$PikoDatabase,
+          $VocabularyCategoryAssignmentsTable,
+          StoredCategoryAssignment
+        >,
+      ),
+      StoredCategoryAssignment,
+      PrefetchHooks Function()
+    >;
 
 class $PikoDatabaseManager {
   final _$PikoDatabase _db;
@@ -6461,5 +8713,15 @@ class $PikoDatabaseManager {
       $$VocabularyOrderSequenceTableTableManager(
         _db,
         _db.vocabularyOrderSequence,
+      );
+  $$CategoryDimensionsTableTableManager get categoryDimensions =>
+      $$CategoryDimensionsTableTableManager(_db, _db.categoryDimensions);
+  $$CategoryValuesTableTableManager get categoryValues =>
+      $$CategoryValuesTableTableManager(_db, _db.categoryValues);
+  $$VocabularyCategoryAssignmentsTableTableManager
+  get vocabularyCategoryAssignments =>
+      $$VocabularyCategoryAssignmentsTableTableManager(
+        _db,
+        _db.vocabularyCategoryAssignments,
       );
 }

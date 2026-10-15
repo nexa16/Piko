@@ -23,6 +23,9 @@ class Collections extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@TableIndex.sql(
+  'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries(id, collection_id)',
+)
 class VocabularyEntries extends Table {
   TextColumn get id => text()();
   TextColumn get collectionId =>
@@ -40,6 +43,62 @@ class VocabularyEntries extends Table {
     'CHECK(length(trim(target_text)) > 0)',
     'CHECK(length(trim(native_text)) > 0)',
     'UNIQUE(collection_id, target_key, native_key)',
+  ];
+}
+
+@DataClassName('StoredCategoryDimension')
+class CategoryDimensions extends Table {
+  TextColumn get id => text()();
+  TextColumn get collectionId =>
+      text().references(Collections, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  TextColumn get nameKey => text()();
+  TextColumn get mode => text()();
+  IntColumn get position => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(name)) > 0)',
+    "CHECK(mode IN ('single', 'multiple'))",
+    'CHECK(position >= 0)',
+    'UNIQUE(collection_id, name_key)',
+    'UNIQUE(id, collection_id)',
+  ];
+}
+
+@DataClassName('StoredCategoryValue')
+class CategoryValues extends Table {
+  TextColumn get id => text()();
+  TextColumn get dimensionId =>
+      text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  TextColumn get nameKey => text()();
+  IntColumn get position => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(name)) > 0)',
+    'CHECK(position >= 0)',
+    'UNIQUE(dimension_id, name_key)',
+    'UNIQUE(id, dimension_id)',
+  ];
+}
+
+@DataClassName('StoredCategoryAssignment')
+class VocabularyCategoryAssignments extends Table {
+  TextColumn get entryId => text()();
+  TextColumn get collectionId => text()();
+  TextColumn get dimensionId => text()();
+  TextColumn get valueId => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {entryId, valueId};
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY(entry_id, collection_id) REFERENCES vocabulary_entries(id, collection_id) ON DELETE CASCADE',
+    'FOREIGN KEY(dimension_id, collection_id) REFERENCES category_dimensions(id, collection_id) ON DELETE CASCADE',
+    'FOREIGN KEY(value_id, dimension_id) REFERENCES category_values(id, dimension_id) ON DELETE CASCADE',
   ];
 }
 
@@ -176,6 +235,9 @@ class VocabularyOrderSequence extends Table {
     ScopeAnswerOrdinals,
     LearningIdentitySequence,
     VocabularyOrderSequence,
+    CategoryDimensions,
+    CategoryValues,
+    VocabularyCategoryAssignments,
   ],
 )
 class PikoDatabase extends _$PikoDatabase {
@@ -183,7 +245,7 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -249,11 +311,21 @@ class PikoDatabase extends _$PikoDatabase {
         if (from < 10 && from >= 8) {
           await m.addColumn(retryObligations, retryObligations.waitEligibleAt);
         }
+        if (from < 11) {
+          await _createVocabularyOwnershipIndex();
+          await m.createTable(categoryDimensions);
+          await m.createTable(categoryValues);
+          await m.createTable(vocabularyCategoryAssignments);
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
+  );
+
+  Future<void> _createVocabularyOwnershipIndex() => customStatement(
+    'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries(id, collection_id)',
   );
 
   Future<void> _initializeVocabularyOrder() => customStatement(
