@@ -131,7 +131,9 @@ try {
         throw 'Direct APK replacement did not report Success; no fallback attempted.'
     }
     Assert-ProtectedFiles $baseline
-    $started = Invoke-Adb -Arguments @('shell', 'am', 'start', '-W', '-n', $activity,
+    # Do not wait for the first rendered frame: the isolate is deliberately
+    # paused until the attach-only driver connects and resumes it below.
+    $started = Invoke-Adb -Arguments @('shell', 'am', 'start', '-n', $activity,
         '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.LAUNCHER',
         '--ez', 'enable-checked-mode', 'true', '--ez', 'verify-entry-points', 'true',
         '--ez', 'start-paused', 'true')

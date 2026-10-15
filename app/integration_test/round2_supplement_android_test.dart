@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:piko/data/collections_repository.dart';
+import 'package:piko/data/categories_repository.dart';
+import 'package:piko/data/regular_review.dart';
 import 'package:piko/data/learning_item.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
+import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_learning_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
@@ -16,6 +19,7 @@ import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/features/learning/review_launch.dart';
 import 'package:piko/features/learning/review_session_route.dart';
+import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
 import 'package:piko/ui/components/piko_button.dart';
@@ -60,6 +64,7 @@ void main() {
     final collections = SqliteCollectionsRepository(db);
     final vocabulary = SqliteVocabularyRepository(db);
     final learning = SqliteLearningRepository(db);
+    final categories = SqliteCategoriesRepository(db);
     var mounted = false, completed = false;
     Future<void> wait(
       FutureOr<bool> Function() condition,
@@ -68,6 +73,16 @@ void main() {
     Future<void> present(Finder finder, String description) =>
         wait(() => finder.evaluate().isNotEmpty, description);
     Future<void> tap(Finder finder) => review.tapVisible(tester, finder);
+    Future<void> enter(Finder finder, String text) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+      await tester.enterText(finder, text);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(finder).controller!.text, text);
+    }
+
     Future<void> capture(
       String id, {
       Finder? at,
@@ -248,7 +263,7 @@ void main() {
       await present(target, 'unchanged vocabulary editor');
       expect(_key('inline-discard-${first.id}'), findsNothing);
       await capture('vocabulary-unchanged', at: target);
-      await tester.enterText(target, '사과 fixture');
+      await enter(target, '사과 fixture');
       await wait(
         () async =>
             (await vocabulary.watchById(first.id).first)!.targetText ==
@@ -259,7 +274,7 @@ void main() {
         'vocabulary-changed',
         at: _key('inline-complete-${first.id}'),
       );
-      await tester.enterText(target, '  ');
+      await enter(target, '  ');
       await present(
         find.text(copy.text('entry.requiredTarget')),
         'invalid raw target retained',
@@ -304,8 +319,8 @@ void main() {
 
       await tap(_button(copy.text('action.new')));
       await present(find.byType(EntrySessionScreen), 'supplement Entry route');
-      await tester.enterText(_field('draft-target'), '친구');
-      await tester.enterText(_field('draft-native'), 'Freund');
+      await enter(_field('draft-target'), '친구');
+      await enter(_field('draft-native'), 'Freund');
       await tap(find.byTooltip(copy.text('action.saveNext')));
       final entrySession = tester
           .widget<EntrySessionScreen>(find.byType(EntrySessionScreen))
@@ -321,7 +336,7 @@ void main() {
       await tap(addedCard);
       final savedNative = _field('${added.id}-native');
       await present(savedNative, 'saved Entry editor');
-      await tester.enterText(savedNative, 'Freund fixture');
+      await enter(savedNative, 'Freund fixture');
       await wait(
         () async =>
             (await vocabulary.watchById(added.id).first)!.nativeText ==
@@ -400,6 +415,239 @@ void main() {
         'correction exits without regrading',
       );
       expect(await learningSnapshot(), beforeCorrection);
+      // Append independent fixtures only after the original state catalogue;
+      // scheduling below cannot change the earlier directional assertions.
+      await tap(_button(copy.text('common.back')));
+      await open(caughtUp);
+      final beforeEmptyLaunch = await learningSnapshot();
+      final detail = tester.widget<CollectionDetail>(
+        find.byType(CollectionDetail),
+      );
+      final emptySession = await detail.reviewSessionFactory!(
+        caughtUp.id,
+        LearningDirection.targetToNative,
+      );
+      // Test-only navigation displays the real authoritative zero-result route.
+      // Production intentionally has no zero-count launch action to tap.
+      unawaited(
+        Navigator.of(tester.element(find.byType(CollectionDetail))).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ReviewSessionRoute(
+              collection: caughtUp,
+              session: emptySession,
+              vocabularyRepository: vocabulary,
+            ),
+          ),
+        ),
+      );
+      await present(_key('review-no-due'), 'authoritative no-due route');
+      expect(find.text(copy.text('learn.noDueTitle')), findsOneWidget);
+      expect(_key('review-prompt'), findsNothing);
+      expect(_key('review-grade-correct'), findsNothing);
+      await capture(
+        'review-no-due',
+        at: _key('review-no-due'),
+        metadata: {
+          'navigation':
+              'test-only push after actual runtime authoritative preparation',
+          'displayedZeroCountAction': false,
+        },
+      );
+      expect(await learningSnapshot(), beforeEmptyLaunch);
+      await tap(_key('review-exit'));
+      await present(find.byType(CollectionDetail), 'Detail after no-due exit');
+      await tap(_button(copy.text('common.back')));
+
+      final waiting = await create('Retry waiting fixture');
+      final retryWord = await vocabulary.create(
+        collectionId: waiting.id,
+        targetText: '다시',
+        nativeText: 'Wieder',
+      );
+      for (final item in await learning.forEntry(retryWord.id)) {
+        if (item.direction == LearningDirection.targetToNative) {
+          await learning.review(
+            kind: ReviewKind.regular,
+            expectedPrior: item,
+            rating: LearningRating.again,
+            reviewedAt: clock.now(),
+          );
+        } else {
+          await learning.saveCard(
+            item.id,
+            item.card..due = clock.now().add(const Duration(days: 7)),
+          );
+        }
+      }
+      await open(waiting);
+      await present(
+        find.text(copy.text('r2.pending')),
+        'pending retry is not caught up',
+      );
+      expect(find.text(copy.text('r2.caughtUp')), findsNothing);
+      await capture(
+        'pending-retry-detail',
+        at: find.text(copy.text('r2.pending')),
+      );
+      await tap(_button(copy.text('common.back')));
+
+      final filtered = await create('Filtered scheduled fixture');
+      final scheduled = await vocabulary.create(
+        collectionId: filtered.id,
+        targetText: '나중에',
+        nativeText: 'Später',
+      );
+      await vocabulary.create(
+        collectionId: filtered.id,
+        targetText: '오늘',
+        nativeText: 'Heute',
+      );
+      for (final item in await learning.forEntry(scheduled.id)) {
+        await learning.saveCard(
+          item.id,
+          item.card..due = clock.now().add(const Duration(days: 7)),
+        );
+        await (db.update(db.learningItems)
+              ..where((row) => row.id.equals(item.id)))
+            .write(const LearningItemsCompanion(speedCompleted: Value(true)));
+      }
+      final scheduleDimension = await categories.createDimension(
+        collectionId: filtered.id,
+        name: 'Schedule',
+        mode: CategoryMode.single,
+      );
+      final scheduledValue = await categories.createValue(
+        dimensionId: scheduleDimension.id,
+        name: 'Later',
+      );
+      await categories.replaceAssignments(
+        entryId: scheduled.id,
+        assignments: {
+          scheduleDimension.id: {scheduledValue.id},
+        },
+      );
+      await open(filtered);
+      await tap(_key('collection-filters'));
+      await tap(_key('filter-value-${scheduledValue.id}'));
+      await tap(_button(copy.text('r2.apply')));
+      await present(
+        find.text(copy.text('collection.filteredNoReview')),
+        'nonempty restricted zero is neutral',
+      );
+      expect(find.text(copy.text('r2.caughtUp')), findsNothing);
+      await capture(
+        'filtered-zero-detail',
+        at: find.text(copy.text('collection.filteredNoReview')),
+      );
+      await tap(_button(copy.text('common.back')));
+
+      final speedOnly = await create('Speed-only fixture');
+      final speedWord = await vocabulary.create(
+        collectionId: speedOnly.id,
+        targetText: '새로운',
+        nativeText: 'Neu',
+      );
+      for (final item in await learning.forEntry(speedWord.id)) {
+        await learning.saveCard(
+          item.id,
+          item.card..due = clock.now().add(const Duration(days: 7)),
+        );
+      }
+      await open(speedOnly);
+      expect(_key('collection-review-targetToNative'), findsNothing);
+      expect(_key('collection-review-nativeToTarget'), findsNothing);
+      await present(
+        _key('collection-speed-targetToNative'),
+        'Speed-only eligibility',
+      );
+      expect(_key('collection-speed-nativeToTarget'), findsOneWidget);
+      await capture('speed-only-detail', at: _key('collection-speed-actions'));
+      await tap(_button(copy.text('common.back')));
+
+      final emptyDimension = await categories.createDimension(
+        collectionId: practice.id,
+        name: 'Empty notes',
+        mode: CategoryMode.multiple,
+      );
+      final largeDimension = await categories.createDimension(
+        collectionId: practice.id,
+        name: 'Large topic',
+        mode: CategoryMode.single,
+      );
+      for (var index = 1; index <= 24; index++) {
+        await categories.createValue(
+          dimensionId: largeDimension.id,
+          name: 'Topic ${index.toString().padLeft(2, '0')}',
+        );
+      }
+      final beforePickers = await learningSnapshot();
+      await open(practice);
+      await tap(_key('vocabulary-${first.id}'));
+      await tap(_key('category-picker-${first.id}-${emptyDimension.id}'));
+      await present(
+        find.text(copy.text('category.emptyValues')),
+        'empty category picker',
+      );
+      await capture(
+        'category-empty-picker',
+        at: find.text(copy.text('category.emptyValues')),
+      );
+      await tap(find.byTooltip(copy.text('common.close')));
+      await tap(_key('category-picker-${first.id}-${largeDimension.id}'));
+      final valueSearch = _field('category-value-search');
+      await present(valueSearch, 'overflow category picker search');
+      await capture(
+        'category-overflow-picker',
+        at: valueSearch,
+        metadata: {'valueCount': 24},
+      );
+      await enter(valueSearch, 'no-matching-fixture-value');
+      await present(
+        find.text(copy.text('r2.noValueMatches')),
+        'category search no match',
+      );
+      await capture('category-no-match-picker', at: valueSearch);
+      await tap(find.byTooltip(copy.text('common.close')));
+      expect(await categories.assignments(first.id), isEmpty);
+      await tap(_key('inline-complete-${first.id}'));
+      expect(await learningSnapshot(), beforePickers);
+
+      await tap(_button(copy.text('action.new')));
+      await present(find.byType(EntrySessionScreen), 'duplicate Entry fixture');
+      await enter(_field('draft-target'), first.targetText);
+      await enter(_field('draft-native'), first.nativeText);
+      await tap(find.byTooltip(copy.text('action.saveNext')));
+      await present(
+        find.text(copy.text('vocab.inlineDuplicate')),
+        'specific duplicate feedback',
+      );
+      expect(
+        tester.widget<TextField>(_field('draft-target')).controller!.text,
+        first.targetText,
+      );
+      expect(
+        tester.widget<TextField>(_field('draft-native')).controller!.text,
+        first.nativeText,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(EntrySessionScreen),
+          matching: _button(copy.text('action.retry')),
+        ),
+        findsNothing,
+      );
+      await capture(
+        'entry-duplicate',
+        at: find.text(copy.text('vocab.inlineDuplicate')),
+      );
+      expect(await learningSnapshot(), beforePickers);
+      await enter(_field('draft-target'), '');
+      await enter(_field('draft-native'), '');
+      await tap(find.byTooltip(copy.text('entry.complete')));
+      await wait(
+        () => find.byType(EntrySessionScreen).evaluate().isEmpty,
+        'empty duplicate draft exits without a new vocabulary item',
+      );
       expect(artifacts.captures.length, supplementPlan.length);
       expect(tester.takeException(), isNull);
       completed = true;

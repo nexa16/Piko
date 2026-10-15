@@ -31,12 +31,28 @@ const supplementPlan = <String, String>{
   'entry-undo': 'Entry session deletion retains the new draft and offers Undo',
   'review-correction':
       'Immediately previous normal review displayed in correction mode, without regrading',
+  'review-no-due':
+      'Real authoritative empty review route; test-only navigation, no offered zero-count action',
+  'pending-retry-detail':
+      'Nonempty Collection waiting for retry eligibility, not caught-up encouragement',
+  'filtered-zero-detail':
+      'Nonempty filtered subset has no due work and uses neutral feedback',
+  'speed-only-detail':
+      'Positive Speed eligibility with no normal Review action',
+  'category-empty-picker': 'Assignment picker for a dimension with no values',
+  'category-overflow-picker':
+      'Assignment picker with 24 actual values and overflow-dependent search',
+  'category-no-match-picker':
+      'Overflow picker retains the search query with no matching values',
+  'entry-duplicate':
+      'Entry draft retains its duplicate pair with specific validation and no blind Retry',
 };
 
 Map<String, int> supplementSpecs(String id) {
   if (id.startsWith('entry-')) {
     return {
       'ENTRY-001': 2,
+      if (id == 'entry-duplicate') 'ENTRY-002': 1,
       'ENTRY-004': 1,
       'UX-ENTRY-001': 4,
       'UX-VOCAB-DELETE-001': 3,
@@ -51,6 +67,18 @@ Map<String, int> supplementSpecs(String id) {
   if (id == 'review-correction') {
     return {'UNDO-001': 1, 'UX-REVIEW-001': 4};
   }
+  if (id == 'review-no-due') {
+    return {'REVIEW-002': 2, 'UX-REVIEW-001': 4};
+  }
+  if (id.startsWith('category-')) {
+    return {'CAT-001': 1, 'UX-CAT-001': 3};
+  }
+  if (id == 'filtered-zero-detail') {
+    return {'FILTER-002': 3, 'UX-COLL-008': 3};
+  }
+  if (id == 'pending-retry-detail') {
+    return {'REVIEW-002': 2, 'UX-COLL-008': 3};
+  }
   return {
     'UX-COLL-008': 3,
     'UX-COLL-004': 2,
@@ -62,7 +90,7 @@ Map<String, int> supplementSpecs(String id) {
 /// A separate immutable supplement, never an overwrite of the main catalogue.
 final class SupplementArtifacts {
   SupplementArtifacts._(this.configuration, this.directory);
-  static const fixture = 'round2-supplement-three-collections-v1';
+  static const fixture = 'round2-supplement-isolated-key-states-v2';
   final CatalogueConfiguration configuration;
   final Directory directory;
   final captures = <Map<String, Object?>>[];
