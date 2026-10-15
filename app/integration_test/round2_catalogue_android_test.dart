@@ -94,6 +94,18 @@ void main() {
       Map<String, Object?> metadata = const {},
     }) => artifacts.capture(binding, tester, id, at: at, metadata: metadata);
     Future<void> tap(Finder finder) => review.tapVisible(tester, finder);
+    void pause() {
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    }
+
+    void resume() {
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    }
+
     Future<void> enter(Finder finder, String text) async {
       await tester.ensureVisible(finder);
       await tester.pumpAndSettle();
@@ -152,6 +164,12 @@ void main() {
       final collection = (await collections.watchAll().first).single;
       expect(collection.targetLanguage, VocabularyLanguage.korean);
       expect(collection.nativeLanguage, VocabularyLanguage.german);
+      // The catalogue shows settled pages; the creation toast is covered by
+      // creation behavior tests and must not obscure unrelated later screens.
+      ScaffoldMessenger.of(
+        tester.element(find.byType(CollectionsHome)),
+      ).removeCurrentSnackBar();
+      await tester.pumpAndSettle();
       // Only fixture setup bypasses UI entry; all subsequent routes are real.
       for (final (target, native) in _words) {
         await vocabulary.create(
@@ -191,9 +209,9 @@ void main() {
       );
       // Fixture writes bypass Entry's normal route-return invalidation. Exercise
       // the real resume refresh before expecting Home's passive count to change.
-      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      pause();
       await tester.pump();
-      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      resume();
       await present(
         _key('collection-review-quick'),
         'populated Home due count',
@@ -804,10 +822,10 @@ void main() {
       expect(_button(copy.text('action.retry')), findsNothing);
       await capture('review-countdown', at: _key('review-retry-wait'));
       final deadline = session.retryWaitDeadline!;
-      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      pause();
       await tester.pump();
       clock.set(deadline);
-      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      resume();
       await present(review.revealTarget, 'automatic eligible retry on resume');
       await capture(
         'review-retry',
