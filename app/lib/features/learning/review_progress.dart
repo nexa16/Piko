@@ -87,6 +87,7 @@ class ReviewProgress extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: FractionallySizedBox(
                           widthFactor: progress.fraction,
+                          heightFactor: 1,
                           child: ColoredBox(
                             key: const ValueKey('review-progress-fill'),
                             color: d.color('ink'),

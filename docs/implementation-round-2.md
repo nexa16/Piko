@@ -83,7 +83,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-DIALOG-001 | 3 | Coordinator | Host-verified | Purpose-based confirmations, safe focus, responsive footer/traversal and pending-write guard. Five new family cases plus existing dialog/create/delete/launch/exit regressions pass; Android pending. |
 | UX-REVIEW-001 | 4 | Learning | Pending | — |
 | UX-CARD-010 | 2 | Learning | Pending | — |
-| UX-CARD-012 | 1 | Learning | Pending | — |
+| UX-CARD-012 | 1 | Learning | Host-verified | 8 EN/DE route/paint cases at 320px and 200% text verify visible 0/50/100% width and nonzero fill height. Android pending. |
 | UX-SETUP-001 | 2 | Learning | Pending | — |
 | UX-SETUP-002 | 4 | Learning | Pending | — |
 | UX-ENTRY-001 | 4 | Entry | Host-verified | Five EN/DE keyboard/200%/Next-Done cases plus stack/exit and category regression batch 39/39. Real IME pending. |
