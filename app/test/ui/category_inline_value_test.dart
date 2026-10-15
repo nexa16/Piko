@@ -5,7 +5,6 @@ import 'package:piko/data/categories_repository.dart';
 import 'package:piko/features/categories/category_assignment_picker.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
-import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
