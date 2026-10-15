@@ -75,7 +75,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   final editors = <String, _Editors>{};
   final retiredEditors = <_Editors>{};
   double bottomPadding = 0;
+  double structuralGap = 0;
+  String? structuralGapBefore;
   double? lastViewportHeight;
+  double? lastKeyboardInset;
   bool visibilityRequested = true, followEditor = true, alignDraftStart = true;
   bool userScrolling = false, scheduled = false, adjusting = false;
   bool centerRequested = true;
@@ -131,7 +134,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       allowPop = false;
       dismissOwnedExitDialog();
       bottomPadding = 0;
+      structuralGap = 0;
+      structuralGapBefore = null;
       lastViewportHeight = null;
+      lastKeyboardInset = null;
       visibilityRequested = true;
       followEditor = true;
       alignDraftStart = activeId == draftId;
@@ -192,6 +198,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       anchorCenter = center(activeId);
     }
     if (advanced || activeId != previousActiveId) {
+      structuralGap = 0;
+      structuralGapBefore = null;
       draftFocusRequested = activeId == draftId;
       visibilityRequested = draftFocusRequested;
       followEditor = draftFocusRequested;
@@ -225,10 +233,19 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       if (last is! RenderBox) return;
       final viewportChanged = lastViewportHeight != box.size.height;
       lastViewportHeight = box.size.height;
-      if (viewportChanged && followEditor) visibilityRequested = true;
+      final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+      final keyboardChanged = lastKeyboardInset != keyboardInset;
+      lastKeyboardInset = keyboardInset;
+      // Undo/footer reflow belongs to the retained structural anchor, not a
+      // fresh field reveal. A real IME transition still keeps labeled input
+      // reachable; deliberate user scrolling has already disabled following.
+      if (followEditor &&
+          (keyboardChanged || viewportChanged && !structuralAnchoring)) {
+        visibilityRequested = true;
+      }
       var nextBottom = math.max(0.0, (box.size.height - last.size.height) / 2);
-      // Only trailing space may retain a draft's structural anchor. The first
-      // card always starts at the normal content edge, never a centering spacer.
+      // Ordinary card placement uses trailing space, never a leading centering
+      // gap. Explicit deletion compensation below is local to its retained card.
       if (!centerRequested && anchorCenter != null && !userScrolling) {
         final viewportTop = box.localToGlobal(Offset.zero).dy;
         if (anchorId == draftId) {
@@ -239,6 +256,40 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                 anchorCenter! -
                 last.size.height / 2,
           );
+        }
+      }
+      if (structuralAnchoring &&
+          !centerRequested &&
+          anchorCenter != null &&
+          !userScrolling) {
+        final current = center(activeId);
+        if (current != null) {
+          final previousGap = structuralGapBefore == activeId
+              ? structuralGap
+              : 0.0;
+          final requiredGap = math.max(
+            0.0,
+            previousGap - (scroll.offset + current - anchorCenter!),
+          );
+          if ((requiredGap - previousGap).abs() > 0.5) {
+            // A deleted predecessor can leave too little content above the
+            // anchor for a nonnegative scroll offset. Retain only that missing
+            // space before this card, never a startup centering spacer.
+            jump(
+              scroll.offset +
+                  current -
+                  anchorCenter! +
+                  requiredGap -
+                  previousGap,
+            );
+            setState(() {
+              structuralGap = requiredGap;
+              structuralGapBefore = requiredGap == 0 ? null : activeId;
+              bottomPadding = nextBottom;
+            });
+            scheduleLayout();
+            return;
+          }
         }
       }
       if ((bottomPadding - nextBottom).abs() > 0.5) {
@@ -404,6 +455,12 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (jumping) return false;
     if (event is UserScrollNotification) {
       if (event.direction != ScrollDirection.idle) {
+        if (structuralGap != 0) {
+          setState(() {
+            structuralGap = 0;
+            structuralGapBefore = null;
+          });
+        }
         structuralAnchoring = false;
         userScrolling = true;
         followEditor = false;
@@ -419,6 +476,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (event is ScrollUpdateNotification &&
         !userScrolling &&
         followEditor &&
+        !structuralAnchoring &&
         !adjusting &&
         !session.isBusy) {
       // EditableText can reveal only its caret after focus or a structural
@@ -617,8 +675,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
 
   Future<void> openInterchange() async {
     final open = widget.onOpenInterchange;
-    if (open == null || exitDraining || exitRequest != null || session.isBusy)
+    if (open == null || exitDraining || exitRequest != null || session.isBusy) {
       return;
+    }
     final owner = session;
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
@@ -1018,8 +1077,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                       exitRequest != null
                                   ? null
                                   : () {
-                                      if (!mounted || session != owningSession)
+                                      if (!mounted ||
+                                          session != owningSession) {
                                         return;
+                                      }
                                       final owner = session;
                                       final refreshing = owner
                                           .refreshCategoryReferences(
@@ -1246,8 +1307,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                                 var i = 0;
                                                 i < ids.length;
                                                 i++
-                                              )
+                                              ) ...[
+                                                if (structuralGapBefore ==
+                                                        ids[i] &&
+                                                    structuralGap > 0)
+                                                  SizedBox(
+                                                    key: ValueKey(
+                                                      'entry-structural-gap-${ids[i]}',
+                                                    ),
+                                                    height: structuralGap,
+                                                  ),
                                                 card(ids[i], i, context),
+                                              ],
                                             ],
                                           ),
                                         ),
