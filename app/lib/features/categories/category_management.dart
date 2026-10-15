@@ -239,8 +239,9 @@ class _DimensionBranchState extends State<_DimensionBranch> {
   @override
   void didUpdateWidget(_DimensionBranch oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.repository != widget.repository)
+    if (oldWidget.repository != widget.repository) {
       values = widget.repository.watchValues(widget.dimension.id);
+    }
   }
 
   Future<void> deleteValue(CategoryValueRecord value) async {
@@ -332,10 +333,11 @@ class _DimensionBranchState extends State<_DimensionBranch> {
             pending: widget.pending,
             execute: widget.execute,
             onDone: () {
-              if (mounted)
+              if (mounted) {
                 setState(() {
                   creating = false;
                 });
+              }
             },
           )
         else
@@ -459,11 +461,12 @@ class _DimensionEditorState extends State<_DimensionEditor> {
       });
       widget.onSaved?.call(saved);
     } catch (failure) {
-      if (mounted && revision == generation)
+      if (mounted && revision == generation) {
         setState(() {
           error = failure;
           saving = false;
         });
+      }
     }
   }
 
@@ -626,11 +629,12 @@ class _ValueEditorState extends State<_ValueEditor> {
       });
       widget.onDone?.call();
     } catch (failure) {
-      if (mounted && revision == generation)
+      if (mounted && revision == generation) {
         setState(() {
           error = failure;
           saving = false;
         });
+      }
     }
   }
 
@@ -761,14 +765,16 @@ class _DeleteCategoryState extends State<_DeleteCategory> {
     });
     try {
       await widget.execute(widget.delete);
-      if (mounted && ModalRoute.of(context)?.isCurrent == true)
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
         Navigator.of(context).pop(true);
+      }
     } catch (failure) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           pending = false;
           error = failure;
         });
+      }
     }
   }
 
