@@ -332,13 +332,20 @@ void main() {
         multiple.id: {other.id, extra.id},
       });
       final restored = await completeSnapshot();
-      final restoredAssignments = restored.remove('vocabulary_category_assignments') as List;
-      final originalAssignments = before.remove('vocabulary_category_assignments') as List;
+      final restoredAssignments =
+          restored.remove('vocabulary_category_assignments') as List;
+      final originalAssignments =
+          before.remove('vocabulary_category_assignments') as List;
       // Assignment identity is the owner/dimension/value relation; successful
       // restoration need not reproduce internal SQLite assignment rowids.
       Set<(Object?, Object?, Object?, Object?)> identities(List rows) => {
         for (final row in rows.cast<Map>())
-          (row['entry_id'], row['collection_id'], row['dimension_id'], row['value_id']),
+          (
+            row['entry_id'],
+            row['collection_id'],
+            row['dimension_id'],
+            row['value_id'],
+          ),
       };
       expect(identities(restoredAssignments), identities(originalAssignments));
       expect(restored, before);
