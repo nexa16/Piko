@@ -94,6 +94,16 @@ void main() {
       Map<String, Object?> metadata = const {},
     }) => artifacts.capture(binding, tester, id, at: at, metadata: metadata);
     Future<void> tap(Finder finder) => review.tapVisible(tester, finder);
+    Future<void> enter(Finder finder, String text) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+      await tester.enterText(finder, text);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(finder).controller!.text, text);
+    }
+
     Future<void> wait(bool Function() condition, String description) =>
         review.waitUntil(tester, condition, description: description);
     Future<void> present(Finder finder, String description) =>
@@ -127,7 +137,7 @@ void main() {
       await tap(_button(copy.text('action.new')));
       await present(find.byType(CreateCollectionDialog), 'Collection creation');
       await capture('collection-create');
-      await tester.enterText(
+      await enter(
         find.descendant(
           of: find.byType(CreateCollectionDialog),
           matching: find.byType(TextField),
@@ -251,7 +261,7 @@ void main() {
         ),
       );
       await capture('category-dimension-mode', at: single);
-      await tester.enterText(topicName, 'Topics');
+      await enter(topicName, 'Topics');
       await tap(single);
       final saveDimension = _button(copy.text('category.saveDimension'));
       await present(saveDimension, 'changed dimension confirmation');
@@ -284,7 +294,7 @@ void main() {
         findsNothing,
       );
       await capture('category-value-create-empty', at: newManagedValue);
-      await tester.enterText(newManagedValue, 'Leisure');
+      await enter(newManagedValue, 'Leisure');
       final saveManagedValue = find.descendant(
         of: topicBranch,
         matching: _icon(copy.text('r2.saveValue')),
@@ -314,7 +324,7 @@ void main() {
         ),
         findsNothing,
       );
-      await tester.enterText(renameValue, 'Travel');
+      await enter(renameValue, 'Travel');
       await capture('category-value-rename-changed', at: renameValue);
       await tap(
         find.descendant(
@@ -362,7 +372,7 @@ void main() {
       final newDimensionName = _field('category-management-name-new');
       await capture('category-dimension-create-empty', at: newDimensionName);
       expect(saveDimension, findsNothing);
-      await tester.enterText(newDimensionName, 'Topics');
+      await enter(newDimensionName, 'Topics');
       await tap(saveDimension);
       await present(
         find.text(copy.text('r2.categoryInvalid')),
@@ -372,7 +382,7 @@ void main() {
         'category-dimension-create-invalid',
         at: find.text(copy.text('r2.categoryInvalid')),
       );
-      await tester.enterText(newDimensionName, 'Unit');
+      await enter(newDimensionName, 'Unit');
       await capture('category-dimension-create-changed', at: saveDimension);
       await tap(saveDimension);
       await wait(
@@ -420,7 +430,7 @@ void main() {
       final newPickerValue = _field('category-new-value-name');
       await capture('category-assignment-create-empty', at: newPickerValue);
       expect(_icon(copy.text('r2.saveValue')), findsNothing);
-      await tester.enterText(newPickerValue, 'Practice');
+      await enter(newPickerValue, 'Practice');
       await capture(
         'category-assignment-create-changed',
         at: _icon(copy.text('r2.saveValue')),
@@ -503,7 +513,7 @@ void main() {
       final popupDimensionName = _field('category-dimension-name');
       expect(saveDimension, findsNothing);
       await capture('category-dimension-popup-empty', at: popupDimensionName);
-      await tester.enterText(popupDimensionName, 'Source');
+      await enter(popupDimensionName, 'Source');
       await tap(_key('category-dimension-mode-multiple'));
       await capture('category-dimension-popup-changed', at: saveDimension);
       await tap(saveDimension);
@@ -573,7 +583,7 @@ void main() {
         topic.id: {school.id},
       });
 
-      await tester.enterText(_key('collection-search'), 'no-such-fixture-word');
+      await enter(_key('collection-search'), 'no-such-fixture-word');
       await present(
         _key('collection-no-matches-clear-filters'),
         'search and category no matches',
@@ -664,7 +674,7 @@ void main() {
       await present(find.byType(EntrySessionScreen), 'Entry session');
       await present(_entryField('target'), 'blank draft');
       await capture('entry-empty');
-      await tester.enterText(_entryField('target'), '미완성');
+      await enter(_entryField('target'), '미완성');
       await tap(find.byTooltip(copy.text('action.saveNext')));
       await present(
         find.text(copy.text('entry.requiredNative')),
@@ -678,12 +688,12 @@ void main() {
       );
       await capture('entry-discard');
       await tap(_button(copy.text('entry.continue')));
-      await tester.enterText(_entryField('target'), '');
+      await enter(_entryField('target'), '');
 
       await tap(_button(copy.text('json.title')));
       await present(find.byType(VocabularyJsonPage), 'Collection JSON page');
       await capture('json-input', at: _key('json-input'));
-      await tester.enterText(_key('json-input'), '{ invalid fixture JSON');
+      await enter(_key('json-input'), '{ invalid fixture JSON');
       await tap(_button(copy.text('json.analyze')));
       await present(
         find.text(copy.text('json.invalidSyntax')),
@@ -827,7 +837,7 @@ void main() {
         '5',
       );
       await capture('speed-setup');
-      await tester.enterText(_key('speed-pool-size'), '0');
+      await enter(_key('speed-pool-size'), '0');
       await present(
         find.text(copy.text('r2.poolInvalid')),
         'invalid pool validation',
@@ -840,7 +850,7 @@ void main() {
       );
       expect(find.byType(SpeedSetupDialog), findsOneWidget);
       await capture('speed-setup-invalid');
-      await tester.enterText(_key('speed-pool-size'), '5');
+      await enter(_key('speed-pool-size'), '5');
       await tap(_button(copy.text('learn.startSpeed')));
       await present(find.byType(SpeedSessionRoute), 'Speed session route');
       final speed = tester
