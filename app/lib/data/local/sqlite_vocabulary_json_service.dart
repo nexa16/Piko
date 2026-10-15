@@ -1,15 +1,34 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/clock.dart';
 import '../learning_item.dart';
+import '../categories_repository.dart';
+import '../vocabulary_normalization.dart';
 import '../vocabulary_json.dart';
 import 'piko_database.dart';
+import 'sqlite_categories_repository.dart';
+
+part 'sqlite_vocabulary_json_import.dart';
 
 final class SqliteVocabularyJsonService implements VocabularyJsonService {
   SqliteVocabularyJsonService(this.database, {PikoClock? clock})
     : clock = clock ?? database.clock;
   final PikoDatabase database;
   final PikoClock clock;
+  final _importIssuer = Object();
+
+  @override
+  Future<VocabularyJsonPreview> analyzeImport({
+    required String collectionId,
+    required String json,
+    Set<VocabularyJsonGroup> groups = VocabularyJsonGroup.all,
+  }) => _analyzeImport(collectionId: collectionId, json: json, groups: groups);
+
+  @override
+  Future<VocabularyJsonApplyResult> applyImport(
+    VocabularyJsonPreview preview,
+  ) => _applyImport(preview);
 
   @override
   String sampleJson() => VocabularyJsonFormat.sample;
@@ -21,8 +40,9 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
     final collection = await (database.select(
       database.collections,
     )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
-    if (collection == null)
+    if (collection == null) {
       throw VocabularyJsonExportFailure.collectionNotFound;
+    }
     final exportedAt = clock.now().toUtc().toIso8601String();
     final entries =
         await (database.select(database.vocabularyEntries)

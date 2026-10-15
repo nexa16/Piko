@@ -5,6 +5,91 @@ abstract interface class VocabularyJsonService {
 
   /// Synthetic, copyable version-one structure. Never reads user data.
   String sampleJson();
+
+  Future<VocabularyJsonPreview> analyzeImport({
+    required String collectionId,
+    required String json,
+    Set<VocabularyJsonGroup> groups = VocabularyJsonGroup.all,
+  });
+
+  /// Call only after explicit confirmation of this service's preview.
+  Future<VocabularyJsonApplyResult> applyImport(VocabularyJsonPreview preview);
+}
+
+enum VocabularyJsonGroup {
+  targetText,
+  nativeText,
+  categoryAssignments;
+
+  static const all = {targetText, nativeText, categoryAssignments};
+}
+
+enum VocabularyJsonIssueCode {
+  groupsRequired,
+  tooLarge,
+  invalidJson,
+  invalidEnvelope,
+  unsupportedFormat,
+  unsupportedVersion,
+  exactlyOneCollection,
+  languageMismatch,
+  collectionNotFound,
+  invalidId,
+  duplicateId,
+  foreignId,
+  invalidField,
+  requiredTarget,
+  requiredNative,
+  duplicatePair,
+  unknownDimension,
+  unknownValue,
+  invalidOwnership,
+  duplicateName,
+  cardinalityViolation,
+}
+
+final class VocabularyJsonIssue {
+  const VocabularyJsonIssue({required this.code, required this.path, this.row});
+  final VocabularyJsonIssueCode code;
+  final String path;
+
+  /// One-based entry row, or null for envelope/definition errors.
+  final int? row;
+}
+
+enum VocabularyJsonNotice {
+  importedLearningIgnored,
+  destinationCategoryMetadataRetained,
+}
+
+abstract interface class VocabularyJsonPreview {
+  String get collectionId;
+  Set<VocabularyJsonGroup> get groups;
+  List<VocabularyJsonIssue> get issues;
+  Set<VocabularyJsonNotice> get notices;
+  int get newCount;
+  int get updatedCount;
+  int get unchangedCount;
+  int get errorCount;
+  bool get canApply;
+}
+
+enum VocabularyJsonApplyFailure {
+  invalidPreview,
+  stalePreview,
+  alreadyApplied,
+  inProgress,
+}
+
+final class VocabularyJsonApplyResult {
+  const VocabularyJsonApplyResult({
+    required this.newCount,
+    required this.updatedCount,
+    required this.unchangedCount,
+  });
+  final int newCount;
+  final int updatedCount;
+  final int unchangedCount;
 }
 
 enum VocabularyJsonExportFailure { collectionNotFound, incompleteLearning }

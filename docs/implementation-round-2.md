@@ -71,7 +71,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | REVIEW-002 | 2 | Learning | Pending | — |
 | SETUP-008 | 2 | Learning | Pending | — |
 | IMPORT-JSON-001 | 1 | Data | Export host-verified | Seven raw snapshot/sample/export tests pass, including expired old-generation retries and exact learning preservation. File/clipboard/Android pending. |
-| IMPORT-JSON-002 | 1 | Data | Pending | — |
+| IMPORT-JSON-002 | 1 | Data | Host-verified | 18 atomic analyze/apply cases: UUID ownership, final pair swaps, exact learning preservation, stale previews, bounds, group selection and late rollback/retry. Joined 46/46 plus review-fix batch 23/23; independent critical review found no corruption defect. UI/Android pending. |
 | OPEN-LEARN-001 | 1 | Learning | Traceability | — |
 | PARAM-005 | 1 | Learning | Pending | — |
 | SPEED-010 | 2 | Learning | Boundary host-verified | Shared complete-pass/break transition covered by SPEED-007 b0db38a; no artificial duplicate implementation. UI pending. |
