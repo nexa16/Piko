@@ -30,6 +30,7 @@ import 'shared/copy_scope.dart';
 import 'ui/components/piko_button.dart';
 import 'ui/components/piko_page.dart';
 import 'ui/piko_theme.dart';
+import 'speed_runtime.dart';
 
 /// Owns private runtime storage. Injected feature repositories remain caller-owned.
 class PikoRuntime extends StatefulWidget {
@@ -59,6 +60,11 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
   late final collectionQuery = SqliteCollectionQueryService(database);
+  late final speedRuntime = PikoSpeedRuntime(
+    learning: learning,
+    clock: database.clock,
+    onPendingWrites: trackWrites,
+  );
   late final jsonPlatform =
       widget.jsonPlatform ?? SystemVocabularyJsonPlatform();
   late final settings =
@@ -303,6 +309,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
             detailReviewSessionFactory: _detailReviewSession,
+            speedSessionFactory: speedRuntime.prepare,
             queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,

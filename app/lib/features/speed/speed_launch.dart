@@ -7,6 +7,7 @@ import '../../data/learning_item.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
+import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
 import 'speed_learning_session.dart';
@@ -25,6 +26,7 @@ class SpeedLaunch extends StatefulWidget {
     this.onPendingWrites,
     this.onSessionClosed,
     this.enabled = true,
+    this.scopeIdentity,
     super.key,
   });
 
@@ -37,6 +39,11 @@ class SpeedLaunch extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final VoidCallback? onSessionClosed;
   final bool enabled;
+
+  /// Stable query intent, independent of passive result refreshes. A Detail
+  /// owner can pass (binding, search, immutableFilters) even while holding its
+  /// admitted launch snapshot. Without this token, snapshot identity is used.
+  final Object? scopeIdentity;
 
   @override
   State<SpeedLaunch> createState() => _SpeedLaunchState();
@@ -63,12 +70,16 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
   @override
   void didUpdateWidget(SpeedLaunch oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final ownerChanged = oldWidget.snapshot.collection.id != widget.snapshot.collection.id ||
+    final ownerChanged =
+        oldWidget.snapshot.collection.id != widget.snapshot.collection.id ||
         oldWidget.factory != widget.factory ||
         !identical(oldWidget.vocabularyRepository, widget.vocabularyRepository);
-    final pendingScopeChanged = !_launched &&
-        (!identical(oldWidget.snapshot, widget.snapshot) ||
-            (oldWidget.enabled && !widget.enabled));
+    final scopeChanged =
+        oldWidget.scopeIdentity != null || widget.scopeIdentity != null
+        ? oldWidget.scopeIdentity != widget.scopeIdentity
+        : !identical(oldWidget.snapshot, widget.snapshot);
+    final pendingScopeChanged =
+        !_launched && (scopeChanged || (oldWidget.enabled && !widget.enabled));
     if (ownerChanged || pendingScopeChanged) {
       _identity++;
       _closeSetup();
@@ -101,8 +112,11 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
 
   Future<void> _open(LearningDirection direction, {int? retryPoolSize}) async {
     final ownerRoute = ModalRoute.of(context);
-    if (_opening || !widget.enabled || ownerRoute?.isCurrent != true ||
-        (widget.snapshot.directions[direction]?.newSpeedItems.length ?? 0) == 0) {
+    if (_opening ||
+        !widget.enabled ||
+        ownerRoute?.isCurrent != true ||
+        (widget.snapshot.directions[direction]?.newSpeedItems.length ?? 0) ==
+            0) {
       return;
     }
     final identity = _identity;
@@ -113,10 +127,14 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
     final busy = widget.onBusyChanged;
     final beforeLaunch = widget.beforeLaunch;
     final loader = widget.snapshotLoader;
-    bool current() => mounted && identity == _identity &&
+    bool current() =>
+        mounted &&
+        identity == _identity &&
         widget.snapshot.collection.id == collectionId &&
-        widget.factory == factory && identical(widget.vocabularyRepository, repository);
-    bool canLaunch() => current() && widget.enabled && ownerRoute?.isCurrent == true;
+        widget.factory == factory &&
+        identical(widget.vocabularyRepository, repository);
+    bool canLaunch() =>
+        current() && widget.enabled && ownerRoute?.isCurrent == true;
     setState(() {
       _opening = true;
       _error = null;
@@ -130,10 +148,14 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         if (!canLaunch()) return null;
         return await loader?.call() ?? widget.snapshot;
       }, register);
-      if (!mounted || !canLaunch() || initialSnapshot == null || initialSnapshot.collection.id != collectionId) {
+      if (!mounted ||
+          !canLaunch() ||
+          initialSnapshot == null ||
+          initialSnapshot.collection.id != collectionId) {
         return;
       }
-      final count = initialSnapshot.directions[direction]?.newSpeedItems.length ?? 0;
+      final count =
+          initialSnapshot.directions[direction]?.newSpeedItems.length ?? 0;
       if (count == 0) return;
       ModalRoute<int>? openedSetup;
       poolSize ??= await showSpeedSetup(
@@ -155,12 +177,15 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         await beforeLaunch();
         if (!canLaunch()) return null;
         final refreshed = await loader?.call() ?? widget.snapshot;
-        if (!canLaunch() || refreshed.collection.id != collectionId ||
+        if (!canLaunch() ||
+            refreshed.collection.id != collectionId ||
             (refreshed.directions[direction]?.newSpeedItems.length ?? 0) == 0) {
           return null;
         }
         launchSnapshot = refreshed;
-        final visible = Set<String>.unmodifiable(refreshed.entries.map((entry) => entry.id));
+        final visible = Set<String>.unmodifiable(
+          refreshed.entries.map((entry) => entry.id),
+        );
         final result = await factory(
           collectionId: collectionId,
           direction: direction,
@@ -168,7 +193,9 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
           poolSize: configuredPool,
         );
         final state = result.state;
-        if (state == null || state.collectionId != collectionId || state.direction != direction ||
+        if (state == null ||
+            state.collectionId != collectionId ||
+            state.direction != direction ||
             !state.entryIds.every(visible.contains)) {
           await result.stop();
           result.dispose();
@@ -224,31 +251,44 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
-    final available = LearningDirection.values.where(
-      (direction) => (widget.snapshot.directions[direction]?.newSpeedItems.length ?? 0) > 0,
-    ).toList();
+    final available = LearningDirection.values
+        .where(
+          (direction) =>
+              (widget.snapshot.directions[direction]?.newSpeedItems.length ??
+                  0) >
+              0,
+        )
+        .toList();
     if (available.isEmpty) return const SizedBox.shrink();
     Widget action(LearningDirection direction) {
       final count = widget.snapshot.directions[direction]!.newSpeedItems.length;
       final label = reviewDirectionLabel(widget.snapshot.collection, direction);
-      final activate = widget.enabled && !_opening ? () => _open(direction) : null;
+      final activate = widget.enabled && !_opening
+          ? () => _open(direction)
+          : null;
       return Semantics(
         button: true,
         enabled: activate != null,
         label: count == 1
             ? copy.text('r2.speedDirectionOne', {'direction': label})
-            : copy.text('r2.speedDirectionAction', {'direction': label, 'count': count}),
+            : copy.text('r2.speedDirectionAction', {
+                'direction': label,
+                'count': count,
+              }),
         onTap: activate,
         child: ExcludeSemantics(
           child: PikoButton(
             key: ValueKey('collection-speed-${direction.name}'),
-            label: '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': count})}',
+            label:
+                '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': count})}',
             variant: PikoButtonVariant.tint,
+            icon: const PikoIcon(PikoIconName.zap),
             onPressed: activate,
           ),
         ),
       );
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -259,19 +299,27 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
             children: [
               Expanded(child: action(available.first)),
               SizedBox(width: d.dimension('spacing.2')),
-              Expanded(child: available.length > 1 ? action(available[1]) : const SizedBox.shrink()),
+              Expanded(
+                child: available.length > 1
+                    ? action(available[1])
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
         ),
         if (_opening && !_launched) Text(copy.text('learn.preparing')),
         if (_error != null) ...[
-          Text(copy.text('learn.prepareFailed'), style: TextStyle(color: d.color('danger'))),
+          Text(
+            copy.text('learn.prepareFailed'),
+            style: TextStyle(color: d.color('danger')),
+          ),
           Align(
             alignment: Alignment.centerLeft,
             child: PikoButton(
               label: copy.text('action.retry'),
               onPressed: widget.enabled && !_opening && _failedDirection != null
-                  ? () => _open(_failedDirection!, retryPoolSize: _failedPoolSize)
+                  ? () =>
+                        _open(_failedDirection!, retryPoolSize: _failedPoolSize)
                   : null,
             ),
           ),

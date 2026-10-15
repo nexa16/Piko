@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
+import '../../data/collection_query.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -20,6 +21,8 @@ import 'collection_entry_count.dart';
 import 'collection_review_count.dart';
 import 'collection_review_entry_point.dart';
 import 'collection_query_binding.dart';
+import '../speed/speed_launch.dart';
+import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
 
 class CollectionLoadFailure extends StatelessWidget {
   const CollectionLoadFailure({required this.onRetry, super.key});
@@ -50,6 +53,7 @@ class CollectionDetail extends StatefulWidget {
     this.reviewCountClock = const SystemPikoClock(),
     this.categoryManagementBuilder,
     this.queryBinding,
+    this.speedSessionFactory,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -68,6 +72,7 @@ class CollectionDetail extends StatefulWidget {
 
   /// Runtime-owned; this route listens but never disposes the shared projection.
   final CollectionQueryBinding? queryBinding;
+  final SpeedSessionFactory? speedSessionFactory;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -76,6 +81,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
   bool _openingReview = false;
+  bool _openingSpeed = false;
+  CollectionQuerySnapshot? _heldLearningSnapshot;
+  bool get _learningBusy => _openingReview || _openingSpeed;
   bool _mutationWasBusy = false;
   int _reviewIdentity = 0;
   CollectionRecord? _currentCollection;
@@ -125,7 +133,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _renameRequest != null ||
         _deleteRequest != null ||
         _openingEntry ||
-        _openingReview ||
+        _learningBusy ||
         route?.isCurrent != true) {
       return;
     }
@@ -249,7 +257,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
             icon: const PikoIcon(PikoIconName.pencil),
             semanticLabel: copy.text('collection.rename'),
             focusNode: _renameFocus,
-            onPressed: blocked || _openingEntry || _openingReview
+            onPressed: blocked || _openingEntry || _learningBusy
                 ? null
                 : _beginRename,
           ),
@@ -349,7 +357,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _deleteRequest != null ||
         _renameRequest != null ||
         _openingEntry ||
-        _openingReview ||
+        _learningBusy ||
         route?.isCurrent != true)
       return;
     final identity = _identity;
@@ -440,7 +448,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _renameRequest != null ||
         record == null ||
         _openingEntry ||
-        _openingReview ||
+        _learningBusy ||
         route?.isCurrent == false) {
       return;
     }
@@ -556,7 +564,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final busy = _mutations?.isBusy == true;
     if (mounted) {
       setState(() {
-        if (_mutationWasBusy && !busy) _reviewIdentity++;
+        if (_mutationWasBusy && !busy && !_learningBusy) _reviewIdentity++;
         _mutationWasBusy = busy;
       });
     } else {
@@ -585,7 +593,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final record = _currentCollection;
     final factory = widget.entrySessionFactory;
     if (_openingEntry ||
-        _openingReview ||
+        _learningBusy ||
         _renameRequest != null ||
         _deleteRequest != null ||
         _mutations?.isBusy == true ||
@@ -632,6 +640,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
             widget.vocabularyMutationsFactory) {
       _identity++;
       _openingReview = false;
+      _openingSpeed = false;
+      _heldLearningSnapshot = null;
       _renaming = false;
       _renameRequest = null;
       _renameError = null;
@@ -647,14 +657,17 @@ class _CollectionDetailState extends State<CollectionDetail> {
       _createMutations();
     }
     if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory ||
+        oldWidget.speedSessionFactory != widget.speedSessionFactory ||
         oldWidget.queryBinding != widget.queryBinding ||
         oldWidget.reviewMembershipLoader != widget.reviewMembershipLoader ||
         oldWidget.reviewCountPolicy != widget.reviewCountPolicy ||
         !identical(oldWidget.reviewCountClock, widget.reviewCountClock) ||
         oldWidget.vocabularyRepository != widget.vocabularyRepository) {
       _reviewIdentity++;
-      if (_openingReview) _writeBarrier.release();
+      if (_learningBusy) _writeBarrier.release();
       _openingReview = false;
+      _openingSpeed = false;
+      _heldLearningSnapshot = null;
     }
     if (oldWidget.repository != widget.repository ||
         oldWidget.collectionId != widget.collectionId) {
@@ -735,30 +748,41 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   Text(copy.text('collection.notFound')),
                 if (_lastReadyCollection != null &&
                     widget.queryBinding != null &&
-                    widget.reviewSessionFactory != null &&
+                    (widget.reviewSessionFactory != null ||
+                        widget.speedSessionFactory != null) &&
                     widget.vocabularyRepository != null)
                   Padding(
                     padding: EdgeInsets.only(
                       top: pikoDesign.dimension('spacing.2'),
                     ),
-                    child: _projectedReview(
+                    child: _projectedLearning(
                       enabled:
                           ready &&
                           _deleteRequest == null &&
                           _renameRequest == null &&
                           !_openingEntry &&
-                          _mutations?.isBusy != true,
+                          (_mutations?.isBusy != true || _learningBusy),
                       beforeLaunch: () async {
                         barrierForBuild.freeze();
                         await barrierForBuild.drain();
                         await mutationsForBuild?.awaitPending();
                       },
-                      onBusyChanged: (busy) {
+                      onBusyChanged: (speed, busy) {
                         if (mounted &&
                             identityForBuild == _identity &&
                             reviewIdentityForBuild == _reviewIdentity) {
-                          if (!busy) barrierForBuild.release();
-                          setState(() => _openingReview = busy);
+                          setState(() {
+                            if (busy)
+                              _heldLearningSnapshot ??=
+                                  widget.queryBinding!.snapshot;
+                            if (speed) {
+                              _openingSpeed = busy;
+                            } else {
+                              _openingReview = busy;
+                            }
+                            if (!_learningBusy) _heldLearningSnapshot = null;
+                          });
+                          if (!_learningBusy) barrierForBuild.release();
                         }
                       },
                     ),
@@ -889,13 +913,13 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                   _deleteRequest == null &&
                                   _renameRequest == null &&
                                   !_openingEntry &&
-                                  !_openingReview &&
+                                  !_learningBusy &&
                                   _mutations?.isBusy != true,
                               onTap:
                                   _deleteRequest != null ||
                                       _renameRequest != null ||
                                       _openingEntry ||
-                                      _openingReview ||
+                                      _learningBusy ||
                                       _mutations?.isBusy == true
                                   ? null
                                   : _openEntry,
@@ -908,7 +932,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                       _deleteRequest != null ||
                                           _renameRequest != null ||
                                           _openingEntry ||
-                                          _openingReview ||
+                                          _learningBusy ||
                                           _mutations?.isBusy == true
                                       ? null
                                       : _openEntry,
@@ -945,14 +969,14 @@ class _CollectionDetailState extends State<CollectionDetail> {
     );
   }
 
-  Widget _projectedReview({
+  Widget _projectedLearning({
     required bool enabled,
     required Future<void> Function() beforeLaunch,
-    required ValueChanged<bool> onBusyChanged,
+    required void Function(bool speed, bool busy) onBusyChanged,
   }) {
     final binding = widget.queryBinding!;
     final copy = PikoCopyScope.of(context);
-    if (!binding.ready) {
+    if (!binding.ready && !_learningBusy) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -972,7 +996,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         ],
       );
     }
-    final snapshot = binding.snapshot!;
+    final snapshot = _heldLearningSnapshot ?? binding.snapshot!;
     if (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty)
       return const SizedBox.shrink();
     final counts = {
@@ -980,11 +1004,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
         entry.key: entry.value.dueCount,
     };
     final total = counts.values.fold<int>(0, (a, b) => a + b);
+    final Widget normal;
     if (total == 0) {
       final pending = snapshot.directions.values.any(
         (direction) => direction.pendingRetryCount > 0,
       );
-      return Text(
+      normal = Text(
         copy.text(
           pending
               ? 'r2.pending'
@@ -993,34 +1018,74 @@ class _CollectionDetailState extends State<CollectionDetail> {
               : 'r2.caughtUp',
         ),
       );
+    } else if (widget.reviewSessionFactory != null) {
+      normal = ReviewLaunch(
+        key: ValueKey(
+          'projected-review-${widget.collectionId}-$_identity-$_reviewIdentity',
+        ),
+        collection: snapshot.collection,
+        factory: widget.reviewSessionFactory!,
+        vocabularyRepository: widget.vocabularyRepository!,
+        beforeLaunch: beforeLaunch,
+        onPendingWrites: widget.onPendingVocabularyWrites,
+        onBusyChanged: (busy) => onBusyChanged(false, busy),
+        enabled: enabled && !_openingSpeed && (binding.ready || _openingReview),
+        presentation: ReviewLaunchPresentation.collectionCard,
+        dueCount: total,
+        directionCounts: counts,
+        directionCountsLoader: () async {
+          final fresh = await binding.service.query(
+            collectionId: binding.collectionId,
+            at: binding.clock.now().toUtc(),
+            search: binding.scope.search,
+            filters: binding.scope.filters,
+          );
+          return {
+            for (final entry in fresh.directions.entries)
+              entry.key: entry.value.dueCount,
+          };
+        },
+        onSessionClosed: binding.refresh,
+      );
+    } else {
+      normal = const SizedBox.shrink();
     }
-    return ReviewLaunch(
-      key: ValueKey(
-        'projected-review-${widget.collectionId}-$_identity-$_reviewIdentity',
-      ),
-      collection: snapshot.collection,
-      factory: widget.reviewSessionFactory!,
-      vocabularyRepository: widget.vocabularyRepository!,
-      beforeLaunch: beforeLaunch,
-      onPendingWrites: widget.onPendingVocabularyWrites,
-      onBusyChanged: onBusyChanged,
-      enabled: enabled && binding.ready,
-      presentation: ReviewLaunchPresentation.collectionCard,
-      dueCount: total,
-      directionCounts: counts,
-      directionCountsLoader: () async {
-        final fresh = await binding.service.query(
-          collectionId: binding.collectionId,
-          at: binding.clock.now().toUtc(),
-          search: binding.scope.search,
-          filters: binding.scope.filters,
-        );
-        return {
-          for (final entry in fresh.directions.entries)
-            entry.key: entry.value.dueCount,
-        };
-      },
-      onSessionClosed: binding.refresh,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        normal,
+        if (widget.speedSessionFactory != null)
+          Padding(
+            padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
+            child: SpeedLaunch(
+              key: ValueKey(
+                'projected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
+              ),
+              snapshot: snapshot,
+              scopeIdentity: (
+                binding,
+                binding.scope.search,
+                binding.scope.filters,
+              ),
+              factory: widget.speedSessionFactory!,
+              vocabularyRepository: widget.vocabularyRepository!,
+              beforeLaunch: beforeLaunch,
+              onBusyChanged: (busy) => onBusyChanged(true, busy),
+              onPendingWrites: widget.onPendingVocabularyWrites,
+              onSessionClosed: binding.refresh,
+              enabled:
+                  enabled &&
+                  !_openingReview &&
+                  (binding.ready || _openingSpeed),
+              snapshotLoader: () => binding.service.query(
+                collectionId: binding.collectionId,
+                at: binding.clock.now().toUtc(),
+                search: binding.scope.search,
+                filters: binding.scope.filters,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1053,7 +1118,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
             onPressed:
                 _deleteRequest != null ||
                     _openingEntry ||
-                    _openingReview ||
+                    _learningBusy ||
                     _renameRequest != null
                 ? null
                 : _openMenu,

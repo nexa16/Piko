@@ -19,6 +19,7 @@ import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_entry_count.dart';
 import 'collection_query_binding.dart';
+import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -33,6 +34,7 @@ class CollectionsHome extends StatefulWidget {
     this.reviewCountClock = const SystemPikoClock(),
     this.queryBindingFactory,
     this.detailReviewSessionFactory,
+    this.speedSessionFactory,
     this.onOpenSettings,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
@@ -48,6 +50,7 @@ class CollectionsHome extends StatefulWidget {
   final CollectionQueryBinding Function(String collectionId)?
   queryBindingFactory;
   final ReviewSessionFactory? detailReviewSessionFactory;
+  final SpeedSessionFactory? speedSessionFactory;
   final VoidCallback? onOpenSettings;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
@@ -99,6 +102,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           reviewSessionFactory:
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
+          speedSessionFactory: widget.speedSessionFactory,
           reviewMembershipLoader: widget.reviewMembershipLoader,
           reviewCountPolicy: widget.reviewCountPolicy,
           reviewCountClock: widget.reviewCountClock,
