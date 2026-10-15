@@ -1,5 +1,33 @@
 import '../../data/learning_item.dart' show LearningDirection;
 
+enum SpeedAnswer { correct, incorrect }
+
+/// Current-round counters, never an attempt history or long-term grade.
+final class SpeedItemProgress {
+  const SpeedItemProgress({this.errors = 0, this.correctStreak = 0});
+
+  final int errors;
+  final int correctStreak;
+  int get requiredCorrectStreak => errors >= 3 ? 4 : errors + 1;
+  bool get isComplete => correctStreak >= requiredCorrectStreak;
+
+  SpeedItemProgress _answer(SpeedAnswer answer) => switch (answer) {
+    SpeedAnswer.incorrect => SpeedItemProgress(errors: errors + 1),
+    SpeedAnswer.correct => SpeedItemProgress(
+      errors: errors,
+      correctStreak: correctStreak + 1,
+    ),
+  };
+}
+
+/// An item just completed in memory; its learning effects still need committing.
+final class SpeedCompletion {
+  const SpeedCompletion({required this.entryId, required this.errors});
+
+  final String entryId;
+  final int errors;
+}
+
 /// Immutable, memory-only membership for one fixed-direction Speed launch.
 ///
 /// The caller supplies the eligible IDs in Collection display order. Eligibility
@@ -16,11 +44,14 @@ final class SpeedSession {
     required this.turnIndex,
     required this.rotation,
     required Iterable<String> completedEntryIds,
+    required Map<String, SpeedItemProgress> itemProgress,
+    this.completion,
   }) : entryIds = List.unmodifiable(entryIds),
        pool = List.unmodifiable(pool),
        waiting = List.unmodifiable(waiting),
        pass = List.unmodifiable(pass),
-       completedEntryIds = Set.unmodifiable(completedEntryIds);
+       completedEntryIds = Set.unmodifiable(completedEntryIds),
+       itemProgress = Map.unmodifiable(itemProgress);
 
   factory SpeedSession.start({
     required String collectionId,
@@ -59,6 +90,7 @@ final class SpeedSession {
       turnIndex: 0,
       rotation: 1,
       completedEntryIds: const [],
+      itemProgress: {for (final id in entries) id: const SpeedItemProgress()},
     );
   }
 
@@ -83,18 +115,30 @@ final class SpeedSession {
   final int turnIndex;
   final int rotation;
   final Set<String> completedEntryIds;
+  final Map<String, SpeedItemProgress> itemProgress;
+
+  /// Set only by the answer that reaches an item's required streak.
+  /// This intent does not itself write a marker, reset FSRS or record a review.
+  final SpeedCompletion? completion;
 
   String? get currentEntryId =>
       turnIndex < pass.length ? pass[turnIndex] : null;
   bool get isComplete => pool.isEmpty && waiting.isEmpty;
 
-  /// Advances an explicitly answered current turn using its completion verdict.
-  ///
-  /// This pool transition does not calculate streaks or durable learning effects.
-  SpeedSession advance({required String entryId, required bool completed}) {
+  /// Only an explicit Correct/Incorrect advances the pass or changes counters.
+  SpeedSession answer({required String entryId, required SpeedAnswer answer}) {
     if (entryId != currentEntryId || isComplete) {
       throw StateError('Only the current Speed turn can advance');
     }
+    final progress = itemProgress[entryId]!._answer(answer);
+    return _advance(entryId: entryId, progress: progress);
+  }
+
+  SpeedSession _advance({
+    required String entryId,
+    required SpeedItemProgress progress,
+  }) {
+    final completed = progress.isComplete;
     final nextPool = List<String>.of(pool);
     final nextWaiting = List<String>.of(waiting);
     if (completed) {
@@ -118,6 +162,10 @@ final class SpeedSession {
       turnIndex: startsNextRotation ? 0 : nextTurn,
       rotation: rotation + (startsNextRotation ? 1 : 0),
       completedEntryIds: {...completedEntryIds, if (completed) entryId},
+      itemProgress: {...itemProgress, entryId: progress},
+      completion: completed
+          ? SpeedCompletion(entryId: entryId, errors: progress.errors)
+          : null,
     );
   }
 }

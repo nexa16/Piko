@@ -3,9 +3,9 @@ import 'package:piko/features/speed/speed_session.dart';
 import 'speed_session_test.dart' show start;
 
 SpeedSession advance(SpeedSession session, {bool completed = false}) {
-  return session.advance(
+  return session.answer(
     entryId: session.currentEntryId!,
-    completed: completed,
+    answer: completed ? SpeedAnswer.correct : SpeedAnswer.incorrect,
   );
 }
 
@@ -103,15 +103,18 @@ void main() {
       expect(session.currentEntryId, 'a');
       expect(session.rotation, 2);
       session = advance(session, completed: true);
-      expect(session.currentEntryId, 'b');
+      expect(session.currentEntryId, 'a');
       expect(session.rotation, 3);
+      session = advance(session, completed: true);
+      expect(session.currentEntryId, 'b');
+      expect(session.rotation, 4);
       expect(session.waiting, isEmpty);
     });
 
     test('rejects foreign and finished turns without mutating prior state', () {
       final initial = start(['a', 'b'], poolSize: 1);
       expect(
-        () => initial.advance(entryId: 'b', completed: true),
+        () => initial.answer(entryId: 'b', answer: SpeedAnswer.correct),
         throwsStateError,
       );
       final next = advance(initial, completed: true);
@@ -123,7 +126,7 @@ void main() {
       expect(() => next.completedEntryIds.add('b'), throwsUnsupportedError);
       final finished = advance(next, completed: true);
       expect(
-        () => finished.advance(entryId: 'b', completed: true),
+        () => finished.answer(entryId: 'b', answer: SpeedAnswer.correct),
         throwsStateError,
       );
     });
