@@ -25,7 +25,13 @@ import '../support/mutable_clock.dart';
 import '../support/entry_deletion_fixture.dart' show GatedEntryRepository;
 import '../features/due_learning_session_test.dart' show GatedSource;
 
-Finder button(String label) => find.widgetWithText(PikoButton, label);
+Finder button(String label) => find.byElementPredicate((element) {
+  final widget = element.widget;
+  if (widget is! PikoButton) return false;
+  return widget.label == label ||
+      element.findAncestorWidgetOfExactType<PikoIconButton>()?.semanticLabel ==
+          label;
+});
 Finder dropdown = find.byType(DropdownButton<LearningDirection>);
 final close = find.byTooltip('Close');
 

@@ -343,14 +343,15 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                 children: [
                   PikoHeading(
                     title: widget.collection.name,
-                    leading: PikoButton(
-                      label: copy.text(
+                    leading: PikoIconButton(
+                      key: const ValueKey('review-exit'),
+                      semanticLabel: copy.text(
                         sessionForBuild.hasInitialWork
                             ? 'learn.exit'
                             : 'common.back',
                       ),
                       icon: const PikoIcon(PikoIconName.arrowLeft),
-                      variant: PikoButtonVariant.ghost,
+                      large: true,
                       onPressed: _exiting ? null : () => _exit(sessionForBuild),
                     ),
                   ),
