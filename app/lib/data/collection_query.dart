@@ -66,9 +66,12 @@ final class CollectionQuerySnapshot {
 abstract interface class CollectionQueryService {
   /// One read-only snapshot. Values within a selected dimension use OR;
   /// selected dimensions combine with AND. Empty sets impose no restriction.
+  /// Search is a trimmed NFC/ordinary-lowercase substring of either language,
+  /// combined with the category constraints; accents and sharp S stay distinct.
   Future<CollectionQuerySnapshot> query({
     required String collectionId,
     required DateTime at,
     Map<String, Set<String>> filters = const {},
+    String search = '',
   });
 }

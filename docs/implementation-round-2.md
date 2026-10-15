@@ -55,7 +55,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | CAT-009 | 3 | Collection | Pending | — |
 | FILTER-001 | 2 | Data / Collection | Query host-verified | 12 consistent query/filtered gateway cases, joined Speed/JSON batch 35/35. OR within/AND across, ordered membership, original counters and hidden retries preserved. UI/Android pending. |
 | FILTER-002 | 3 | Collection | Pending | — |
-| FILTER-003 | 1 | Collection | Pending | — |
+| FILTER-003 | 1 | Data / Collection | Query host-verified | Five NFC/case/both-language/ß-versus-ss/accent/combined-filter cases; joined query/UI batch 32/32. UI/Android pending. |
 | ENTRY-001 | 2 | Entry | Host-verified | Three draft focus/settled-scroll/save failure UI cases; joined category/entry batch 35/35. IME geometry follows UX-ENTRY-001; Android pending. |
 | ENTRY-005 | 2 | Entry | Host-verified | Seven guarded revalidation cases plus existing autosave/confirmation regressions; B01 29/29. Android pending. |
 | SPEED-001 | 2 | Learning | Foundation host-verified | Six immutable ordered-membership tests; B01 feature batch 29/29. Rotation and UI follow dependent specs. |

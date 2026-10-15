@@ -4,6 +4,7 @@ import '../collection_query.dart';
 import '../collections_repository.dart';
 import '../learning_item.dart';
 import '../vocabulary_repository.dart';
+import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
 import 'sqlite_learning_repository.dart';
@@ -17,6 +18,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
     required String collectionId,
     required DateTime at,
     Map<String, Set<String>> filters = const {},
+    String search = '',
   }) {
     if (!at.isUtc) {
       return Future.error(ArgumentError.value(at, 'at', 'Must be UTC'));
@@ -25,6 +27,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
       for (final group in filters.entries)
         if (group.value.isNotEmpty) group.key: Set<String>.of(group.value),
     };
+    final searchKey = vocabularyComparisonKey(search);
     return database.transaction(() async {
       final owner = await (database.select(
         database.collections,
@@ -105,7 +108,9 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
       }
       final visible = entries
           .where(
-            (entry) => selected.entries.every(
+            (entry) => (searchKey.isEmpty ||
+                vocabularyComparisonKey(entry.targetText).contains(searchKey) ||
+                vocabularyComparisonKey(entry.nativeText).contains(searchKey)) && selected.entries.every(
               (group) =>
                   grouped[entry.id]?[group.key]?.any(group.value.contains) ??
                   false,
