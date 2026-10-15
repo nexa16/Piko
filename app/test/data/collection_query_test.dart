@@ -175,7 +175,7 @@ void main() {
         eligible
             .directions[LearningDirection.targetToNative]!
             .pendingRetryCount,
-        1,
+        0,
       );
       final beforeExpiryRead = await completeSnapshot(f.db);
       final expired = await query.query(

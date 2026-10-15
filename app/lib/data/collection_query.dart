@@ -19,7 +19,8 @@ final class CollectionDirectionSnapshot {
   final List<LearningItemRecord> newSpeedItems;
   int get dueCount =>
       review.where((item) => item.regularDue || item.eligibleRetry).length;
-  int get pendingRetryCount => review.where((item) => !item.regularDue).length;
+  /// Retry items waiting for their gap/deadline; eligible retries count as due.
+  int get pendingRetryCount => review.where((item) => !item.regularDue && !item.eligibleRetry).length;
 }
 
 final class CollectionQuerySnapshot {
