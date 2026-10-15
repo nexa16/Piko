@@ -6,6 +6,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 
@@ -17,9 +18,32 @@ final class _TransferState {
     this.failed = false,
     this.fallback,
     this.example = false,
+    this.arguments = const {},
   });
   final bool busy, failed, example;
   final String? messageKey, fallback;
+  final Map<String, Object> arguments;
+}
+
+@immutable
+final class _ImportReview {
+  _ImportReview(this.capability, this.revision)
+    : issues = List.unmodifiable(capability.issues),
+      newCount = capability.newCount,
+      updatedCount = capability.updatedCount,
+      unchangedCount = capability.unchangedCount,
+      errorCount = capability.errorCount,
+      canApply = capability.canApply;
+  final VocabularyJsonPreview capability;
+  final int revision, newCount, updatedCount, unchangedCount, errorCount;
+  final List<VocabularyJsonIssue> issues;
+  final bool canApply;
+  Map<String, Object> get counts => {
+    'added': newCount,
+    'updated': updatedCount,
+    'unchanged': unchangedCount,
+    'errors': errorCount,
+  };
 }
 
 /// One opened Collection's interchange surface. Platform access and storage
@@ -31,11 +55,13 @@ class VocabularyJsonPage extends StatefulWidget {
     required this.service,
     required this.platform,
     this.onPendingWrites,
+    this.onImported,
   });
   final CollectionRecord collection;
   final VocabularyJsonService service;
   final VocabularyJsonPlatform platform;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final ValueChanged<VocabularyJsonApplyResult>? onImported;
   @override
   State<VocabularyJsonPage> createState() => _VocabularyJsonPageState();
 }
@@ -45,6 +71,10 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   _TransferState transfer = const _TransferState();
   Object? request;
   int inputRevision = 0;
+  Set<VocabularyJsonGroup> groups = Set.unmodifiable(VocabularyJsonGroup.all);
+  _ImportReview? review;
+  bool confirming = false, applying = false;
+  ModalRoute<dynamic>? confirmationRoute;
 
   @override
   void didUpdateWidget(VocabularyJsonPage oldWidget) {
@@ -55,9 +85,31 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       request = null;
       inputRevision++;
       transfer = const _TransferState();
+      review = null;
+      confirming = false;
+      applying = false;
+      dismissConfirmation();
       fallback.clear();
-      if (oldWidget.collection.id != widget.collection.id) input.clear();
+      if (oldWidget.collection.id != widget.collection.id) {
+        input.clear();
+        groups = Set.unmodifiable(VocabularyJsonGroup.all);
+      }
     }
+  }
+
+  void dismissConfirmation() {
+    final route = confirmationRoute;
+    confirmationRoute = null;
+    if (route?.isActive == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (route!.isActive) route.navigator?.removeRoute(route);
+      });
+    }
+  }
+
+  void invalidateInput() {
+    inputRevision++;
+    review = null;
   }
 
   Object begin() {
@@ -75,6 +127,9 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       setState(() {
         request = null;
         transfer = const _TransferState();
+        confirming = false;
+        applying = false;
+        review = null;
       });
       return false;
     }
@@ -111,7 +166,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       if (!current(token)) return;
       if (text != null && inputRevision == revision) {
         input.text = text;
-        inputRevision++;
+        invalidateInput();
       }
       finish(token, const _TransferState());
     } catch (error) {
@@ -123,6 +178,179 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       finish(token, _TransferState(messageKey: key, failed: true));
     }
   }
+
+  Future<void> analyze() async {
+    final token = begin();
+    final revision = inputRevision;
+    final selected = Set<VocabularyJsonGroup>.unmodifiable(groups);
+    setState(() {
+      review = null;
+    });
+    try {
+      final candidate = await widget.service.analyzeImport(
+        collectionId: widget.collection.id,
+        json: input.text,
+        groups: selected,
+      );
+      if (!current(token)) return;
+      if (revision != inputRevision) {
+        finish(token, const _TransferState());
+        return;
+      }
+      if (candidate.collectionId != widget.collection.id ||
+          candidate.groups.length != selected.length ||
+          !candidate.groups.containsAll(selected)) {
+        throw VocabularyJsonApplyFailure.invalidPreview;
+      }
+      setState(() {
+        review = _ImportReview(candidate, revision);
+      });
+      finish(token, const _TransferState());
+    } catch (_) {
+      finish(
+        token,
+        revision == inputRevision
+            ? const _TransferState(
+                messageKey: 'json.analyzeFailed',
+                failed: true,
+              )
+            : const _TransferState(),
+      );
+    }
+  }
+
+  Future<void> confirmImport(_ImportReview expected) async {
+    if (!identical(review, expected) ||
+        expected.revision != inputRevision ||
+        !expected.canApply) {
+      return;
+    }
+    final token = begin();
+    confirming = true;
+    final service = widget.service;
+    final imported = widget.onImported;
+    bool owned() =>
+        mounted && identical(request, token) && identical(review, expected);
+    try {
+      final accepted = await showPikoDialog<bool>(
+        context,
+        canRestoreFocus: owned,
+        builder: (dialogContext) {
+          final route = ModalRoute.of(dialogContext);
+          if (!owned()) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (route?.isActive == true) route!.navigator?.removeRoute(route);
+            });
+            return const SizedBox.shrink();
+          }
+          confirmationRoute = route;
+          final copy = PikoCopyScope.of(dialogContext);
+          void choose(bool result) {
+            if (owned() && route?.isCurrent == true) {
+              Navigator.of(dialogContext).pop(result);
+            }
+          }
+
+          return PikoDialog(
+            purpose: PikoDialogPurpose.confirmation,
+            title: copy.text('json.confirmTitle'),
+            body: Text(
+              copy.text('json.confirmReplacement', {
+                'name': widget.collection.name,
+              }),
+            ),
+            actions: [
+              PikoDialogAction(
+                label: copy.text('action.cancel'),
+                role: PikoDialogActionRole.safe,
+                onPressed: () => choose(false),
+              ),
+              PikoDialogAction(
+                label: copy.text('json.apply'),
+                onPressed: () => choose(true),
+              ),
+            ],
+          );
+        },
+      );
+      confirmationRoute = null;
+      if (!current(token)) return;
+      confirming = false;
+      if (accepted != true ||
+          !identical(review, expected) ||
+          inputRevision != expected.revision) {
+        finish(token, const _TransferState());
+        return;
+      }
+      setState(() {
+        applying = true;
+      });
+      final result = await service.applyImport(expected.capability);
+      if (!current(token)) return;
+      setState(() {
+        review = null;
+        applying = false;
+      });
+      finish(
+        token,
+        _TransferState(
+          messageKey: 'json.importApplied',
+          arguments: {
+            'added': result.newCount,
+            'updated': result.updatedCount,
+            'unchanged': result.unchangedCount,
+          },
+        ),
+      );
+      // A caller's refresh notification cannot turn committed storage success
+      // into a reported import failure.
+      try {
+        imported?.call(result);
+      } catch (_) {
+        /* Caller-owned notification. */
+      }
+    } catch (error) {
+      if (!current(token)) return;
+      setState(() {
+        review = null;
+        confirming = false;
+        applying = false;
+      });
+      finish(
+        token,
+        _TransferState(
+          messageKey: error is VocabularyJsonApplyFailure
+              ? 'json.stalePreview'
+              : 'json.applyFailed',
+          failed: true,
+        ),
+      );
+    }
+  }
+
+  String issueKey(VocabularyJsonIssueCode code) => switch (code) {
+    VocabularyJsonIssueCode.groupsRequired => 'r2.jsonGroupsRequired',
+    VocabularyJsonIssueCode.tooLarge => 'json.tooLarge',
+    VocabularyJsonIssueCode.invalidJson => 'json.invalidSyntax',
+    VocabularyJsonIssueCode.unsupportedVersion => 'json.unsupportedVersion',
+    VocabularyJsonIssueCode.exactlyOneCollection => 'json.oneCollection',
+    VocabularyJsonIssueCode.languageMismatch => 'json.languages',
+    VocabularyJsonIssueCode.collectionNotFound => 'json.collectionMissing',
+    VocabularyJsonIssueCode.foreignId => 'json.foreignId',
+    VocabularyJsonIssueCode.invalidId ||
+    VocabularyJsonIssueCode.duplicateId => 'r2.jsonIdentity',
+    VocabularyJsonIssueCode.invalidField => 'json.invalidField',
+    VocabularyJsonIssueCode.requiredTarget => 'entry.requiredTarget',
+    VocabularyJsonIssueCode.requiredNative => 'entry.requiredNative',
+    VocabularyJsonIssueCode.duplicatePair => 'r2.jsonDuplicate',
+    VocabularyJsonIssueCode.unknownDimension ||
+    VocabularyJsonIssueCode.unknownValue ||
+    VocabularyJsonIssueCode.invalidOwnership ||
+    VocabularyJsonIssueCode.duplicateName ||
+    VocabularyJsonIssueCode.cardinalityViolation => 'r2.jsonCategory',
+    VocabularyJsonIssueCode.invalidEnvelope ||
+    VocabularyJsonIssueCode.unsupportedFormat => 'r2.jsonInvalid',
+  };
 
   Future<void> export({bool example = false, bool download = false}) async {
     if (transfer.busy) return;
@@ -238,14 +466,85 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
                 child: TextField(
                   key: const ValueKey('json-input'),
                   controller: input,
+                  enabled: !confirming && !applying,
                   minLines: 6,
                   maxLines: 12,
                   decoration: pikoInputDecoration(),
                   onChanged: (_) {
-                    inputRevision++;
+                    setState(() {
+                      invalidateInput();
+                    });
                   },
                 ),
               ),
+              SizedBox(height: gap),
+              Text(copy.text('r2.jsonNotice')),
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              Text(copy.text('r2.jsonMetadata')),
+              SizedBox(height: gap),
+              Text(copy.text('r2.jsonGroups')),
+              for (final group in VocabularyJsonGroup.values)
+                CheckboxListTile(
+                  key: ValueKey('json-group-${group.name}'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    copy.text(switch (group) {
+                      VocabularyJsonGroup.targetText => 'r2.targetText',
+                      VocabularyJsonGroup.nativeText => 'r2.nativeText',
+                      VocabularyJsonGroup.categoryAssignments =>
+                        'r2.categoryAssignments',
+                    }),
+                  ),
+                  value: groups.contains(group),
+                  onChanged: transfer.busy
+                      ? null
+                      : (selected) {
+                          setState(() {
+                            final next = {...groups};
+                            if (selected == true) {
+                              next.add(group);
+                            } else {
+                              next.remove(group);
+                            }
+                            groups = Set.unmodifiable(next);
+                            invalidateInput();
+                          });
+                        },
+                ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: action('json.analyze', () => launch(analyze)),
+              ),
+              if (review case final result?) ...[
+                SizedBox(height: gap),
+                Text(copy.text('r2.jsonSummary', result.counts)),
+                for (final issue in result.issues) ...[
+                  SizedBox(height: pikoDesign.dimension('spacing.2')),
+                  Text(
+                    copy.text(
+                      issue.row == null
+                          ? 'json.issuePath'
+                          : 'json.issueLocation',
+                      {
+                        'path': issue.path,
+                        if (issue.row != null) 'row': issue.row!,
+                      },
+                    ),
+                  ),
+                  Text(
+                    copy.text(issueKey(issue.code)),
+                    style: TextStyle(color: pikoDesign.color('danger')),
+                  ),
+                ],
+                if (result.canApply)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: action(
+                      'json.apply',
+                      () => launch(() => confirmImport(result)),
+                    ),
+                  ),
+              ],
               SizedBox(height: gap),
               Text(copy.text('json.exampleNotice')),
               Align(
@@ -286,6 +585,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
                   child: Text(
                     copy.text(
                       transfer.busy ? 'json.working' : transfer.messageKey!,
+                      transfer.busy ? const {} : transfer.arguments,
                     ),
                     style: TextStyle(
                       color: pikoDesign.color(
@@ -321,6 +621,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   @override
   void dispose() {
     request = null;
+    dismissConfirmation();
     input.dispose();
     fallback.dispose();
     super.dispose();

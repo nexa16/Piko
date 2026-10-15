@@ -720,17 +720,41 @@ const copyCatalog = <String, Object?>{
 "de": "JSON analysieren",
 "en": "Analyze JSON",
 },
+"json.analyzeFailed": <String, Object?>{
+"de": "JSON konnte nicht geprüft werden. Versuche es erneut.",
+"en": "Couldn't analyze the JSON. Try again.",
+},
 "json.applied": <String, Object?>{
 "de": "{count} Beispielvokabeln hinzugefügt. Bestehende Wörter wurden nicht überschrieben.",
 "en": "Added {count} sample words. Existing words were not overwritten.",
+},
+"json.apply": <String, Object?>{
+"de": "Vokabeln importieren",
+"en": "Import vocabulary",
+},
+"json.applyFailed": <String, Object?>{
+"de": "Import fehlgeschlagen. Es wurden keine Änderungen gespeichert. Prüfe JSON erneut, um es nochmals zu versuchen.",
+"en": "Import failed. No changes were saved. Analyze again to retry.",
 },
 "json.clipboardFailed": <String, Object?>{
 "de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen.",
 "en": "Clipboard unavailable. Select and copy the JSON below, or paste manually.",
 },
+"json.collectionMissing": <String, Object?>{
+"de": "Diese Sammlung ist nicht mehr verfügbar.",
+"en": "This collection is no longer available.",
+},
 "json.collectionNotice": <String, Object?>{
 "de": "Exporte enthalten die gespeicherten Vokabeln und den Lernstand dieser Sammlung.",
 "en": "Exports contain the saved vocabulary and learning from this collection.",
+},
+"json.confirmReplacement": <String, Object?>{
+"de": "Diesen Import auf {name} anwenden? Bestehende IDs ersetzen die gewählten Inhalte. Der Lernstand bleibt unverändert.",
+"en": "Apply this batch to {name}? Existing IDs replace selected content. Learning stays unchanged.",
+},
+"json.confirmTitle": <String, Object?>{
+"de": "Vokabeln importieren?",
+"en": "Import vocabulary?",
 },
 "json.copied": <String, Object?>{
 "de": "JSON kopiert.",
@@ -772,6 +796,14 @@ const copyCatalog = <String, Object?>{
 "de": "JSON-Datei gespeichert.",
 "en": "JSON file saved.",
 },
+"json.foreignId": <String, Object?>{
+"de": "Diese ID gehört zu einer anderen Sammlung. Prüfe die Zuordnung der Vokabeln, Dimensionen und Werte.",
+"en": "This ID belongs to another collection. Check vocabulary, dimension and value ownership.",
+},
+"json.importApplied": <String, Object?>{
+"de": "Import abgeschlossen: {added} neu · {updated} aktualisiert · {unchanged} unverändert.",
+"en": "Import complete: {added} new · {updated} updated · {unchanged} unchanged.",
+},
 "json.input": <String, Object?>{
 "de": "JSON einfügen oder bearbeiten",
 "en": "Paste or edit JSON",
@@ -780,9 +812,25 @@ const copyCatalog = <String, Object?>{
 "de": "Piko-JSON Version 1 mit einer Sammlung und 1–1.000 vollständigen Wortpaaren verwenden (maximal 1 MB).",
 "en": "Use version 1 Piko JSON with one collection and 1–1,000 nonempty word pairs (maximum 1 MB).",
 },
+"json.invalidField": <String, Object?>{
+"de": "Dieses Feld hat einen ungültigen Typ oder Wert. Prüfe die JSON-Vorlage.",
+"en": "This field has an invalid type or value. Check the example JSON.",
+},
+"json.invalidSyntax": <String, Object?>{
+"de": "JSON konnte nicht gelesen werden. Prüfe Kommas, Anführungszeichen und Klammern.",
+"en": "JSON could not be parsed. Check commas, quotes and brackets.",
+},
 "json.invalidUtf8": <String, Object?>{
 "de": "Die Datei muss gültigen UTF-8-Text enthalten.",
 "en": "The file must contain valid UTF-8 text.",
+},
+"json.issueLocation": <String, Object?>{
+"de": "Zeile {row} · {path}",
+"en": "Row {row} · {path}",
+},
+"json.issuePath": <String, Object?>{
+"de": "{path}",
+"en": "{path}",
 },
 "json.languages": <String, Object?>{
 "de": "Das Sprachpaar muss dieser Sammlung entsprechen.",
@@ -800,6 +848,10 @@ const copyCatalog = <String, Object?>{
 "de": "Prototyp: Importe ändern Beispieldaten bis zum Neuladen. Exporte enthalten nur diese Beispielvokabeln, keinen echten Lernverlauf.",
 "en": "Prototype: imports change sample vocabulary until reload. Exports contain these sample words only, not real learning history.",
 },
+"json.oneCollection": <String, Object?>{
+"de": "Gib genau eine Sammlung an.",
+"en": "Include exactly one collection.",
+},
 "json.paste": <String, Object?>{
 "de": "Aus Zwischenablage einfügen",
 "en": "Paste from clipboard",
@@ -812,6 +864,10 @@ const copyCatalog = <String, Object?>{
 "de": "Die Datei konnte nicht gespeichert werden. Dein JSON steht unten weiterhin zum Kopieren bereit.",
 "en": "Couldn't save the file. Your JSON is still available below to copy.",
 },
+"json.stalePreview": <String, Object?>{
+"de": "Die Sammlung wurde geändert. Prüfe JSON vor dem Import erneut.",
+"en": "The collection changed. Analyze the JSON again before importing.",
+},
 "json.title": <String, Object?>{
 "de": "JSON importieren / exportieren",
 "en": "JSON import / export",
@@ -823,6 +879,10 @@ const copyCatalog = <String, Object?>{
 "json.unchanged": <String, Object?>{
 "de": "Unverändert — übersprungen",
 "en": "Unchanged — skipped",
+},
+"json.unsupportedVersion": <String, Object?>{
+"de": "Verwende schemaVersion 1.",
+"en": "Use schemaVersion 1.",
 },
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",

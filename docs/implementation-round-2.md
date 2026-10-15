@@ -91,7 +91,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-ENTRY-004 | 1 | Entry | Host-verified | Two EN/DE compact/partial-draft cases plus 8 keyboard/activation regressions pass; Android pending. |
 | UX-CAT-001 | 3 | Collection | Pending | — |
 | UX-IMPORT-JSON-001 | 1 | JSON UI | Transfer surface host-verified | 11 file/clipboard/page tests in EN/DE: bounded UTF-8 reads, cancellation, exact stored export, failed-copy fallback and stale-owner/input protection. Entry route integration and Android picker pending. |
-| UX-IMPORT-JSON-002 | 1 | JSON UI | Pending | — |
+| UX-IMPORT-JSON-002 | 1 | JSON UI | Page host-verified | Nine grouped preview/confirmation/stale/pending/import cases plus six transfer regressions; joined query/Speed/JSON batch 35/35. Real SQLite updates preserve learning; DE 320px/200% controls reachable. Android pending. |
 | UX-VOCAB-DELETE-001 | 3 | Collection | Pending | — |
 | UX-SYSTEM-001 | 5 | Coordinator | Shared controls host-verified | Modality-aware card/button focus, subtle field border, Next/Done API and semantic action pairs; 25/25 shared/Speed batch. Screen integration/Android pending. |
 | UX-COLL-007 | 3 | Collection | Pending | — |

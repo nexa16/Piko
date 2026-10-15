@@ -111,8 +111,29 @@ Future<void> pressJson(
   String language = 'en',
 }) async {
   final button = find.text(PikoCopy(language).text(key));
+  // A newly focused JSON editor schedules its caret reveal. Settle that before
+  // the user's deliberate action scroll, so it cannot undo this movement.
+  await tester.pumpAndSettle();
   await tester.ensureVisible(button);
   await tester.pumpAndSettle();
+  final page = find.byType(SingleChildScrollView).first;
+  for (var attempt = 0; attempt < 12; attempt++) {
+    final area = tester.getRect(page);
+    final target = tester.getRect(button);
+    if (target.top >= area.top && target.bottom <= area.bottom) break;
+    final delta = target.bottom > area.bottom
+        ? area.bottom - target.bottom - 24
+        : area.top - target.top + 24;
+    await tester.dragFrom(
+      Offset(area.left + 4, area.center.dy),
+      Offset(0, delta.clamp(-area.height * .7, area.height * .7)),
+    );
+    await tester.pumpAndSettle();
+  }
+  final area = tester.getRect(page);
+  final target = tester.getRect(button);
+  expect(target.top, greaterThanOrEqualTo(area.top));
+  expect(target.bottom, lessThanOrEqualTo(area.bottom));
   await tester.tap(button);
   await tester.pumpAndSettle();
 }
