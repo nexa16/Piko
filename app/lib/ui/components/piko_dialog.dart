@@ -94,6 +94,7 @@ class PikoDialog extends StatelessWidget {
   const PikoDialog({
     required this.title,
     required this.body,
+    this.titleContent,
     this.actions = const [],
     this.purpose = PikoDialogPurpose.form,
     this.dismissible = true,
@@ -101,6 +102,9 @@ class PikoDialog extends StatelessWidget {
     super.key,
   });
   final String title;
+
+  /// Optional icon/title composition; [title] remains the route's spoken name.
+  final Widget? titleContent;
   final Widget body;
   final List<PikoDialogAction> actions;
   final PikoDialogPurpose purpose;
@@ -142,8 +146,9 @@ class PikoDialog extends StatelessWidget {
                       child: Semantics(
                         namesRoute: true,
                         header: true,
-                        child: Text(
-                          title,
+                        label: title,
+                        excludeSemantics: true,
+                        child: DefaultTextStyle(
                           style: Theme.of(context).textTheme.titleMedium!
                               .copyWith(
                                 fontSize: d.dimension(
@@ -151,6 +156,7 @@ class PikoDialog extends StatelessWidget {
                                 ),
                                 fontWeight: d.weight('typography.titleWeight'),
                               ),
+                          child: titleContent ?? Text(title),
                         ),
                       ),
                     ),

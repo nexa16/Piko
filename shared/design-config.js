@@ -10,6 +10,7 @@ globalThis.PIKO_DESIGN = {
   layout: {pagePadding:24,mobilePadding:18,pageTop:20,mobileBreakpoint:680},
   states: {borderWidth:1,borderInkOpacity:0.14,disabledOpacity:0.5,focusWidth:3,focusOffset:3},
   components: {
+    categoryPicker: {listHeight:264},
     dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
     icons: {size:20},
     checkboxes: {size:24,paddingY:10},

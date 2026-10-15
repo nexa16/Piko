@@ -29,6 +29,9 @@ const designCatalog = <String, Object?>{
 "cards": <String, Object?>{
 "padding": 19,
 },
+"categoryPicker": <String, Object?>{
+"listHeight": 264,
+},
 "checkboxes": <String, Object?>{
 "paddingY": 10,
 "size": 24,
@@ -350,6 +353,18 @@ const copyCatalog = <String, Object?>{
 "category.difficulty": <String, Object?>{
 "de": "Schwierigkeit",
 "en": "Difficulty",
+},
+"category.emptyValues": <String, Object?>{
+"de": "Noch keine Werte.",
+"en": "No values yet.",
+},
+"category.loadFailed": <String, Object?>{
+"de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
+"en": "Couldn't load category values. Try again.",
+},
+"category.selectionInvalid": <String, Object?>{
+"de": "Kategoriewerte wurden geändert. Prüfe die Auswahl vor dem Übernehmen.",
+"en": "Category values changed. Review the selection before applying.",
 },
 "category.settings": <String, Object?>{
 "de": "Sammlungseinstellungen",
