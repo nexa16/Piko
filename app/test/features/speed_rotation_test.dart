@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/speed/speed_session.dart';
+import 'speed_pass_test.dart' show completeNumbersBreak;
 import 'speed_session_test.dart' show start;
 
 SpeedSession advance(SpeedSession session, {bool completed = false}) {
@@ -77,7 +78,7 @@ void main() {
         expect(session.currentEntryId, 'c');
         session = advance(session, completed: true);
         expect(session.needsBreak, isTrue);
-        session = session.completeBreak();
+        session = completeNumbersBreak(session);
         expect(session.pass, ['b']);
         expect(session.currentEntryId, 'b');
         expect(session.completedEntryIds, {'a', 'c'});

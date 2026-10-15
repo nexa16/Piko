@@ -1,9 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/speed/speed_session.dart';
 import 'speed_session_test.dart' show start;
 
 SpeedSession answer(SpeedSession session, SpeedAnswer answer) =>
     session.answer(entryId: session.currentEntryId!, answer: answer);
+
+SpeedSession completeNumbersBreak(SpeedSession session) {
+  var next = session.beginBreak(random: Random(42));
+  for (var number = 1; number <= 10; number++) {
+    next = next.tapNumber(number);
+  }
+  return next;
+}
 
 void main() {
   group('SPEED-007 one complete pass between short-pool breaks', () {
@@ -39,7 +49,7 @@ void main() {
         }
         expect(session.needsBreak, isTrue);
         final beforeGame = session;
-        session = session.completeBreak();
+        session = completeNumbersBreak(session);
         expect(session.pass, ['c', 'd', 'e']);
         expect(session.rotation, 2);
         expect(session.itemProgress, beforeGame.itemProgress);
@@ -95,7 +105,7 @@ void main() {
           }
           if (index < passes.length - 1) {
             expect(session.needsBreak, isTrue);
-            session = session.completeBreak();
+            session = completeNumbersBreak(session);
             games++;
           }
         }
@@ -124,7 +134,7 @@ void main() {
           session = answer(session, grades[index]);
           if (index < grades.length - 1) {
             expect(session.needsBreak, isTrue);
-            session = session.completeBreak();
+            session = completeNumbersBreak(session);
             games++;
           }
         }
@@ -154,14 +164,14 @@ void main() {
 
     test('no final game or completion outside a pending break', () {
       var session = start(['a', 'b']);
-      expect(() => session.completeBreak(), throwsStateError);
+      expect(() => session.beginBreak(), throwsStateError);
       session = answer(session, SpeedAnswer.correct);
       expect(session.needsBreak, isFalse);
-      expect(() => session.completeBreak(), throwsStateError);
+      expect(() => session.beginBreak(), throwsStateError);
       session = answer(session, SpeedAnswer.correct);
       expect(session.isComplete, isTrue);
       expect(session.needsBreak, isFalse);
-      expect(() => session.completeBreak(), throwsStateError);
+      expect(() => session.beginBreak(), throwsStateError);
     });
   });
 }

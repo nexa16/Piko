@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import '../../data/learning_item.dart' show LearningDirection;
+import 'speed_numbers_game.dart';
 
 enum SpeedAnswer { correct, incorrect }
 
@@ -47,6 +50,7 @@ final class SpeedSession {
     required Map<String, SpeedItemProgress> itemProgress,
     this.completion,
     this.needsBreak = false,
+    this.numberGame,
   }) : entryIds = List.unmodifiable(entryIds),
        pool = List.unmodifiable(pool),
        waiting = List.unmodifiable(waiting),
@@ -124,17 +128,49 @@ final class SpeedSession {
 
   /// A short pool has exhausted its pass and needs one completed minigame.
   final bool needsBreak;
+  final SpeedNumbersGame? numberGame;
 
   String? get currentEntryId =>
       turnIndex < pass.length ? pass[turnIndex] : null;
   bool get isComplete => pool.isEmpty && waiting.isEmpty;
 
-  /// The minigame boundary unlocks one complete pass, never just one word.
-  /// Number-game content and its completion condition are supplied separately.
-  SpeedSession completeBreak() {
+  /// Creates the shuffled game once for this exact pending break.
+  SpeedSession beginBreak({Random? random}) {
     if (!needsBreak) {
-      throw StateError('No Speed break is awaiting completion');
+      throw StateError('No Speed break is awaiting a numbers game');
     }
+    if (numberGame != null) return this;
+    return _withGame(SpeedNumbersGame.start(random: random));
+  }
+
+  /// Finishing 10 automatically unlocks every remaining word's next pass.
+  SpeedSession tapNumber(int number) {
+    final game = numberGame;
+    if (!needsBreak || game == null) {
+      throw StateError('No Speed numbers game is active');
+    }
+    final next = game.tap(number);
+    if (identical(next, game)) return this;
+    return next.isComplete ? _completeBreak() : _withGame(next);
+  }
+
+  SpeedSession _withGame(SpeedNumbersGame game) => SpeedSession._(
+    collectionId: collectionId,
+    direction: direction,
+    poolSize: poolSize,
+    entryIds: entryIds,
+    pool: pool,
+    waiting: waiting,
+    pass: pass,
+    turnIndex: turnIndex,
+    rotation: rotation,
+    completedEntryIds: completedEntryIds,
+    itemProgress: itemProgress,
+    needsBreak: true,
+    numberGame: game,
+  );
+
+  SpeedSession _completeBreak() {
     return SpeedSession._(
       collectionId: collectionId,
       direction: direction,
