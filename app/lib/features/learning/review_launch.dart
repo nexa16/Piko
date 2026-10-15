@@ -166,24 +166,24 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
           done.complete();
         }
       }
-      if (session == null)
-        session = await showPikoDialog<DueLearningSession>(
-          context,
-          canRestoreFocus: () => current() && route?.isCurrent == true,
-          onRouteCreated: (owned) {
-            if (current()) _dialog = owned;
-          },
-          builder: (_) => ReviewDirectionDialog(
-            collection: collection,
-            factory: factory,
-            beforeLaunch: beforeLaunch,
-            onPendingWrites: register,
-            canLaunch: () => current() && widget.enabled,
-            eligibility: _eligibility,
-            directionCounts: counts,
-            directionCountsLoader: widget.directionCountsLoader,
-          ),
-        );
+      if (!mounted || !current()) return;
+      session ??= await showPikoDialog<DueLearningSession>(
+        context,
+        canRestoreFocus: () => current() && route?.isCurrent == true,
+        onRouteCreated: (owned) {
+          if (current()) _dialog = owned;
+        },
+        builder: (_) => ReviewDirectionDialog(
+          collection: collection,
+          factory: factory,
+          beforeLaunch: beforeLaunch,
+          onPendingWrites: register,
+          canLaunch: () => current() && widget.enabled,
+          eligibility: _eligibility,
+          directionCounts: counts,
+          directionCountsLoader: widget.directionCountsLoader,
+        ),
+      );
       if (!mounted || !current()) return;
       _dialog = null;
       if (session == null || route?.isCurrent != true || !widget.enabled) {
