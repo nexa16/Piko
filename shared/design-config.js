@@ -2,7 +2,7 @@
 globalThis.PIKO_DESIGN = {
   schemaVersion: 1,
   previews: {round2: {gradingIncorrect:'#EF4444',gradingCorrect:'#22C55E',gradingText:'#111827',inputFocusWidth:1,keyboardFocusWidth:2,gameColumns:5,entrySettleMs:160,learningGap:8,learningPadding:16,learningSectionGap:16,categoryListHeight:264,reviewSecondaryBackground:'#E9EEF6',reviewSecondaryText:'#42516B',warningBackground:'#FFF7ED',warningBorder:'#FB923C',warningText:'#9A3412'}},
-  colors: {name:'Cobalt',primary:'#2956B8',tint:'#E7EEFC',bg:'#F5F7FB',surface:'#FFFFFF',ink:'#1E293B',muted:'#526177',onPrimary:'#FFFFFF',danger:'#B42318',onDanger:'#FFFFFF',success:'#166534'},
+  colors: {name:'Cobalt',primary:'#2956B8',tint:'#E7EEFC',bg:'#F5F7FB',surface:'#FFFFFF',ink:'#1E293B',muted:'#526177',onPrimary:'#FFFFFF',danger:'#B42318',onDanger:'#FFFFFF',success:'#166534',onSuccess:'#FFFFFF'},
   spacing: {'1':4,'2':8,'3':12,'4':16,'5':20,'6':24,'8':32},
   typography: {family:'system-ui,-apple-system,sans-serif',body:16,small:13,label:14,title:29,titleWeight:700},
   radii: {card:16,dialog:20},
@@ -31,7 +31,7 @@ globalThis.PIKO_DESIGN = {
     swipe: {revealDistance:60,axisDominance:1.5},
     inlineVocabulary: {compactBreakpoint:420,captionSize:11},
     cards: {padding:19},
-    fields: {padding:13,radius:12,labelSize:12,labelWeight:750},
+    fields: {padding:13,radius:12,labelSize:12,labelWeight:750,focusWidth:1},
     buttons: {variant:'soft',radius:24,height:44,weight:700,padding:14},
     dropdowns: {gap:8,height:44,radius:11,padding:12,weight:400}
   }

@@ -9,6 +9,7 @@ const designCatalog = <String, Object?>{
 "name": "Cobalt",
 "onDanger": "#FFFFFF",
 "onPrimary": "#FFFFFF",
+"onSuccess": "#FFFFFF",
 "primary": "#2956B8",
 "success": "#166534",
 "surface": "#FFFFFF",
@@ -85,6 +86,7 @@ const designCatalog = <String, Object?>{
 "statusSize": 11,
 },
 "fields": <String, Object?>{
+"focusWidth": 1,
 "labelSize": 12,
 "labelWeight": 750,
 "padding": 13,

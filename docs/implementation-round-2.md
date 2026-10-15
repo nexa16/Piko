@@ -93,7 +93,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-IMPORT-JSON-001 | 1 | JSON UI | Pending | — |
 | UX-IMPORT-JSON-002 | 1 | JSON UI | Pending | — |
 | UX-VOCAB-DELETE-001 | 3 | Collection | Pending | — |
-| UX-SYSTEM-001 | 5 | Coordinator | Pending | — |
+| UX-SYSTEM-001 | 5 | Coordinator | Shared controls host-verified | Modality-aware card/button focus, subtle field border, Next/Done API and semantic action pairs; 25/25 shared/Speed batch. Screen integration/Android pending. |
 | UX-COLL-007 | 3 | Collection | Pending | — |
 | UX-COLL-008 | 3 | Collection | Pending | — |
 | UX-COLL-004 | 2 | Collection | Pending | — |
