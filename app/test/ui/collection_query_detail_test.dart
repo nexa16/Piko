@@ -9,7 +9,7 @@ import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collection_query_binding.dart';
 import 'package:piko/features/collections/collection_view_scope.dart';
 import 'package:piko/features/collections/collections_home.dart';
-import 'package:piko/features/learning/review_launch.dart';
+import 'package:piko/features/learning/due_learning_session.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'collection_inline_edit_test.dart' show LiveVocabulary, owner, one, two;
@@ -156,9 +156,11 @@ void main() {
         invalidations: const Stream<void>.empty(),
       );
       final vocabulary = LiveVocabulary();
-      final ReviewSessionFactory overview = (_, _) async =>
-          throw StateError('overview');
-      final ReviewSessionFactory detail = (_, _) async =>
+      Future<DueLearningSession> overview(
+        String _,
+        LearningDirection _,
+      ) async => throw StateError('overview');
+      Future<DueLearningSession> detail(String _, LearningDirection _) async =>
           throw StateError('detail');
       addTearDown(() async {
         await tester.pumpWidget(const SizedBox());
