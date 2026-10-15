@@ -57,7 +57,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | FILTER-002 | 3 | Collection | Pending | — |
 | FILTER-003 | 1 | Collection | Pending | — |
 | ENTRY-001 | 2 | Entry | Pending | — |
-| ENTRY-005 | 2 | Entry | Pending | — |
+| ENTRY-005 | 2 | Entry | Host-verified | Seven guarded revalidation cases plus existing autosave/confirmation regressions; B01 29/29. Android pending. |
 | SPEED-001 | 2 | Learning | Foundation host-verified | Six immutable ordered-membership tests; B01 feature batch 29/29. Rotation and UI follow dependent specs. |
 | SPEED-002 | 2 | Learning | Pending | — |
 | SPEED-003 | 1 | Learning | Pending | — |

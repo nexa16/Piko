@@ -103,6 +103,9 @@ final class EntrySessionController extends ChangeNotifier {
     ),
   );
   EntryDraft _draft = const EntryDraft();
+  Object? _draftError;
+  int _draftRevision = 0, _activationRevision = 0;
+  final Map<String, Future<void>> _rechecks = {};
   bool _disposed = false;
   final List<VocabularyRecord> _confirmedEntries = [];
   String? _activeEntryId;
@@ -117,6 +120,7 @@ final class EntrySessionController extends ChangeNotifier {
   bool get isCompleted => !_disposed && _completed;
 
   EntryDraft get draft => _draft;
+  Object? get draftError => _draftError;
   List<VocabularyRecord> get confirmedEntries =>
       List.unmodifiable(_confirmedEntries);
 
@@ -180,6 +184,7 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     final buffer = _savedBuffer(id);
     if (_savedWorkers.containsKey(id)) return;
+    if (buffer.error == null || buffer.error is VocabularyValidation) return;
     if (normalizeVocabularyText(buffer.draft.targetText).isEmpty) {
       buffer.error = VocabularyValidation.requiredTarget;
     } else if (normalizeVocabularyText(buffer.draft.nativeText).isEmpty) {
@@ -229,9 +234,94 @@ final class EntrySessionController extends ChangeNotifier {
   /// Resolves when all accepted saved-edit queues are idle, including additions
   /// made while draining. Errors remain on each saved-entry state.
   Future<void> awaitSavedEdits() async {
-    while (_savedWorkers.isNotEmpty) {
-      await Future.wait(_savedWorkers.values.toList(growable: false));
+    while (_savedWorkers.isNotEmpty || _rechecks.isNotEmpty) {
+      await Future.wait([..._savedWorkers.values, ..._rechecks.values]);
     }
+  }
+
+  /// Read-only validation never rewrites the user's raw buffer. The subsequent
+  /// update remains authoritative if another writer races this snapshot.
+  Future<Object?> _pairError(EntryDraft value, {String? excludingId}) async {
+    if (normalizeVocabularyText(value.targetText).isEmpty) {
+      return VocabularyValidation.requiredTarget;
+    }
+    if (normalizeVocabularyText(value.nativeText).isEmpty) {
+      return VocabularyValidation.requiredNative;
+    }
+    final entries = await _repository.watchByCollection(collectionId).first;
+    final target = vocabularyComparisonKey(value.targetText);
+    final native = vocabularyComparisonKey(value.nativeText);
+    return entries.any(
+          (entry) =>
+              entry.collectionId == collectionId &&
+              entry.id != excludingId &&
+              vocabularyComparisonKey(entry.targetText) == target &&
+              vocabularyComparisonKey(entry.nativeText) == native,
+        )
+        ? VocabularyValidation.duplicatePair
+        : null;
+  }
+
+  void _recheckSavedEntry(String id) {
+    final buffer = _savedBuffers[id];
+    if (buffer == null || buffer.error != VocabularyValidation.duplicatePair) {
+      return;
+    }
+    final activation = _activationRevision;
+    final revision = buffer.revision;
+    final snapshot = buffer.draft;
+    final key = '$id:$activation';
+    final done = Completer<void>();
+    _rechecks[key] = done.future;
+    unawaited(() async {
+      try {
+        final error = await _pairError(snapshot, excludingId: id);
+        if (_disposed ||
+            _activationRevision != activation ||
+            buffer.revision != revision ||
+            !identical(_savedBuffers[id], buffer)) {
+          return;
+        }
+        buffer.error = error;
+        if (error == null) {
+          buffer.pending = (revision, snapshot);
+          _startSavedWorker(id, buffer);
+        }
+        notifyListeners();
+      } catch (_) {
+        // A failed read cannot establish that the retained conflict is gone.
+      } finally {
+        _rechecks.remove(key);
+        done.complete();
+      }
+    }());
+  }
+
+  void _recheckDraft() {
+    if (_draftError != VocabularyValidation.duplicatePair) return;
+    final activation = _activationRevision;
+    final revision = _draftRevision;
+    final snapshot = _draft;
+    final key = 'draft:$activation';
+    final done = Completer<void>();
+    _rechecks[key] = done.future;
+    unawaited(() async {
+      try {
+        final error = await _pairError(snapshot);
+        if (_disposed ||
+            _activationRevision != activation ||
+            _draftRevision != revision) {
+          return;
+        }
+        _draftError = error;
+        notifyListeners();
+      } catch (_) {
+        // Retain duplicate feedback until a successful current read.
+      } finally {
+        _rechecks.remove(key);
+        done.complete();
+      }
+    }());
   }
 
   Future<VocabularyDeletionReceipt> deleteSavedEntry(String id) {
@@ -256,9 +346,7 @@ final class EntrySessionController extends ChangeNotifier {
     Completer<VocabularyDeletionReceipt> result,
   ) async {
     try {
-      while (_savedWorkers.containsKey(id)) {
-        await _savedWorkers[id];
-      }
+      await awaitSavedEdits();
       if (_disposed) throw StateError('The entry session has ended.');
       final startedAt = _clock.now().toUtc();
       final receipt = await _deletionService!.delete(id);
@@ -417,12 +505,17 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     final snapshot = _draft;
     if (normalizeVocabularyText(snapshot.targetText).isEmpty) {
+      _draftError = VocabularyValidation.requiredTarget;
+      notifyListeners();
       return Future.error(VocabularyValidation.requiredTarget);
     }
     if (normalizeVocabularyText(snapshot.nativeText).isEmpty) {
+      _draftError = VocabularyValidation.requiredNative;
+      notifyListeners();
       return Future.error(VocabularyValidation.requiredNative);
     }
     final result = Completer<VocabularyRecord>();
+    _draftError = null;
     _pendingConfirmation = result.future;
     notifyListeners();
     unawaited(_confirm(snapshot, result));
@@ -488,6 +581,9 @@ final class EntrySessionController extends ChangeNotifier {
     } catch (error, stack) {
       _completion = null;
       _completing = false;
+      if (!_disposed && error is! SavedEntryCompletionBlocked) {
+        _draftError = error;
+      }
       if (!_disposed) notifyListeners();
       result.completeError(error, stack);
     }
@@ -514,12 +610,16 @@ final class EntrySessionController extends ChangeNotifier {
         _ordinals[record.id] = _nextOrdinal++;
         _advancementRevision++;
         _draft = const EntryDraft();
+        _draftRevision++;
+        _draftError = null;
+        _activationRevision++;
         _activeEntryId = null;
         notifyListeners();
       }
       result.complete(record);
     } catch (error, stack) {
       _pendingConfirmation = null;
+      if (!_disposed) _draftError = error;
       if (!_disposed) notifyListeners();
       result.completeError(error, stack);
     }
@@ -532,6 +632,8 @@ final class EntrySessionController extends ChangeNotifier {
     }
     if (_activeEntryId == id) return;
     _activeEntryId = id;
+    _activationRevision++;
+    _recheckSavedEntry(id);
     notifyListeners();
   }
 
@@ -539,6 +641,8 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     if (_activeEntryId == null) return;
     _activeEntryId = null;
+    _activationRevision++;
+    _recheckDraft();
     notifyListeners();
   }
 
@@ -559,6 +663,8 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     if (target == _draft.targetText && native == _draft.nativeText) return;
     _draft = EntryDraft(targetText: target, nativeText: native);
+    _draftRevision++;
+    _draftError = null;
     notifyListeners();
   }
 
