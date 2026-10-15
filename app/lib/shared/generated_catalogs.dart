@@ -73,6 +73,7 @@ const designCatalog = <String, Object?>{
 "compactBreakpoint": 400,
 "compactTitleSize": 18,
 "gap": 10,
+"maxTitleLines": 2,
 "titleLetterSpacing": -1,
 "titleSize": 22,
 },

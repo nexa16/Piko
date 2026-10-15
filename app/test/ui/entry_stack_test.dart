@@ -275,7 +275,9 @@ void main() {
       clean(tester, session);
       await seed(session, 4);
       await mount(tester, session);
-      final id = session.confirmedEntries[1].id;
+      // An interior card can retain its measured center without requiring
+      // artificial leading space before the first card.
+      final id = session.confirmedEntries[2].id;
       final viewport = tester.getRect(
         find.byKey(const ValueKey('entry-stack')),
       );
@@ -465,7 +467,11 @@ void main() {
         const TextSelection(baseOffset: 2, extentOffset: 5),
       );
       expect(find.byType(TextField), findsNWidgets(2));
-      expect(tester.testTextInput.isVisible, isFalse);
+      expect(tester.testTextInput.isVisible, isTrue);
+      expect(
+        tester.widget<TextField>(field('draft', 'target')).focusNode!.hasFocus,
+        isTrue,
+      );
     },
   );
 

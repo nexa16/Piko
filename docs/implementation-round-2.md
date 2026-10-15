@@ -86,7 +86,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-CARD-012 | 1 | Learning | Pending | — |
 | UX-SETUP-001 | 2 | Learning | Pending | — |
 | UX-SETUP-002 | 4 | Learning | Pending | — |
-| UX-ENTRY-001 | 4 | Entry | Pending | — |
+| UX-ENTRY-001 | 4 | Entry | Host-verified | Five EN/DE keyboard/200%/Next-Done cases plus stack/exit and category regression batch 39/39. Real IME pending. |
 | UX-ENTRY-003 | 1 | Entry | Host-verified | Four EN/DE error/reopen UI cases with 7 controller regressions; B02 31/31; Android pending. |
 | UX-ENTRY-004 | 1 | Entry | Pending | — |
 | UX-CAT-001 | 3 | Collection | Pending | — |
@@ -103,6 +103,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 ## Batch evidence
 
 - Round-1 baseline evidence remains in implementation-round-1.md; no round-2 result is inferred.
+- Entry header reflows navigation above a full-width title when the centered track would exceed two lines. This retains labels and scale instead of truncating or shrinking them when German text and the keyboard consume the viewport.
 
 ### CAT-002 decision
 
