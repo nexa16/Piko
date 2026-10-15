@@ -32,6 +32,12 @@ abstract interface class CategorizedVocabularyOpeningSnapshot
 abstract interface class CategorizedVocabularyRepository
     implements VocabularyRepository {
   Future<Map<String, Set<String>>> categorizedAssignments(String entryId);
+  Future<VocabularyRecord> createCategorized({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  });
   Future<VocabularyRecord> updateCategorized({
     required String id,
     required String targetText,

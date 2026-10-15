@@ -164,6 +164,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   EntrySessionResources _entrySession(String collectionId) {
     final deletion = SqliteVocabularyDeletionService(database);
     return EntrySessionResources(
+      categoriesRepository: categories,
       interchangeBuilder: (_, collection) => VocabularyJsonPage(
         collection: collection,
         service: jsonService,

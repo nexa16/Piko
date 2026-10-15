@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
+import '../../data/categories_repository.dart';
+import '../categories/vocabulary_categories.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -25,12 +27,14 @@ class EntrySessionScreen extends StatefulWidget {
     required this.session,
     this.onOpenInterchange,
     this.onPendingWrites,
+    this.categoriesRepository,
     super.key,
   });
   final CollectionRecord collection;
   final EntrySessionController session;
   final Future<void> Function()? onOpenInterchange;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final CategoriesRepository? categoriesRepository;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
@@ -456,7 +460,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (exitDraining || exitRequest != null) return;
     final initiatingSession = session;
     try {
-      await initiatingSession.confirmAndNext();
+      final operation = initiatingSession.confirmAndNext();
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      await operation;
     } catch (_) {
       // The controller owns revision-aware validation, including rechecks when
       // reopening the same raw draft after a conflicting saved entry changes.
@@ -587,7 +595,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
     try {
-      await initiatingSession.completeSession();
+      final operation = initiatingSession.completeSession();
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      await operation;
       if (!mounted ||
           !identical(session, initiatingSession) ||
           route?.isCurrent != true) {
@@ -652,7 +664,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       final draft = initiatingSession.draft;
       if (!initiatingSession.isCompleted &&
           (draft.targetText.trim().isNotEmpty ||
-              draft.nativeText.trim().isNotEmpty)) {
+              draft.nativeText.trim().isNotEmpty ||
+              draft.assignments.isNotEmpty)) {
         final discard = await showPikoDialog<bool>(
           context,
           builder: (dialogContext) {
@@ -727,11 +740,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     VocabularyValidation.requiredNative => 'entry.requiredNative',
     VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
     VocabularyValidation.entryNotFound => 'entry.notFound',
+    CategoryValidation() => 'category.selectionInvalid',
     _ => 'entry.saveFailed',
   };
 
   Widget card(String id, int index, BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final owningSession = session;
     final draft = id == draftId;
     final saved = draft ? null : session.savedEntryState(id);
     final values = draft ? session.draft : saved!.draft;
@@ -764,6 +779,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           targetText: target ? value : null,
           nativeText: target ? null : value,
         );
+        widget.onPendingWrites?.call(session.awaitSavedEdits());
       }
     }
 
@@ -942,6 +958,15 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                               ),
                             ),
                         ],
+                        if (widget.categoriesRepository != null &&
+                            values.assignments.isNotEmpty)
+                          VocabularyCategories(
+                            key: ObjectKey(owningSession),
+                            collectionId: widget.collection.id,
+                            entryId: draft ? null : id,
+                            repository: widget.categoriesRepository!,
+                            draftAssignments: values.assignments,
+                          ),
                         if (error != null)
                           Text(
                             copy.text(errorKey(error)),
@@ -973,6 +998,67 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           field(true),
                           SizedBox(height: pikoDesign.dimension('spacing.4')),
                           field(false),
+                          if (widget.categoriesRepository != null &&
+                              session.supportsCategories)
+                            VocabularyCategories(
+                              key: ObjectKey(owningSession),
+                              collectionId: widget.collection.id,
+                              entryId: draft ? null : id,
+                              repository: widget.categoriesRepository!,
+                              draftAssignments: values.assignments,
+                              disabled:
+                                  !active ||
+                                  session.isBusy ||
+                                  exitDraining ||
+                                  exitRequest != null,
+                              onPendingWrites: widget.onPendingWrites,
+                              onMetadataChanged:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : () {
+                                      if (!mounted || session != owningSession)
+                                        return;
+                                      final owner = session;
+                                      final refreshing = owner
+                                          .refreshCategoryReferences(
+                                            widget.categoriesRepository!,
+                                          );
+                                      widget.onPendingWrites?.call(
+                                        refreshing.then(
+                                          (_) => owner.awaitSavedEdits(),
+                                        ),
+                                      );
+                                    },
+                              onSelection: (assignment) {
+                                if (!mounted ||
+                                    session != owningSession ||
+                                    !active ||
+                                    id != activeId ||
+                                    session.isBusy ||
+                                    exitDraining ||
+                                    exitRequest != null ||
+                                    ModalRoute.of(context)?.isCurrent != true) {
+                                  return;
+                                }
+                                session.setCategoryValues(
+                                  entryId: draft ? null : id,
+                                  dimensionId: assignment.dimensionId,
+                                  valueIds: assignment.valueIds,
+                                );
+                                final owner = session;
+                                final refreshing = owner
+                                    .refreshCategoryReferences(
+                                      widget.categoriesRepository!,
+                                    );
+                                widget.onPendingWrites?.call(
+                                  refreshing.then(
+                                    (_) => owner.awaitSavedEdits(),
+                                  ),
+                                );
+                              },
+                            ),
                           SizedBox(height: pikoDesign.dimension('spacing.3')),
                           if (draft)
                             Wrap(
@@ -1022,7 +1108,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ),
                               ),
                             ),
-                          if (error != null && error is! VocabularyValidation)
+                          if (error != null &&
+                              error is! VocabularyValidation &&
+                              error is! CategoryValidation)
                             PikoButton(
                               label: copy.text('action.retry'),
                               onPressed: session.isBusy || exitDraining

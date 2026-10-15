@@ -350,23 +350,10 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
         database.vocabularyEntries,
       )..where((row) => row.id.equals(entryId))).getSingleOrNull();
       if (entry == null) throw CategoryValidation.entryNotFound;
-      for (final group in requested.entries) {
-        final dimension = await dimensionById(group.key);
-        if (dimension == null) throw CategoryValidation.dimensionNotFound;
-        if (dimension.collectionId != entry.collectionId) {
-          throw CategoryValidation.invalidOwnership;
-        }
-        if (dimension.mode == CategoryMode.single && group.value.length > 1) {
-          throw CategoryValidation.cardinalityViolation;
-        }
-        for (final id in group.value) {
-          final value = await valueById(id);
-          if (value == null) throw CategoryValidation.valueNotFound;
-          if (value.dimensionId != dimension.id) {
-            throw CategoryValidation.invalidOwnership;
-          }
-        }
-      }
+      await validateAssignments(
+        collectionId: entry.collectionId,
+        assignments: requested,
+      );
       await (database.delete(
         database.vocabularyCategoryAssignments,
       )..where((row) => row.entryId.equals(entryId))).go();
@@ -385,5 +372,30 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
         }
       }
     });
+  }
+
+  /// Shared preflight inside the caller's transaction, including for a new
+  /// vocabulary UUID that must not be allocated until category validation passes.
+  Future<void> validateAssignments({
+    required String collectionId,
+    required Map<String, Set<String>> assignments,
+  }) async {
+    for (final group in assignments.entries) {
+      final dimension = await dimensionById(group.key);
+      if (dimension == null) throw CategoryValidation.dimensionNotFound;
+      if (dimension.collectionId != collectionId) {
+        throw CategoryValidation.invalidOwnership;
+      }
+      if (dimension.mode == CategoryMode.single && group.value.length > 1) {
+        throw CategoryValidation.cardinalityViolation;
+      }
+      for (final id in group.value) {
+        final value = await valueById(id);
+        if (value == null) throw CategoryValidation.valueNotFound;
+        if (value.dimensionId != dimension.id) {
+          throw CategoryValidation.invalidOwnership;
+        }
+      }
+    }
   }
 }

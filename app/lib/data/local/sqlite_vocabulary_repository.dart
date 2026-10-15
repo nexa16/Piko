@@ -52,6 +52,36 @@ final class SqliteVocabularyRepository
   });
 
   @override
+  Future<VocabularyRecord> createCategorized({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) {
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final categories = SqliteCategoriesRepository(database);
+      await categories.validateAssignments(
+        collectionId: collectionId,
+        assignments: requested,
+      );
+      final saved = await create(
+        collectionId: collectionId,
+        targetText: targetText,
+        nativeText: nativeText,
+      );
+      await categories.replaceAssignments(
+        entryId: saved.id,
+        assignments: requested,
+      );
+      return saved;
+    });
+  }
+
+  @override
   Future<VocabularyRecord> updateCategorized({
     required String id,
     required String targetText,

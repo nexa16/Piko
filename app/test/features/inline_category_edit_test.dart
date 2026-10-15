@@ -77,6 +77,13 @@ class Opening implements CategorizedVocabularyOpeningSnapshot {
 
 class ControlledCategories extends ControlledVocabularyRepository
     implements CategorizedVocabularyRepository {
+  @override
+  Future<VocabularyRecord> createCategorized({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) => throw UnimplementedError('Unused inline creation');
   static const entry = VocabularyRecord(
     id: 'entry',
     collectionId: 'owner',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_deletion.dart';
+import '../../data/categories_repository.dart';
 import 'entry_session_controller.dart';
 import 'entry_session_screen.dart';
 
@@ -14,11 +15,13 @@ final class EntrySessionResources {
     required this.deletionService,
     this.interchangeBuilder,
     this.onPendingWrites,
+    this.categoriesRepository,
   });
   final EntrySessionController session;
   final VocabularyDeletionService deletionService;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final CategoriesRepository? categoriesRepository;
 
   void dispose() {
     session.dispose();
@@ -59,6 +62,7 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
   Widget build(BuildContext context) => EntrySessionScreen(
     collection: widget.collection,
     session: resources.session,
+    categoriesRepository: resources.categoriesRepository,
     onOpenInterchange: resources.interchangeBuilder == null
         ? null
         : () async {

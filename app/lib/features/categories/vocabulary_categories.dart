@@ -24,7 +24,8 @@ class VocabularyCategories extends StatefulWidget {
     this.onPendingWrites,
     this.onMetadataChanged,
   });
-  final String collectionId, entryId;
+  final String collectionId;
+  final String? entryId;
   final CategoriesRepository repository;
   final CollectionQuerySnapshot? snapshot;
   final Map<String, Set<String>>? draftAssignments;
@@ -79,7 +80,9 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
     final revision = ++generation;
     popup = false;
     dimensionsReady = false;
-    assignmentsReady = false;
+    assignmentsReady = widget.entryId == null;
+    assignments = const [];
+    dimensions = const [];
     error = null;
     values.clear();
     metadataSignature = null;
@@ -123,8 +126,9 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
             dimensionsReady = true;
           });
         }, onError: failed);
+    if (widget.entryId == null) return;
     assignmentsSubscription = widget.repository
-        .watchAssignments(widget.entryId)
+        .watchAssignments(widget.entryId!)
         .listen((next) {
           if (mounted && generation == revision) {
             setState(() {
@@ -245,7 +249,9 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
           in definitions[dimension.id] ?? const <CategoryValueRecord>[])
         if (assigned[dimension.id]?.contains(value.id) == true)
           Container(
-            key: ValueKey('category-label-${widget.entryId}-${value.id}'),
+            key: ValueKey(
+              'category-label-${widget.entryId ?? 'draft'}-${value.id}',
+            ),
             padding: EdgeInsets.symmetric(
               horizontal: design.dimension('spacing.2'),
               vertical: design.dimension('spacing.1'),
@@ -286,7 +292,7 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
             width: double.infinity,
             child: PikoButton(
               key: ValueKey(
-                'category-picker-${widget.entryId}-${dimension.id}',
+                'category-picker-${widget.entryId ?? 'draft'}-${dimension.id}',
               ),
               label: dimension.name,
               icon: const PikoIcon(PikoIconName.layers),
