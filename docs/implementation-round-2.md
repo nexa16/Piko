@@ -47,7 +47,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-RESET-001 | 1 | Data | Storage host-verified | Eight completion transaction cases; joined Speed/JSON/scope batch 40/40. Exact preserved history/opposite/scopes, fresh studied generation, rollback and idempotent retry/reopen. UI/Android pending. |
 | SPEED-RESET-002 | 1 | Data | Storage host-verified | Opposite direction and retained review-history assertions covered by SPEED-RESET-001 owning transaction; no duplicate implementation. UI/Android pending. |
 | OPEN-FSRS-001 | 1 | Data | Traceability | — |
-| COLL-007 | 2 | Collection | Pending | — |
+| COLL-007 | 2 | Collection | Session-state foundation verified | Two retention/isolation/immutable snapshot cases; joined batch 40/40. Runtime scope and filtered query/UI integration pending. |
 | CAT-001 | 1 | Data | Host-verified | Schema11; 7 category cases plus cascade/Undo/migration/inventory batch 31/31; Android pending. |
 | CAT-002 | 1 | Data | Host-verified | Five cardinality/atomic rollback/Undo conflict cases; joined category/entry batch 35/35. Android pending. |
 | CAT-004 | 1 | Collection | Pending | — |
