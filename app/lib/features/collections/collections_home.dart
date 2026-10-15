@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
+import '../../data/categories_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -35,6 +36,7 @@ class CollectionsHome extends StatefulWidget {
     this.queryBindingFactory,
     this.detailReviewSessionFactory,
     this.speedSessionFactory,
+    this.categoriesRepository,
     this.onOpenSettings,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
@@ -51,6 +53,7 @@ class CollectionsHome extends StatefulWidget {
   queryBindingFactory;
   final ReviewSessionFactory? detailReviewSessionFactory;
   final SpeedSessionFactory? speedSessionFactory;
+  final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
@@ -103,6 +106,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
+          categoriesRepository: widget.categoriesRepository,
           reviewMembershipLoader: widget.reviewMembershipLoader,
           reviewCountPolicy: widget.reviewCountPolicy,
           reviewCountClock: widget.reviewCountClock,

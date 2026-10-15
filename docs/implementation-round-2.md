@@ -89,7 +89,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | UX-ENTRY-001 | 4 | Entry | Host-verified | Five EN/DE keyboard/200%/Next-Done cases plus stack/exit and category regression batch 39/39. Real IME pending. |
 | UX-ENTRY-003 | 1 | Entry | Host-verified | Four EN/DE error/reopen UI cases with 7 controller regressions; B02 31/31; Android pending. |
 | UX-ENTRY-004 | 1 | Entry | Host-verified | Two EN/DE compact/partial-draft cases plus 8 keyboard/activation regressions pass; Android pending. |
-| UX-CAT-001 | 3 | Category UI | Management host-verified | Eight embedded form/cardinality/cancel/delete/failure/drain cases; expanded forms retain drafts. Joined category/learning runtime batch 25/25. Collection-menu and vocabulary wiring/Android pending. |
+| UX-CAT-001 | 3 | Category UI | Runtime management host-verified | Ten management/menu cases verify embedded forms, atomic name/mode, safe deletion, repository propagation, retained raw drafts and pending-write dismissal/delete guards. Two final focused wiring cases pass without missed taps. Entry integration/Android pending. |
 | UX-IMPORT-JSON-001 | 1 | JSON UI | Host-verified | 11 file/clipboard/page cases plus real EN/DE entry-to-JSON roundtrip: incomplete/invalid drafts retained, healthy saved cards refreshed, learning preserved. Joined route batch 32/32. Android picker pending. |
 | UX-IMPORT-JSON-002 | 1 | JSON UI | Page host-verified | Nine grouped preview/confirmation/stale/pending/import cases plus six transfer regressions; joined query/Speed/JSON batch 35/35. Real SQLite updates preserve learning; DE 320px/200% controls reachable. Android pending. |
 | UX-VOCAB-DELETE-001 | 3 | Collection | Pending | — |

@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/collection_query.dart';
+import '../../data/categories_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -25,6 +26,7 @@ import 'collection_search_field.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import '../categories/category_management.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
   const CollectionLoadFailure({required this.onRetry, super.key});
@@ -56,6 +58,7 @@ class CollectionDetail extends StatefulWidget {
     this.categoryManagementBuilder,
     this.queryBinding,
     this.speedSessionFactory,
+    this.categoriesRepository,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -75,6 +78,7 @@ class CollectionDetail extends StatefulWidget {
   /// Runtime-owned; this route listens but never disposes the shared projection.
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
+  final CategoriesRepository? categoriesRepository;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
@@ -368,6 +372,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final request = Object();
     final repository = widget.repository;
     final categoryBuilder = widget.categoryManagementBuilder;
+    final categories = widget.categoriesRepository;
+    final register = widget.onPendingVocabularyWrites;
+    final pending = ValueNotifier(false);
     bool current() =>
         mounted &&
         identity == _identity &&
@@ -377,7 +384,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
     setState(() => _menuRequest = request);
     var consumed = false;
     bool consume() {
-      if (!current() || consumed || _menuDialog?.isCurrent != true)
+      if (!current() ||
+          consumed ||
+          pending.value ||
+          _menuDialog?.isCurrent != true)
         return false;
       consumed = true;
       return true;
@@ -399,34 +409,55 @@ class _CollectionDetailState extends State<CollectionDetail> {
         },
         builder: (menuContext) {
           final copy = PikoCopyScope.of(menuContext);
-          return Focus(
-            autofocus: true,
-            child: PikoDialog(
-              purpose: PikoDialogPurpose.directChoice,
-              title: copy.text('r2.more'),
-              onClose: () {
-                if (consume()) Navigator.of(menuContext).pop();
-              },
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (categoryBuilder != null)
-                    ExpansionTile(
-                      key: const ValueKey('collection-menu-categories'),
-                      leading: const PikoIcon(PikoIconName.layers),
-                      title: Text(copy.text('r2.editCategories')),
-                      children: [Builder(builder: categoryBuilder)],
+          return ValueListenableBuilder<bool>(
+            valueListenable: pending,
+            builder: (_, writing, _) => Focus(
+              autofocus: true,
+              child: PikoDialog(
+                purpose: PikoDialogPurpose.directChoice,
+                dismissible: !writing,
+                title: copy.text('r2.more'),
+                onClose: () {
+                  if (consume()) Navigator.of(menuContext).pop();
+                },
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (categoryBuilder != null || categories != null)
+                      ExpansionTile(
+                        key: const ValueKey('collection-menu-categories'),
+                        leading: const PikoIcon(PikoIconName.layers),
+                        title: Text(copy.text('r2.editCategories')),
+                        enabled: !writing,
+                        maintainState: true,
+                        children: [
+                          if (categoryBuilder != null)
+                            Builder(builder: categoryBuilder)
+                          else
+                            CategoryManagement(
+                              collectionId: record.id,
+                              repository: categories!,
+                              onPendingWrites: register,
+                              onPendingChanged: (busy) {
+                                if (current()) pending.value = busy;
+                              },
+                            ),
+                        ],
+                      ),
+                    PikoButton(
+                      key: const ValueKey('collection-menu-delete'),
+                      label: copy.text('collection.delete'),
+                      icon: const PikoIcon(PikoIconName.trash),
+                      variant: PikoButtonVariant.dangerGhost,
+                      onPressed: writing
+                          ? null
+                          : () {
+                              if (consume())
+                                Navigator.of(menuContext).pop(true);
+                            },
                     ),
-                  PikoButton(
-                    key: const ValueKey('collection-menu-delete'),
-                    label: copy.text('collection.delete'),
-                    icon: const PikoIcon(PikoIconName.trash),
-                    variant: PikoButtonVariant.dangerGhost,
-                    onPressed: () {
-                      if (consume()) Navigator.of(menuContext).pop(true);
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -442,6 +473,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
       }
     } finally {
       if (current()) setState(() => _menuRequest = null);
+      pending.dispose();
     }
   }
 
@@ -724,6 +756,11 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void didUpdateWidget(CollectionDetail oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.categoriesRepository != widget.categoriesRepository ||
+        oldWidget.categoryManagementBuilder !=
+            widget.categoryManagementBuilder) {
+      _closeMenu();
+    }
     if (oldWidget.collectionId != widget.collectionId ||
         oldWidget.repository != widget.repository ||
         oldWidget.vocabularyMutationsFactory !=
@@ -1096,6 +1133,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     collection: _lastReadyCollection!,
                     repository: widget.vocabularyRepository!,
                     queryBinding: widget.queryBinding,
+                    categoriesRepository: widget.categoriesRepository,
                     onPendingWrites: (work) {
                       // Capture this build's barrier/dependency callback so old
                       // child work is registered with its original storage owner.

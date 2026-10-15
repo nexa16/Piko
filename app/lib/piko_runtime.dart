@@ -10,6 +10,7 @@ import 'data/local/sqlite_learning_repository.dart';
 import 'data/local/sqlite_settings_repository.dart';
 import 'data/local/sqlite_vocabulary_json_service.dart';
 import 'data/local/sqlite_collection_query.dart';
+import 'data/local/sqlite_categories_repository.dart';
 import 'features/interchange/vocabulary_json_page.dart';
 import 'platform/vocabulary_json_platform.dart';
 import 'data/learning_item.dart';
@@ -57,6 +58,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
   late final collections = SqliteCollectionsRepository(database);
   late final vocabulary = SqliteVocabularyRepository(database);
+  late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
   late final collectionQuery = SqliteCollectionQueryService(database);
@@ -305,6 +307,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             repository: collections,
             entrySessionFactory: _entrySession,
             vocabularyRepository: vocabulary,
+            categoriesRepository: categories,
             onPendingVocabularyWrites: trackWrites,
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
