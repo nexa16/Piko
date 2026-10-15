@@ -62,7 +62,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | SPEED-002 | 2 | Learning | Host-verified | Seven rotation/refill cases; B02 31/31. Replacements wait for next pass; streak/game specs follow. |
 | SPEED-003 | 1 | Learning | Host-verified | Error-dependent streak/completion matrix plus pool/rotation regressions; shared/Speed batch 25/25. Persistence/UI pending. |
 | SPEED-005 | 3 | Data | Storage host-verified | Schema12 directional marker; 5 new eligibility/migration/preservation cases; data/learning/Speed batch 174/174. UI/Android pending. |
-| SPEED-006 | 1 | Coordinator | Runtime bridge host-verified | Two real SQLite composition cases plus lifecycle batch 11/11: filtered new-only launch, completion marker/reset callback, abandoned errors write nothing. UI/Android pending. |
+| SPEED-006 | 1 | Coordinator | Runtime UI host-verified | Two bridge cases plus real production screen flows for error-free and erroneous reverse completion: refresh-safe return, no summary, marker visibility, exact FSRS preservation/one-direction reset and unlocked controls. Latest focused batch 7/7; Android pending. |
 | SPEED-007 | 2 | Learning | Host-verified | Seven short-pool/full-pass boundary cases including accepted shrinking example; joined batch 174/174. Game widget follows. |
 | SPEED-008 | 1 | Learning | Controller host-verified | Nine lifecycle/write-drain/stale-callback cases; joined Speed batch 20/20. Durable data callback and route integration pending. |
 | RETRY-005 | 2 | Learning | Host-verified | Deadline-based countdown, automatic eligibility refresh, expiry/coverage/lifecycle cases; joined batch 46/46 plus focused review fixes 23/23. Android pending. |
