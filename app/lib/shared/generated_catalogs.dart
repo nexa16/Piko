@@ -351,6 +351,26 @@ const copyCatalog = <String, Object?>{
 "de": "Dimension hinzufügen",
 "en": "Add dimension",
 },
+"category.deleteDimension": <String, Object?>{
+"de": "Dimension löschen",
+"en": "Delete dimension",
+},
+"category.deleteDimensionWarning": <String, Object?>{
+"de": "{name} mit allen Werten und Zuordnungen löschen? Vokabeln und Lernstand bleiben erhalten.",
+"en": "Delete {name} and all its values and assignments? Vocabulary and learning are kept.",
+},
+"category.deleteFailed": <String, Object?>{
+"de": "Diese Kategorie konnte nicht gelöscht werden. Versuche es erneut.",
+"en": "Couldn't delete this category. Try again.",
+},
+"category.deleteValue": <String, Object?>{
+"de": "Wert löschen",
+"en": "Delete value",
+},
+"category.deleteValueWarning": <String, Object?>{
+"de": "{name} und seine Zuordnungen löschen? Vokabeln und Lernstand bleiben erhalten.",
+"en": "Delete {name} and its assignments? Vocabulary and learning are kept.",
+},
 "category.description": <String, Object?>{
 "de": "Dimensionen und Werte",
 "en": "Dimensions and values",
@@ -374,6 +394,10 @@ const copyCatalog = <String, Object?>{
 "category.loadFailed": <String, Object?>{
 "de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load category values. Try again.",
+},
+"category.managementLoadFailed": <String, Object?>{
+"de": "Kategorien konnten nicht geladen werden. Versuche es erneut.",
+"en": "Couldn't load categories. Try again.",
 },
 "category.saveDimension": <String, Object?>{
 "de": "Dimension speichern",
