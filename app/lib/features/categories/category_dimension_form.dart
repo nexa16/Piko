@@ -129,10 +129,11 @@ class _CategoryDimensionFormState extends State<CategoryDimensionForm> {
             autofocus: true,
             textInputAction: TextInputAction.done,
             onChanged: (_) {
-              if (editable())
+              if (editable()) {
                 setState(() {
                   error = null;
                 });
+              }
             },
           ),
           SizedBox(height: design.dimension('spacing.4')),
