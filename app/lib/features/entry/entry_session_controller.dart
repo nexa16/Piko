@@ -295,8 +295,23 @@ final class EntrySessionController extends ChangeNotifier {
       await Future.wait([
         ..._savedWorkers.values,
         ..._rechecks.values,
-        if (_categoryMetadata != null) _categoryMetadata!,
+        ?_categoryMetadata,
       ]);
+    }
+  }
+
+  /// Deleting one card must not wait for an unrelated entry's held write.
+  /// Its own recheck may still accept a save, so drain again after each await.
+  Future<void> _awaitSavedEntryEdits(String id) async {
+    while (true) {
+      final worker = _savedWorkers[id];
+      final pending = <Future<void>>[
+        if (worker != null) worker,
+        for (final recheck in _rechecks.entries)
+          if (recheck.key.startsWith('$id:')) recheck.value,
+      ];
+      if (pending.isEmpty) return;
+      await Future.wait(pending);
     }
   }
 
@@ -458,7 +473,7 @@ final class EntrySessionController extends ChangeNotifier {
     Completer<VocabularyDeletionReceipt> result,
   ) async {
     try {
-      await awaitSavedEdits();
+      await _awaitSavedEntryEdits(id);
       if (_disposed) throw StateError('The entry session has ended.');
       final repository = _repository;
       final assignments = repository is CategorizedVocabularyRepository

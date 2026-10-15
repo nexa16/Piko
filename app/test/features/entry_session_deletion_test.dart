@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/vocabulary_deletion.dart';
+import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/core/clock.dart';
 import 'package:piko/features/entry/entry_session_controller.dart';
 import '../support/entry_deletion_fixture.dart';
@@ -15,6 +16,42 @@ class FallibleSchedulingClock implements PikoClock {
   DateTime now() {
     if (calls++ == 0) return instant;
     throw StateError('Clock read failed');
+  }
+}
+
+class CategorizedGatedEntryRepository extends GatedEntryRepository
+    implements CategorizedVocabularyRepository {
+  CategorizedGatedEntryRepository(this.categorized) : super(categorized);
+  final CategorizedVocabularyRepository categorized;
+  @override
+  Future<Map<String, Set<String>>> categorizedAssignments(String entryId) =>
+      categorized.categorizedAssignments(entryId);
+  @override
+  Future<VocabularyRecord> createCategorized({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) => categorized.createCategorized(
+    collectionId: collectionId,
+    targetText: targetText,
+    nativeText: nativeText,
+    assignments: assignments,
+  );
+  @override
+  Future<VocabularyRecord> updateCategorized({
+    required String id,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) async {
+    await updateGates[id]?.future;
+    return categorized.updateCategorized(
+      id: id,
+      targetText: targetText,
+      nativeText: nativeText,
+      assignments: assignments,
+    );
   }
 }
 
@@ -160,35 +197,48 @@ void main() {
     },
   );
 
-  test(
-    'target save queue drains independently; busy repeats and competing actions are guarded',
-    () async {
-      final first = await f.confirm('One', 'Eins'),
-          other = await f.confirm('Two', 'Zwei');
-      final gate = Completer<void>(), unrelated = Completer<void>();
-      f.repository.updateGates[first.id] = gate;
-      f.repository.updateGates[other.id] = unrelated;
-      f.session.editSavedEntry(first.id, nativeText: 'First');
-      f.session.editSavedEntry(first.id, nativeText: 'Latest');
-      f.session.editSavedEntry(other.id, nativeText: 'Other');
-      final deletion = f.session.deleteSavedEntry(first.id);
-      expect(identical(deletion, f.session.deleteSavedEntry(first.id)), isTrue);
-      expect(f.session.isBusy, isTrue);
-      expect(f.deletion.deletes, 0);
-      expect(() => f.session.completeSession(), throwsStateError);
-      expect(() => f.session.confirmAndNext(), throwsStateError);
-      expect(() => f.session.setTargetText('new'), throwsStateError);
-      expect(() => f.session.selectSavedEntry(other.id), throwsStateError);
-      gate.complete();
-      await deletion;
-      expect(f.deletion.receipts.single.entry.nativeText, 'Latest');
-      expect(f.session.savedEntryState(other.id).isSaving, isTrue);
-      await f.session.undoDeletion(first.id);
-      unrelated.complete();
-      await f.session.awaitSavedEdits();
-      expect(f.session.savedEntryState(other.id).draft.nativeText, 'Other');
-    },
-  );
+  for (final categorized in [false, true]) {
+    test(
+      'target save queue drains independently; busy repeats and competing actions are guarded (${categorized ? 'categorized' : 'text-only'})',
+      () async {
+        if (categorized) {
+          f.sessions.remove(f.session);
+          f.session.dispose();
+          f.repository = CategorizedGatedEntryRepository(
+            f.repository.real as CategorizedVocabularyRepository,
+          );
+          f.session = f.newSession();
+        }
+        final first = await f.confirm('One', 'Eins'),
+            other = await f.confirm('Two', 'Zwei');
+        final gate = Completer<void>(), unrelated = Completer<void>();
+        f.repository.updateGates[first.id] = gate;
+        f.repository.updateGates[other.id] = unrelated;
+        f.session.editSavedEntry(first.id, nativeText: 'First');
+        f.session.editSavedEntry(first.id, nativeText: 'Latest');
+        f.session.editSavedEntry(other.id, nativeText: 'Other');
+        final deletion = f.session.deleteSavedEntry(first.id);
+        expect(
+          identical(deletion, f.session.deleteSavedEntry(first.id)),
+          isTrue,
+        );
+        expect(f.session.isBusy, isTrue);
+        expect(f.deletion.deletes, 0);
+        expect(() => f.session.completeSession(), throwsStateError);
+        expect(() => f.session.confirmAndNext(), throwsStateError);
+        expect(() => f.session.setTargetText('new'), throwsStateError);
+        expect(() => f.session.selectSavedEntry(other.id), throwsStateError);
+        gate.complete();
+        await deletion;
+        expect(f.deletion.receipts.single.entry.nativeText, 'Latest');
+        expect(f.session.savedEntryState(other.id).isSaving, isTrue);
+        await f.session.undoDeletion(first.id);
+        unrelated.complete();
+        await f.session.awaitSavedEdits();
+        expect(f.session.savedEntryState(other.id).draft.nativeText, 'Other');
+      },
+    );
+  }
 
   test(
     'first/middle/last and active/inactive removal preserve identities and original ordinals',
