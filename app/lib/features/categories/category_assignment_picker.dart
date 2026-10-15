@@ -56,17 +56,20 @@ class CategoryAssignmentPicker extends StatefulWidget {
 }
 
 class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
-  final query = TextEditingController();
+  final query = TextEditingController(), newValueName = TextEditingController();
+  final newValueFocus = FocusNode();
   final listScroll = ScrollController();
-  final fullList = GlobalKey(), search = GlobalKey();
+  final fullList = GlobalKey(), search = GlobalKey(), creation = GlobalKey();
   StreamSubscription<List<CategoryValueRecord>>? valuesSubscription;
   List<CategoryValueRecord> values = const [];
   Set<String> opening = const {}, selected = const {};
   late CategoryDimensionRecord dimension;
   bool ready = false, pending = false, overflow = false, scheduled = false;
   Object? error;
+  Object? valueError;
+  bool creatingValue = false;
   int generation = 0;
-  double fullHeight = 0, searchHeight = 0;
+  double fullHeight = 0, searchHeight = 0, creationHeight = 0;
   bool get changed => !setEquals(opening, selected);
 
   @override
@@ -86,6 +89,9 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         oldWidget.dimension.id != widget.dimension.id ||
         oldWidget.dimension.collectionId != widget.dimension.collectionId) {
       dimension = widget.dimension;
+      creatingValue = false;
+      valueError = null;
+      newValueName.clear();
       track(load());
     }
   }
@@ -196,6 +202,58 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
     }
   }
 
+  Future<void> createValue() async {
+    if (!ready ||
+        pending ||
+        !creatingValue ||
+        newValueName.text.isEmpty ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    final revision = generation;
+    final snapshot = newValueName.text;
+    setState(() {
+      pending = true;
+      valueError = null;
+    });
+    try {
+      final actual = await widget.repository.dimensionById(dimension.id);
+      if (!owned(revision)) return;
+      if (ModalRoute.of(context)?.isCurrent != true) {
+        setState(() {
+          pending = false;
+        });
+        return;
+      }
+      if (actual == null || actual.collectionId != dimension.collectionId) {
+        throw CategoryValidation.dimensionNotFound;
+      }
+      final saved = await widget.repository.createValue(
+        dimensionId: dimension.id,
+        name: snapshot,
+      );
+      if (!owned(revision)) return;
+      if (saved.dimensionId != dimension.id)
+        throw CategoryValidation.invalidOwnership;
+      setState(() {
+        // Definition creation never changes the staged assignment set/query.
+        if (!values.any((value) => value.id == saved.id)) {
+          values = List.unmodifiable([...values, saved]);
+        }
+        creatingValue = false;
+        pending = false;
+        newValueName.clear();
+      });
+      newValueFocus.unfocus();
+    } catch (failure) {
+      if (owned(revision))
+        setState(() {
+          pending = false;
+          valueError = failure;
+        });
+    }
+  }
+
   void measure(double baseCap) {
     if (scheduled) return;
     scheduled = true;
@@ -208,13 +266,16 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
       }
 
       final nextFull = height(fullList), nextSearch = height(search);
+      final nextCreation = height(creation);
       final nextOverflow = nextFull > baseCap + .5;
       if ((fullHeight - nextFull).abs() > .5 ||
           (searchHeight - nextSearch).abs() > .5 ||
+          (creationHeight - nextCreation).abs() > .5 ||
           overflow != nextOverflow) {
         setState(() {
           fullHeight = nextFull;
           searchHeight = nextSearch;
+          creationHeight = nextCreation;
           overflow = nextOverflow;
         });
       }
@@ -280,7 +341,8 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         media.size.height -
             media.viewInsets.bottom -
             media.padding.vertical -
-            chrome,
+            chrome -
+            math.max(minRow, creationHeight),
       ),
     );
     final showSearch = overflow || query.text.isNotEmpty;
@@ -386,6 +448,105 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
                 ),
               ],
             ),
+            Padding(
+              key: creation,
+              padding: EdgeInsets.only(top: design.dimension('spacing.2')),
+              child: creatingValue
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: PikoTextField(
+                                key: const ValueKey('category-new-value-name'),
+                                label: copy.text('r2.valueName'),
+                                controller: newValueName,
+                                focusNode: newValueFocus,
+                                enabled: !pending,
+                                textInputAction: TextInputAction.done,
+                                onEditingComplete: () {},
+                                onSubmitted: (_) {
+                                  if (owned(buildGeneration))
+                                    track(createValue());
+                                },
+                                onChanged: (_) => setState(() {
+                                  valueError = null;
+                                }),
+                              ),
+                            ),
+                            if (newValueName.text.isNotEmpty) ...[
+                              SizedBox(width: design.dimension('spacing.2')),
+                              PikoIconButton(
+                                icon: const PikoIcon(PikoIconName.check),
+                                semanticLabel: copy.text('r2.saveValue'),
+                                large: true,
+                                variant: PikoButtonVariant.primary,
+                                onPressed: pending
+                                    ? null
+                                    : () {
+                                        if (owned(buildGeneration))
+                                          track(createValue());
+                                      },
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (valueError != null)
+                          Text(
+                            copy.text(
+                              valueError is CategoryValidation
+                                  ? 'r2.valueInvalid'
+                                  : 'category.valueSaveFailed',
+                            ),
+                            style: TextStyle(color: design.color('danger')),
+                          ),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: PikoButton(
+                            label: copy.text('action.cancel'),
+                            variant: PikoButtonVariant.ghost,
+                            onPressed: pending
+                                ? null
+                                : () {
+                                    if (!owned(buildGeneration)) return;
+                                    setState(() {
+                                      creatingValue = false;
+                                      valueError = null;
+                                      newValueName.clear();
+                                    });
+                                  },
+                          ),
+                        ),
+                      ],
+                    )
+                  : Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: PikoButton(
+                        label: copy.text('r2.addValue'),
+                        variant: PikoButtonVariant.ghost,
+                        onPressed: pending
+                            ? null
+                            : () {
+                                if (!owned(buildGeneration) ||
+                                    ModalRoute.of(context)?.isCurrent != true) {
+                                  return;
+                                }
+                                setState(() {
+                                  creatingValue = true;
+                                  valueError = null;
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  if (owned(buildGeneration) && creatingValue)
+                                    newValueFocus.requestFocus();
+                                });
+                              },
+                      ),
+                    ),
+            ),
           ],
           if (error != null) ...[
             Text(
@@ -421,6 +582,8 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
     generation++;
     unawaited(valuesSubscription?.cancel());
     query.dispose();
+    newValueName.dispose();
+    newValueFocus.dispose();
     listScroll.dispose();
     super.dispose();
   }

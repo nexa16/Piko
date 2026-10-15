@@ -50,7 +50,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | COLL-007 | 2 | Collection | Session-state foundation verified | Two retention/isolation/immutable snapshot cases; joined batch 40/40. Runtime scope and filtered query/UI integration pending. |
 | CAT-001 | 1 | Data | Host-verified | Schema11; 7 category cases plus cascade/Undo/migration/inventory batch 31/31; Android pending. |
 | CAT-002 | 1 | Data | Host-verified | Five cardinality/atomic rollback/Undo conflict cases; joined category/entry batch 35/35. Android pending. |
-| CAT-004 | 1 | Collection | Pending | — |
+| CAT-004 | 1 | Category UI | Host-verified | Four inline-create validation/failure/retry/pending cases plus five picker regressions pass. Definition-only writes preserve staged assignments and open picker. Editor wiring/Android pending. |
 | CAT-005 | 1 | Collection | Pending | — |
 | CAT-009 | 3 | Category UI | Picker host-verified | Five staged-set/Single/Multiple/safe-cancel/adaptive-overflow cases plus shared dialog regressions 10/10. Returns confirmed assignments without writing early. Vocabulary wiring/Android pending. |
 | FILTER-001 | 2 | Data / Collection | Query host-verified | 12 consistent query/filtered gateway cases, joined Speed/JSON batch 35/35. OR within/AND across, ordered membership, original counters and hidden retries preserved. UI/Android pending. |

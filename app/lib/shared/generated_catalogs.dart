@@ -382,6 +382,10 @@ const copyCatalog = <String, Object?>{
 "de": "Einheit",
 "en": "Unit",
 },
+"category.valueSaveFailed": <String, Object?>{
+"de": "Dieser Wert konnte nicht gespeichert werden. Versuche es erneut.",
+"en": "Couldn't save this value. Try again.",
+},
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
 "en": "Created {name}",

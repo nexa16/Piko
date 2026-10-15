@@ -369,6 +369,7 @@ globalThis.PIKO_COPY = {
     "category.loadFailed": {"en":"Couldn't load category values. Try again.","de":"Kategoriewerte konnten nicht geladen werden. Versuche es erneut."},
     "category.selectionInvalid": {"en":"Category values changed. Review the selection before applying.","de":"Kategoriewerte wurden geändert. Prüfe die Auswahl vor dem Übernehmen."},
     "category.emptyValues": {"en":"No values yet.","de":"Noch keine Werte."},
+    "category.valueSaveFailed": {"en":"Couldn't save this value. Try again.","de":"Dieser Wert konnte nicht gespeichert werden. Versuche es erneut."},
     "entry.saved": {"en":"Saved","de":"Gespeichert"},
     "entry.draft": {"en":"Not confirmed yet","de":"Noch nicht bestätigt"},
     "entry.autoSave": {"en":"Valid edits save automatically","de":"Gültige Änderungen werden automatisch gespeichert"},
