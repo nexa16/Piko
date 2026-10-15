@@ -1078,27 +1078,74 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     padding: EdgeInsets.only(
                       bottom: pikoDesign.dimension('spacing.3'),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: CollectionSearchField(
-                            scope: widget.queryBinding!.scope,
-                            enabled: _queryControlsAvailable,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final gap = pikoDesign.dimension('spacing.2');
+                        final labelSize = pikoDesign.dimension(
+                          'typography.label',
+                        );
+                        final scaler = MediaQuery.textScalerOf(context);
+                        final stack =
+                            constraints.maxWidth <
+                                pikoDesign.dimension(
+                                  'layout.mobileBreakpoint',
+                                ) ||
+                            scaler.scale(labelSize) > labelSize;
+                        final measure = TextPainter(
+                          text: TextSpan(
+                            text: copy.text('action.filters'),
+                            style: TextStyle(
+                              fontSize: labelSize,
+                              fontWeight: pikoDesign.weight(
+                                'components.buttons.weight',
+                              ),
+                            ),
                           ),
-                        ),
-                        SizedBox(width: pikoDesign.dimension('spacing.2')),
-                        PikoButton(
-                          key: const ValueKey('collection-filters'),
-                          label: copy.text('action.filters'),
-                          icon: const PikoIcon(PikoIconName.listFilter),
-                          variant: PikoButtonVariant.ghost,
-                          onPressed:
-                              _queryControlsAvailable &&
-                                  widget.queryBinding!.ready
-                              ? _openFilters
-                              : null,
-                        ),
-                      ],
+                          textDirection: Directionality.of(context),
+                          textScaler: scaler,
+                        )..layout();
+                        final buttonWidth =
+                            measure.width +
+                            pikoDesign.dimension('components.icons.size') +
+                            gap +
+                            2 *
+                                pikoDesign.dimension(
+                                  'components.buttons.padding',
+                                );
+                        measure.dispose();
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            SizedBox(
+                              width: stack
+                                  ? constraints.maxWidth
+                                  : constraints.maxWidth - buttonWidth - gap,
+                              child: CollectionSearchField(
+                                scope: widget.queryBinding!.scope,
+                                enabled: _queryControlsAvailable,
+                              ),
+                            ),
+                            SizedBox(
+                              width: stack ? constraints.maxWidth : buttonWidth,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: PikoButton(
+                                  key: const ValueKey('collection-filters'),
+                                  label: copy.text('action.filters'),
+                                  icon: const PikoIcon(PikoIconName.listFilter),
+                                  variant: PikoButtonVariant.ghost,
+                                  onPressed:
+                                      _queryControlsAvailable &&
+                                          widget.queryBinding!.ready
+                                      ? _openFilters
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 if (ready &&
