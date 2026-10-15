@@ -13,12 +13,16 @@ import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
+import 'package:piko/data/learning_item.dart';
+import 'package:piko/data/vocabulary_normalization.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/features/interchange/vocabulary_json_page.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
 import 'package:piko/platform/vocabulary_json_platform.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:uuid/uuid.dart';
 
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 
@@ -114,6 +118,7 @@ void main() {
       var mounted = false;
       var clipboardCaptured = false;
       var clipboardRestored = false;
+      var clipboardVerification = 'not-yet-verified';
       String? previousPlaintext;
       final savedName = 'piko-native-$run-$locale.json';
       Future<void> manifest() => File('${directory.path}/manifest.json')
@@ -124,7 +129,7 @@ void main() {
               'commit': commit,
               'locale': locale,
               'fixture':
-                  'synthetic Korean Basics, five entries, no applied imports',
+                  'synthetic Korean Basics, five exported entries; confirmed import updates one and appends one',
               'database': 'fixture.sqlite',
               'platform':
                   'default SystemVocabularyJsonPlatform, real Android services',
@@ -132,8 +137,9 @@ void main() {
               'screenshots': 'host captures device screenshots before each ACK',
               'status': status,
               'clipboardRestored': clipboardRestored,
+              'clipboardVerification': clipboardVerification,
               'clipboardPolicy':
-                  'prior plaintext retained in memory only; absent plaintext restored as empty plaintext',
+                  'mutate only with restorable plaintext retained in memory; otherwise skip without writing',
               'specRevisions': {
                 'UX-ENTRY-001': 4,
                 'IMPORT-JSON-001': 1,
@@ -273,55 +279,88 @@ void main() {
           find.byType(VocabularyJsonPage),
         );
         expect(page.platform, isA<SystemVocabularyJsonPlatform>());
-        Future<Map<String, Object?>> snapshot() => db.transaction(() async {
-          final rows = <String, Object?>{};
-          for (final table in db.allTables) {
-            rows[table.actualTableName] =
-                (await db
-                        .customSelect(
-                          'SELECT rowid AS fixture_rowid, * FROM ${table.actualTableName} ORDER BY rowid',
-                        )
-                        .get())
-                    .map((row) => row.data)
-                    .toList();
-          }
-          return rows;
-        });
+        Future<Map<String, Object?>> snapshot([PikoDatabase? connection]) {
+          final store = connection ?? db;
+          return store.transaction(() async {
+            final rows = <String, Object?>{};
+            for (final table in store.allTables) {
+              rows[table.actualTableName] =
+                  (await store
+                          .customSelect(
+                            'SELECT rowid AS fixture_rowid, * FROM ${table.actualTableName} ORDER BY rowid',
+                          )
+                          .get())
+                      .map((row) => row.data)
+                      .toList();
+            }
+            return rows;
+          });
+        }
+
         final baseline = await snapshot();
-        // Clipboard access stays strictly inside try/finally. Never serialize or
-        // interpolate the prior value into assertions, messages or artifacts.
-        previousPlaintext = (await Clipboard.getData(
-          Clipboard.kTextPlain,
-        ))?.text;
-        clipboardCaptured = true;
-        await _tap(tester, _button(copy.text('json.copy')));
-        await _wait(
-          tester,
-          () => find.text(copy.text('json.copied')).evaluate().isNotEmpty,
-          'real clipboard copy completion',
-        );
-        await _tap(tester, _button(copy.text('json.paste')));
+        final expectedCollections =
+            (jsonDecode(await page.service.exportCollection(owner.id))
+                as Map)['collections'];
         String input() =>
             tester.widget<TextField>(_key('json-input')).controller!.text;
-        await _wait(tester, () => input().isNotEmpty, 'real clipboard paste');
-        final pasted = jsonDecode(input()) as Map<String, dynamic>;
-        final entries =
-            ((pasted['collections'] as List).single as Map)['entries'] as List;
-        expect(entries.length, 5);
-        expect(entries.map((e) => (e as Map)['targetText']), [
-          '사과',
-          '물',
-          '학교',
-          '친구',
-          '책',
-        ]);
-        final copiedInput = input();
-        await Clipboard.setData(ClipboardData(text: previousPlaintext ?? ''));
-        clipboardRestored = true;
-        previousPlaintext = null;
+        void expectSyntheticFive(String json) {
+          final envelope = jsonDecode(json) as Map<String, dynamic>;
+          expect(envelope['format'], 'piko-vocabulary');
+          expect(envelope['schemaVersion'], 1);
+          final collection = (envelope['collections'] as List).single as Map;
+          expect(collection['id'], owner.id);
+          expect(collection['targetLanguage'], 'ko');
+          expect(collection['nativeLanguage'], 'de');
+          final entries = collection['entries'] as List;
+          expect(entries.length, 5);
+          expect(
+            entries.map((e) => ((e as Map)['targetText'], e['nativeText'])),
+            [
+              ('사과', 'Apfel'),
+              ('물', 'Wasser'),
+              ('학교', 'Schule'),
+              ('친구', 'Freund'),
+              ('책', 'Buch'),
+            ],
+          );
+          expect(envelope['collections'], expectedCollections);
+        }
+
+        // Clipboard access stays strictly inside try/finally. Never serialize or
+        // interpolate the prior value into assertions, messages or artifacts.
+        try {
+          previousPlaintext = (await Clipboard.getData(
+            Clipboard.kTextPlain,
+          ))?.text;
+        } catch (_) {
+          // Unreadable clipboard is also not safely restorable. Do not mutate it.
+        }
+        if (previousPlaintext != null) {
+          clipboardCaptured = true;
+          clipboardVerification = 'in-progress';
+          await _tap(tester, _button(copy.text('json.copy')));
+          await _wait(
+            tester,
+            () => find.text(copy.text('json.copied')).evaluate().isNotEmpty,
+            'real clipboard copy completion',
+          );
+          await _tap(tester, _button(copy.text('json.paste')));
+          await _wait(tester, () => input().isNotEmpty, 'real clipboard paste');
+          expectSyntheticFive(input());
+          await Clipboard.setData(ClipboardData(text: previousPlaintext));
+          clipboardRestored = true;
+          previousPlaintext = null;
+          clipboardVerification = 'verified';
+        } else {
+          clipboardVerification = 'not-verified-no-restorable-plaintext';
+        }
+        final inputBeforeFileOperations = input();
         await phase(
           'clipboard-roundtrip',
-          'Capture JSON route after real Copy/Paste; clipboard already restored; ACK only',
+          clipboardVerification == 'verified'
+              ? 'Capture JSON route after verified real Copy/Paste; clipboard restored; ACK only'
+              : 'Clipboard NOT VERIFIED: no restorable plaintext, no mutation; capture JSON route and ACK only',
+          metadata: {'clipboardVerification': clipboardVerification},
         );
         Future<void> idle() => _wait(
           tester,
@@ -339,7 +378,7 @@ void main() {
         );
         await idle();
         expect(
-          input() == copiedInput,
+          input() == inputBeforeFileOperations,
           isTrue,
           reason: 'Save cancellation must retain editable input',
         );
@@ -363,12 +402,12 @@ void main() {
         );
         await idle();
         expect(
-          input() == copiedInput,
+          input() == inputBeforeFileOperations,
           isTrue,
           reason: 'Open cancellation must retain editable input',
         );
         expect(find.text(copy.text('json.fileFailed')), findsNothing);
-        // Remove the existing pasted input so a later read cannot falsely pass.
+        // Clear any existing input so a later read cannot falsely pass.
         await tester.enterText(_key('json-input'), '');
         FocusManager.instance.primaryFocus?.unfocus();
         await tester.pumpAndSettle();
@@ -383,11 +422,8 @@ void main() {
           () => input().isNotEmpty,
           'real saved document read',
         );
-        // exportedAt may differ between Copy and Save; compare collection content.
-        expect(
-          (jsonDecode(input()) as Map)['collections'],
-          pasted['collections'],
-        );
+        // Verify the file independently of clipboard availability or payload.
+        expectSyntheticFive(input());
         await _tap(tester, _button(copy.text('json.analyze')));
         final summary = copy.text('r2.jsonSummary', {
           'added': 0,
@@ -407,6 +443,185 @@ void main() {
           'Capture analyzed preview with five unchanged entries; ACK only (do not Apply)',
         );
         expect(await snapshot(), baseline);
+        // Derive the import from the file actually reopened through Android,
+        // retaining UUIDs and original export bytes in the saved document.
+        final importEnvelope = jsonDecode(input()) as Map<String, dynamic>;
+        final importCollection =
+            (importEnvelope['collections'] as List).single as Map;
+        final importEntries = importCollection['entries'] as List;
+        final firstImported = importEntries.first as Map;
+        final changedId = firstImported['id'] as String;
+        const changedNative = 'Apfel (Android Import)';
+        firstImported['nativeText'] = changedNative;
+        final newId = const Uuid().v4();
+        importEntries.add({
+          'id': newId,
+          'targetText': '하늘',
+          'nativeText': 'Himmel',
+          'categoryAssignments': <Object?>[],
+          // No imported learning: both directional items must initialize fresh.
+        });
+        await tester.enterText(_key('json-input'), jsonEncode(importEnvelope));
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        await _tap(tester, _button(copy.text('json.analyze')));
+        final importSummary = copy.text('r2.jsonSummary', {
+          'added': 1,
+          'updated': 1,
+          'unchanged': 4,
+          'errors': 0,
+        });
+        await _wait(
+          tester,
+          () => find.text(importSummary).evaluate().isNotEmpty,
+          'changed file preview: one new, one updated, four unchanged, zero errors',
+        );
+        expect(
+          await snapshot(),
+          baseline,
+          reason: 'Analyze must not apply the synthetic edits',
+        );
+        await _tap(tester, _button(copy.text('json.apply')));
+        await _wait(
+          tester,
+          () => find.text(copy.text('json.confirmTitle')).evaluate().isNotEmpty,
+          'explicit aggregate import confirmation',
+        );
+        expect(
+          await snapshot(),
+          baseline,
+          reason: 'Opening confirmation must not apply the import',
+        );
+        final confirm = find.descendant(
+          of: find.byType(PikoDialog),
+          matching: _button(copy.text('json.apply')),
+        );
+        final applyStarted = DateTime.now().toUtc();
+        await _tap(tester, confirm);
+        final appliedMessage = copy.text('json.importApplied', {
+          'added': 1,
+          'updated': 1,
+          'unchanged': 4,
+        });
+        await _wait(
+          tester,
+          () => find.text(appliedMessage).evaluate().isNotEmpty,
+          'confirmed Android import success counts',
+        );
+        final applyFinished = DateTime.now().toUtc();
+        final afterImport = await snapshot();
+        List<Map<String, Object?>> rows(
+          Map<String, Object?> state,
+          String name,
+        ) => (state[name] as List).cast<Map<String, Object?>>();
+        final oldWords = rows(baseline, 'vocabulary_entries');
+        final newWords = rows(afterImport, 'vocabulary_entries');
+        expect(newWords.length, 6);
+        expect(
+          newWords.take(5).toList(),
+          [
+            for (final row in oldWords)
+              if (row['id'] == changedId)
+                {
+                  ...row,
+                  'native_text': changedNative,
+                  'native_key': vocabularyComparisonKey(changedNative),
+                }
+              else
+                row,
+          ],
+          reason:
+              'Existing UUIDs, order, targets and unchanged content remain exact',
+        );
+        expect(newWords.last['id'], newId);
+        expect(newWords.last['collection_id'], owner.id);
+        expect(newWords.last['target_text'], '하늘');
+        expect(newWords.last['native_text'], 'Himmel');
+        expect(
+          newWords.last['fixture_rowid'] as int,
+          greaterThan(oldWords.last['fixture_rowid'] as int),
+        );
+        final allLearning = rows(afterImport, 'learning_items');
+        final freshLearning = allLearning
+            .where((row) => row['entry_id'] == newId)
+            .toList();
+        expect(freshLearning.length, 2);
+        expect(
+          allLearning.where((row) => row['entry_id'] != newId).toList(),
+          baseline['learning_items'],
+          reason:
+              'All existing directional learning bytes and identities remain exact',
+        );
+        expect(freshLearning.map((row) => row['direction']).toSet(), {
+          'targetToNative',
+          'nativeToTarget',
+        });
+        for (final item in freshLearning) {
+          expect(item['generation'], 0);
+          expect(item['review_revision'], 0);
+          expect(item['speed_completed'], 0);
+          expect(item['format_version'], LearningCardCodec.version);
+          LearningCardCodec.decode(
+            item['card_json'] as String,
+            expectedId: item['id'] as int,
+            formatVersion: item['format_version'] as int,
+          );
+          final card = jsonDecode(item['card_json'] as String) as Map;
+          expect(card['state'], 1);
+          expect(card['step'], 0);
+          expect(card['stability'], isNull);
+          expect(card['difficulty'], isNull);
+          expect(card['lastReview'], isNull);
+          final due = DateTime.parse(card['due'] as String);
+          expect(due.isBefore(applyStarted), isFalse);
+          expect(due.isAfter(applyFinished), isFalse);
+        }
+        for (final table in baseline.keys.where(
+          (name) => !{
+            'vocabulary_entries',
+            'learning_items',
+            'learning_identity_sequence',
+            'vocabulary_order_sequence',
+          }.contains(name),
+        )) {
+          expect(
+            afterImport[table],
+            baseline[table],
+            reason:
+                '$table unchanged by confirmed import, including history/retry/counters',
+          );
+        }
+        await tester.ensureVisible(find.text(appliedMessage));
+        await tester.pumpAndSettle();
+        await phase(
+          'import-applied',
+          'Capture confirmed import: one new, one updated, four unchanged; ACK only',
+          metadata: {
+            'added': 1,
+            'updated': 1,
+            'unchanged': 4,
+            'existingLearningPreserved': true,
+            'freshDirectionalItems': 2,
+          },
+        );
+        // Let the real runtime drain and close before opening this same owned
+        // file independently. Never mount a second runtime or production DB.
+        await tester.pumpWidget(const SizedBox());
+        await db.closed.future.timeout(const Duration(seconds: 30));
+        mounted = false;
+        final reopened = PikoDatabase(
+          NativeDatabase(File('${directory.path}/fixture.sqlite')),
+        );
+        try {
+          expect(
+            await snapshot(reopened),
+            afterImport,
+            reason:
+                'Confirmed content and all preserved state survive file reopen',
+          );
+        } finally {
+          await reopened.close();
+        }
         expect(tester.takeException(), isNull);
         status = 'passed';
         debugPrint('PIKO_NATIVE_PASSED:$run:$locale');
@@ -417,10 +632,10 @@ void main() {
         rethrow;
       } finally {
         try {
-          if (clipboardCaptured && !clipboardRestored) {
-            await Clipboard.setData(
-              ClipboardData(text: previousPlaintext ?? ''),
-            );
+          if (clipboardCaptured &&
+              !clipboardRestored &&
+              previousPlaintext != null) {
+            await Clipboard.setData(ClipboardData(text: previousPlaintext));
             clipboardRestored = true;
           }
         } finally {

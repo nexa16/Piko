@@ -179,6 +179,11 @@ void main() {
           topic.id: {school.id},
         },
       );
+      // Fixture writes bypass Entry's normal route-return invalidation. Exercise
+      // the real resume refresh before expecting Home's passive count to change.
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await present(
         _key('collection-review-quick'),
         'populated Home due count',
