@@ -49,7 +49,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 | OPEN-FSRS-001 | 1 | Data | Traceability | — |
 | COLL-007 | 2 | Collection | Pending | — |
 | CAT-001 | 1 | Data | Host-verified | Schema11; 7 category cases plus cascade/Undo/migration/inventory batch 31/31; Android pending. |
-| CAT-002 | 1 | Data | Pending | — |
+| CAT-002 | 1 | Data | Host-verified | Five cardinality/atomic rollback/Undo conflict cases; joined category/entry batch 35/35. Android pending. |
 | CAT-004 | 1 | Collection | Pending | — |
 | CAT-005 | 1 | Collection | Pending | — |
 | CAT-009 | 3 | Collection | Pending | — |
@@ -103,3 +103,7 @@ Pending means no production completion claimed. Resolved OPEN records link to im
 ## Batch evidence
 
 - Round-1 baseline evidence remains in implementation-round-1.md; no round-2 result is inferred.
+
+### CAT-002 decision
+
+If an Undo snapshot contains multiple assignments but its dimension has since become Single, restoration fails atomically and keeps the original receipt until its original deadline. No assignment is silently dropped; switching the dimension back permits retry while the receipt is valid.

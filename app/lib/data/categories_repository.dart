@@ -48,6 +48,7 @@ enum CategoryValidation {
   invalidOwnership,
   invalidId,
   identityConflict,
+  cardinalityViolation,
 }
 
 abstract interface class CategoriesRepository {
@@ -67,6 +68,14 @@ abstract interface class CategoriesRepository {
     required String id,
     required String name,
   });
+
+  /// Confirms both editable fields together. Switching to Single never drops
+  /// existing assignments; conflicting entries must be resolved first.
+  Future<CategoryDimensionRecord> updateDimension({
+    required String id,
+    required String name,
+    required CategoryMode mode,
+  });
   Future<void> deleteDimension(String id);
   Future<CategoryValueRecord> createValue({
     required String dimensionId,
@@ -81,8 +90,18 @@ abstract interface class CategoriesRepository {
   Future<List<CategoryAssignmentRecord>> assignments(String entryId);
   Stream<List<CategoryAssignmentRecord>> watchAssignments(String entryId);
 
+  /// Explicit picker action: selecting replaces the old Single selection, or
+  /// adds to Multiple. Deselecting removes only this value in either mode.
+  Future<void> setValueSelected({
+    required String entryId,
+    required String valueId,
+    required bool selected,
+  });
+
   /// Replaces all assignments atomically, after validating every reference.
   /// Empty input explicitly clears assignments. Definitions are never changed.
+  /// Unlike a picker selection, a Single group containing several values fails
+  /// rather than choosing one. JSON uses this same validated write boundary.
   Future<void> replaceAssignments({
     required String entryId,
     required Map<String, Set<String>> assignments,

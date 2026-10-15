@@ -13,6 +13,7 @@ enum VocabularyUndoFailure {
   collectionNotFound,
   duplicatePair,
   identityConflict,
+  categoryConflict,
 }
 
 abstract interface class VocabularyDeletionService {

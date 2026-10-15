@@ -5,7 +5,9 @@ import '../../core/clock.dart';
 import '../vocabulary_deletion.dart';
 import '../vocabulary_repository.dart';
 import '../retry_obligation.dart';
+import '../categories_repository.dart';
 import 'piko_database.dart';
+import 'sqlite_categories_repository.dart';
 
 final class _Snapshot {
   const _Snapshot(
@@ -312,6 +314,7 @@ final class SqliteVocabularyDeletionService
         for (final retry in retries) {
           await database.into(database.retryObligations).insert(retry);
         }
+        final assignments = <String, Set<String>>{};
         for (final assignment in snapshot.assignments) {
           // Explicit category deletion remains effective after vocabulary Undo.
           // Restore exact assignments only while both original owners survive.
@@ -327,10 +330,20 @@ final class SqliteVocabularyDeletionService
               )
               .getSingleOrNull();
           if (surviving != null) {
-            await database
-                .into(database.vocabularyCategoryAssignments)
-                .insert(assignment);
+            assignments
+                .putIfAbsent(assignment.dimensionId, () => <String>{})
+                .add(assignment.valueId);
           }
+        }
+        try {
+          await SqliteCategoriesRepository(
+            database,
+          ).replaceAssignments(entryId: entry.id, assignments: assignments);
+        } on CategoryValidation catch (error) {
+          if (error == CategoryValidation.cardinalityViolation) {
+            throw VocabularyUndoFailure.categoryConflict;
+          }
+          rethrow;
         }
       });
       receipt.used = true;

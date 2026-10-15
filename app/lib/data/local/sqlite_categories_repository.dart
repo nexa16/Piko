@@ -151,8 +151,34 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     required String id,
     required String name,
   }) async {
+    _name(name);
+    return _write(() async {
+      final existing = await dimensionById(id);
+      if (existing == null) throw CategoryValidation.dimensionNotFound;
+      return updateDimension(id: id, name: name, mode: existing.mode);
+    });
+  }
+
+  @override
+  Future<CategoryDimensionRecord> updateDimension({
+    required String id,
+    required String name,
+    required CategoryMode mode,
+  }) async {
     final trimmed = _name(name);
     return _write(() async {
+      final existing = await dimensionById(id);
+      if (existing == null) throw CategoryValidation.dimensionNotFound;
+      if (mode == CategoryMode.single) {
+        final conflicts = await database
+            .customSelect(
+              'SELECT entry_id FROM vocabulary_category_assignments '
+              'WHERE dimension_id = ? GROUP BY entry_id HAVING COUNT(*) > 1 LIMIT 1',
+              variables: [Variable(id)],
+            )
+            .get();
+        if (conflicts.isNotEmpty) throw CategoryValidation.cardinalityViolation;
+      }
       final count =
           await (database.update(
             database.categoryDimensions,
@@ -160,6 +186,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
             CategoryDimensionsCompanion(
               name: Value(trimmed),
               nameKey: Value(trimmed.toLowerCase()),
+              mode: Value(mode.name),
             ),
           );
       if (count != 1) throw CategoryValidation.dimensionNotFound;
@@ -283,6 +310,32 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
       _assignments(entryId).watch().map(_assignmentRecords);
 
   @override
+  Future<void> setValueSelected({
+    required String entryId,
+    required String valueId,
+    required bool selected,
+  }) => _write(() async {
+    final value = await valueById(valueId);
+    if (value == null) throw CategoryValidation.valueNotFound;
+    final dimension = await dimensionById(value.dimensionId);
+    if (dimension == null) throw CategoryValidation.dimensionNotFound;
+    final current = {
+      for (final group in await assignments(entryId))
+        group.dimensionId: Set<String>.of(group.valueIds),
+    };
+    final values = current.putIfAbsent(dimension.id, () => <String>{});
+    if (selected) {
+      if (dimension.mode == CategoryMode.single) values.clear();
+      values.add(valueId);
+    } else {
+      values.remove(valueId);
+    }
+    // Retain the touched dimension even when empty so reference/owner validation
+    // still runs for deselection, then reuse the full replacement boundary.
+    await replaceAssignments(entryId: entryId, assignments: current);
+  });
+
+  @override
   Future<void> replaceAssignments({
     required String entryId,
     required Map<String, Set<String>> assignments,
@@ -302,6 +355,9 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
         if (dimension == null) throw CategoryValidation.dimensionNotFound;
         if (dimension.collectionId != entry.collectionId) {
           throw CategoryValidation.invalidOwnership;
+        }
+        if (dimension.mode == CategoryMode.single && group.value.length > 1) {
+          throw CategoryValidation.cardinalityViolation;
         }
         for (final id in group.value) {
           final value = await valueById(id);
