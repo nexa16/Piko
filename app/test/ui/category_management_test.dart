@@ -136,6 +136,108 @@ void main() {
   );
   for (final language in ['en', 'de']) {
     testWidgets(
+      '$language duplicate new dimension can be corrected, unfocused and saved with pending state released',
+      (tester) async {
+        final f = PickerFixture();
+        try {
+          await tester.runAsync(f.initialize);
+          final topics = (await tester.runAsync(
+            () => f.repository.createDimension(
+              collectionId: f.dimension.collectionId,
+              name: 'Topics',
+              mode: CategoryMode.multiple,
+            ),
+          ))!;
+          final changes = <bool>[];
+          final accepted = <Future<void>>[];
+          await mount(
+            tester,
+            f,
+            language,
+            pending: changes.add,
+            writes: accepted.add,
+          );
+          final copy = PikoCopy(language);
+          await press(tester, find.text(copy.text('category.addDimension')));
+          final input = field('category-management-name-new');
+          await tester.ensureVisible(input);
+          await tester.tap(input);
+          await tester.pumpAndSettle();
+          await tester.enterText(input, 'Topics');
+          await tester.pumpAndSettle();
+          final controller = tester.widget<TextField>(input).controller!;
+          await press(tester, find.text(copy.text('category.saveDimension')));
+          await f.flush(tester);
+          expect(find.text(copy.text('r2.categoryInvalid')), findsOneWidget);
+          expect(controller.text, 'Topics');
+          expect(tester.widget<TextField>(input).enabled, isTrue);
+          expect(changes, [true, false]);
+          expect(
+            (await tester.runAsync(
+              () => f.repository.dimensions(f.dimension.collectionId),
+            ))!,
+            hasLength(2),
+          );
+
+          // Exercise the actual form/controller and focus path, rather than
+          // invoking its callback or replacing state beneath a live keyboard.
+          await tester.ensureVisible(input);
+          await tester.tap(input);
+          await tester.pumpAndSettle();
+          await tester.enterText(input, 'Unit');
+          await tester.pumpAndSettle();
+          expect(tester.widget<TextField>(input).controller, same(controller));
+          expect(controller.text, 'Unit');
+          expect(find.text(copy.text('r2.categoryInvalid')), findsNothing);
+          FocusManager.instance.primaryFocus?.unfocus();
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<EditableText>(
+                  find.descendant(
+                    of: input,
+                    matching: find.byType(EditableText),
+                  ),
+                )
+                .focusNode
+                .hasFocus,
+            isFalse,
+          );
+          expect(controller.text, 'Unit');
+          expect(find.text(copy.text('r2.categoryInvalid')), findsNothing);
+          await press(tester, find.text(copy.text('category.saveDimension')));
+          await f.flush(tester);
+          await Future.wait(accepted);
+          await tester.pumpAndSettle();
+          final saved = (await tester.runAsync(
+            () => f.repository.dimensions(f.dimension.collectionId),
+          ))!;
+          expect(saved.map((dimension) => dimension.name), [
+            'Difficulty',
+            'Topics',
+            'Unit',
+          ]);
+          expect(saved[1].id, topics.id);
+          expect(saved[1].mode, CategoryMode.multiple);
+          expect(
+            await tester.runAsync(() => f.repository.values(saved.last.id)),
+            isEmpty,
+          );
+          expect(input, findsNothing);
+          expect(find.text(copy.text('r2.categoryInvalid')), findsNothing);
+          expect(find.text(copy.text('category.addDimension')), findsOneWidget);
+          expect(changes, [true, false, true, false]);
+          expect(accepted, hasLength(2));
+          expect(f.raw.text, ' Retained vocabulary draft ');
+          expect(tester.takeException(), isNull);
+        } finally {
+          await f.cleanup(tester);
+        }
+      },
+      timeout: const Timeout(Duration(seconds: 20)),
+    );
+
+    testWidgets(
       '$language inline name/mode confirm together and blocked Single conversion preserves both stored fields',
       (tester) async {
         final f = PickerFixture();
