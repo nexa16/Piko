@@ -227,6 +227,10 @@ void main() {
         expect(copy.locale, locale);
         await _tap(tester, _key('collection-${owner.id}'));
         await _tap(tester, _button(copy.text('action.new')));
+        await phase(
+          'ime-configuration',
+          'Ensure the emulator uses a docked software keyboard, not a hardware-keyboard toolbar; ACK only after configuration',
+        );
         await _wait(
           tester,
           () =>
