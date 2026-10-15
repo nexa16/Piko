@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart'
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
+import '../../data/categories_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -16,6 +17,7 @@ import 'inline_vocabulary_edit_controller.dart';
 import 'collection_vocabulary_mutations.dart';
 import '../collections/collection_write_barrier.dart';
 import '../collections/collection_query_binding.dart';
+import '../categories/vocabulary_categories.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -27,6 +29,7 @@ class CollectionVocabulary extends StatefulWidget {
     this.mutations,
     this.writeBarrier,
     this.queryBinding,
+    this.categoriesRepository,
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
@@ -34,6 +37,7 @@ class CollectionVocabulary extends StatefulWidget {
   final CollectionVocabularyMutations? mutations;
   final CollectionWriteBarrier? writeBarrier;
   final CollectionQueryBinding? queryBinding;
+  final CategoriesRepository? categoriesRepository;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
@@ -420,6 +424,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     VocabularyValidation.requiredNative => 'entry.requiredNative',
     VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
     VocabularyValidation.entryNotFound => 'entry.notFound',
+    CategoryValidation() => 'category.selectionInvalid',
     _ => 'entry.saveFailed',
   };
 
@@ -463,6 +468,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
     VocabularyValidation.entryNotFound ||
     VocabularyValidation.collectionNotFound => 'entry.notFound',
+    CategoryValidation() => 'category.selectionInvalid',
     _ => 'vocab.inlineDiscardFailed',
   };
 
@@ -472,33 +478,47 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     final expanded = current != null;
     Widget content;
     if (current == null) {
-      content = Row(
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Text(
-              record.targetText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: pikoDesign.dimension('typography.body'),
-                fontWeight: pikoDesign.weight('typography.titleWeight'),
-              ),
+          ExcludeSemantics(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    record.targetText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: pikoDesign.dimension('typography.body'),
+                      fontWeight: pikoDesign.weight('typography.titleWeight'),
+                    ),
+                  ),
+                ),
+                SizedBox(width: pikoDesign.dimension('spacing.3')),
+                Expanded(
+                  child: Text(
+                    record.nativeText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: pikoDesign.dimension('typography.body'),
+                      color: pikoDesign.color('muted'),
+                    ),
+                  ),
+                ),
+                SizedBox(width: pikoDesign.dimension('spacing.3')),
+                const PikoIcon(PikoIconName.pencil),
+              ],
             ),
           ),
-          SizedBox(width: pikoDesign.dimension('spacing.3')),
-          Expanded(
-            child: Text(
-              record.nativeText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: pikoDesign.dimension('typography.body'),
-                color: pikoDesign.color('muted'),
-              ),
+          if (widget.categoriesRepository != null)
+            VocabularyCategories(
+              collectionId: widget.collection.id,
+              entryId: record.id,
+              repository: widget.categoriesRepository!,
+              snapshot: widget.queryBinding?.snapshot,
             ),
-          ),
-          SizedBox(width: pikoDesign.dimension('spacing.3')),
-          const PikoIcon(PikoIconName.pencil),
         ],
       );
     } else {
@@ -605,6 +625,43 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
           SizedBox(height: pikoDesign.dimension('spacing.3')),
           fields,
+          if (widget.categoriesRepository != null && edits.supportsCategories)
+            VocabularyCategories(
+              collectionId: widget.collection.id,
+              entryId: record.id,
+              repository: widget.categoriesRepository!,
+              snapshot: widget.queryBinding?.snapshot,
+              draftAssignments: edits.draft.assignments,
+              disabled: actionBusy,
+              onPendingWrites: widget.onPendingWrites,
+              onMetadataChanged: () {
+                if (!mounted ||
+                    !identical(editor, current) ||
+                    edits.isDiscarding) {
+                  return;
+                }
+                final refresh = edits.refreshCategoryReferences(
+                  widget.categoriesRepository!,
+                );
+                widget.onPendingWrites?.call(refresh);
+              },
+              onSelection: (assignment) {
+                if (!mounted ||
+                    !identical(editor, current) ||
+                    actionBusy ||
+                    ModalRoute.of(context)?.isCurrent != true) {
+                  return;
+                }
+                edits.setCategoryValues(
+                  assignment.dimensionId,
+                  assignment.valueIds,
+                );
+                unawaited(
+                  edits.refreshCategoryReferences(widget.categoriesRepository!),
+                );
+                widget.onPendingWrites?.call(edits.awaitSavedEdits());
+              },
+            ),
           if (error != null &&
               error != VocabularyValidation.requiredTarget &&
               error != VocabularyValidation.requiredNative)
@@ -640,7 +697,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               label: copy.text('action.retry'),
               onPressed: actionBusy ? null : () => discardEditor(current),
             )
-          else if (error != null && error is! VocabularyValidation)
+          else if (error != null &&
+              error is! VocabularyValidation &&
+              error is! CategoryValidation)
             PikoButton(
               label: copy.text('action.retry'),
               onPressed: actionBusy || edits.isSaving ? null : edits.retry,
@@ -697,7 +756,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       expanded: expanded,
       onTap: expanded || actionBusy ? null : () => activateRow(record.id),
       child: ExcludeSemantics(
-        excluding: !expanded,
+        excluding: false,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
