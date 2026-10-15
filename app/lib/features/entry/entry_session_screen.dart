@@ -64,6 +64,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   bool releaseAnchor = false, jumping = false;
   bool settleSelection = false;
   bool structuralAnchoring = false;
+  bool draftFocusRequested = true;
   String? anchorId;
   double? anchorCenter;
   Object? deletionError, undoFeedback;
@@ -89,6 +90,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     advancementRevision = session.advancementRevision;
     previousActiveId = activeId;
     previousIds = ids;
+    draftFocusRequested = activeId == draftId;
     session.addListener(changed);
   }
 
@@ -125,6 +127,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       previousUndo = (null, null);
       structuralAnchoring = false;
       centerRequested = true;
+      draftFocusRequested = activeId == draftId;
       session.addListener(changed);
     }
   }
@@ -166,6 +169,17 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     } else if (!adjusting && !structuralAnchoring) {
       anchorId = activeId;
       anchorCenter = center(activeId);
+    }
+    if (advanced || activeId != previousActiveId) {
+      draftFocusRequested = activeId == draftId;
+      if (!draftFocusRequested) {
+        // Browsing a saved card must not carry a hidden draft's input focus or
+        // reopen the software keyboard. Stack keyboard focus stays independent.
+        for (final editor in editors.values) {
+          if (editor.targetFocus.hasFocus) editor.targetFocus.unfocus();
+          if (editor.nativeFocus.hasFocus) editor.nativeFocus.unfocus();
+        }
+      }
     }
     previousActiveId = activeId;
     previousIds = ids;
@@ -249,6 +263,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         }
       }
       final editor = editors[activeId];
+      if (draftFocusRequested &&
+          activeId == draftId &&
+          !session.isBusy &&
+          !exitDraining &&
+          !userScrolling &&
+          !adjusting &&
+          editor != null) {
+        draftFocusRequested = false;
+        editor.targetFocus.requestFocus();
+      }
       final focused = editor?.targetFocus.hasFocus == true
           ? editor?.targetFocus
           : editor?.nativeFocus.hasFocus == true
@@ -323,9 +347,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         userScrolling &&
         anchorCenter != null) {
       anchorCenter = anchorCenter! - (event.scrollDelta ?? 0);
-    }
-    if (event is ScrollUpdateNotification && userScrolling && !adjusting) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => nearest());
     }
     if (event is ScrollEndNotification) {
       if (adjusting) {
