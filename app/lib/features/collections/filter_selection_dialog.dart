@@ -81,10 +81,12 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       final fresh = await widget.reloadDefinitions();
       if (!mounted ||
           !widget.canApply() ||
-          ModalRoute.of(context)?.isCurrent != true)
+          ModalRoute.of(context)?.isCurrent != true) {
         return;
-      if (fresh.collection.id != widget.snapshot.collection.id)
+      }
+      if (fresh.collection.id != widget.snapshot.collection.id) {
         throw StateError('Changed Collection');
+      }
       final dimensionIds = fresh.categoryDimensions
           .map((dimension) => dimension.id)
           .toSet();

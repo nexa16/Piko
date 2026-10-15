@@ -366,8 +366,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
         _renameRequest != null ||
         _openingEntry ||
         _learningBusy ||
-        route?.isCurrent != true)
+        route?.isCurrent != true) {
       return;
+    }
     final identity = _identity;
     final request = Object();
     final repository = widget.repository;
@@ -387,8 +388,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
       if (!current() ||
           consumed ||
           pending.value ||
-          _menuDialog?.isCurrent != true)
+          _menuDialog?.isCurrent != true) {
         return false;
+      }
       consumed = true;
       return true;
     }
@@ -452,8 +454,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
                       onPressed: writing
                           ? null
                           : () {
-                              if (consume())
+                              if (consume()) {
                                 Navigator.of(menuContext).pop(true);
+                              }
                             },
                     ),
                   ],
@@ -503,8 +506,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
         !binding.ready ||
         !_queryControlsAvailable ||
         _filterRequest != null ||
-        route?.isCurrent != true)
+        route?.isCurrent != true) {
       return;
+    }
     final identity = _identity;
     final request = Object();
     bool current() =>
@@ -515,8 +519,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
     _filterRequest = request;
     var consumed = false;
     bool consume() {
-      if (!current() || consumed || _filterDialog?.isCurrent != true)
+      if (!current() || consumed || _filterDialog?.isCurrent != true) {
         return false;
+      }
       consumed = true;
       return true;
     }
@@ -902,9 +907,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             identityForBuild == _identity &&
                             reviewIdentityForBuild == _reviewIdentity) {
                           setState(() {
-                            if (busy)
+                            if (busy) {
                               _heldLearningSnapshot ??=
                                   widget.queryBinding!.snapshot;
+                            }
                             if (speed) {
                               _openingSpeed = busy;
                             } else {
@@ -1226,8 +1232,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
       );
     }
     final snapshot = _heldLearningSnapshot ?? binding.snapshot!;
-    if (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty)
+    if (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty) {
       return const SizedBox.shrink();
+    }
     final counts = {
       for (final entry in snapshot.directions.entries)
         entry.key: entry.value.dueCount,
