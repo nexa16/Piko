@@ -1,5 +1,45 @@
 # Decision log
 
+## Round-2 implementation authorized — 2026-10-15
+
+The owner approved one isolated shared implementation branch based on merged develop, one specification per implementation commit and coherent targeted test batches. Preserve the ongoing UX checkout; incorporate accepted refinements at batch boundaries. Prefer simpler reversible/data-preserving choices and record them, without inventing functionality. JSON imports with multiple Collections are rejected. Final acceptance includes a local Android test APK and reproducible screenshots of every page and distinct dialogs/states. No publication is authorized. See implementation-round-2.md.
+
+## Piko artwork placement and round-2 boundary — accepted, 2026-10-15
+
+- **Owner clarification:** The Piko character is purely decorative. Context selects the picture only; the character has no interaction, action or learning function. Existing controls/text remain authoritative; exclude every in-app pose from focus and redundant accessibility/status announcements. The app/launcher icon keeps normal OS behavior.
+- **Round 2:** Use refined source frame 1 as Piko's app/launcher icon and reading frame 3 on Collection Detail when normal review is available. Preserve the owner's manual pixel corrections, 64×64 masters and editable source. Export the icon with its background and the reading pose with transparency when integration begins. Lucide remains the control/navigation icon family.
+- **One Collection mascot:** Never display more than one contextual Piko on the page, including two-direction states or later completion overlays. Round 2 enables only frame 3; if normal review is unavailable, the slot is absent. When normal and Speed work both exist in round 2, frame 3 still shows because frame 6 is deferred.
+- **Later mapping and confirmed priority:** New-Speed-vocabulary frame 6 takes priority when both Speed and normal review are available; otherwise reading frame 3 represents normal review, then sleeping frame 5 represents a genuine nothing-to-learn state. Keep existing loading/error/no-result/retry-wait distinctions. Excited frame 2 accompanies a completed learning session; star-holding frame 4 appears in the homepage statistics view when added. The owner explicitly selected frame 6 over frame 3 for simultaneous availability in that later state set.
+- **Scope and unresolved presentation:** Frames 2, 4, 5 and 6 remain specification only; statistics, new rewards and new completion dialogs are not pulled into round 2. Normal completion keeps its existing summary. Speed keeps its no-summary direct return; its later completion-feedback placement/lifetime needs review. Exact reading-slot size/placement also awaits mockup review and shared-token integration.
+- **Traceability and handoff:** MASCOT-001–004, UX-BRAND-001 and UX-MASCOT-001–004 revision 1. The owner requested handoff to the existing Implementation chat after the specs are ready. This pass changes the definitions and studio summary only; final exports, interactive mascot mockup and Android implementation/verification remain pending, with no publication authorized.
+
+## Speed short pools — complete passes between number breaks — accepted, 2026-10-15
+
+- **Decision:** A pass asks every current pool word once in rotation order, advancing only on Correct/Incorrect. Refill completed slots from waiting words, but defer a replacement's first turn to the next rotation. When fewer than the configured N unfinished words remain with no waiting refill, finish the current pass, then show exactly one numbers game before the next complete pass. One game unlocks every remaining word once, not just a single repetition. This supersedes the per-word insufficient-gap gate in SPEED-007/010 revision 1.
+- **Edges:** Start with a full pass even when already short. One unfinished word gets a game between attempts (five attempts → four games); no final game, no completed filler and no games for configured N=1. Correct is not necessarily complete: the consecutive-correct rule still applies.
+- **Game:** Shuffled 1–10, ascending taps, wrong taps do not advance; no countdown, minimum duration or time limit. Finishing automatically starts the next pass and never counts as a vocabulary answer or changes learning progress.
+- **Unchanged:** Normal learning's ten-second retry countdown, Speed completion/reset outcomes, scope/eligibility and unfinished-round lifecycle. The canonical changes are SPEED-001/002/007/010/012/013 revision 2. This update covers specifications and the sample-data mockup only; Android remains planned.
+
+## Speed Learning — corrected open-decision classification — 2026-10-14
+
+Pool size defines spacing: default five means four intervening vocabulary answers. Rotate in order and replenish completed slots from the selected waiting list. Interrupted rounds are discarded, not resumed. Previously confirmed long-term effects remain unchanged: error-free completion preserves the studied direction's state; completion after an error resets that direction to initial learning. Earlier statements below calling these product decisions unresolved are superseded. Scheduler initialization is implementation work. No implementation is started.
+
+## JSON reimport — UUID updates, content replacement, preserved learning — 2026-10-14
+
+The owner simplified the workflow to export, edit externally and reimport. Match existing vocabulary by UUID only; add new vocabulary. Default to replacing all supported content, with an optional import-wide selection of content groups. Do not require per-vocabulary decisions, manual matching or Keep/Add/Replace review. Always preserve existing learning state, with no progress-overwrite option; imported learning data is ignored, and new entries start fresh. A short replacement warning and aggregate validation/confirmation are sufficient. IMPORT-JSON-002 and UX-IMPORT-JSON-001–002 supersede the earlier per-entry merge and learning-restoration proposals below. Other import types are unchanged. This remains specification-only.
+
+## Speed Learning — selected for Release 2 — 2026-10-14
+
+The owner requests Speed Learning in the second release. Preserve the existing confirmed rotating-pool, consecutive-correct completion, direction-specific progress handling and first Minigame Break requirements. Recall spacing, interrupted-round/resume handling, automatic eligibility and exact FSRS reset initialization remain explicit open decisions. This scope selection does not automatically include additional minigames, advanced statistics, automatic recommendations or standalone manual progress-reset controls. Planning only; neither implementation nor the complete second-release scope is approved here.
+
+## VOCAB-TRASH-001 — 30-day retention — 2026-10-14
+
+The owner confirmed 30 days as the retention period for deleted vocabulary in the future trash/recovery area. The period starts at deletion and is separate from the first-release eight-second Undo window. This supersedes the earlier retention-undecided statement; detailed recovery and expiry-cleanup behavior remain open. This is a specification decision during second-release planning, not authorization to implement or approval of the entire release scope.
+
+## JSON enrichment and selective replacement — scope clarification
+
+During Release 2 planning, the owner requested import updates to existing vocabulary: later-added examples, notes/additional information and categories may enrich an existing entry, while full replacement or separate field-group replacement must also be possible, including explicit learning-progress replacement and vocabulary-text refinements. IMPORT-JSON-002 and UX-IMPORT-JSON-002 record this accepted capability. UUID-first matching, exact-pair fallback, per-group Keep/Add/Replace and missing-field rules are recommendations awaiting confirmation, not owner-selected identity policy. Vocabulary already has stable UUIDs. Single-side text matching cannot safely identify distinct meanings automatically. Progress/counter reconciliation and Note versus Hint semantics remain open. This is specification-only; neither the full second-release scope nor implementation of examples/categories/notes is approved here.
+
 ## JSON vocabulary import/export — definition only — 2026-10-14
 
 The owner requests a JSON import/export capability containing all currently used/stored vocabulary-associated data, within Import new vocabulary, with clipboard copying. No implementation is authorized by this request. IMPORT-JSON-001 records the current data inventory and a proposed versioned format; UX-IMPORT-JSON-001 records the placement and proposed file/paste/export/copy actions. Format details, progress import defaults, merge behavior and release placement remain proposals/open decisions, not additions to the running first-release implementation goal.
@@ -542,7 +582,7 @@ Classify the previously unassigned shared-catalog requirement as First, as an ex
 
 ## FOUNDATION-005 — implementation coordination — 2026-10-13
 
-The accepted implementation plan is tracked in `release-1-implementation.md`, with one spec per commit, explicit exclusions and evidence required for completion. The roadmap and product phase now reflect authorized implementation. Older discovery questions are retained as historical research context, not treated as fresh blockers or permission to add later capabilities. Android is the verification target; the owner controls merge and publication. Requirement details and release tags are reconciled individually as their implementations land.
+The accepted implementation plan is tracked in `implementation-round-1.md`, with one spec per commit, explicit exclusions and evidence required for completion. The roadmap and product phase now reflect authorized implementation. Older discovery questions are retained as historical research context, not treated as fresh blockers or permission to add later capabilities. Android is the verification target; the owner controls merge and publication. Requirement details and release tags are reconciled individually as their implementations land.
 
 ## FOUNDATION-001 — implementation start — 2026-10-13
 
@@ -689,7 +729,135 @@ The accepted Home hierarchy remains the compact Piko identity and top-right Sett
 - **Reason:** Shared buttons, fields, cards, headings and page layout keep accepted appearance and accessible states consistent across product screens.
 - **Consequences:** Existing recurring CSS measurements are promoted into `shared/design-config.js`; CSS and generated Flutter adapters consume them. Large text can grow controls and wrap validation messages. Product screens, Lucide integration and dialogs retain their own specification commits.
 
-## Template for the next decision
+## Release-2 scope, revision tracking and prototype gate — 2026-10-14
+
+- **Decision:** Include all reported Android/UX refinements, JSON import/export, Speed Learning, category management and search in Release 2. JSON has highest new-feature priority, followed by Speed and categories; search is lower priority. Retained trash is deferred with an accepted future 30-day retention period.
+- **Status:** Accepted behavior and mockup authorization; Release-2 production implementation awaits owner review.
+- **Traceability:** Amend existing requirements in place, keep stable IDs, increment revision only for changed behavior and label the delta `[Updated: Second]`. Defects against unchanged behavior use `[Fix: Second]`. New capabilities use `[Release: Second]`. Keep one owning specification/revision per implementation commit; batch related verification without squashing distinct specs.
+- **JSON:** One opened Collection per operation; stable vocabulary UUID matching; default replace supported content, optional batch groups; preserve all existing learning unconditionally; initialize new vocabulary fresh; no per-entry decisions. Existing category names and settings remain unchanged on import, while assignments can be replaced. New referenced definitions may be created. Final-result validation and atomic commit are mandatory.
+- **Speed:** Pool size defines spacing (default five means four other answered words). Replace completed slots from selected waiting words. One numbers game bridges an insufficient unfinished pool. No time-limit scoring. Explicit exit/process loss discards unfinished round state; short backgrounding while alive does not. Completed results remain; zero-error completion preserves directional learning, completion after errors resets only that direction and marks successful Speed completion.
+- **Review UX:** Per-direction Detail actions; aggregate Overview action; never offer a zero-work direction. Hide zero-count actions; congratulate only on nonempty fully caught-up Detail. Countdown is the existing ten-second retry deadline, not a separate delay or manually retried screen.
+- **Consequences:** Canonical specs, filter/parser, release-switchable mockup, shared copy and preview configuration evolve together. Browser verification does not establish Android fixes. Existing APK and Release-1 implementation evidence remain separate. The roadmap records production ordering after visual review, without promising a date.
+
+## Implementation rounds and feature-sized integration — 2026-10-15
+
+- **Decision:** Rename the previously named Release 1/2 planning scopes to implementation rounds 1/2. These scopes do not represent published releases. Current Android APKs remain test builds; the owner does not want to publish round 1 or prepare a release branch now.
+- **Status:** Accepted; supersedes the single implementation PR and one-spec-per-integrated-commit policies above. Historical decisions and commit subjects retain their original wording as history.
+- **Integration:** Use thematic feature PRs into `develop`, with outcome-based titles and no release number. Squash each accepted feature PR into one feature commit. Implementation commits may still be small, but need not survive individually on `develop`. PR descriptions must retain covered spec IDs/revisions and verification evidence.
+- **Transition:** Do not merge the existing all-in-one PR #2. Plan four dependent review units: foundation, collections, vocabulary editing/entry, and learning/review. Preserve its existing branch as the source/reference until replacement PRs have been verified; no blind history rewrite. The roadmap records dependencies and checks. Existing round-2 draft edits stay separate from that baseline split.
+- **Future release:** Only on a later explicit owner request, create `release/<version>` from accepted `develop`, complete release verification and promote to `main` (the repository's release branch, not `master`). Publication versions are assigned during release preparation, not to feature PRs. Build modes, database migrations and interchange schema versions remain independently versioned.
+- **Consequences:** Keep squash-only repository settings. No permission to enable merge commits is needed. Canonical specs and Design Lab use implementation-round filters; old preview bookmarks remain compatible. No release branch, tag, merge or store publication is authorized by this workflow change.
+
+The owner's separate testing-download authorization permits a clearly marked GitHub testing pre-release, not store publication or promotion to `main`. The existing `v0.1.0-test.1` APK remains such a test artifact; no replacement version or duplicate upload is implied by the round rename.
+
+## Entry testing feedback: focus, draft preview and duplicate recovery — 2026-10-15
+
+- **Decision:** Opening a new-entry editor and successful Save & Next focus the first target-language field and open or retain the software keyboard. Scroll so both required fields are visible when possible, otherwise the complete first field. A fresh card must not inherit the previous card's second-field focus. Deliberate draft activation after scrolling settles counts as opening it; keyboard resizing or scrolling past a card does not.
+- **Status:** Accepted specification changes for implementation round 2; application and interactive mockup changes and their verification remain pending.
+- **Draft presentation:** The owner selected a compact card labeled New vocabulary while another entry is being edited, with no placeholder vocabulary pair. Preserve actual input in nonempty draft previews. The existing stack/draft lifecycle remains; this does not save a new entry.
+- **Validation:** Explain a same-Collection duplicate pair instead of showing a generic save failure. Do not offer Retry for duplicate or required-field validation; retain it for recoverable storage failures. Recheck when reopening an editor, including by scrolling back. If another saved edit removed the conflict, clear stale feedback and resume saved-entry autosave without retyping or Retry. New drafts still need explicit confirmation.
+- **Context and reason:** Owner testing found intermittent second-field focus on a fresh draft, insufficient keyboard-visible scrolling, misleading empty-card placeholder content and a duplicate error that remained stale after changing the conflicting entry. These observations define regression scenarios, not a reproduced root-cause claim.
+- **Traceability:** ENTRY-001 and ENTRY-005 advance to revision 2; UX-ENTRY-001 advances to revision 3, retaining their original Round 1 and Updated 2 tags. New presentation rules are UX-ENTRY-003 and UX-ENTRY-004, revision 1, Round 2. VOCAB-002/012 uniqueness and comparison rules remain unchanged. No standalone BUG IDs are introduced.
+- **Verification:** Canonical specs include repeated real-Android focus/visibility checks and duplicate-conflict/remove/reopen cases, including unchanged conflicts, preserved storage/learning, localization and recoverable failure. Earlier passing implementation evidence does not verify these revisions. Shared copy and implementation follow the accepted specs in the later authorized implementation pass; source screenshots are not copied into the repository.
+
+## No artificial space before the first entry card — 2026-10-15
+
+- **Decision:** At the start of the entry stack, the first vocabulary card follows the header with only normal shared header-to-content spacing. Remove artificial leading space used to center the first card or satisfy scroll-activation thresholds; preserve the device safe area and normal layout gap.
+- **Status:** Accepted specification change for implementation round 2; interactive mockup/application changes and Android verification remain pending.
+- **Context:** The design notes already identified excessive blank scrolling space as a pending refinement. Owner testing now explicitly rejects the large empty area above the first vocabulary card, resolving that leading-spacing decision.
+- **Traceability:** Update UX-ENTRY-001 in place from revision 3 to revision 4, retaining Round 1 and Updated 2. No new requirement ID or change to vocabulary behavior is needed.
+- **Verification:** Check the first draft and first saved card at the top of the stack, including returning from later cards, keyboard opening/closing, expansion/collapse and deletion/Undo. Measure that only the shared header-to-content gap remains; first-field focus and keyboard-visible fields must still satisfy the same requirement. These are pending acceptance checks, not evidence of an app fix.
+
+## Swipe-delete feedback and navigation design research — 2026-10-15
+
+- **Accepted:** UX-VOCAB-DELETE-001 advances to revision 2, retaining Round 1 with Updated 2. Only one row exposes Delete at a time; opening another closes the prior reveal. A red delete background extends continuously underneath the foreground vocabulary card's rounded corners. Swiping still only reveals, explicit Delete performs removal, and the existing eight-second Undo remains.
+- **Proposed:** Following the owner's request for external guidance, recommend strong semantic red with white icon/text for the revealed delete surface. Recommend icon-only Back navigation nearer the safe-area leading/top edges, with a 48dp Android touch target and localized semantics. The owner has not yet selected the precise delete color treatment or accepted a global Back change; these proposals do not modify current production tokens or header requirements.
+- **Evidence:** DESIGN.md links official Apple, Android, Material and WCAG references and distinguishes their guidance from Piko-specific choices. Local source inspection identifies accumulated page/button padding around Collection Back; no runtime measurement or fixed device offset is claimed. UX-HEADER-002 records the pending header feedback separately from its accepted baseline.
+- **Consequences:** Update the canonical UX rule, roadmap and factual studio summary; implementation and Android checks remain pending. Future acceptance of the Back proposal must reconcile Collection, entry, Settings and the already accepted icon-only review navigation. Source screenshots remain outside tracked files.
+
+## Unified popup feedback and design proposal — 2026-10-15
+
+Historical proposal, superseded by the accepted popup layout and dismissal decision below.
+
+- **Accepted:** The owner requests consistent popup title, close-control and action alignment across the app. Track the reported inconsistency under UX-DIALOG-001 revision 1 with Fix 2 and pending Android verification; it is a correction of the existing shared-shell rule.
+- **Proposed:** Use content-width footer actions grouped right, stacking when labels cannot fit. Compare equal-width actions before selection. Use explicit Cancel/action choices without X for destructive confirmations, Continue editing / Discard & exit without X for draft exit, top-right X plus the primary action for forms/setup, and X alone for the review summary. Clear outcome labels replace generic Yes/No in the proposal.
+- **Boundary:** The current accepted X-on-every-popup/no-redundant-Cancel policy remains active until the owner chooses a replacement. Research is not acceptance. A top-left X is relevant to some full-screen modal patterns, not a reason to move individual Piko popup controls arbitrarily.
+- **Evidence and follow-up:** DESIGN.md records primary-source guidance, current shared-component inspection and the proposed common geometry; the UX specification lists coverage and responsive/accessibility acceptance. Update the factual studio summary. This pass does not alter application code, canonical tokens/copy or interactive mockup behavior, and does not claim the reported alignment defect is fixed.
+
+## Comparable collection previews — 2026-10-15
+
+- **Decision:** Retain the full localized language pair beneath each collection name in the round-2 overview and align the default sample data across both implementation-round previews.
+- **Status:** Accepted mockup refinement; not a production implementation claim.
+- **Consequences:** One shared synthetic fixture supplies Korean Basics, French A1 and English Notes with 5/3/3 actual entries. Independent preview copies preserve edit isolation. Review counts still demonstrate the accepted distinct-word versus directional-item difference. UX-COLL-005 clarifies retained metadata; UX-LAB-001 revision 2 records comparison fixtures.
+
+## One Piko design across platforms — 2026-10-15
+
+- **Decision:** Align app-owned visual and interaction conventions across platforms using one Piko design system. Apple and Android guidance inform shared choices rather than separate platform styles.
+- **Status:** Accepted; UX-SYSTEM-001 advances to revision 3, retaining Round 1 and Updated 2.
+- **Consequences:** Keep popup structure, action ordering, close-control policy, navigation presentation, wording, colors and component geometry consistent. Retain necessary adaptations for system Back, safe areas, keyboards, accessibility and OS-owned interfaces; document justified departures. Shared components, tokens and copy remain canonical.
+- **Boundary:** This does not select the pending popup/Back/delete-color alternatives, authorize implementation on another platform or change the Android verification scope. This pass updates specifications and the factual studio summary, not app behavior.
+
+## Review direction picker approved — 2026-10-15
+
+- **Decision:** Retain the pictured round-2 picker with two stacked full-width Soft filled direction/count choices and a top-right close X. Each choice starts its direction directly; no separate Start or Cancel is added.
+- **Status:** Owner visual approval of this picker; UX-SETUP-001 revision 2. Android implementation remains planned.
+- **Boundary:** Preserve zero/one-direction bypass and the shared popup shell. This approval does not select unrelated screen or destructive-confirmation designs, and does not remove the accepted overview language-pair metadata.
+
+## Popup layout and purpose-based dismissal — accepted, 2026-10-15
+
+- **Decision:** The owner selected right-aligned content-width actions and the recommended purpose-based dismissal policy. Apply the same popup family across platforms.
+- **Layout:** Group safe/secondary then affirmative/destructive actions at the right in English/German. Stack full-width actions when labels cannot fit, with affirmative above safe dismissal and matching visual/keyboard/semantic order. Align title/body edges and keep a present X in the top-right header slot alongside the first title line.
+- **Dismissal:** Confirmations use explicit Cancel/action choices without X; draft exit uses Continue editing / Discard & exit without X. Forms/setup retain top-right X plus the primary action. Summaries retain top-right X without an extra Close footer. Escape, backdrop and system Back retain safe dismissal and pending-write guards; closing never performs an affirmative action or discards the entry-session draft.
+- **Supersedes:** The prior X-on-every-popup/no-Cancel choice and the pending popup alternatives recorded above. Equal-width side-by-side actions were not selected. Global Back treatment and exact swipe-delete colors remain separate open choices.
+- **Existing pickers:** This footer rule does not replace the approved full-width direction/count choices in the review picker. They remain body choices with top-right X and no extra Start/Cancel footer under UX-SETUP-001 revision 2.
+- **Traceability:** UX-DIALOG-001 advances to revision 2 with Updated 2, incorporating its previously tagged alignment fix; UX-COLL-007 advances to revision 3 for Collection deletion. Original Round 1 tags remain. Functional safety/data behavior is unchanged; cross-references distinguish the earlier X-based implementation evidence from the required presentation.
+- **Verification and scope:** Specifications and studio summary are updated. Interactive mockup, shared component integration and Android acceptance remain pending. Do not infer completion from the conversation comparison or older test evidence. This does not add a confirmation step to reversible vocabulary deletion or authorize another platform release.
+
+## Collection learning actions and Speed setup — 2026-10-15
+
+- **Decision:** Reduce gaps around normal review actions, emphasize the first displayed direction and give the second a different quieter fill. Use two distinctively colored half-width Speed actions; a lone available direction stays half-width on the left.
+- **Selection and setup:** Choose vocabulary in the normal Collection list. Preselect the clicked direction in Speed setup, show the actual new/manual count, and expose pool size without disclosure controls. Add a bordered orange warning about normal-learning reset after completing a Speed word with errors.
+- **Boundary:** Preserve SPEED-006 completion semantics and the opposite direction. Exact palette candidates await visual review. This pass changes specifications, shared prototype resources and the mockup, not Android behavior.
+- **Traceability:** UX-COLL-008 revision 3, UX-SETUP-002 revision 2 and SPEED-004 revision 2.
+
+## Shared action background and text colors — 2026-10-15
+
+Historical comparison; the solid-pair selection below supersedes its proposed soft treatment and open palette status.
+
+- **Accepted:** The owner requests that grading and app-wide approving/dismissive actions use a consistent background/text color system. UX-REVIEW-001 advances to revision 3 and UX-SYSTEM-001 to revision 4, retaining Round 1 and Updated 2. Define semantic foreground/background pairs and verify them together rather than patching text colors independently.
+- **Supersedes:** The bright grading fill with a common dark label remains an unaccepted prototype trial, not the final target. Its source-color contrast passes the normal-text minimum; the owner's report concerns its visual fit. A white-label-only replacement on those same fills would fail the minimum.
+- **Proposed:** Prefer soft red/green backgrounds with dark semantic labels; compare stronger semantic fills with white labels. Keep ordinary primary actions Cobalt, explicit positive meanings green, negative/destructive meanings red, and safe Cancel/Close/Continue editing neutral. Exact palette and role mapping await visual selection; do not infer that every confirmation should be green or every dismissal red.
+- **Consequences:** DESIGN.md records paired candidates and calculated contrast. Preserve labels, popup button placement, grading geometry and distinct action semantics. The revealed swipe-delete emphasis remains a related open decision. Canonical tokens/copy, interactive mockup and app behavior are unchanged by this specification pass; implementation and Android verification follow selection.
+
+## Solid semantic action colors — accepted, 2026-10-15
+
+- **Decision:** The owner selected stronger backgrounds with white labels after viewing the shared action-color comparison. Use success `#166534` / white `#FFFFFF` for filled positive actions and Correct; use danger `#B42318` / white `#FFFFFF` for filled negative/destructive actions and Incorrect. Calculated source-color contrast is 7.13:1 and 6.57:1 respectively.
+- **Scope:** Apply the same pairs across the app and platforms, including filled destructive confirmations and the revealed swipe-delete surface. This resolves the earlier light-red-versus-strong-red swipe choice. Preserve distinct grading/deletion semantics, existing layout and low-emphasis icon/text variants. Safe Cancel/Close/Continue editing stays neutral; ordinary primary actions remain Cobalt. Other feature-specific color proposals retain their own review status.
+- **Supersedes:** The bright-fill/dark-label grading trial and the proposed soft red/green replacement. The solid semantic treatment is an explicit exception to the general soft-button default; shared shape/type/spacing remain.
+- **Traceability:** UX-REVIEW-001 advances to revision 4, UX-SYSTEM-001 to revision 5 and UX-VOCAB-DELETE-001 to revision 3, retaining Round 1 and Updated 2. Update the current design definition, roadmap and studio summary; preserve earlier decision records as history.
+- **Verification:** The chosen source pairs exceed the 4.5:1 active-text minimum. Canonical pair bindings, adapter/component integration, interactive mockup changes and real Android default/pressed/focused/disabled-state checks remain pending. This records specification acceptance, not completed application work.
+
+## Inline category management and narrower Speed scope — accepted, 2026-10-15
+
+- **Decision:** Show category chips below each vocabulary pair. Expand Edit categories only inside the Collection ellipsis menu; no separate management page. Use visible Single/Multiple choices. Assignment popups use the dimension name with a category icon, and show search only when values need scrolling. Add values inline with a checkmark, retaining the popup, raw drafts and existing assignments; newly created values are not autoassigned.
+- **Independent clearing:** Clear filters affects category constraints only. Clear search is a labeled X inside the search bar and retains category filters.
+- **Speed scope:** Defer manual vocabulary selection and Speed launch from it to Later. Round 2 uses filtered new words only. Directional half-width buttons use the active palette Tint/Primary pair, display eligible counts and disappear at zero; a lone button stays left and half-width. This supersedes the earlier manual-selection and violet Speed trial decisions.
+- **Traceability:** UX-CAT-001/CAT-009/FILTER-002 revision 2; COLL-007/FILTER-001/SPEED-005 revision 2; SPEED-004 revision 3 moves to Later; UX-SETUP-002 revision 3. No Flutter behavior or store publication is authorized by this prototype refinement.
+
+## Speed inherits the clicked direction — accepted, 2026-10-15
+
+- **Decision:** Remove direction selection from Speed setup entirely. The Collection's directional Speed button already establishes it; show only a plain direction label alongside the new-word count, editable pool size, warning and Start action. Dismiss and use the other Collection button to change direction.
+- **Supersedes:** The earlier preselected dropdown and the immediately withdrawn suggestion to replace it with two setup buttons. The approved regular Review direction picker remains unchanged because its Overview launch does not establish direction.
+- **Traceability:** UX-SETUP-002 revision 4, SPEED-005 revision 3 and SETUP-008 revision 2. This change covers specifications and the sample-data prototype, not Android implementation.
+
+## Round-2 popup confirmation audit — accepted, 2026-10-15
+
+- **Decision:** Category assignment and Filters use local pending selections and a right-aligned Apply/checkmark only while changed from their opening state. Reverting hides it. X, Escape and backdrop cancel pending popup edits, preserving the parent vocabulary draft and previously active filters. Apply passes confirmed assignments into the existing vocabulary autosave flow.
+- **Whole-form confirmation:** Dimension name and Single/Multiple mode confirm together below both fields, not beside the name alone. Keep the adjacent changed-only checkmark only for a single inline category-value field. Explicitly saved values remain independent of unconfirmed assignment changes.
+- **Shared family audit:** Include every round-2 popup and the reused summary. Collection/category deletion and entry-draft exit use the accepted explicit safe/action pair without X; forms/setup keep X and meaningful primary actions; direct-launch direction choices and summaries retain no extra footer. Content-width actions align right and stack affirmative above safe when needed, with matching DOM/tab order and safe initial focus. Destructive fills consume canonical danger/white; safe actions are neutral.
+- **Traceability:** UX-DIALOG-001 revision 3, UX-CAT-001 revision 3, CAT-009 revision 3 and FILTER-002 revision 3. Scope is specifications and sample-data prototype; no Android behavior or publication is claimed.
+
+## Next decision template
 
 - **Date:** To be decided — when was this choice accepted?
 - **Decision:** To be decided — what exactly was chosen?

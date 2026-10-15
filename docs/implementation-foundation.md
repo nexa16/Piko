@@ -2,7 +2,7 @@
 
 ## FOUNDATION-004 — Canonical Flutter design and copy adapters
 
-**Status:** Accepted for First release implementation.
+**Status:** Accepted for Implementation round 1 implementation.
 
 Generate Flutter catalogs from `shared/design-config.js` and `shared/copy.js` without hand-maintained duplicate defaults. Preserve every field, including schema metadata, notes and future nested configuration. Use CSS pixel dimensions as Flutter logical pixel values; platform font-family selection belongs to the shared widget implementation. Canonical numeric font weights map to the nearest Flutter hundred-weight.
 
@@ -12,7 +12,7 @@ Regenerate with `node app/tool/generate_shared.mjs`; verify with `node app/tool/
 
 ## FOUNDATION-001 — Flutter Android application scaffold
 
-**Status:** Accepted for First release implementation.
+**Status:** Accepted for Implementation round 1 implementation.
 
 The owner authorizes Flutter implementation under `app/`, with a local-first approach and Android-only release verification. The application identifier is `io.github.nexa16.piko`. The installed baseline is Flutter 3.44.7 stable with Dart 3.12.2.
 
@@ -32,7 +32,7 @@ Verification from `app/`: `flutter analyze`, `flutter test`, and a debug APK bui
 
 ## FOUNDATION-002 — Injectable time and deterministic test harness
 
-**Status:** Accepted for First release implementation.
+**Status:** Accepted for Implementation round 1 implementation.
 
 Time-dependent domain behavior receives a `PikoClock` dependency. The production implementation supplies the current UTC instant. Local learning-day interpretation remains a separate behavior requirement. Tests use a mutable clock that advances or sets time explicitly without sleeping, including exact deadline boundaries and device-clock changes.
 
@@ -47,7 +47,7 @@ This establishes time injection and test support only; it does not implement ret
 
 ## FOUNDATION-003 — Versioned local storage infrastructure
 
-**Status:** Accepted for First release implementation.
+**Status:** Accepted for Implementation round 1 implementation.
 
 The application uses Drift with SQLite in its private application support directory. `PikoDatabase` accepts an injected executor for tests; `openPikoDatabase()` opens the production connection lazily. A settings repository exposes read, write and remove operations without exposing SQL to feature code. The composition root owns database lifetime. Domain tables and setting semantics are introduced under their corresponding feature requirements.
 

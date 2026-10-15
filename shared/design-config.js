@@ -1,7 +1,8 @@
 /* Single editable design configuration. Numeric dimensions are CSS px unless named otherwise. */
 globalThis.PIKO_DESIGN = {
   schemaVersion: 1,
-  colors: {name:'Cobalt',primary:'#2956B8',tint:'#E7EEFC',bg:'#F5F7FB',surface:'#FFFFFF',ink:'#1E293B',muted:'#526177',onPrimary:'#FFFFFF',danger:'#B42318',success:'#166534'},
+  previews: {round2: {gradingIncorrect:'#EF4444',gradingCorrect:'#22C55E',gradingText:'#111827',inputFocusWidth:1,keyboardFocusWidth:2,gameColumns:5,entrySettleMs:160,learningGap:8,learningPadding:16,learningSectionGap:16,categoryListHeight:264,reviewSecondaryBackground:'#E9EEF6',reviewSecondaryText:'#42516B',warningBackground:'#FFF7ED',warningBorder:'#FB923C',warningText:'#9A3412'}},
+  colors: {name:'Cobalt',primary:'#2956B8',tint:'#E7EEFC',bg:'#F5F7FB',surface:'#FFFFFF',ink:'#1E293B',muted:'#526177',onPrimary:'#FFFFFF',danger:'#B42318',onDanger:'#FFFFFF',success:'#166534'},
   spacing: {'1':4,'2':8,'3':12,'4':16,'5':20,'6':24,'8':32},
   typography: {family:'system-ui,-apple-system,sans-serif',body:16,small:13,label:14,title:29,titleWeight:700},
   radii: {card:16,dialog:20},

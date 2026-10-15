@@ -1,6 +1,6 @@
 # Piko application
 
-Flutter application for the local-first first release. Android is the release verification target. Collection creation persists locally; the overview lists stored Collections and opens their detail by stable identity. The New action opens a validated creation popup. Remaining product features follow in individually traceable requirement commits.
+Local-first Flutter application under Android testing. Implementation rounds describe planning scope, not published versions. Collections, vocabulary entry/editing and learning are tracked in the [round-1 ledger](../docs/implementation-round-1.md); round-2 definitions and mockups do not establish implemented app behavior. Thematic feature PRs squash into `develop` while retaining specification IDs and verification evidence. Store publication and promotion to `main` have not been requested.
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 

@@ -30,16 +30,16 @@ let catalog=globalThis.PIKO_COPY;
 let locale=catalog.defaultLocale;
 let scope='minimum';
 let emptyCollections=new URLSearchParams(location.search).get('empty')==='1';
-const books=[['Korean Basics','Korean · German','KO',128,24,16],['French A1','French · German','FR',64,8,6],['English Notes','English · German','EN',32,4,3]];
-const words=[['사과','Apfel','Food'],['물','Wasser','Food'],['학교','Schule','Education'],['친구','Freund','People'],['책','Buch','Education']];
-const collectionEntries=new Map(books.map((book,index)=>[book,index===0?words.map(pair=>pair.slice(0,2)):index===1?[['pomme','Apfel'],['eau','Wasser'],['école','Schule']]:[['apple','Apfel'],['water','Wasser'],['school','Schule']]]));
-const collectionLanguages=new Map(books.map((book,index)=>[book,[['korean','french','english'][index],'german']]));
+const sampleCollections=PikoSampleData.createCollections();
+const books=sampleCollections.map(c=>[c.name,'',c.targetLanguage.toUpperCase(),c.entries.length,c.entries.length,c.entries.length]);
+const collectionEntries=new Map(books.map((book,index)=>[book,sampleCollections[index].entries.map(e=>[e.targetText,e.nativeText])]));
+const collectionLanguages=new Map(books.map((book,index)=>[book,[sampleCollections[index].targetLanguage,sampleCollections[index].nativeLanguage].map(PikoSampleData.languageKey)]));
 function getCollectionEntries(index=s.book){return collectionEntries.get(books[index])||[];}
 function getCollectionLanguages(index=s.book){return collectionLanguages.get(books[index])||['english','german'];}
 function getCollectionCodes(index=s.book){return getCollectionLanguages(index).map(key=>({korean:'KO',french:'FR',english:'EN',german:'DE'}[key]));}
-function collectionCount(index=s.book){const book=books[index];return (book?.[3]||0)+(getCollectionEntries(index).length-(book?.sampleEntryCount||0));}
-books.forEach((book,index)=>book.sampleEntryCount=getCollectionEntries(index).length);
+function collectionCount(index=s.book){return getCollectionEntries(index).length;}
 function collectionPair(index=s.book){return getCollectionLanguages(index).map(key=>raw('language.'+key)).join(' · ');}
+function collectionMetadata(languageKeys,count){return languageKeys.map(key=>t('language.'+key)).join(' · ')+' · '+t('common.entries',{count});}
 function openExistingEntry(index){entrySession={book:s.book,cards:getCollectionEntries(),draft:['',''],active:index,scroll:0};go('entry');}
 let collectionAutoName=true;
 function updateCollectionDefault(){const field=document.getElementById('collection-name');if(collectionAutoName)field.value=raw('language.'+document.getElementById('collection-target').value);}
@@ -60,7 +60,7 @@ function go(page){if(s.page==='entry'&&page!=='entry'&&entrySession?.draft.some(
 function change(key,value){s[key]=value;render();}
 let reviewSession=null;
 function learn(index,mode){s.book=index;s.mode=mode;popup('learn.setup');}
-function startReview(){const direction=document.getElementById('review-setup-direction').value;reviewSession={index:0,completed:12,total:30,correct:9,history:[],hard:false,direction:direction==='nativeTarget'?'nativeTarget':'targetNative',correction:false};s.modal='';setupReturnFocus=null;go('learning');}
+function startReview(){const direction=document.getElementById('review-setup-direction').value;reviewSession={index:0,completed:0,total:getCollectionEntries().length,correct:0,history:[],hard:false,direction:direction==='nativeTarget'?'nativeTarget':'targetNative',correction:false};s.modal='';setupReturnFocus=null;go('learning');}
 let dialogReturnFocus=null;
 function popup(key,name=''){if(key&&!s.modal)dialogReturnFocus=document.activeElement;s.modal=key;s.modalName=name;overlay();}
 function title(key,heading,description){const contextual=['collection.title','learn.longTitle','learn.speedTitle'].includes(key);return '<h1>'+heading+'</h1>'+(contextual?'<div class="sub">'+description+'</div>':'');}
@@ -68,7 +68,7 @@ function back(page,key='common.back'){return '<button class="back" onclick="go(\
 function button(key,action,style='',icon=''){return '<button type="button" class="btn '+style+'" onclick="'+action+'">'+icon+t(key)+'</button>';}
 function overview(){
  if(emptyCollections||!books.length)return '<header class="home-header"><span class="home-brand">'+t('app.name')+'</span>'+button('nav.settings',"go('settings')",'ghost',uiIcon('settings')+' ')+'</header><div class="head collection-heading"><h2>'+t('home.collections')+'</h2>'+button('action.new',"popup('dialog.newCollection')",'ghost',uiIcon('plus')+' ')+'</div><section class="card"><p class="meta empty-description">'+t('home.emptyDescription')+'</p>'+button('action.firstCollection',"popup('dialog.newCollection')",'primary')+'</section>';
- const cards=books.map((b,i)=>'<article class="card collection-card"><button class="collection-open" onclick="s.book='+i+';go(\'detail\')"><span class="cover">'+b[2]+'</span><span class="collection-info"><strong>'+esc(b[0])+'</strong><span class="meta">'+esc(collectionPair(i))+' · '+t('common.entries',{count:collectionCount(i)})+'</span></span>'+uiIcon('chevron')+'</button><div class="collection-actions">'+button('action.review',"learn("+i+",'long')",'tint',uiIcon('review')+' ').replace('</button>',' <span class="count">'+b[4]+'</span></button>')+(scope==='expanded'?button('action.speed',"learn("+i+",'speed')",'',uiIcon('speed')+' ').replace('</button>',' <span class="count">'+b[5]+'</span></button>'):'')+'</div></article>').join('');
+ const cards=books.map((b,i)=>'<article class="card collection-card"><button class="collection-open" onclick="s.book='+i+';go(\'detail\')"><span class="cover" aria-hidden="true">'+b[2]+'</span><span class="collection-info"><strong>'+esc(b[0])+'</strong><span class="meta">'+collectionMetadata(getCollectionLanguages(i),collectionCount(i))+'</span></span>'+uiIcon('chevron')+'</button><div class="collection-actions">'+button('action.review',"learn("+i+",'long')",'tint',uiIcon('review')+' ').replace('</button>',' <span class="count">'+b[4]+'</span></button>')+(scope==='expanded'?button('action.speed',"learn("+i+",'speed')",'',uiIcon('speed')+' ').replace('</button>',' <span class="count">'+b[5]+'</span></button>'):'')+'</div></article>').join('');
  const summary=scope==='expanded'?'<section class="summary"><div class="head"><h2>'+t('metric.today')+'</h2>'+button('action.activity',"go('stats')",'ghost',uiIcon('stats')+' ')+'</div>'+metrics([['36','metric.due'],['18','metric.reviewed'],['7','metric.streak']])+'</section>':'';
  return '<header class="home-header"><span class="home-brand">'+t('app.name')+'</span>'+button('nav.settings',"go('settings')",'ghost',uiIcon('settings')+' ')+'</header>'+summary+'<div class="head collection-heading"><h2>'+t('home.collections')+'</h2>'+button('action.new',"popup('dialog.newCollection')",'ghost',uiIcon('plus')+' ')+'</div><div class="stack">'+cards+'</div>';
 }
@@ -107,7 +107,7 @@ function drawWords(){
  el.innerHTML=getCollectionEntries().length?'<div class="stack">'+getCollectionEntries().map((w,index)=>({w,index})).filter(({w})=>scope==='minimum'||w.join(' ').toLowerCase().includes(s.search.toLowerCase())).map(({w,index})=>inlineEntryCard(w,index)).join('')+'</div>':'<section class="card"><p class="meta">'+t('collection.empty')+'</p></section>';el.insertAdjacentHTML('beforeend',vocabularyUndoMarkup());bindVocabularySwipe();
 }
 function learning(){
- if(!reviewSession)reviewSession={index:0,completed:12,total:30,correct:9,history:[],hard:false,direction:'targetNative',correction:false};
+ if(!reviewSession)reviewSession={index:0,completed:0,total:getCollectionEntries().length,correct:0,history:[],hard:false,direction:'targetNative',correction:false};
  const r=reviewSession,pairs=getCollectionEntries(),codes=getCollectionCodes(),reverse=r.direction==='nativeTarget',pair=pairs.length?pairs[r.index%pairs.length]:['',''],prompt=pair[reverse?1:0],answer=pair[reverse?0:1];
  const noDue=!pairs.length||books[s.book][4]===0||new URLSearchParams(location.search).get('noDue')==='1',header=back('detail',noDue?'common.back':'learn.exit')+'<h1>'+esc(books[s.book][0])+'</h1>';
  if(noDue)return header+'<section class="card review-empty"><h2>'+t('learn.noDueTitle')+'</h2><p class="meta">'+t('learn.noDueBody')+'</p>'+button('common.back',"go('detail')",'tint')+'</section><p class="caption">'+t('learn.prototype')+'</p>';

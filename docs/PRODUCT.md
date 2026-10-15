@@ -1,8 +1,10 @@
 # Product brief
 
-**Status: First-release implementation started. Product research and later scope remain open.**
+**Execution update, 2026-10-15:** The owner authorized round-2 production implementation under [the execution ledger](implementation-round-2.md), with accepted UX refinements integrated at batch boundaries. Older overall mockup-approval gates below are superseded. Specific unresolved visual choices, including reading-mascot placement, retain their normal review. No publication is authorized.
 
-The owner has authorized Flutter implementation with a local-first approach and Android verification for the first release. FOUNDATION-001 establishes the empty application host under `app/`; it does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
+**Status: Implementation round 1 under Android owner testing; round 2 definitions and interactive mockup ready for review. Not a published product release.**
+
+The owner has authorized local-first Flutter implementation with Android verification. FOUNDATION-001 establishes the application host under `app/`; the requirement alone does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
 
 | Area | Current answer | Question to answer |
 | --- | --- | --- |
@@ -22,19 +24,25 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 
 ## Specifications and current phase
 
-The owner has authorized the first-release implementation plan: collections, focused manual entry, inline vocabulary editing, deletion with Undo, single-direction self-assessment with FSRS and reinforcement retries, previous-grade correction, a summary popup, and English/German language settings. The [implementation ledger](release-1-implementation.md) records the dependency order, accepted implementation constraints and verification evidence. Earlier discovery questions and incomplete Release tags do not override that accepted plan; each requirement's canonical detail is reconciled in its own implementation commit. The prototype itself remains illustrative and does not establish production persistence or scheduling.
+The owner has authorized implementation round 1: collections, focused manual entry, inline vocabulary editing, deletion with Undo, single-direction self-assessment with FSRS and reinforcement retries, previous-grade correction, a summary popup, and English/German language settings. The [implementation ledger](implementation-round-1.md) records dependency order and verification evidence. Earlier discovery questions and incomplete planning tags do not override that accepted scope. The prototype itself remains illustrative and does not establish production persistence or scheduling.
 
 - [Functional specification](piko-functional.md): behavior, data, validation, learning rules, and open functional decisions.
 - [UX specification](piko-ux.md): screens, controls, interaction, and pending browser feedback.
 - [Navigation mockup](../mockups/piko-mockup.html): existing mobile-first, English prototype using sample data.
 
-Current product work implements and verifies the accepted first release against the binding mockup. The prototype also contains later-scope screens for import, statistics and category management; those screens do not expand this release. Production implementation status is recorded in the ledger, not inferred from the prototype.
+Current product work reconciles accepted round-2 specifications and a round-switchable interactive mockup. Implementation round 2 includes reported UX/Android fixes, JSON import/export preserving learning, rotating-pool Speed Learning for filtered new words, categories and search. Manual vocabulary selection and Speed launch from that selection are explicitly Later, not round 2. Priorities and dependency order are in the roadmap. Production implementation of round 2 awaits owner mockup review. Legacy expanded previews do not expand accepted scope. The round-1 ledger remains its historical implementation evidence; changing the mockup does not establish fixes in the Android APK.
+
+The 2026-10-15 mascot decision adds only the refined Piko app icon (source frame 1) and reading Piko on Collection Detail when normal review is available (frame 3) to round 2. The sleeping (5), new-Speed-vocabulary (6), session-completion excited (2) and homepage-statistics star (4) poses are specified for Later. Collection Detail displays at most one contextual Piko; when the later states are enabled, new Speed vocabulary takes priority over normal review. See MASCOT-001–004 in the functional specification and UX-BRAND-001 / UX-MASCOT-001–004 in the UX specification. Artwork selection is accepted; mockup placement, final asset export and Android integration/verification remain pending. Homepage statistics are not added to round 2 by this decision.
 
 Requirement IDs remain stable. Confirmed requirements, proposals, and open questions are distinct. Newer explicit accepted decisions supersede older conflicting statements; superseded IDs remain documented for traceability. Functional behavior and UX presentation have separate specifications. The original handoff is retained locally and excluded from publication.
+
+Implementation rounds are internal planning scopes, not software releases. Development is integrated through thematic feature PRs, each squash-merged into `develop` with spec/revision traceability. Neither round currently authorizes store publication or a promotion to `main`. Only a later explicit release-preparation request creates a release branch from accepted `develop` and assigns a publication version. Existing test APKs do not establish a published product release.
 
 The accepted visible Minimum flow is create/open a collection → manually enter vocabulary → Long-term self-assessment review, with basic settings. Relevant requirement texts carry Flow tags (collection, entry, review, settings). Scope labels remain an independent proposal. The [requirements view](../mockups/requirements.html) reads both original specifications at runtime and filters those tags without maintaining duplicate lists. Use its reload action after editing a source file; bookmarked filters are preserved. UX requirements without scope labels remain explicitly unclassified.
 
 ## Glossary
+
+Piko's in-app character is purely decorative: its pose follows the specified context, but it has no interaction or learning function. Existing controls and text remain complete without it.
 
 | Term | Definition |
 |---|---|
