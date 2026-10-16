@@ -17,6 +17,110 @@ SpeedSession completeNumbersBreak(SpeedSession session) {
 
 void main() {
   group('SPEED-007 one complete pass between short-pool breaks', () {
+    test('39 words finish without a game before the final four first turns', () {
+      final entries = List.generate(39, (index) => 'word-${index + 1}');
+      var session = start(entries);
+      for (final id in entries.take(35)) {
+        expect(session.needsBreak, isFalse);
+        expect(session.currentEntryId, id);
+        session = answer(session, SpeedAnswer.correct);
+        expect(session.completion!.entryId, id);
+        expect(session.completion!.errors, 0);
+      }
+      expect(session.completedEntryIds.length, 35);
+      expect(session.waiting, isEmpty);
+      expect(session.pool, entries.skip(35).toList());
+      expect(session.pass, session.pool);
+      expect(session.rotation, 8);
+      for (final id in entries.skip(35)) {
+        expect(session.needsBreak, isFalse);
+        expect(session.currentEntryId, id);
+        session = answer(session, SpeedAnswer.correct);
+      }
+      expect(session.completedEntryIds, entries.toSet());
+      expect(session.isComplete, isTrue);
+      expect(session.needsBreak, isFalse);
+      expect(session.currentEntryId, isNull);
+    });
+
+    for (var replacements = 1; replacements < 5; replacements++) {
+      test('$replacements unseen replacements get a full pass before a game', () {
+        final entries = List.generate(5 + replacements, (index) => 'word-$index');
+        var session = start(entries);
+        final firstPass = session.pass;
+        for (final id in entries.take(5)) {
+          expect(session.currentEntryId, id);
+          expect(session.pass, firstPass);
+          session = answer(session, SpeedAnswer.correct);
+        }
+        final remaining = entries.skip(5).toList();
+        expect(session.needsBreak, isFalse);
+        expect(session.pass, remaining);
+        expect(session.waiting, isEmpty);
+        expect(session.rotation, 2);
+        for (final id in remaining) {
+          expect(session.currentEntryId, id);
+          expect(session.needsBreak, isFalse);
+          session = answer(session, SpeedAnswer.incorrect);
+          expect(session.completion, isNull);
+        }
+        expect(session.needsBreak, isTrue);
+        expect(session.currentEntryId, isNull);
+        final beforeGame = session;
+        session = completeNumbersBreak(session);
+        expect(session.itemProgress, beforeGame.itemProgress);
+        expect(session.completedEntryIds, beforeGame.completedEntryIds);
+        expect(session.pass, remaining);
+        expect(session.rotation, 3);
+        for (final id in remaining) {
+          expect(session.needsBreak, isFalse);
+          expect(session.currentEntryId, id);
+          session = answer(session, SpeedAnswer.correct);
+          expect(session.completion, isNull);
+        }
+        expect(session.needsBreak, isTrue);
+        session = completeNumbersBreak(session);
+        for (final id in remaining) {
+          expect(session.needsBreak, isFalse);
+          expect(session.currentEntryId, id);
+          session = answer(session, SpeedAnswer.correct);
+          expect(session.completion!.entryId, id);
+          expect(session.completion!.errors, 1);
+        }
+        expect(session.completedEntryIds, entries.toSet());
+        expect(session.isComplete, isTrue);
+        expect(session.needsBreak, isFalse);
+      });
+    }
+
+    test('unseen replacements retain their slots beside an attempted survivor', () {
+      var session = start(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+      for (var index = 0; index < 4; index++) {
+        session = answer(session, SpeedAnswer.correct);
+      }
+      session = answer(session, SpeedAnswer.incorrect);
+      expect(session.waiting, isEmpty);
+      expect(session.needsBreak, isFalse);
+      expect(session.pass, ['f', 'g', 'e']);
+      for (final id in ['f', 'g', 'e']) {
+        expect(session.needsBreak, isFalse);
+        expect(session.currentEntryId, id);
+        session = answer(session, SpeedAnswer.incorrect);
+      }
+      expect(session.itemProgress['f']!.errors, 1);
+      expect(session.itemProgress['g']!.errors, 1);
+      expect(session.itemProgress['e']!.errors, 2);
+      expect(session.needsBreak, isTrue);
+      session = completeNumbersBreak(session);
+      expect(session.pass, ['f', 'g', 'e']);
+      for (final id in ['f', 'g', 'e']) {
+        expect(session.needsBreak, isFalse);
+        expect(session.currentEntryId, id);
+        session = answer(session, SpeedAnswer.incorrect);
+      }
+      expect(session.needsBreak, isTrue);
+    });
+
     test('initially short asks every word before its first break', () {
       var session = start(['a', 'b', 'c']);
       expect(session.needsBreak, isFalse);
