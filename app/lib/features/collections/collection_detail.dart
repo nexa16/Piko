@@ -1,3 +1,4 @@
+import 'collection_view_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -54,6 +55,7 @@ class CollectionDetail extends StatefulWidget {
     required this.repository,
     required this.collectionId,
     this.entrySessionFactory,
+    this.interchangeBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -71,6 +73,7 @@ class CollectionDetail extends StatefulWidget {
   final CollectionsRepository repository;
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
+  final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -445,6 +448,22 @@ class _CollectionDetailState extends State<CollectionDetail> {
                 body: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (widget.interchangeBuilder != null)
+                      PikoButton(
+                        label: copy.text('json.title'),
+                        onPressed: writing
+                            ? null
+                            : () {
+                                if (consume()) {
+                                  Navigator.of(menuContext).pop();
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (mounted) _openInterchange();
+                                  });
+                                }
+                              },
+                      ),
                     if (categoryBuilder != null || categories != null)
                       ExpansionTile(
                         key: const ValueKey('collection-menu-categories'),
@@ -736,7 +755,62 @@ class _CollectionDetailState extends State<CollectionDetail> {
     }
   }
 
+  Future<void> _openInterchange() async {
+    final record = _currentCollection, builder = widget.interchangeBuilder;
+    if (record == null || builder == null || _openingEntry || _learningBusy) {
+      return;
+    }
+    setState(() => _openingEntry = true);
+    try {
+      await showPikoDialog<Object?>(
+        context,
+        builder: (context) => builder(context, record),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _openingEntry = false);
+        widget.queryBinding?.refresh();
+      }
+    }
+  }
+
   Future<void> _openEntry() async {
+    if (widget.interchangeBuilder == null) {
+      await _openManualEntry();
+      return;
+    }
+    if (_openingEntry || _learningBusy) return;
+    final method = await showPikoDialog<String>(
+      context,
+      builder: (context) {
+        final copy = PikoCopyScope.of(context);
+        return PikoDialog(
+          title: copy.text('entry.chooseMethod'),
+          purpose: PikoDialogPurpose.directChoice,
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PikoButton(
+                label: copy.text('entry.manualMethod'),
+                onPressed: () => Navigator.of(context).pop('manual'),
+              ),
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              PikoButton(
+                label: copy.text('json.importTab'),
+                onPressed: () => Navigator.of(context).pop('import'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (method == 'manual') await _openManualEntry();
+    if (method == 'import') await _openInterchange();
+  }
+
+  Future<void> _openManualEntry() async {
     final record = _currentCollection;
     final factory = widget.entrySessionFactory;
     if (_openingEntry ||
@@ -769,6 +843,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void initState() {
     super.initState();
+    widget.queryBinding?.scope.resetExpansion();
     _createMutations();
     _watch();
   }
@@ -1246,6 +1321,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                           : null,
                                     ),
                                   ),
+                                ),
+                                CollectionViewControls(
+                                  binding: widget.queryBinding!,
+                                  enabled: _queryControlsAvailable,
                                 ),
                                 if (selectedCount > 0)
                                   Align(

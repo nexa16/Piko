@@ -1,6 +1,19 @@
 # Round 4 implementation ledger
 
-**Status, 2026-10-16: current planning scope accepted with no further owner alignment or preliminary mockup pass required. The completed scrolling change is retained with owner permission. Owner phone testing remains deferred until more changes have been implemented. No additional implementation is authorized yet.**
+**Status, 2026-10-16: owner explicitly authorized the complete round-4 plan. Implementation in progress; no publication or phone acceptance is claimed.**
+
+## Execution agreement — 2026-10-16
+
+Owner-authorized plan: solo execution; no subagents. One final owner-review APK, with private recovery checkpoints. Preserve the verified scrolling APK and original source commits. Current branch integrates develop 61fdefc through merge aacabcd (the squash tree equals original round-3 head 5107327). Preserve the newer specifications in 38ea841. No publication is authorized.
+
+Scope is the eight selected packages below, with the owner's accepted implementation defaults: schema-15 ordered examples and local addition dates; JSON v3 with v1/v2 import; persistent Collection view settings; Compact/target-first/ungrouped/original-order defaults; lexical NFC lowercase sorting with stable ties and unknown dates last; transient collapsed groups and UUID-owned editors; default-on question examples captured per presentation; shared Import/Export with retained session drafts. Exclude Active/Inactive, answer-card editing, compact-editor redesign, proficiency/Mastered, manual Speed selection and other unscheduled features. Revisions and acceptance are maintained in the owning specifications. The older planning authorization statements below retain their historical scope.
+
+| Package | Status | Verification / limitations |
+| --- | --- | --- |
+| Shared dialogs, launcher and palette | Implemented locally | Shared-dialog host checks and prepared-resource geometry passed; Android pending |
+| Multiple examples, dates, JSON and navigation | Implemented locally | Populated schema-14 migration/reopen, v1/v2/v3, rollback, Discard/Undo, preference capture and popup retention host checks passed; Android pending |
+| Collection views and sorting | Implemented locally | Unicode/date ordering, preference persistence and duplicate raw-editor host checks passed; Android pending |
+| Header transitions | Investigation pending | Owner's two recording cases not independently reproduced |
 
 ## Scope and authorization
 
@@ -108,3 +121,10 @@ The owner clarified that VOCAB-EDIT-003 r1 / UX-CARD-014 r1 belong only in the g
 - The owner reported successfully installing the round-3 update and learning vocabulary through the happy path, then merged [PR #4](https://github.com/nexa16/Piko/pull/4). GitHub confirms merge commit `61fdefc` on `develop`, with the same tree as reviewed head `5107327`. This is owner-reported round-3 happy-path evidence; no additional cases, exact phone/build identifier or round-4 scrolling acceptance are inferred.
 - Workspace cleanup preserves the newer popup, all-round palette and alphabetical-category specifications, plus the selected round-4 planning and grouping questions. CAT-009 r5, FILTER-002 r5, UX-CAT-001 r7, UX-DIALOG-001 r5, UX-SYSTEM-001 r7 and UX-LAB-001 r4 remain pending implementation for their revised scope. Findings keep their evidence/history and specified status. The historical prototype source remains recoverable privately.
 - Merged branch heads and dirty source snapshots were archived outside the repository before cleanup; ignored APKs and verification logs were separately preserved. Cleanup changes checkout organization and documentation, without rebuilding or changing the application.
+
+
+## Current implementation checkpoint
+
+The first integrated full host run passed 1,150 tests and found one missing canonical Apply-key reference in the new View popup; that reference was corrected to the existing shared Apply key. Targeted regression caught and corrected the editor-occurrence handoff when an invalid draft blocks switching. Legacy migration fixtures now explicitly expect unknown addition dates; existing learning snapshots remain exact. New tests cover ordered child-row rollback, populated schema-14 upgrade/reopen, retired scalar-column isolation, list replacement/clear/stale preview, local date preservation, per-presentation question preferences, duplicate grouped appearances and popup reopening.
+
+Header investigation starts with the existing normal/Speed route headers unchanged. The new isolated Android fixture samples intermediate frames across normal grading/correction/retry waits and Speed grading/number-game boundaries. Source inspection finds the heading outside the conditional card branches; this is a hypothesis check, not reproduction or a fix. The owner’s two private recording cases remain separately unidentified.

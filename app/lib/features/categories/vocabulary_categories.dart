@@ -18,6 +18,7 @@ class VocabularyCategories extends StatefulWidget {
     required this.entryId,
     required this.repository,
     this.snapshot,
+    this.excludedValues = const {},
     this.draftAssignments,
     this.onSelection,
     this.disabled = false,
@@ -28,6 +29,7 @@ class VocabularyCategories extends StatefulWidget {
   final String? entryId;
   final CategoriesRepository repository;
   final CollectionQuerySnapshot? snapshot;
+  final Set<String> excludedValues;
   final Map<String, Set<String>>? draftAssignments;
   final ValueChanged<CategoryAssignmentRecord>? onSelection;
   final bool disabled;
@@ -249,7 +251,8 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
     List<Widget> chips(CategoryDimensionRecord dimension) => [
       for (final value
           in definitions[dimension.id] ?? const <CategoryValueRecord>[])
-        if (assigned[dimension.id]?.contains(value.id) == true)
+        if (assigned[dimension.id]?.contains(value.id) == true &&
+            (editable || !widget.excludedValues.contains(value.id)))
           Container(
             key: ValueKey(
               'category-label-${widget.entryId ?? 'draft'}-${value.id}',

@@ -29,6 +29,7 @@ class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
     required this.repository,
     this.entrySessionFactory,
+    this.interchangeBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -46,6 +47,7 @@ class CollectionsHome extends StatefulWidget {
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
+  final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -107,6 +109,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           repository: widget.repository,
           collectionId: collection.id,
           entrySessionFactory: widget.entrySessionFactory,
+          interchangeBuilder: widget.interchangeBuilder,
           reviewSessionFactory:
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
