@@ -28,6 +28,8 @@ The accepted companion scope is Detailed/Compact presentation under COLL-009–0
 
 Before implementation, clarify treatment of unassigned entries, group and within-group ordering, initial/persisted expansion, and editing the same entry shown in several groups. For the view modes, settle initial defaults and presentation of hints, categories and directional statuses alongside the specified vocabulary/examples. CAT-006 editor ordering/collapse configuration, CARRY-001 / CAT-003 category carry-over and proposed sorting under COLL-008 remain separate unscheduled work. App/mockup implementation and Android acceptance are pending; this planning review used source documents, not runtime reproduction.
 
+Planning verification: all eight existing requirements-parser tests pass; a targeted parse confirms the nine functional IDs and UX-COLL-001 match Round 4 with pending implementation. The requirements page still exposes only round-1/2 choices in its dropdown; adding a round-4 UI filter remains pending. This parser evidence does not establish app behavior.
+
 The owner will add further items. Do not begin app/mockup implementation while this scope is being gathered. The retained scrolling correction and deferred phone acceptance above remain unchanged.
 
 ## Retained change: Collection Detail scrolling

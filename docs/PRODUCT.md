@@ -1,6 +1,6 @@
 # Product brief
 
-**Round-4 planning selection, 2026-10-16:** Shared popup corrections, the approved book launcher with remaining palette cleanup, and the simplified JSON import example/template are selected for planning. The owner is gathering more items before implementation. Manual Speed selection remains deferred pending reconsideration of its learning-state reset consequence; no replacement learning rule is accepted. See [the round-4 ledger](implementation-round-4.md#selected-planning-scope--2026-10-16).
+**Round-4 planning selection, 2026-10-16:** Shared popup corrections, the approved book launcher with remaining palette cleanup, the simplified JSON import example/template, and category-based vocabulary grouping with Compact/Detailed modes, language display order and per-Collection persistence are selected for planning (GROUP-001–003, COLL-004–006, COLL-009–011). The owner is gathering more items before implementation. Manual Speed selection remains deferred pending reconsideration of its learning-state reset consequence; no replacement learning rule is accepted. See [the round-4 ledger](implementation-round-4.md#selected-planning-scope--2026-10-16).
 
 **Round-4 initialization, 2026-10-16:** The owner requested retention of the already completed Collection Detail scrolling change on a round-4 branch. Owner phone testing is deferred until more work has been implemented. No additional round-4 feature implementation is authorized by this request; see [the round-4 ledger](implementation-round-4.md).
 
