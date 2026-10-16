@@ -1,6 +1,6 @@
 # Piko application
 
-Local-first Flutter application under Android testing. Implementation rounds describe planning scope, not published versions. Collections, vocabulary entry/editing and learning are tracked in the [round-1 ledger](../docs/implementation-round-1.md); round-2 definitions and mockups do not establish implemented app behavior. Thematic feature PRs squash into `develop` while retaining specification IDs and verification evidence. Store publication and promotion to `main` have not been requested.
+Local-first Flutter application under Android testing. Implementation rounds describe planning scope, not published versions. Collections, vocabulary entry/editing and learning are tracked in the [round-1 ledger](../docs/implementation-round-1.md); JSON interchange, Speed, categories, filtering/search and usability changes are tracked in the [round-2 ledger](../docs/implementation-round-2.md). Each ledger separates host, Android and visual evidence from pending work. Thematic feature PRs squash into `develop` while retaining specification IDs and verification evidence. Store publication and promotion to `main` have not been requested.
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 
@@ -18,7 +18,7 @@ For VOCAB-EDIT-002 device acceptance, run `flutter test --no-uninstall integrati
 
 For RETRY-004 device acceptance, `integration_test/retry_expiry_android_test.dart` uses an isolated database and injected clock with the device's existing GMT calendar. It checks same-day gap/wait retention, exact local-04:00 expiry without success or extra FSRS/history, and non-resurrection after reopen. It never changes timezone and does not establish Android DST coverage. Use the same no-uninstall and normal-APK restoration procedure above.
 
-SDK paths, caches and build output remain untracked. Generated release builds currently use development signing and are not store publication artifacts. Interface copy and design configuration will use adapters from the canonical `shared/copy.js` and `shared/design-config.js`; this scaffold introduces no separate UI wording or design values.
+SDK paths, caches and build output remain untracked. Generated release builds currently use development signing and are not store publication artifacts. Interface copy and design configuration use generated adapters from the canonical `shared/copy.js` and `shared/design-config.js`; edit those sources and regenerate rather than changing generated defaults.
 
 Lucide SVGs and their full ISC/Feather MIT notice are edited only in `mockups/assets/icons/lucide`. Android does not package the parent-relative asset paths, so `node tool/generate_shared.mjs` produces byte-identical adapters in `assets/generated/lucide`. Never edit these copies; `--check` rejects changed, missing or extra output. Run `flutter test --no-uninstall integration_test/piko_icon_android_test.dart -d <android-device>` to verify real bundled loading and raster rendering. The test fixture does not ship as a product screen.
 

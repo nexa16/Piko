@@ -1,8 +1,8 @@
 # Piko
 
-**Status: Implementation round 1 under Android testing; round 2 specifications and mockup ready for review. Not a published product release.**
+**Status: Implementation round 2 under integrated host and Android verification. Not a published product release.**
 
-The local-first Flutter app has an Android test build for implementation round 1. Round 2 currently covers canonical definitions and an interactive mockup, not new production features. The HTML/CSS mockup remains the design reference; the roadmap separates accepted round-2 scope, production implementation order and later capabilities.
+The local-first Flutter app includes round-2 JSON interchange, Speed learning, categories, filtering/search and usability changes. The implementation ledger distinguishes verified behavior, pending Android acceptance and the reading mascot's outstanding visual handoff. The HTML/CSS mockup remains the design reference; neither the mockup nor written code alone establishes application acceptance.
 
 This repository contains Piko's product planning and future implementation.
 
@@ -24,7 +24,7 @@ This repository contains Piko's product planning and future implementation.
 
 The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The initial Android scaffold now supports local collection creation; each feature requires its own tests and verification.
 
-Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly. The studio supports immediate draft previews and export; a future app will consume the same catalog through an adapter appropriate to its platform. See the design foundations document for persistence and synchronization limits.
+Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly and Flutter consumes a generated adapter; the same approach applies to `shared/design-config.js`. The studio supports immediate draft previews and export. See the design foundations document for persistence and synchronization limits.
 
 `main` is the default and release branch; `develop` is for development. The initial planning and mockup bootstrap on `main` does not represent a release. Substantive work uses thematic feature PRs from short-lived branches, squash-merged into `develop`. Implementation rounds are planning scopes, not release numbers. A future owner-requested release branch will start from accepted `develop`; no promotion or store publication is currently authorized. See the [feature-PR transition plan](docs/ROADMAP.md#feature-pr-transition).
 
