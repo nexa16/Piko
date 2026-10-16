@@ -700,8 +700,22 @@ void main() {
                 for (final row in before[table]!)
                   if (table == 'learning_items')
                     {...row, 'speed_completed': 0}
+                  else if (table == 'vocabulary_entries')
+                    {
+                      ...row,
+                      'example_target_text': null,
+                      'example_native_text': null,
+                      'hint_text': null,
+                      'hint_visibility': 'always',
+                    }
                   else
                     row,
+                if (table == 'app_settings')
+                  {
+                    'rowid': 2,
+                    'key': 'preferredDirection',
+                    'value': 'nativeToTarget',
+                  },
               ],
             );
           }

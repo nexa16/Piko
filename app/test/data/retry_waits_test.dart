@@ -526,6 +526,25 @@ void main() {
         db = upgraded;
         final expected = <String, Object?>{
           ...before,
+          'app_settings': [
+            ...(before['app_settings'] as List),
+            {
+              'stored_rowid': 2,
+              'key': 'preferredDirection',
+              'value': 'nativeToTarget',
+            },
+          ],
+          'vocabulary_entries': [
+            for (final row
+                in (before['vocabulary_entries'] as List).cast<Map>())
+              {
+                ...row,
+                'example_target_text': null,
+                'example_native_text': null,
+                'hint_text': null,
+                'hint_visibility': 'always',
+              },
+          ],
           'learning_items': [
             for (final row in (before['learning_items'] as List).cast<Map>())
               {...row, 'speed_completed': 0},

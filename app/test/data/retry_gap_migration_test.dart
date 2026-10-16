@@ -254,8 +254,22 @@ void main() {
                   }
                 else if (table == 'learning_items')
                   {...row, 'speed_completed': 0}
+                else if (table == 'vocabulary_entries')
+                  {
+                    ...row,
+                    'example_target_text': null,
+                    'example_native_text': null,
+                    'hint_text': null,
+                    'hint_visibility': 'always',
+                  }
                 else
                   row,
+              if (table == 'app_settings')
+                {
+                  'stored_rowid': 3,
+                  'key': 'preferredDirection',
+                  'value': 'nativeToTarget',
+                },
             ], reason: '$table survives schema8 migration/reopen exactly');
           }
           expect(await rows(current, 'scope_answer_ordinals'), isEmpty);
