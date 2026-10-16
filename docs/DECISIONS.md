@@ -1,5 +1,85 @@
 # Decision log
 
+Reconciliation note, 2026-10-16: the recovered preparation decisions below retain their original status and scope at the time of writing. Subsequent round-3 implementation and resolved Hint/example/status/preference contracts are recorded in [implementation-round-3.md](implementation-round-3.md) and the canonical specifications. Historical “pending” or “unresolved” wording does not reverse that later evidence. The book launcher revision 3 remains an unintegrated asset handoff; the simplified import template remains Later. The older frame-1 launcher decision is superseded by the book choice, while its APK evidence remains historical. No new product decision or publication is made by this reconciliation.
+
+## Findings and feature requests begin with clarification — accepted, 2026-10-16
+
+- **Owner workflow:** Reporting a finding, bug, defect or new feature means first understand the intended outcome, clarify material details together, and then document the finding and agreed behavior in the functional and/or UX specifications. The report does not authorize implementation, including within an already authorized implementation round.
+- **Investigation:** A very small, focused investigation may help understanding. Attempt reproduction on the existing emulator/device or by another suitable available method. Record established preconditions, state/data, exact steps, expected/actual results, build/environment and repeatability. Separate owner reports, direct observations and hypotheses; document unsuccessful attempts, unavailable reproduction and unresolved details honestly. Keep private evidence outside the repository.
+- **Implementation boundary:** Preserve existing requirement IDs and revision rules, record concrete acceptance scenarios, and leave app/mockup implementation pending until the owner explicitly requests it for the clarified scope. Neither confirming the specification nor reproducing the issue is that request. The standing procedure is in [AGENTS.md](../AGENTS.md#owner-findings-and-feature-requests).
+
+## Plain-book app icon — accepted, 2026-10-16
+
+- **Owner selection:** Use concept A, a plain open book, as Piko's app/launcher icon. Cream pages, a navy outline and fold, and a blue cover sit on a light-blue background. The icon has no ears, face or star. This supersedes the source-frame-1 launcher choice below; the contextual mascot mappings remain unchanged.
+- **Asset:** A separate 32×32 pixel master has editable Book and Background layers and 0 FPS. The icon uses four existing illustration colors: `#FFF9F0`, `#34365B`, `#7FA6DF` and `#B7D1F4`. Keep the original six-frame 64×64 mascot master intact. Export the full square background with crisp integer scaling; platform masks are applied during integration.
+- **Initial export:** The first Piskel source was saved and reopened with one frame and two layers. Initial local PNG exports at 32, 256 and 1024 pixels have four colors, an opaque background and exact mirror symmetry; larger exports match nearest-neighbor scaling of that first master.
+- **Owner revision and Android package:** The owner refined the book to a one-pixel spine and a 23×18-pixel silhouette on the 32×32 canvas, then requested separate foreground/background files with exact centering. Preserve this revision as the Android source, including its empty third layer. Export each source pixel at 24×24 into a 1080×1080 adaptive canvas: 552×432 artwork, 264-pixel left/right margins and 324-pixel top/bottom margins. The whole foreground fits inside Android's 66 dp safe circle. Supply adaptive XML, legacy density PNGs and an optional monochrome outline/spine layer. Exact pixel/centering checks and Android resource compilation/linking pass. UX-BRAND-001 is revision 3; app integration and installed-device verification remain pending.
+
+## Style and copy acceptance — 2026-10-16
+
+After reviewing the interactive typography/style/language comparison, the owner accepted the new wording and text-style changes. Together with the earlier Nunito Sans and four-state acceptance, this finalizes the design handoff. The accepted contract is in DESIGN.md; the revised owning UX requirements retain their IDs; ux-findings.json records specified status. No finding is Fixed without later revision-specific Android evidence.
+
+Follow ux-implementation-plan.md for foundation-first integration and owning workflow packages. Synchronize canonical tokens/copy, adapters and mockup within implementation; the preparation package has not changed or installed the Android app. Existing newer JSON and conditional-Speed-warning behavior remains authoritative. No API, schema, future feature or release is added.
+
+## Four state designs accepted — 2026-10-16
+
+The owner accepted F04, F10, F11 and F13 after the concrete state comparison and the follow-up left-alignment/X-dismissal refinements. They are specified, not implemented or Android verified. Acceptance covers Collection Detail navigation/alignment, the genuine-empty CTA, confirmed filter count and direct toolbar clearing, and inline Speed completion feedback with explicit X dismissal. The subsequent style/copy acceptance above resolves the reviewed typography and wording; global navigation variants outside the reviewed states and new features are not added.
+
+Implement the accepted state contract through shared tokens/copy and the canonical mockup together in the foundation/owning packages; the local approved state illustrations remain the review evidence. Current application/catalog defaults are not claimed to have changed. Other ongoing accepted specifications, including the newer conditional Speed warning and JSON revisions, remain intact.
+
+## UX preparation and repeated reviews — accepted, 2026-10-16
+
+- Review typography, style and EN/DE wording before final prioritization; consider all F01–F15 and add independent new findings with stable IDs.
+- Owner selected Nunito Sans for further design development after comparison with Inter and the existing browser reference. This does not establish Android font integration or acceptance of every proposed size/copy/layout change.
+- Adopt the [quality workflow](ux-quality.md): requirements own intended behavior/presentation, shared design rules own reusable patterns, and the [finding register](ux-findings.json) owns lifecycle and verification. Fixed requires revision-specific Android evidence and relevant checks.
+- Use targeted per-change reviews, six round-end reference states and wider consumer checks for global changes. Keep raw evidence local, preserve user data and prioritize implementation emulator access.
+- Remaining concrete screen/text proposals are listed in [UX consolidation proposals](ux-consolidation-proposals.md); they are now resolved by the style/copy acceptance above; implementation remains pending.
+
+## Accepted UX handoff included in round 3 — 2026-10-16
+
+- Include all F01–F18 as specified, none Fixed, with source/evidence history preserved in ux-findings.json. Follow the six packages in implementation-round-3.md and ux-implementation-plan.md; retain separate spec ownership and tests.
+- Accept Nunito Sans with reviewed offline Korean fallback, the nine-color palette, shared geometry, all 27 reviewed EN/DE copy changes and the four state designs including left-aligned Speed text and completion X. Canonical runtime configuration, copy, mockup and Android remain unchanged in this planning pass.
+- Preserve the newest Detail-only direction preference, prefix-free single-direction learning status, conditional warning, separate JSON views, unseen-Speed-replacement rule and plain-book icon revision. F13 is a text-only notice, not new mascot artwork. IMPORT-JSON-003 remains deferred.
+- Shared visual refinements carry Updated 3 while original round tags/history remain. Required new-feature decisions are not bypassed. No implementation or publication authorization is inferred; existing publication approval remains pending.
+
+## Round-3 learning status and direction-preference boundary — accepted, 2026-10-16
+
+- **Scope:** The owner selected examples/notes, preferred learning direction and vocabulary learning-status display for round 3. Manual Speed selection and correction of the last Speed answer remain deferred. Detailed examples/notes and status mappings still need specification; this selection is not implementation authorization.
+- **Status:** Reuse LEARN-005 for the functional learning-status requirement and add UX-LEARN-005 for its Collection presentation. With one preferred direction, show status only, without language-direction prefixes; with both, distinguish directions. Do not infer the earlier unresolved mastery scale is now approved for implementation.
+- **Preference:** PREF-005 includes hiding unselected normal-review cards and Speed actions on Collection Detail. It does not filter the homepage quick-review count or direction picker; both available directions remain accessible there. Learning records remain unchanged. Mixed sessions and per-Collection overrides stay deferred; existing-user preference migration remains open.
+- **Evidence:** Specifications only, revisions 1; no app/mockup changes or passing implementation claim.
+
+## Speed must present unseen replacements before a number break — accepted, 2026-10-16
+
+- **Observation:** The owner reported a number game followed by a newly introduced, never-before-seen vocabulary near 35/39 completed. Exact reproduction and technical cause remain unverified.
+- **Correction:** A short pool and empty waiting queue are not enough to trigger a game. Every remaining pool word must already have an answered attempt in this round. If a replacement still awaits its first turn, skip the game at that boundary and run the next complete pass in rotation order. Do not interrupt a pass or bring replacements into the preceding pass. Reevaluate at the following boundary; completion still ends immediately without a final game.
+- **Traceability:** SPEED-007 and SPEED-010 advance to revision 3, with a 39-word regression scenario and replacement edge cases. This refines revision 2's unconditional short-pool boundary rule; streaks, learning reset semantics, one-game-per-pass and N=1 remain unchanged. Specifications only; app/mockup fix and verification pending.
+
+## Separate JSON import/export and clarify import steps — accepted, 2026-10-16
+
+- **Owner feedback:** JSON import/export worked in owner testing, but the combined action-heavy page was unclear. Separate Import and Export so only one operation's details are visible; leave the precise switch control for visual review.
+- **Import flow:** Example first, then file/paste with compact expandable input, content-group choices and Check, results and an explicit Import action. Content-group choices do not disable mandatory validation. Disable Import with loading feedback during apply, retain recoverable failures and show success only after a successful write.
+- **Navigation correction:** The owner's final clarification selects the owning Collection Detail, not the homepage or manual-entry page, as Back/post-success return destination.
+- **Traceability and boundary:** UX-IMPORT-JSON-001/002 advance to revision 2. JSON data semantics remain unchanged. IMPORT-JSON-003's simplified template is still Later, outside round 2. This review changes specifications only; shared copy, mockup and app implementation/verification are pending.
+
+## Speed reset warning only for existing progress — accepted, 2026-10-16
+
+- **Decision:** Hide the reset warning when all words in the actual Speed round are new in its direction. Show it only when an included word has existing normal-learning progress in that direction; mere initial scheduler records or progress in the opposite direction do not qualify. Shorten the message to the completion-after-error reset consequence.
+- **Traceability:** UX-SETUP-002 revision 5 replaces revision 4's unconditional warning. SPEED-005 eligibility and SPEED-006 learning effects remain unchanged, so normal round-2 new-word-only setup needs no warning. Manual selection remains Later. SETUP-008's reference to a completion-time warning is conditional on UX-SETUP-002, not an always-visible requirement.
+- **Status:** Owner-review specification change only; app, shared copy and mockup updates and verification are pending. No implementation or publication is claimed.
+
+## Minimal import template — accepted for Later, 2026-10-16
+
+- **Decision:** Simplify the copyable JSON import example: retain format and schemaVersion plus required import structure, omit learning state, timestamps and scheduler details, and demonstrate Topic → Food and Difficulty → Easy assigned to one example vocabulary (German: Thema → Essen; Schwierigkeit → Einfach).
+- **Boundary:** Full export still includes all stored vocabulary-associated data. Import matching, validation and learning preservation do not change.
+- **Traceability:** IMPORT-JSON-003 revision 1 is a deferred refinement of IMPORT-JSON-001, not a new round-2 requirement or an implemented fix. Preserve the round-2 baseline revisions and verification evidence. Specifications only; app and mockup remain unchanged.
+
+## 2026-10-16 — Round 3 prototype and reduced Design Lab
+
+- **Status:** Accepted for mockup work; not an application release.
+- **Decision:** Implement accepted round-3 UX packages in parallel, preserving earlier rounds for comparison. The Design Lab has two columns: preview and requirements/reference; Colors precedes collapsed i18n. Remove generators, button/dropdown workbenches and inline confirmed-rule lists; link consolidated UX criteria instead.
+- **Consequences:** The accepted Piko palette is the studio default. Round 3 demonstrates offline fonts, revised copy, separate Import/Export, entry actions, compact Collection actions, stable selection footers and learning presentation. Preferred direction restricts Detail only, not Overview. Detailed status mapping and examples/notes stay unresolved.
+- **Verification boundary:** Browser prototype checks do not mark Android findings fixed.
 ## Collection Detail scrolling correction — 2026-10-16
 
 - **Authorization correction:** The original issue report did not request implementation. On 2026-10-16 the owner explicitly chose to keep the completed change on `codex/round-4-implementation`, deferring phone testing until more work is implemented. This retention is not broader round-4 implementation authorization or owner acceptance of the physical scrolling behavior. Evidence and pending acceptance are recorded in [the round-4 ledger](implementation-round-4.md).

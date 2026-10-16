@@ -1,17 +1,61 @@
 # Design foundations and shared copy
 
+## Accepted design contract — 2026-10-16
+
+The owner accepted the new copy proposals and text-style changes after inspecting the interactive style review. Nunito Sans and F04/F10/F11/F13 were already accepted. The following rules supersede conflicting older design trials; they remain the accepted design contract. Round-3 checkpoint 1 records canonical token/copy/font integration and scoped Android checks. That evidence does not close all F01–F18 acceptance criteria.
+
+### Color roles
+
+Only these nine UI colors, plus documented alpha compositing of them, are allowed: action blue `#4D64AE`, pale blue `#E8EFFA`, page `#F6F7FB`, cream surface `#FFFDF8`, navy text/icons `#34365B`, supporting text `#62657D`, restrained gold `#FFE08A`, danger `#B42318` and success `#166534`. Original Piko artwork and OS-owned interfaces retain their own colors. No extra grey, orange, pink or white UI token.
+
+Use cream on blue/red/green, navy on gold, and primary/navy on pale or cream. Speed cards and category tags use gold. Secondary review uses pale blue. Warnings use 12% red over cream, red icon/heading/border and navy body; they remain distinct from solid destructive/grading actions. Labels carry meaning independently of color. Essential fields use the supporting-text boundary, focus blue and error red with explicit text; decorative borders use navy alpha. Use navy for dialog backdrops at the existing opacity initially. Safe dismissals use the existing low-emphasis shared role. Pressed/hover/focus/disabled variants derive from allowed roles and documented alpha, not new swatches. Verify each pair in context, including the framework's complete theme mapping.
+
+### Typography and geometry
+
+Use Nunito Sans for interface text with the reviewed Noto Sans KR Korean fallback. Bundle required weights and license notices for offline use. Preserve font scaling and verify actual Android glyph metrics; do not substitute the browser screenshot for that check.
+
+| Role | Size / weight / line height |
+| --- | --- |
+| Page title | 26 / 700 / 1.2 |
+| Dialog title | 20 / 700 / 1.3 |
+| Section heading | 18 / 700 / 1.35 |
+| Body / input value | 16 / 400 / 1.5 |
+| Field label | 14 / 600 / 1.4 |
+| Control label | 14 / 700 / 1.4 |
+| Supporting text | 14 / 400 / 1.45 |
+| Learning answer | 37 / 600 / 1.3 |
+| Revealed original prompt | 22 / 400 / 1.4 |
+
+Remove decorative negative title tracking. Use shared 4/8/12/16/24 spacing steps; keep existing 20/32 steps only where an owning accepted component requires them rather than blanket replacing dimensions. Radii: card 16, dialog 20, field 12 and action 24. Lucide icons remain 20; 48 logical pixels is the target for new/shared controls. The reading mascot's accepted 64px slot is unchanged.
+
+Titles and actions rearrange before clipping or character-level breaking; long unspaced user content may break as a last resort. Do not reduce accessibility text to make it fit. Input values may scroll inside their field; readonly content needs wrapping or an explicit full-value access rule. Keep label/value groups together. Input values never inherit a field label's bold weight. State-specific details belong to their existing UX requirements.
+
+### Wording
+
+Keep EN/DE meaning and placeholders equivalent. Prefer vocabulary/Vokabeln over technical entry-session wording. Use Category group/Kategoriegruppe for the user-facing dimension and Value/Wert within a named group; internal IDs and serialized names remain unchanged. Completed is a session outcome; currently due is time-dependent; neither asserts durable mastery. Use explicit action outcomes and natural verbs. Retain Collection/Sammlung, Review/Wiederholen, Speed/Intensiv lernen and explicit grading labels. New labels must pass targeted long-text checks.
+
+The reviewed copy changes are accepted for canonical integration in the owning packages. `shared/copy.js` remains the only runtime wording source; `shared/design-config.js` remains the only runtime design source. Keep tokens/copy and generated application adapters synchronized. The preserved historical round-3 mockup uses older profile/alias adapters and still needs compatibility integration with the current catalogs; do not overwrite current runtime values to restore that preview. No second production catalog or unreviewed seeded palette is authorized.
+
+## Reconciled verification and historical references — 2026-10-16
+
+The [quality workflow](ux-quality.md), [criteria](ux-consolidation-proposals.md) and [finding register](ux-findings.json) preserve the accepted design handoff. Finding-level closure remains separate from the implementation ledger. Older Cobalt, white-on-action, orange-warning and pending-integration statements below record their dated checkpoints; the accepted contract above and current canonical requirements supersede conflicting active design values. Dark-mode and unaccepted global navigation choices remain open.
+
 ## Piko app icon and contextual mascot — accepted, 2026-10-15
 
 The owner clarified that the Piko character is purely decorative. Its context-dependent appearance adds no function, interaction, action or learning effect. Do not make it a control or status indicator: exclude it from focus/accessibility announcements and keep all existing state text/actions independently understandable. This applies to every in-app pose; the app icon retains ordinary OS launcher behavior.
-Use the refined Piko artwork while preserving the owner's manual pixel edits. Round 2 includes source frame 1 for the application/launcher icon and source frame 3 (reading) once inside the first visible positive normal-review card on Collection Detail when normal review is available. The reading Piko sits to the right of the card's left-aligned text and before its trailing review icon. If only the reverse-direction card is visible, it receives the mascot. The app icon includes its background; the reading sprite requires a transparent, lossless export. Keep the 64×64 masters, crisp pixel edges and the eight illustration colors recorded in UX-BRAND-001 / UX-MASCOT-001; illustration colors do not replace Cobalt or semantic UI/action tokens. Lucide remains the icon family for controls and navigation.
+**Launcher supersession, 2026-10-16:** UX-BRAND-001 revision 3 replaces the frame-1 launcher choice below with the owner-refined plain book (one-pixel spine, 23×18 silhouette on 32×32). Use its prepared centered Android foreground/background, monochrome and legacy resources without trimming or an extra inset. The four-color book palette is cream #FFF9F0, navy #34365B, medium blue #7FA6DF and light blue #B7D1F4. Resource preparation checks are not installed-app verification; integration remains pending. The following reading-mascot placement and geometry stay accepted and unchanged.
+
+Use the refined Piko artwork while preserving the owner's manual pixel edits. The historical round-2 application uses source frame 1 for the launcher; that choice is superseded by UX-BRAND-001 revision 3, whose integration remains pending. Source frame 3 (reading) appears once inside the first visible positive normal-review card on Collection Detail when normal review is available. The reading Piko sits to the right of the card's left-aligned text and before its trailing review icon. If only the reverse-direction card is visible, it receives the mascot. The app icon includes its background; the reading sprite requires a transparent, lossless export. Keep the 64×64 masters, crisp pixel edges and the eight illustration colors recorded in UX-BRAND-001 / UX-MASCOT-001; illustration colors do not replace semantic UI/action tokens. Lucide remains the icon family for controls and navigation.
 
 Collection Detail displays at most one contextual mascot, independent of the number of language-direction buttons. Round 2 shows reading Piko for normal review, including normal-plus-Speed availability, and no mascot otherwise. Its approved card treatment uses the canonical `components.collectionReview.mascotSize` of 64px square and `components.collectionReview.mascotGap` of 8px. Later, new-vocabulary frame 6 takes priority over reading frame 3 when both Speed and normal review are available; sleeping frame 5 represents a genuine nothing-to-learn state. Their precise placement remains a later design decision. Derive those states from the existing search/filter scope and availability rules, preserving honest loading, error, no-result and retry-wait states. Excited frame 2 belongs to completed learning sessions; star-holding frame 4 belongs to the future homepage statistics view. These other poses are specifications only and do not enter round 2. MASCOT-001–004 and UX-MASCOT-002–004 own the behavior and later boundaries.
 
 Keep one shared asset mapping/component and use the canonical 64px size and 8px gap for the approved reading placement. The art supplements explicit status text/actions, remains decorative and noninteractive, and must not introduce extra focus stops or duplicated status announcements. The first positive card's text and trailing review icon remain visible and reachable at narrow widths and enlarged text. Later Speed-completion feedback placement/lifetime must preserve the existing direct return with no new summary popup and the one-mascot limit; it remains open rather than inventing a timer or CTA. The existing summary is the normal-review completion location, with the underlying Collection mascot suppressed while visible.
 
-The 2026-10-15 asset-selection pass did not export or integrate the reading pose. The 2026-10-16 placement approval resolves its card location and scale; integration is in progress, with host, visual and Android acceptance still pending. Do not regenerate or overwrite the manually edited source when preparing the two round-2 assets.
+The 2026-10-15 asset-selection pass did not export or integrate the reading pose. The 2026-10-16 placement approval resolves its card location and scale; the round-2 ledger records later integration and scoped host/Android evidence. Do not regenerate or overwrite the manually edited source when preparing the two round-2 assets.
 
 ## Speed short-pool passes — accepted, 2026-10-15
+
+Current clarification: SPEED-007/010 revision 3 requires every remaining pool word to have an answered attempt before a game is eligible. Unseen replacements run in the next complete pass first. Round-3 checkpoint 1 records implementation and scoped checks; the revision-2 text and verification below are historical.
 
 SPEED-007/010 revision 2 uses one complete vocabulary pass, then one untimed numbers game, then the next complete pass whenever the configured pool cannot be refilled and has fewer than N unfinished words. Never put games between different words in a pass. Start with a vocabulary pass even when initially short; finish immediately when all words complete. One remaining word gets one game between attempts; configured N=1 never gets games. Completed slots refill in order, with replacements first appearing in the next rotation. Only Correct/Incorrect advances a pass, not reveal.
 
