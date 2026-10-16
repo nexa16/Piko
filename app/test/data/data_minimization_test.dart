@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
+import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/features/learning/due_learning_session.dart';
 import 'package:piko/features/learning/regular_grading_coordinator.dart';
 import '../support/mutable_clock.dart';
@@ -138,6 +139,7 @@ void main() {
         expect(await rows(db, 'scope_answer_ordinals'), hasLength(1));
         expect((await rows(db, 'scope_answer_ordinals')).single['ordinal'], 4);
         expect(await rows(db, 'app_settings'), [
+          {'key': PreferredDirection.settingKey, 'value': PreferredDirection.targetToNative.name},
           {'key': 'locale', 'value': 'de'},
         ]);
         for (final item in await rows(db, 'learning_items')) {

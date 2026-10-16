@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
+import 'package:piko/data/preferred_direction.dart';
 
 void main() {
   late PikoDatabase database;
@@ -17,9 +18,12 @@ void main() {
   tearDown(() => database.close());
 
   test(
-    'fresh schema has no seeded settings and enables foreign keys',
+    'fresh schema seeds only its direction preference and enables foreign keys',
     () async {
-      expect(await database.select(database.appSettings).get(), isEmpty);
+      final seeded = await database.select(database.appSettings).get();
+      expect(seeded, hasLength(1));
+      expect(seeded.single.key, PreferredDirection.settingKey);
+      expect(seeded.single.value, PreferredDirection.targetToNative.name);
       expect(await settings.read('missing'), isNull);
       final pragma = await database
           .customSelect('PRAGMA foreign_keys')
@@ -32,7 +36,7 @@ void main() {
     await settings.write('test.setting', 'first');
     await settings.write('test.setting', 'second');
     expect(await settings.read('test.setting'), 'second');
-    expect(await database.select(database.appSettings).get(), hasLength(1));
+    expect(await database.select(database.appSettings).get(), hasLength(2));
     await settings.remove('test.setting');
     expect(await settings.read('test.setting'), isNull);
   });

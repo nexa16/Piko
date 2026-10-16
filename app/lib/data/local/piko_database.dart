@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import '../../core/clock.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
+import '../preferred_direction.dart';
 import '../vocabulary_normalization.dart';
 
 part 'piko_database.g.dart';
@@ -248,7 +249,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -256,6 +257,7 @@ class PikoDatabase extends _$PikoDatabase {
       await m.createAll();
       await _initializeLearningSequence();
       await _initializeVocabularyOrder();
+      await _initializePreferredDirection(PreferredDirection.targetToNative);
     },
     onUpgrade: (m, from, to) async {
       await transaction(() async {
@@ -324,12 +326,21 @@ class PikoDatabase extends _$PikoDatabase {
         if (from < 12 && from >= 5) {
           await m.addColumn(learningItems, learningItems.speedCompleted);
         }
+        if (from < 13) {
+          await _initializePreferredDirection(PreferredDirection.nativeToTarget);
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _initializePreferredDirection(PreferredDirection value) =>
+      customStatement(
+        'INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)',
+        [PreferredDirection.settingKey, value.name],
+      );
 
   Future<void> _createVocabularyOwnershipIndex() => customStatement(
     'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries(id, collection_id)',
