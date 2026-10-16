@@ -245,6 +245,12 @@ void main() {
               .nativeText,
           'Der Apfel ist rot.',
         );
+        await tester.scrollUntilVisible(
+          key('collection-menu'),
+          -500,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
         await tap(key('collection-menu'));
         await tap(button(copy.text('json.title')));
         await present(key('json-input'));
