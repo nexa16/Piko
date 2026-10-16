@@ -20,9 +20,12 @@ class PikoHeadingAction extends MultiChildRenderObjectWidget {
   @override
   void updateRenderObject(
     BuildContext context,
-    covariant _HeadingActionLayout renderObject,
+    covariant RenderBox renderObject,
   ) {
-    renderObject.configure(gap, Directionality.of(context));
+    (renderObject as _HeadingActionLayout).configure(
+      gap,
+      Directionality.of(context),
+    );
   }
 }
 
