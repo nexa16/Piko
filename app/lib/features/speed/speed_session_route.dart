@@ -19,6 +19,14 @@ import 'speed_session.dart';
 typedef SpeedGameBuilder =
     Widget Function(BuildContext context, SpeedLearningSession session);
 
+/// Returned only after every selected word has committed its completion.
+final class SpeedSessionResult {
+  const SpeedSessionResult({required this.completedCount})
+    : assert(completedCount > 0);
+
+  final int completedCount;
+}
+
 /// Owns this in-process session's presentation and safe exit, never its storage.
 class SpeedSessionRoute extends StatefulWidget {
   const SpeedSessionRoute({
@@ -108,22 +116,38 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
         return;
       }
       if (session.isComplete) {
-        unawaited(_exit(session));
+        unawaited(_exit(session, completed: true));
       } else if (session.needsBreak && session.state?.numberGame == null) {
         session.beginBreak();
       }
     });
   }
 
-  Future<void> _exit(SpeedLearningSession session) async {
+  Future<void> _exit(
+    SpeedLearningSession session, {
+    bool completed = false,
+  }) async {
     if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
+    final state = session.state;
+    final result =
+        completed &&
+            state != null &&
+            state.isComplete &&
+            state.entryIds.isNotEmpty &&
+            !session.isSubmitting &&
+            session.error == null &&
+            state.completedEntryIds.length == state.entryIds.length
+        ? SpeedSessionResult(completedCount: state.completedEntryIds.length)
+        : null;
     setState(() => _exiting = true);
     await session.stop();
     if (mounted && identical(session, widget.session)) {
       setState(() => _exiting = false);
-      if (route?.isCurrent == true) Navigator.of(context).pop();
+      if (route?.isCurrent == true) {
+        Navigator.of(context).pop<SpeedSessionResult>(result);
+      }
     }
   }
 
@@ -241,7 +265,7 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                 'completed': state.completedEntryIds.length,
                 'total': state.entryIds.length,
               });
-        return PopScope(
+        return PopScope<SpeedSessionResult>(
           canPop: !_exiting && session.isStopped,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) unawaited(_exit(session));

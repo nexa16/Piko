@@ -25,6 +25,7 @@ class SpeedLaunch extends StatefulWidget {
     this.snapshotLoader,
     this.onPendingWrites,
     this.onSessionClosed,
+    this.onCompleted,
     this.enabled = true,
     this.scopeIdentity,
     super.key,
@@ -38,6 +39,7 @@ class SpeedLaunch extends StatefulWidget {
   final Future<CollectionQuerySnapshot> Function()? snapshotLoader;
   final ValueChanged<Future<void>>? onPendingWrites;
   final VoidCallback? onSessionClosed;
+  final ValueChanged<int>? onCompleted;
   final bool enabled;
 
   /// Stable query intent, independent of passive result refreshes. A Detail
@@ -163,6 +165,10 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         collection: initialSnapshot.collection,
         direction: direction,
         eligibleCount: count,
+        hasLearningProgress: initialSnapshot
+            .directions[direction]!
+            .newSpeedItems
+            .any((item) => item.card.lastReview != null),
         canRestoreFocus: canLaunch,
         onRouteCreated: (route) {
           openedSetup = route;
@@ -206,8 +212,8 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
       if (!mounted || !canLaunch() || prepared == null) return;
       final session = prepared;
       _launched = true;
-      final closed = Navigator.of(context).push<void>(
-        MaterialPageRoute(
+      final closed = Navigator.of(context).push<SpeedSessionResult>(
+        MaterialPageRoute<SpeedSessionResult>(
           builder: (_) => SpeedSessionRoute(
             collection: launchSnapshot.collection,
             session: session,
@@ -216,8 +222,11 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         ),
       );
       prepared = null;
-      await closed;
-      if (current()) widget.onSessionClosed?.call();
+      final result = await closed;
+      if (current()) {
+        if (result != null) widget.onCompleted?.call(result.completedCount);
+        widget.onSessionClosed?.call();
+      }
     } catch (error) {
       if (current() && ownerRoute?.isCurrent == true) {
         setState(() {
@@ -281,8 +290,10 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
             key: ValueKey('collection-speed-${direction.name}'),
             label:
                 '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': count})}',
-            variant: PikoButtonVariant.tint,
+            variant: PikoButtonVariant.speed,
             icon: const PikoIcon(PikoIconName.zap),
+            expandLabel: true,
+            labelAlignment: TextAlign.left,
             onPressed: activate,
           ),
         ),

@@ -89,6 +89,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   bool _openingEntry = false;
   bool _openingReview = false;
   bool _openingSpeed = false;
+  int? _speedCompletedCount;
   CollectionQuerySnapshot? _heldLearningSnapshot;
   bool get _learningBusy => _openingReview || _openingSpeed;
   bool _mutationWasBusy = false;
@@ -772,6 +773,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         oldWidget.vocabularyMutationsFactory !=
             widget.vocabularyMutationsFactory) {
       _identity++;
+      _speedCompletedCount = null;
       _openingReview = false;
       _openingSpeed = false;
       _heldLearningSnapshot = null;
@@ -867,6 +869,30 @@ class _CollectionDetailState extends State<CollectionDetail> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _detailHeading(record, ready),
+                if (_speedCompletedCount != null && ready)
+                  Semantics(
+                    liveRegion: true,
+                    child: Row(
+                      key: const ValueKey('speed-completion-notice'),
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _speedCompletedCount == 1
+                                ? copy.text('speed.completionNoticeOne')
+                                : copy.text('speed.completionNotice', {
+                                    'count': _speedCompletedCount!,
+                                  }),
+                          ),
+                        ),
+                        PikoIconButton(
+                          semanticLabel: copy.text('speed.dismissCompletion'),
+                          icon: const PikoIcon(PikoIconName.x),
+                          onPressed: () =>
+                              setState(() => _speedCompletedCount = null),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (_deleting) Text(copy.text('collection.deleting')),
                 if (_deleteError != null)
                   Semantics(
@@ -909,6 +935,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             reviewIdentityForBuild == _reviewIdentity) {
                           setState(() {
                             if (busy) {
+                              _speedCompletedCount = null;
                               _heldLearningSnapshot ??=
                                   widget.queryBinding!.snapshot;
                             }
@@ -1309,6 +1336,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
               onBusyChanged: (busy) => onBusyChanged(true, busy),
               onPendingWrites: widget.onPendingVocabularyWrites,
               onSessionClosed: binding.refresh,
+              onCompleted: (count) {
+                if (mounted) setState(() => _speedCompletedCount = count);
+              },
               enabled:
                   enabled &&
                   !_openingReview &&
