@@ -4,6 +4,7 @@ import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
 import 'entry_session_controller.dart';
 import 'entry_session_screen.dart';
+import '../interchange/vocabulary_json_page.dart' show VocabularyJsonReturn;
 
 /// The composition root supplies dependencies; the route owns their lifetime.
 typedef EntrySessionFactory =
@@ -66,8 +67,8 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
     onOpenInterchange: resources.interchangeBuilder == null
         ? null
         : () async {
-            await Navigator.of(context).push<void>(
-              MaterialPageRoute(
+            return Navigator.of(context).push<VocabularyJsonReturn>(
+              MaterialPageRoute<VocabularyJsonReturn>(
                 builder: (context) =>
                     resources.interchangeBuilder!(context, widget.collection),
               ),

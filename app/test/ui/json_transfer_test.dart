@@ -15,6 +15,7 @@ import 'package:piko/main.dart';
 import 'package:piko/platform/vocabulary_json_platform.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/shared/interface_locale.dart';
+import 'package:piko/ui/components/piko_button.dart';
 
 const owner = CollectionRecord(
   id: 'owner',
@@ -135,10 +136,91 @@ Future<void> pressJson(
   expect(target.top, greaterThanOrEqualTo(area.top));
   expect(target.bottom, lessThanOrEqualTo(area.bottom));
   await tester.tap(button);
+  await settleJson(tester);
+}
+
+Future<void> settleJson(WidgetTester tester) async {
+  await tester.pump();
+  if (find.byType(CircularProgressIndicator).evaluate().isNotEmpty) {
+    await tester.pump(const Duration(milliseconds: 100));
+  } else {
+    await tester.pumpAndSettle();
+  }
+}
+
+Future<void> mountJsonRoute(
+  WidgetTester tester,
+  VocabularyJsonService service,
+  JsonTestPlatform platform, {
+  required ValueChanged<VocabularyJsonReturn?> returned,
+}) async {
+  await tester.pumpWidget(PikoApp(
+    home: Scaffold(body: Builder(builder: (context) => PikoButton(
+      label: 'Open interchange',
+      onPressed: () async {
+        returned(await Navigator.of(context).push<VocabularyJsonReturn>(
+          MaterialPageRoute<VocabularyJsonReturn>(builder: (_) => VocabularyJsonPage(
+            collection: owner,
+            service: service,
+            platform: platform,
+          )),
+        ));
+      },
+    ))),
+  ));
+  await tester.tap(find.text('Open interchange'));
   await tester.pumpAndSettle();
 }
 
 void main() {
+  for (final language in ['en', 'de']) {
+    testWidgets('$language import starts with an example and preserves compact input across views', (tester) async {
+      await mountJson(tester, JsonTestService(), JsonTestPlatform(), language: language);
+      final copy = PikoCopy(language);
+      expect(find.text(copy.text('json.copy')), findsNothing);
+      expect(find.text(copy.text('json.download')), findsNothing);
+      expect(tester.getTopLeft(find.text(copy.text('json.example'))).dy,
+          lessThan(tester.getTopLeft(find.text(copy.text('json.file'))).dy));
+      expect(tester.widget<TextField>(input).minLines, 2);
+      expect(tester.widget<TextField>(input).maxLines, 4);
+      await tester.enterText(input, 'unfinished JSON input');
+      await pressJson(tester, 'json.expandInput', language: language);
+      expect(tester.widget<TextField>(input).minLines, 6);
+      expect(tester.widget<TextField>(input).maxLines, 12);
+      expect(inputText(tester), 'unfinished JSON input');
+      await pressJson(tester, 'json.collapseInput', language: language);
+      expect(tester.widget<TextField>(input).minLines, 2);
+      expect(inputText(tester), 'unfinished JSON input');
+      await pressJson(tester, 'json.exportTab', language: language);
+      expect(input, findsNothing);
+      expect(find.text(copy.text('json.example')), findsNothing);
+      expect(find.byType(CheckboxListTile), findsNothing);
+      expect(find.text(copy.text('json.analyze')), findsNothing);
+      expect(find.text(copy.text('json.copy')), findsOneWidget);
+      expect(find.text(copy.text('json.download')), findsOneWidget);
+      await pressJson(tester, 'json.importTab', language: language);
+      expect(inputText(tester), 'unfinished JSON input');
+      expect(tester.widget<TextField>(input).minLines, 2);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final back in ['button', 'system']) {
+    testWidgets('$back Back returns the typed owning-Collection intent', (tester) async {
+      final returns = <VocabularyJsonReturn?>[];
+      await mountJsonRoute(tester, JsonTestService(), JsonTestPlatform(), returned: returns.add);
+      if (back == 'button') {
+        await pressJson(tester, 'common.back');
+      } else {
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+      }
+      expect(returns, [VocabularyJsonReturn.collection]);
+      expect(find.byType(VocabularyJsonPage), findsNothing);
+      expect(find.text('Open interchange'), findsOneWidget);
+    });
+  }
+
   for (final language in ['en', 'de']) {
     testWidgets(
       '$language editable file/paste and exact sample/current exports preserve input',
@@ -163,11 +245,13 @@ void main() {
         await pressJson(tester, 'json.example', language: language);
         expect(platform.copied.single, VocabularyJsonFormat.sample);
         expect(inputText(tester), 'my raw JSON');
+        await pressJson(tester, 'json.exportTab', language: language);
         await pressJson(tester, 'json.copy', language: language);
         await pressJson(tester, 'json.download', language: language);
         expect(platform.copied.last, service.exported);
         expect(platform.saved.single, service.exported);
         expect(service.exports, ['owner', 'owner']);
+        await pressJson(tester, 'json.importTab', language: language);
         expect(inputText(tester), 'my raw JSON');
         await Future.wait(pending);
         expect(pending, hasLength(5));
@@ -183,21 +267,25 @@ void main() {
           ..copyFailure = JsonPlatformFailure.clipboardFailed;
         await mountJson(tester, service, platform, language: language);
         await tester.enterText(input, 'preserved');
+        await pressJson(tester, 'json.exportTab', language: language);
         await pressJson(tester, 'json.copy', language: language);
         final output = tester.widget<TextField>(
           find.byKey(const ValueKey('json-fallback')),
         );
         expect(output.readOnly, isTrue);
         expect(output.controller!.text, service.exported);
-        expect(inputText(tester), 'preserved');
         expect(
           find.text(PikoCopy(language).text('json.clipboardFailed')),
           findsOneWidget,
         );
+        await pressJson(tester, 'json.importTab', language: language);
+        expect(inputText(tester), 'preserved');
         await pressJson(tester, 'json.file', language: language);
         await pressJson(tester, 'json.paste', language: language);
         platform.saveResult = false;
+        await pressJson(tester, 'json.exportTab', language: language);
         await pressJson(tester, 'json.download', language: language);
+        await pressJson(tester, 'json.importTab', language: language);
         expect(inputText(tester), 'preserved');
         expect(
           find.text(PikoCopy(language).text('json.fileSaved')),
@@ -230,12 +318,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(inputText(tester), 'newer raw input');
       service.exportGate = Completer<String>();
+      await pressJson(tester, 'json.exportTab');
       await pressJson(tester, 'json.copy');
       final replacement = JsonTestService();
       await mountJson(tester, replacement, platform);
       service.exportGate!.complete('stale export');
       await tester.pumpAndSettle();
       expect(platform.copied, isEmpty);
+      await pressJson(tester, 'json.importTab');
       expect(inputText(tester), 'newer raw input');
       expect(find.text(PikoCopy('en').text('json.copied')), findsNothing);
       expect(tester.takeException(), isNull);
@@ -273,6 +363,7 @@ void main() {
         platform,
         collection: collection,
       );
+      await pressJson(tester, 'json.exportTab');
       await pressJson(tester, 'json.copy');
       final document = jsonDecode(platform.copied.single) as Map;
       final exported = (document['collections'] as List).single as Map;
@@ -284,6 +375,7 @@ void main() {
         (entry['learning'] as Map).keys,
         containsAll(['targetToNative', 'nativeToTarget']),
       );
+      await pressJson(tester, 'json.importTab');
       expect(inputText(tester), isEmpty);
     },
   );
