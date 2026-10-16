@@ -317,8 +317,9 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                             : () {
                                 if (!currentSnapshot() ||
                                     _revealed ||
-                                    _hintRevealed)
+                                    _hintRevealed) {
                                   return;
+                                }
                                 setState(() => _hintRevealed = true);
                               },
                       ),
