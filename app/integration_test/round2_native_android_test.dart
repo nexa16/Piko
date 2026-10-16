@@ -26,12 +26,16 @@ import 'package:uuid/uuid.dart';
 
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 
-// Coordinator protocol (emulator, --no-uninstall only):
+// Coordinator protocol: isolated emulator, build-only APK, direct adb install
+// -r -t, manual launch and attach-only drive; never Flutter's install/start path.
 // Required --dart-define=PIKO_NATIVE_RUN=<unique safe ID> and
 // --dart-define=PIKO_NATIVE_COMMIT=<tested commit>; optional PIKO_NATIVE_LOCALE=en|de.
 // Optional PIKO_NATIVE_MODE=import-only narrows a diagnostic rerun to NEW fixture
 // Save/Open/Analyze/confirmed Apply/reopen. It does not verify IME, clipboard or
 // cancellation and emits PIKO_NATIVE_IMPORT_ONLY_PASSED, never the full marker.
+// PIKO_NATIVE_MODE=entry-only checks UI Save & Next plus the second draft's real
+// keyboard/focus/labels, then exits without JSON/clipboard access. Optional
+// PIKO_NATIVE_SCALE=normal|200 changes text scale, never the physical viewport.
 // Clipboard mutation is disabled by default. PIKO_NATIVE_OWNED_CLIPBOARD=true
 // is only for an explicitly owned clipboard on a separate disposable emulator;
 // available plaintext cannot prove a shared ClipData has no other private items.
@@ -49,6 +53,23 @@ Finder _key(String key) => find.byKey(ValueKey(key));
 Finder _field(String side) =>
     find.descendant(of: _key('draft-$side'), matching: find.byType(TextField));
 Finder _button(String label) => find.widgetWithText(PikoButton, label);
+
+Future<Map<String, Object?>> _fixtureSnapshot(
+  PikoDatabase store,
+) => store.transaction(() async {
+  final rows = <String, Object?>{};
+  for (final table in store.allTables) {
+    rows[table.actualTableName] =
+        (await store
+                .customSelect(
+                  'SELECT rowid AS fixture_rowid, * FROM ${table.actualTableName} ORDER BY rowid',
+                )
+                .get())
+            .map((row) => row.data)
+            .toList();
+  }
+  return rows;
+});
 
 class _NativeDatabase extends PikoDatabase {
   _NativeDatabase(File file) : super(NativeDatabase(file));
@@ -115,16 +136,26 @@ void main() {
       const ownedClipboard = bool.fromEnvironment(
         'PIKO_NATIVE_OWNED_CLIPBOARD',
       );
+      const scale = String.fromEnvironment(
+        'PIKO_NATIVE_SCALE',
+        defaultValue: 'normal',
+      );
       final fullNative = mode == 'full';
+      final entryOnly = mode == 'entry-only';
       if (!RegExp(r'^[A-Za-z0-9][A-Za-z0-9_-]{3,63}$').hasMatch(run) ||
           !RegExp(r'^[a-fA-F0-9]{7,40}$').hasMatch(commit) ||
           !['en', 'de'].contains(locale) ||
-          !['full', 'import-only'].contains(mode)) {
+          !['full', 'import-only', 'entry-only'].contains(mode) ||
+          !['normal', '200'].contains(scale)) {
         throw ArgumentError(
           'Required safe PIKO_NATIVE_RUN/COMMIT and en/de locale',
         );
       }
       expect(binding.registerTestTextInput, isFalse);
+      tester.platformDispatcher.textScaleFactorTestValue = scale == '200'
+          ? 2
+          : 1;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final support = await getApplicationSupportDirectory();
       final directory = Directory('${support.path}/round2-native-$run-$locale');
       if (await directory.exists()) {
@@ -148,9 +179,18 @@ void main() {
               'runId': run,
               'commit': commit,
               'locale': locale,
+              'scale': scale,
               'acceptanceScope': mode,
-              'fixture':
-                  'synthetic Korean Basics, five exported entries; confirmed import updates one and appends one',
+              'fixture': entryOnly
+                  ? 'synthetic Korean Basics, five seeded entries; UI confirms 바다/Meer and retains a partial 나무 draft'
+                  : 'synthetic Korean Basics, five exported entries; confirmed import updates one and appends one',
+              'textEntryMethod':
+                  'synthetic text injected through tester.enterText; no Korean keyboard composition claim',
+              'physicalViewport': {
+                'width': tester.view.physicalSize.width,
+                'height': tester.view.physicalSize.height,
+              },
+              'devicePixelRatio': tester.view.devicePixelRatio,
               'database': 'fixture.sqlite',
               'platform':
                   'default SystemVocabularyJsonPlatform, real Android services',
@@ -162,11 +202,13 @@ void main() {
               'ownedDisposableClipboardOptIn': ownedClipboard,
               'clipboardPolicy':
                   'default no clipboard access or mutation; only explicitly owned disposable-emulator clipboard may opt in, with plaintext restored from memory',
-              'specRevisions': {
-                'UX-ENTRY-001': 4,
-                'IMPORT-JSON-001': 1,
-                'IMPORT-JSON-002': 1,
-              },
+              'specRevisions': entryOnly
+                  ? {'UX-ENTRY-001': 4, 'ENTRY-001': 2, 'UX-ENTRY-002': 1}
+                  : {
+                      'UX-ENTRY-001': 4,
+                      'IMPORT-JSON-001': 1,
+                      'IMPORT-JSON-002': 1,
+                    },
               'phases': phases,
             }),
             flush: true,
@@ -205,6 +247,8 @@ void main() {
           tester.widget<TextField>(_field(side)).focusNode!.hasFocus;
       Map<String, Object?> entryGeometry() {
         final bounds = tester.getRect(_key('draft-target'));
+        final native = tester.getRect(_key('draft-native'));
+        final viewport = tester.getRect(_key('entry-stack'));
         return {
           'targetBounds': {
             'left': bounds.left,
@@ -213,6 +257,21 @@ void main() {
             'bottom': bounds.bottom,
           },
           'imeInset': inset(),
+          'nativeBounds': {
+            'left': native.left,
+            'top': native.top,
+            'right': native.right,
+            'bottom': native.bottom,
+          },
+          'entryViewport': {
+            'left': viewport.left,
+            'top': viewport.top,
+            'right': viewport.right,
+            'bottom': viewport.bottom,
+          },
+          'pairFitsViewport': native.bottom - bounds.top <= viewport.height,
+          'targetFocused': focused('target'),
+          'nativeFocused': focused('native'),
           'logicalHeight':
               tester.view.physicalSize.height / tester.view.devicePixelRatio,
         };
@@ -249,6 +308,208 @@ void main() {
         expect(copy.locale, locale);
         await _tap(tester, _key('collection-${owner.id}'));
         await _tap(tester, _button(copy.text('action.new')));
+        if (entryOnly) {
+          clipboardVerification = 'not-verified-entry-only-mode';
+          await phase(
+            'ime-configuration',
+            'Ensure a docked software keyboard on the emulator; ACK after configuration; entry-only run',
+          );
+          await _wait(
+            tester,
+            () =>
+                _field('target').evaluate().isNotEmpty &&
+                focused('target') &&
+                inset() > 0,
+            'entry-only initial target focus and real IME',
+          );
+          await tester.pumpAndSettle();
+          expect(
+            MediaQuery.textScalerOf(
+              tester.element(find.byType(EntrySessionScreen)),
+            ).scale(10),
+            scale == '200' ? 20 : 10,
+          );
+          final beforeEntry = await _fixtureSnapshot(db);
+          Future<void> enterEntry(String side, String value) async {
+            final finder = _field(side);
+            await tester.ensureVisible(finder);
+            await tester.pumpAndSettle();
+            await tester.tap(finder);
+            await tester.pumpAndSettle();
+            await tester.enterText(finder, value);
+            await tester.pumpAndSettle();
+            expect(tester.widget<TextField>(finder).controller!.text, value);
+          }
+
+          void labeledDraftVisible({bool nativeFocused = false}) {
+            final target = tester.getRect(_key('draft-target'));
+            final native = tester.getRect(_key('draft-native'));
+            final area = tester.getRect(_key('entry-stack'));
+            final pairFits = native.bottom - target.top <= area.height;
+            final selected = nativeFocused && !pairFits ? native : target;
+            expect(selected.top, greaterThanOrEqualTo(area.top - 1));
+            expect(selected.bottom, lessThanOrEqualTo(area.bottom + 1));
+            if (pairFits) {
+              expect(native.top, greaterThanOrEqualTo(area.top - 1));
+              expect(native.bottom, lessThanOrEqualTo(area.bottom + 1));
+            }
+          }
+
+          labeledDraftVisible();
+          await enterEntry('target', '바다');
+          await enterEntry('native', 'Meer');
+          expect(focused('native'), isTrue);
+          final next = find.byTooltip(copy.text('action.saveNext'));
+          // User scrolling releases editor-following; ensureVisible alone can
+          // compete with caret reveal under a real, enlarged-text keyboard.
+          for (var attempt = 0; attempt < 5; attempt++) {
+            final area = tester.getRect(_key('entry-stack'));
+            final action = tester.getRect(next);
+            if (action.top >= area.top && action.bottom <= area.bottom) break;
+            final delta = action.bottom > area.bottom
+                ? area.bottom - action.bottom - 24
+                : area.top - action.top + 24;
+            await tester.dragFrom(
+              Offset(area.left + 4, area.center.dy),
+              Offset(0, delta),
+            );
+            await tester.pumpAndSettle();
+          }
+          final nextArea = tester.getRect(_key('entry-stack'));
+          final nextBounds = tester.getRect(next);
+          expect(nextBounds.top, greaterThanOrEqualTo(nextArea.top));
+          expect(nextBounds.bottom, lessThanOrEqualTo(nextArea.bottom));
+          expect(next.hitTestable(), findsOneWidget);
+          expect(inset(), greaterThan(0));
+          await phase(
+            'entry-save-next',
+            'Capture filled first new draft with card Save & Next reachable above real IME; ACK only (fixture taps Save & Next)',
+            metadata: {...entryGeometry(), 'syntheticInput': true},
+          );
+          await _tap(tester, next);
+          await _wait(
+            tester,
+            () =>
+                tester
+                    .widget<TextField>(_field('target'))
+                    .controller!
+                    .text
+                    .isEmpty &&
+                tester
+                    .widget<TextField>(_field('native'))
+                    .controller!
+                    .text
+                    .isEmpty &&
+                focused('target') &&
+                inset() > 0,
+            'successful UI Save & Next opens an empty second draft on target field',
+          );
+          await tester.pumpAndSettle();
+          labeledDraftVisible();
+          final words = await vocabulary.watchByCollection(owner.id).first;
+          expect(words.length, 6);
+          expect(words.last.targetText, '바다');
+          expect(words.last.nativeText, 'Meer');
+          final afterSave = await _fixtureSnapshot(db);
+          expect(
+            (afterSave['vocabulary_entries'] as List).take(5).toList(),
+            beforeEntry['vocabulary_entries'],
+          );
+          expect(
+            (afterSave['learning_items'] as List).take(10).toList(),
+            beforeEntry['learning_items'],
+          );
+          await phase(
+            'entry-second-draft-empty',
+            'Capture empty second draft after Save & Next: target focus, real IME, full required labels/input when they fit; ACK only',
+            metadata: {
+              ...entryGeometry(),
+              'persistedEntries': 6,
+              'draftState': 'empty',
+            },
+          );
+          await enterEntry('target', '나무');
+          expect(
+            tester.widget<TextField>(_field('native')).controller!.text,
+            isEmpty,
+          );
+          labeledDraftVisible();
+          expect(
+            tester.widget<TextField>(_field('target')).textInputAction,
+            TextInputAction.next,
+          );
+          expect(
+            tester.widget<TextField>(_field('native')).textInputAction,
+            TextInputAction.done,
+          );
+          await phase(
+            'ime-target-next',
+            'Capture partially filled second draft (synthetic 나무, native empty); press actual IME Next then ACK',
+            metadata: {
+              ...entryGeometry(),
+              'draftState': 'partial',
+              'syntheticInput': true,
+            },
+          );
+          await _wait(
+            tester,
+            () => focused('native') && inset() > 0,
+            'real Next traverses within the second draft',
+          );
+          await tester.pumpAndSettle();
+          expect(focused('target'), isFalse);
+          labeledDraftVisible(nativeFocused: true);
+          await phase(
+            'ime-native-done',
+            'Capture second draft native-field focus; press actual IME Done then ACK',
+            metadata: {...entryGeometry(), 'draftState': 'partial'},
+          );
+          await _wait(
+            tester,
+            () => !focused('native') && inset() == 0,
+            'real Done closes the second draft IME without confirming incomplete input',
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester.widget<TextField>(_field('target')).controller!.text,
+            '나무',
+          );
+          expect(
+            tester.widget<TextField>(_field('native')).controller!.text,
+            isEmpty,
+          );
+          expect(
+            await _fixtureSnapshot(db),
+            afterSave,
+            reason:
+                'Partial second draft and IME actions must not create another entry or mutate learning',
+          );
+          await phase(
+            'ime-closed',
+            'Capture retained partial second draft after Done closed IME; ACK only; no JSON or clipboard actions',
+            metadata: {'persistedEntries': 6, 'draftState': 'partial'},
+          );
+          await tester.pumpWidget(const SizedBox());
+          await db.closed.future.timeout(const Duration(seconds: 30));
+          mounted = false;
+          final reopened = PikoDatabase(
+            NativeDatabase(File('${directory.path}/fixture.sqlite')),
+          );
+          try {
+            expect(
+              await _fixtureSnapshot(reopened),
+              afterSave,
+              reason:
+                  'The UI-confirmed first new entry survives isolated file reopen; the raw second draft stays unconfirmed',
+            );
+          } finally {
+            await reopened.close();
+          }
+          expect(tester.takeException(), isNull);
+          status = 'passed-entry-only';
+          debugPrint('PIKO_NATIVE_ENTRY_ONLY_PASSED:$run:$locale:$scale');
+          return;
+        }
         if (fullNative) {
           await phase(
             'ime-configuration',
@@ -310,23 +571,8 @@ void main() {
           find.byType(VocabularyJsonPage),
         );
         expect(page.platform, isA<SystemVocabularyJsonPlatform>());
-        Future<Map<String, Object?>> snapshot([PikoDatabase? connection]) {
-          final store = connection ?? db;
-          return store.transaction(() async {
-            final rows = <String, Object?>{};
-            for (final table in store.allTables) {
-              rows[table.actualTableName] =
-                  (await store
-                          .customSelect(
-                            'SELECT rowid AS fixture_rowid, * FROM ${table.actualTableName} ORDER BY rowid',
-                          )
-                          .get())
-                      .map((row) => row.data)
-                      .toList();
-            }
-            return rows;
-          });
-        }
+        Future<Map<String, Object?>> snapshot([PikoDatabase? connection]) =>
+            _fixtureSnapshot(connection ?? db);
 
         final baseline = await snapshot();
         final expectedCollections =
