@@ -10,7 +10,7 @@ Design acceptance is complete for this preparation package. F01–F18 are specif
 
 - Product and functional requirements own outcomes and data behavior. UX requirements own screen/state presentation. DESIGN owns shared visual rules. The findings register owns status, not a competing full specification.
 - Existing requirement IDs stay stable. Revise accepted requirements in place; add an ID only for a genuinely new shared requirement. Historical implementation checkpoints remain evidence of their recorded revision, not the current status.
-- Preserve the finished round-2 baseline and newer accepted definitions, including round-3 checkpoint evidence. JSON presentation follows UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2; IMPORT-JSON-003 remains Later and the plain-book launcher remains pending integration. Do not revert those boundaries while integrating this package.
+- Preserve the finished round-2 baseline and newer accepted definitions, including round-3 checkpoint evidence. JSON presentation follows UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2; IMPORT-JSON-003 is selected for round-4 planning with scope clarification pending, and the plain-book launcher remains pending integration. Do not revert those boundaries while integrating this package.
 - Canonical tokens and EN/DE copy remain single sources. Prototypes are illustrative. Do not reproduce known prototype defects in Android.
 
 ## Before a UI feature is ready to implement
@@ -23,7 +23,7 @@ Specify its owning requirement/revision, user outcome, shared components and rol
 - Use named typography roles, shared spacing/radii and existing Lucide icons. Nunito Sans is selected; the accepted role sizes and reviewed Korean fallback are defined in DESIGN.md. Keep offline font assets and license notices; verify glyph coverage, weight mapping and Android metrics.
 - Grow or rearrange content before clipping meaningful labels. Decision labels and validation text remain complete. Titles move to a separate row when actions constrain them. Keep accessible text scaling; do not shrink it to force a fit.
 - Long input values may scroll inside an editable field; read-only content needs an explicit wrap/truncation policy and access to the full value. Do not infer support for every writing system from the Korean sample.
-- Preserve purpose-based dialog dismissal, safe focus, changed-only Apply, pending-write guards and learning/data semantics. A stable selection shell must not jump when its footer appears.
+- Preserve purpose-based dialog dismissal, safe focus, pending-write guards and learning/data semantics. Under UX-DIALOG-001 revision 5, Apply stays visible and is enabled only for changed selections; Filters also keeps Clear filters visible, disabled for an empty pending selection. Use a compact real footer whose geometry stays stable as enabled states change.
 - UI wording names observable outcomes. Keep EN/DE meaning equivalent, preserve placeholders, distinguish current due state from completion/mastery, and test new longer labels at their actual width.
 
 ## Finding lifecycle

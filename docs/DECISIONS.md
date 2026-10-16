@@ -1,6 +1,32 @@
 # Decision log
 
-Reconciliation note, 2026-10-16: the recovered preparation decisions below retain their original status and scope at the time of writing. Subsequent round-3 implementation and resolved Hint/example/status/preference contracts are recorded in [implementation-round-3.md](implementation-round-3.md) and the canonical specifications. Historical “pending” or “unresolved” wording does not reverse that later evidence. The book launcher revision 3 remains an unintegrated asset handoff; the simplified import template remains Later. The older frame-1 launcher decision is superseded by the book choice, while its APK evidence remains historical. No new product decision or publication is made by this reconciliation.
+## Round-4 grouping and Collection view package — accepted, 2026-10-16
+
+- **Decision:** The owner confirmed grouping by existing category groups such as Topic or Unit and added GROUP-001–003, COLL-004–006 and COLL-009–011 to round-4 planning. The package covers expandable grouping, repeated appearances for multiple assignments, redundant-tag omission, Compact/Detailed modes, language display order and per-Collection persistence. Existing requirement IDs and revision-1 meanings are retained; previously Undecided round assignments become Round 4.
+- **Boundary:** Display preferences do not change learning direction or reset learning; repeated group appearances do not create entries or extra review work. Sorting, editor category ordering, carry-over and manual Speed selection are not added. Open grouping/view details remain explicit in the canonical functional/UX specifications and the round-4 ledger. The owner is still gathering scope; implementation has not been requested.
+
+## Round-4 planning priorities and manual Speed deferral — accepted, 2026-10-16
+
+- **Planning selection:** The owner accepted shared popup corrections, approved book-launcher integration with remaining palette cleanup, and the simplified JSON import example/template as the first three priorities. Exact template contents still require clarification. The owner is gathering additional items before implementation; this is planning acceptance, not an instruction to implement.
+- **Deferred:** Manual vocabulary selection and Speed launch under SPEED-004 stay deferred because the owner is not yet satisfied with the learning-state reset consequence. Reconsider that outcome with the owner before scheduling the feature. No alternative preservation/reset rule is accepted, and SPEED-006 and current application behavior are unchanged.
+- **Traceability:** The [round-4 ledger](implementation-round-4.md#selected-planning-scope--2026-10-16) owns the selected scope and remaining decisions. Its planning selection supersedes older Later scheduling for the simplified template. Existing scrolling evidence and deferred phone acceptance are retained. No app/mockup implementation or publication is authorized by this decision.
+
+Reconciliation note, 2026-10-16: the recovered preparation decisions below retain their original status and scope at the time of writing. Subsequent round-3 implementation and resolved Hint/example/status/preference contracts are recorded in [implementation-round-3.md](implementation-round-3.md) and the canonical specifications. Historical “pending” or “unresolved” wording does not reverse that later evidence. The book launcher revision 3 remains an unintegrated asset handoff; the simplified import template was Later at that recovery checkpoint and is now selected for round-4 planning, with scope clarification still required. The older frame-1 launcher decision is superseded by the book choice, while its APK evidence remains historical. No new product decision or publication is made by this reconciliation.
+
+## Alphabetical category values now; custom order later — accepted, 2026-10-16
+
+- **Decision:** Default Category Values to alphabetical A–Z by displayed name, ignoring capitalization, in assignment/filter checklists, management lists and assigned-value tags/summaries within each group. Search and selected subsets keep the same order. Successful creation/rename/import refreshes display position while preserving UUIDs, selections, drafts and learning. Category-group and vocabulary order are unchanged.
+- **Supersession and deferral:** Replaces UX-CAT-001's creation-order default for values only. Manual moving into a custom value order is a later enhancement; no new sort control or reorder interaction is accepted for now. Special collation details for accents, non-Latin scripts and numeric labels remain open rather than assuming natural-number sorting.
+- **Traceability:** CAT-009 revision 5 and UX-CAT-001 revision 7 retain Round 2 and Updated 3. CAT-001 cross-references the ordering rule without changing its CRUD revision. The existing design/studio criteria and prototype ledger record pending implementation.
+- **Evidence and boundary:** Existing mockup assignment/management renderers retain synthetic stored order Zebra, apple, Banana on two isolated Node runs; source inspection shows the same dependency in Filters/tags. This does not establish the owner's Android behavior or build. Definition accepted; app/mockup implementation and runtime verification await a separate owner request. Earlier passing evidence remains attached to its original revisions.
+
+## One approved Piko palette across every preview round — accepted, 2026-10-16
+
+- **Decision:** Older previews do not need to preserve their historical color appearance. Use the nine approved Piko UI colors across all preview rounds and the studio, with the same canonical palette as the application target under UX-SYSTEM-001. Retain round-specific behavior and independent sample state.
+- **Migration target:** Consolidate the palette definitions and migrate consumers before removing Cobalt, legacy grading/secondary-review/warning overrides and the old green backdrop. Use semantic danger/cream and success/cream grading, tint/navy secondary review, the documented red-over-cream warning and navy backdrop at existing opacity. Keep Piko's shared red/green and legitimate role aliases; retain non-color round settings. Artwork and OS-owned interfaces keep their existing exceptions.
+- **Supersession:** Replaces historical-color preservation in the round-3 comparison decision and the Cobalt studio baseline/preset. Earlier pure-white action foregrounds were already superseded by the accepted cream foreground in UX-SYSTEM-001 revision 6; reconcile their stale grading/swipe wording without changing those flows. Explicit studio color experiments remain drafts.
+- **Traceability:** UX-SYSTEM-001 revision 7 (Round 1, Updated 3) and UX-LAB-001 revision 4 (Round 2, Updated 3). DESIGN.md and the existing F05/studio reference own the mapping and acceptance handoff. No functional requirement or release scope changes.
+- **Evidence and authorization:** Source inspection confirms active legacy consumers; it is not new browser or Android reproduction. The owner then explicitly limited this work to specification updates. Definition is accepted; shared code, generated adapters, mockup/application changes and visual/Android verification are pending a separate implementation request. Prior test results do not verify this migration.
 
 ## Findings and feature requests begin with clarification — accepted, 2026-10-16
 
@@ -949,6 +975,8 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 
 ## Round-2 popup confirmation audit — accepted, 2026-10-15
 
+The selection-action visibility below is superseded by the persistent selection-action decision of 2026-10-16; pending-selection and dismissal behavior is retained.
+
 - **Decision:** Category assignment and Filters use local pending selections and a right-aligned Apply/checkmark only while changed from their opening state. Reverting hides it. X, Escape and backdrop cancel pending popup edits, preserving the parent vocabulary draft and previously active filters. Apply passes confirmed assignments into the existing vocabulary autosave flow.
 - **Whole-form confirmation:** Dimension name and Single/Multiple mode confirm together below both fields, not beside the name alone. Keep the adjacent changed-only checkmark only for a single inline category-value field. Explicitly saved values remain independent of unconfirmed assignment changes.
 - **Shared family audit:** Include every round-2 popup and the reused summary. Collection/category deletion and entry-draft exit use the accepted explicit safe/action pair without X; forms/setup keep X and meaningful primary actions; direct-launch direction choices and summaries retain no extra footer. Content-width actions align right and stack affirmative above safe when needed, with matching DOM/tab order and safe initial focus. Destructive fills consume canonical danger/white; safe actions are neutral.
@@ -973,3 +1001,19 @@ Owner approved the incremental APK checkpoint plan. Latest verified APK remains 
 - **Alternatives:** To be decided — what other options were considered?
 - **Reason:** To be decided — why was this option selected?
 - **Consequences:** To be decided — what changes, constraints, or follow-up work result?
+
+## Persistent selection actions and shared header alignment — accepted, 2026-10-16
+
+- **Decision:** The owner selected always-visible buttons with disabled states after reporting empty footer space and movement of Clear filters when Apply appears. In editable selection popups, keep Apply visible and disabled while unchanged/reverted; enable it only for a changed selection. Filters also keeps Clear filters visible and disables it when the pending selection is empty.
+- **Geometry:** State changes must not move either action, the title or selected row. Use a compact real footer without an extra blank reservation. Retain responsive content-width actions and stacking when labels require it; always-stacked actions were suggested but not selected.
+- **Header finding:** The owner reports a misaligned X across popups. Preserve the existing first-title-line alignment and full 48px target through the shared header; track this as Fix 3, not a new dismissal policy.
+- **Supersedes:** Hidden Apply on unchanged/reverted selection and revision 4’s empty reserved action area. Keep staging, set comparison, Apply/cancel effects, independent search clearing, outside-toolbar clear visibility, inline category saves and other popup-purpose action rules.
+- **Traceability:** UX-DIALOG-001 revision 5 with Updated 3/Fix 3, UX-CAT-001 revision 6, CAT-009 revision 4 and FILTER-002 revision 5; original round tags remain. F03 and the existing studio reference track the new target.
+- **Evidence and boundary:** The UX specification separates owner screenshots/reports from the bounded English browser observation, unresolved device/build details and pending acceptance scenarios. This acceptance updates definitions only; no mockup/app implementation, Android verification or publication is authorized by it.
+
+## Standard dialog layout baseline — accepted, 2026-10-16
+
+- **Decision:** Simplify the shared Piko popup component around standard framework layout, using AlertDialog where compatible and justified Dialog customization where needed. Preserve canonical styling, purpose-based X/dismissal rules, persistent visible/disabled actions, safe focus and pending-write behavior.
+- **Reason:** The earlier review preserved hidden Apply and reserved footer geometry. Source inspection found separate reservation/rendering measurements and conditional action membership; header tests check the close target rather than first-line glyph alignment. These explain plausible mechanisms, not a new installed-device reproduction.
+- **Verification target:** One real action layout without an extra blank reservation; existing buttons remain stationary through unchanged/changed/cleared/reverted states. Check actual X alignment, narrow/stacked layouts and relevant shared popup consumers before claiming completion.
+- **Traceability and boundary:** Implementation guidance for UX-DIALOG-001 revision 5 and the existing F03 finding; no new behavioral requirement or dismissal policy. The owner explicitly requested recording the accepted approach only. App/mockup implementation and verification remain pending a later explicit request under AGENTS.md.

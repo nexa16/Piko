@@ -1,13 +1,34 @@
 # Round 4 implementation ledger
 
-**Status, 2026-10-16: branch initialized; completed scrolling change retained with owner permission. Owner phone testing is deferred until more changes have been implemented. No additional implementation scope is authorized yet.**
+**Status, 2026-10-16: planning scope selected; the owner is gathering additional items before implementation. The completed scrolling change is retained with owner permission. Owner phone testing remains deferred until more changes have been implemented. No additional implementation is authorized yet.**
 
 ## Scope and authorization
 
 - The owner requested local branch `codex/round-4-implementation` and retention of the already completed Collection Detail scrolling correction. The branch starts at `73fa33a`, preserving app commit `626baa5`, its verification commit and the round-3 baseline `5107327`; that history descends from integration baseline `17677e3`. Existing commits are retained without rewriting their APK provenance.
 - This request keeps completed work; it does not retroactively authorize the original implementation or authorize additional round-4 features. New findings start clarification, proportionate investigation and specification work. App/mockup implementation requires a separate explicit request for the clarified scope, as recorded in AGENTS.md.
 - Phone acceptance is pending by owner choice. Do not treat the retained APK, host tests or isolated emulator evidence as owner acceptance, and do not request immediate testing. Revisit testing with the owner after additional explicitly authorized work.
-- No new code, build, public push, PR, merge or release is part of this branch-organization step. Future scope, execution preferences and checkpoint timing remain to be established when implementation is requested.
+- No new code, build, public push, PR, merge or release is part of this planning step. The scope below remains open to further owner additions; execution preferences and checkpoint timing remain to be established when implementation is requested.
+
+## Selected planning scope — 2026-10-16
+
+The owner accepted the following round-4 planning packages:
+
+1. Shared popup corrections: persistent visible Apply/Clear actions with disabled states, stable geometry, a compact real footer and first-title-line X alignment, following the accepted standard-framework layout approach under UX-DIALOG-001 revision 5 and its related category/filter requirements.
+2. Approved plain-book launcher integration under UX-BRAND-001 revision 3 and the remaining shared-palette cleanup under UX-SYSTEM-001 revision 7 / UX-LAB-001 revision 4. Preserve the already verified round-3 behavior and distinguish application checks from prototype checks.
+3. Simplified JSON import example/template under IMPORT-JSON-003. Clarify the exact contents and acceptance scenarios before implementation; retain the existing format, preview, validation and learning-preservation contracts unless the owner explicitly accepts a change.
+4. Category-based vocabulary grouping, Compact/Detailed view modes, language display order and per-Collection view preferences under GROUP-001–003, COLL-004–006 and COLL-009–011. See the accepted package and remaining decisions below.
+
+Manual vocabulary selection and Speed launch under SPEED-004 are deferred. The owner is not satisfied with the learning-state reset consequence and wants to reconsider it before scheduling this feature. This records an open concern, not acceptance of a replacement rule: SPEED-006 and existing app behavior remain unchanged. Clarify the intended preservation/reset outcome before revising the owning functional and UX requirements.
+
+### Accepted planning package: vocabulary grouping and view controls
+
+The owner confirmed grouping by existing category groups such as Topic or Unit and accepted the accompanying Collection specifications for round 4. GROUP-001–003 define independently expandable value groups, one entry appearing in each assigned value group, and omission of redundant filter/group tags. COLL-006 owns per-Collection grouping persistence; UX-COLL-001 owns the view controls.
+
+The accepted companion scope is Detailed/Compact presentation under COLL-009–011, display-order control under COLL-004, and their per-Collection persistence under COLL-005. These nine functional requirements are assigned Round 4 at their existing revision 1; scope assignment does not claim implementation or resolve the open details. Search/filter integration under COLL-007 / FILTER-001–003, existing learning counts, inline editing/Undo and the retained lazy scrolling need preservation checks. Repeated visual appearances refer to the same stored entry; grouping and display preferences do not reset learning or multiply learning work. Display order remains independent of learning direction.
+
+Before implementation, clarify treatment of unassigned entries, group and within-group ordering, initial/persisted expansion, and editing the same entry shown in several groups. For the view modes, settle initial defaults and presentation of hints, categories and directional statuses alongside the specified vocabulary/examples. CAT-006 editor ordering/collapse configuration, CARRY-001 / CAT-003 category carry-over and proposed sorting under COLL-008 remain separate unscheduled work. App/mockup implementation and Android acceptance are pending; this planning review used source documents, not runtime reproduction.
+
+The owner will add further items. Do not begin app/mockup implementation while this scope is being gathered. The retained scrolling correction and deferred phone acceptance above remain unchanged.
 
 ## Retained change: Collection Detail scrolling
 
@@ -31,3 +52,9 @@
 - Updated entry-point planning to the current round-4 branch and retained [historical round-3 prototype evidence](implementation-round-3-mockup.md). The complete older prototype and dirty source worktrees remain recoverable privately; their runtime adapters were not transplanted over current catalogs.
 - Verification: 8/8 requirements-parser tests pass, checking current round/revision metadata, complete requirement bodies, deferred boundaries and bilingual copy references. All 301 requirement IDs are unique and every pre-recovery ID remains present. Shared-catalog generation `--check`, changed Markdown file links, registry/history checks and `git diff --check` pass. The Python renderer successfully produces all 18 finding sections without changing registry status; unavailable private evidence links are explicit.
 - App code, shared runtime catalogs and executable mockup files are unchanged from `9b0326e`; the only mockup-file change updates the requirements-parser test fixture. No new Android behavior or APK verification is claimed. The retained APK still corresponds to source `626baa5` and the checksum above, with owner phone acceptance deferred.
+
+## Integration and owner test update — 2026-10-16
+
+- The owner reported successfully installing the round-3 update and learning vocabulary through the happy path, then merged [PR #4](https://github.com/nexa16/Piko/pull/4). GitHub confirms merge commit `61fdefc` on `develop`, with the same tree as reviewed head `5107327`. This is owner-reported round-3 happy-path evidence; no additional cases, exact phone/build identifier or round-4 scrolling acceptance are inferred.
+- Workspace cleanup preserves the newer popup, all-round palette and alphabetical-category specifications, plus the selected round-4 planning and grouping questions. CAT-009 r5, FILTER-002 r5, UX-CAT-001 r7, UX-DIALOG-001 r5, UX-SYSTEM-001 r7 and UX-LAB-001 r4 remain pending implementation for their revised scope. Findings keep their evidence/history and specified status. The historical prototype source remains recoverable privately.
+- Merged branch heads and dirty source snapshots were archived outside the repository before cleanup; ignored APKs and verification logs were separately preserved. Cleanup changes checkout organization and documentation, without rebuilding or changing the application.

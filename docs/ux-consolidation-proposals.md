@@ -6,7 +6,7 @@ Design handoff accepted on 2026-10-16. All findings retain specified status; rel
 
 ## F01 — Give Save & Next and Finish visibly different names
 
-Status: specified. Requirements: UX-ENTRY-002 r2, UX-SYSTEM-001 r6.
+Status: specified. Requirements: UX-ENTRY-002 r2, UX-SYSTEM-001 r7.
 
 - Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior.
 - Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable.
@@ -14,18 +14,21 @@ Status: specified. Requirements: UX-ENTRY-002 r2, UX-SYSTEM-001 r6.
 
 ## F02 — Make the JSON workflow’s next action and result obvious
 
-Status: specified. Requirements: UX-IMPORT-JSON-001 r3, UX-IMPORT-JSON-002 r2, UX-SYSTEM-001 r6.
+Status: specified. Requirements: UX-IMPORT-JSON-001 r3, UX-IMPORT-JSON-002 r2, UX-SYSTEM-001 r7.
 
 - Follow UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.
 - Make the applicable next action prominent and place success/errors next to the step that produced them.
 - Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled.
 
-## F03 — Keep selection dialogs still while their footer changes
+## F03 — Keep selection actions visible and stationary
 
-Status: specified. Requirements: UX-DIALOG-001 r4, UX-CAT-001 r5, FILTER-002 r4.
+Status: revised and accepted 2026-10-16; implementation and verification pending. Requirements: UX-DIALOG-001 r5 (Fix 3), UX-CAT-001 r7, CAT-009 r5, FILTER-002 r5.
 
-- Changed-only Apply remains absent when unchanged/reverted.
-- Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell.
+- Apply remains visible, disabled while unchanged/reverted and enabled only for a changed selection. Filters also keeps Clear filters visible, disabled only when the pending selection is empty.
+- Selecting, clearing or reverting does not move either action, the title or selected row. Use a content-sized bounded shell and compact real footer, without an extra empty slot. Determine responsive layout from all actions, including disabled ones; this does not accept unconditional stacking.
+- Preserve the shared X alignment to the title first line and its 48px target. Treat reported drift as a fix; check wrapping titles and multiple popup consumers.
+- Accepted implementation approach: one Piko-themed shared popup using standard framework content/action layout where compatible. Remove separate hidden-footer reservations and duplicate size estimates. Verify existing-button positions and the X glyph, not just title/row bounds; DESIGN.md owns the approach.
+- The owner reports blank space and clear-action movement across popups. Browser evidence confirms a 64px empty reservation, but did not reproduce that movement in the inspected fixture; exact phone/emulator builds and other affected popups are unestablished. See the UX specification for evidence and concrete acceptance scenarios.
 - At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved.
 
 ## F04 — Tighten Collection Detail’s vertical rhythm and alignment
@@ -36,28 +39,32 @@ Status: specified. Requirements: UX-COLL-008 r4, UX-HEADER-001 r1, UX-HEADER-002
 - Adopt shared 4/8/12/16/24 spacing steps; remove additive margins instead of reducing touch targets.
 - Use a compact navigation row with one icon-only Back, 48 logical-pixel target and localized name; retain existing Back behavior and the accepted 64px mascot slot.
 
-## F05 — Move the palette closer to Piko’s blue, cream and navy
+## F05 — Use only the approved Piko palette across all preview rounds
 
-Status: specified. Requirements: UX-SYSTEM-001 r6, UX-MASCOT-001 r2.
+Status: specified; migration and verification pending. Requirements: UX-SYSTEM-001 r7, UX-LAB-001 r4, UX-MASCOT-001 r2.
 
 - Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt.
+- Use the same approved palette in all preview rounds, standalone bookmarks and the studio. Retain their behavior/sample-state differences, not historical colors; remove the Cobalt preset.
+- Consolidate active palette definitions and migrate consumers before deleting old grading, secondary-review, warning and backdrop colors. Keep shared red/green, semantic aliases and non-color round settings; regenerate application adapters only during later authorized implementation.
+- Verify palette reset, round switching, inventory/export and rendered action/warning/dialog states under UX-LAB-001. This update records definitions only; prior prototype checks do not verify the migration.
 - Define primary, secondary, safe, disabled, pressed, focus, warning, danger and success states together. Do not rely on unreviewed ColorScheme.fromSeed defaults.
 - Use cream text on blue/red/green, navy on gold; grade labels and behavior remain explicit.
 
 ## F06 — Give dialog backdrops a neutral navy cast
 
-Status: specified. Requirements: UX-DIALOG-001 r4, UX-SYSTEM-001 r6.
+Status: specified. Requirements: UX-DIALOG-001 r5, UX-SYSTEM-001 r7.
 
 - Use palette navy as dialog backdrop at the existing opacity first; check both text separation and the underlying artwork.
 - Change opacity only after a contextual comparison; retain one shared backdrop mapping.
 
 ## F07 — Align category rows and clarify management levels
 
-Status: specified. Requirements: UX-CAT-001 r5, UX-SYSTEM-001 r6.
+Status: specified. Requirements: UX-CAT-001 r7, UX-SYSTEM-001 r7.
 
 - Align group titles, field labels and value rows to common leading edges.
 - Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration.
-- Keep in-place management, two visible selection modes, changed-only confirmation and explicit assignment. No new management page or reorder.
+- Keep in-place management, two visible selection modes, persistent Apply enabled only for changed selections, and explicit assignment. No new management page or manual reorder.
+- Accepted 2026-10-16: values use alphabetical A–Z display within each group across assignment/filter checklists, management and assigned tags/summaries (CAT-009 r5 / UX-CAT-001 r7). Keep group order, selections and drafts intact after saved create/rename; search subsets retain the same order. Manual custom value order is Later. Collation edge cases, implementation and runtime verification remain pending.
 
 ## F08 — Wrap review progress deliberately
 
@@ -85,7 +92,7 @@ Status: specified. Requirements: UX-COLL-003 r3, UX-COLL-008 r4.
 
 ## F11 — Show enough active-filter context outside the popup
 
-Status: specified. Requirements: UX-CAT-001 r5, FILTER-002 r4.
+Status: specified. Requirements: UX-CAT-001 r7, FILTER-002 r5.
 
 - Show Filters (n) for active confirmed filters, counting distinct selected category-value IDs.
 - Use an accessible full label; keep Clear filters separate from clearing the search query.
@@ -110,7 +117,7 @@ Status: specified. Requirements: SPEED-008 r2, UX-MASCOT-003 r2.
 
 ## F14 — Separate essential field boundaries from decorative borders
 
-Status: specified. Requirements: UX-SYSTEM-001 r6.
+Status: specified. Requirements: UX-SYSTEM-001 r7.
 
 - Use supporting-text color #62657D for essential enabled field boundaries on cream; focus uses primary and error uses red plus explicit text.
 - Decorative card borders retain a quieter documented navy alpha; do not reuse that treatment for essential fields.
@@ -118,7 +125,7 @@ Status: specified. Requirements: UX-SYSTEM-001 r6.
 
 ## F15 — Give the Speed consequence warning clear visual emphasis
 
-Status: specified. Requirements: UX-SETUP-002 r7, UX-SYSTEM-001 r6, SPEED-006 r1.
+Status: specified. Requirements: UX-SETUP-002 r7, UX-SYSTEM-001 r7, SPEED-006 r1.
 
 - Use 12% red over cream, red icon/heading/border and navy body; solid red remains for Incorrect/destructive actions.
 - Use a compact heading; preserve the full condition: completed after a mistake, studied direction only, opposite unchanged.
@@ -127,7 +134,7 @@ Status: specified. Requirements: UX-SETUP-002 r7, UX-SYSTEM-001 r6, SPEED-006 r1
 
 ## F16 — Consolidate typography and reflow rules
 
-Status: specified. Requirements: UX-SYSTEM-001 r6, UX-HEADER-002 r2, UX-ENTRY-002 r2, UX-I18N-001 r2.
+Status: specified. Requirements: UX-SYSTEM-001 r7, UX-HEADER-002 r2, UX-ENTRY-002 r2, UX-I18N-001 r2.
 
 - Use selected Nunito Sans through explicit browser and Flutter family/weight adapters; verify German and Korean glyphs and fallbacks offline.
 - Accepted type roles: page title 26/700/1.2; dialog 20/700/1.3; section 18/700/1.35; body and input 16/400/1.5; control 14/700/1.4; helper 14/400/1.45; answer 37/600/1.3; revealed prompt 22/400/1.4.
@@ -143,7 +150,7 @@ Status: specified. Requirements: UX-COLL-008 r4, UX-REVIEW-004 r2, UX-I18N-001 r
 
 ## F18 — Use consistent user-facing vocabulary and category terms
 
-Status: specified. Requirements: UX-CAT-001 r5, UX-ENTRY-002 r2, UX-I18N-002 r2.
+Status: specified. Requirements: UX-CAT-001 r7, UX-ENTRY-002 r2, UX-I18N-002 r2.
 
 - Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag.
 - Apply the same terms to create, edit, validation, failure and deletion copy. Internal IDs and JSON names remain unchanged.

@@ -12,9 +12,9 @@ Gate: catalog generation and placeholder checks pass; representative German/Kore
 
 ## 2. Stable shared dialogs and clear entry actions
 
-F03 and F01, after package 1. Reserve selection-footer geometry without exposing inactive Apply; keep focus/dismissal and pending drafts safe. Make Save & Next / Finish visible, grow or stack the header, clarify inline finish/discard and keep save status nearby.
+F03 and F01, after package 1. Follow UX-DIALOG-001 revision 5: keep Apply and applicable Clear filters visible with their defined disabled states, in a compact real footer with stable geometry. Preserve focus/dismissal and pending drafts. Make Save & Next / Finish visible, grow or stack the header, clarify inline finish/discard and keep save status nearby.
 
-Gate: unchanged → changed → reverted selections do not move the selected row/title; keyboard, large text and short-height actions remain reachable. Existing draft, save-next, finish validation, autosave and exit-warning behavior passes relevant tests and a named Android sequence.
+Gate: unchanged → changed → cleared → reverted selections change only action enabled states without moving the selected row/title or existing buttons; keyboard, large text and short-height actions remain reachable. Existing draft, save-next, finish validation, autosave and exit-warning behavior passes relevant tests and a named Android sequence.
 
 ## 3. JSON workflow clarity
 
@@ -24,7 +24,7 @@ Gate: invalid input, valid preview, changed input after preview, confirmed impor
 
 ## 4. Collection and categories
 
-Remaining F04/F07 plus F10/F11/F18; after package 1 and package 2's shared selection shell. Complete aligned category levels, genuine-empty CTA, active confirmed-filter count and independent clear action. Apply the accepted glossary across success, error and deletion contexts.
+Remaining F04/F07 plus F10/F11/F18; after package 1 and package 2's shared selection shell. Complete aligned category levels, genuine-empty CTA, active confirmed-filter count and independent clear action. Follow CAT-009 revision 5 / UX-CAT-001 revision 7 for alphabetical values within each group while retaining group order, membership and drafts; clarify the recorded collation edge cases before implementation. Apply the accepted glossary across success, error and deletion contexts.
 
 Gate: genuine empty versus loading/error/filtered-empty/no-due remain distinct. Filters count selected values only; direct toolbar clear preserves search, popup clear is staged until Apply, and cancellation restores the opening selection. Test assignment/cardinality and category changes without learning-data loss. Existing rename and menu access remain present.
 

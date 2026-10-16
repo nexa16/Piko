@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 5,
+  "revision": 6,
   "updated": "2026-10-16",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -105,7 +105,7 @@
     },
     {
       "id": "F02",
-      "revision": 3,
+      "revision": 4,
       "priority": "P1",
       "title": "Make the JSON workflow’s next action and result obvious",
       "kind": "Likely usability concern",
@@ -117,10 +117,10 @@
       ],
       "summary": "Analyze JSON, file/clipboard actions and export actions all look like muted text controls. The long page interleaves explanations, replacement choices and export; successful import feedback appears below the export section.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "json",
       "acceptance": [
-        "Follow UX-IMPORT-JSON-001/002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.",
+        "Follow UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.",
         "Make the applicable next action prominent and place success/errors next to the step that produced them.",
         "Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled."
       ],
@@ -146,6 +146,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "The main next step is difficult to distinguish from helper actions. After confirmation, people may need to search down the page to discover whether the import succeeded.",
@@ -192,23 +196,27 @@
     },
     {
       "id": "F03",
-      "revision": 3,
+      "revision": 4,
       "priority": "P1",
-      "title": "Keep selection dialogs still while their footer changes",
+      "title": "Keep selection actions visible and stationary",
       "kind": "Observed interaction defect",
       "screen": "Category assignment and Filters: unchanged → changed",
       "requirements": [
         "UX-DIALOG-001",
         "UX-CAT-001",
+        "CAT-009",
         "FILTER-002"
       ],
       "summary": "Selecting an item adds the Apply footer and recenters the popup. The Filters popup also adds Clear filters, moving the title and selected row substantially upward. The shift recurs in category assignment.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "foundation",
       "acceptance": [
-        "Changed-only Apply remains absent when unchanged/reverted.",
-        "Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell.",
+        "Apply remains visible, disabled while unchanged/reverted and enabled only for a changed selection. Filters also keeps Clear filters visible, disabled only when the pending selection is empty.",
+        "Selecting, clearing or reverting does not move either action, the title or selected row. Use a content-sized bounded shell and compact real footer, without an extra empty slot. Determine responsive layout from all actions, including disabled ones; this does not accept unconditional stacking.",
+        "Preserve the shared X alignment to the title first line and its 48px target. Treat reported drift as a fix; check wrapping titles and multiple popup consumers.",
+        "Accepted implementation approach: one Piko-themed shared popup using standard framework content/action layout where compatible. Remove separate hidden-footer reservations and duplicate size estimates. Verify existing-button positions and the X glyph, not just title/row bounds; DESIGN.md owns the approach.",
+        "The owner reports blank space and clear-action movement across popups. Browser evidence confirms a 64px empty reservation, but did not reproduce that movement in the inspected fixture; exact phone/emulator builds and other affected popups are unestablished. See the UX specification for evidence and concrete acceptance scenarios.",
         "At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved."
       ],
       "baselineEvidence": [
@@ -234,6 +242,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "The control under the user’s finger moves after selection. This weakens spatial continuity during a simple multi-selection task and makes the form feel unstable.",
@@ -383,21 +395,25 @@
     },
     {
       "id": "F05",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
-      "title": "Move the palette closer to Piko’s blue, cream and navy",
+      "title": "Use only the approved Piko palette across all preview rounds",
       "kind": "Aesthetic judgment",
       "screen": "Shared surfaces and primary actions",
       "requirements": [
         "UX-SYSTEM-001",
+        "UX-LAB-001",
         "UX-MASCOT-001"
       ],
       "summary": "The saturated Cobalt/white/slate system is coherent, but its large primary blocks feel more institutional than the warm cream rabbit, powder-blue book, navy outline and small golden details.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "foundation",
       "acceptance": [
         "Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt.",
+        "Use the same approved palette in all preview rounds, standalone bookmarks and the studio. Retain their behavior/sample-state differences, not historical colors; remove the Cobalt preset.",
+        "Consolidate active palette definitions and migrate consumers before deleting old grading, secondary-review, warning and backdrop colors. Keep shared red/green, semantic aliases and non-color round settings; regenerate application adapters only during later authorized implementation.",
+        "Verify palette reset, round switching, inventory/export and rendered action/warning/dialog states under UX-LAB-001. This update records definitions only; prior prototype checks do not verify the migration.",
         "Define primary, secondary, safe, disabled, pressed, focus, warning, danger and success states together. Do not rely on unreviewed ColorScheme.fromSeed defaults.",
         "Use cream text on blue/red/green, navy on gold; grade labels and behavior remain explicit."
       ],
@@ -423,6 +439,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "Piko reads as a decorative addition rather than the visual source of the interface. Color can make the same layout feel more connected to the character.",
@@ -551,7 +571,7 @@
     },
     {
       "id": "F07",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
       "title": "Align category rows and clarify management levels",
       "kind": "Aesthetic judgment with a usability concern",
@@ -562,12 +582,13 @@
       ],
       "summary": "Dimension rows are centered between left-aligned fields and actions. In management, nested dimension/value controls, dividers and red deletion actions compete at several levels inside the same large popup.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "categories",
       "acceptance": [
         "Align group titles, field labels and value rows to common leading edges.",
         "Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration.",
-        "Keep in-place management, two visible selection modes, changed-only confirmation and explicit assignment. No new management page or reorder."
+        "Keep in-place management, two visible selection modes, persistent Apply enabled only for changed selections, and explicit assignment. No new management page or manual reorder.",
+        "Accepted 2026-10-16: values use alphabetical A–Z display within each group across assignment/filter checklists, management and assigned tags/summaries (CAT-009 r5 / UX-CAT-001 r7). Keep group order, selections and drafts intact after saved create/rename; search subsets retain the same order. Manual custom value order is Later. Collation edge cases, implementation and runtime verification remain pending."
       ],
       "baselineEvidence": [
         "021",
@@ -591,6 +612,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "The eye repeatedly changes alignment, and the distinction between a dimension and its values takes more effort to scan.",
@@ -799,7 +824,7 @@
     },
     {
       "id": "F10",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
       "title": "Make the empty Collection’s first step more direct",
       "kind": "Likely usability concern",
@@ -810,10 +835,10 @@
       ],
       "summary": "The empty screen still gives substantial space to search and Filters. Its message points to a “plus button”, while the actual action is a labeled “+ New” control above the empty region.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "collection",
       "acceptance": [
-        "For a genuinely empty collection show one prominent Add first word action in the vocabulary heading and one brief explanation.",
+        "For a genuinely empty collection show one prominent Add first word action below the Vocabulary heading, following UX-COLL-003 revision 3 and one brief explanation.",
         "Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist.",
         "Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states."
       ],
@@ -841,6 +866,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "The invitation to add the first word is indirect, and controls with no useful result compete with it.",
@@ -1285,7 +1314,7 @@
     },
     {
       "id": "F16",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
       "title": "Consolidate typography and reflow rules",
       "kind": "Design recommendation and browser stress observation",
@@ -1293,12 +1322,11 @@
       "requirements": [
         "UX-SYSTEM-001",
         "UX-HEADER-002",
-        "UX-ENTRY-002",
-        "UX-I18N-001"
+        "UX-ENTRY-002"
       ],
       "summary": "System families differ across browser/Android; Flutter does not explicitly consume typography.family. Browser stress examples show fragmented titles and long-heading overflow with both alternatives. These stress observations are not newly confirmed Android defects.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "foundation",
       "acceptance": [
         "Use selected Nunito Sans through explicit browser and Flutter family/weight adapters; verify German and Korean glyphs and fallbacks offline.",
@@ -1323,6 +1351,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "Inconsistent text roles and reflow can weaken hierarchy or obscure labels. Font choice alone will not repair constrained layouts.",
@@ -1371,19 +1403,18 @@
     },
     {
       "id": "F17",
-      "revision": 3,
+      "revision": 4,
       "priority": "P1",
       "title": "Keep learning-state wording accurate in both languages",
       "kind": "Observed catalog inconsistency; likely usability concern",
       "screen": "No-due and completion messages",
       "requirements": [
         "UX-COLL-008",
-        "UX-REVIEW-004",
-        "UX-I18N-001"
+        "UX-REVIEW-004"
       ],
       "summary": "r2.caughtUp translates a current no-due state as “du hast alles gelernt”. summary.completed labels a session completion count as vocabulary learned. Both need precise wording; the latter revises accepted terminology.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "copy",
       "acceptance": [
         "No-due text describes current due work, not permanent mastery.",
@@ -1408,6 +1439,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "People may interpret a current no-due state or a completed session as permanent mastery.",
@@ -1450,19 +1485,18 @@
     },
     {
       "id": "F18",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
       "title": "Use consistent user-facing vocabulary and category terms",
       "kind": "Copy recommendation",
       "screen": "Category management and vocabulary entry",
       "requirements": [
         "UX-CAT-001",
-        "UX-ENTRY-002",
-        "UX-I18N-002"
+        "UX-ENTRY-002"
       ],
       "summary": "Visible copy mixes dimension/category terminology and Eintrag/Wort/Vokabel. Choose a small glossary and apply it consistently; do not rename internal model types.",
       "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
       "workPackage": "copy/categories",
       "acceptance": [
         "Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag.",
@@ -1487,6 +1521,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
         }
       ],
       "impact": "Different terms for the same level make category creation and assignment harder to understand.",
