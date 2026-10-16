@@ -4,7 +4,7 @@
 
 ## Execution agreement — 2026-10-16
 
-Owner-authorized plan: solo execution; no subagents. One final owner-review APK, with private recovery checkpoints. Preserve the verified scrolling APK and original source commits. Current branch integrates develop 61fdefc through merge aacabcd (the squash tree equals original round-3 head 5107327). Preserve the newer specifications in 38ea841. No publication is authorized.
+Owner-authorized plan: solo execution; no subagents. One final owner-review APK, with private recovery checkpoints. Preserve the verified scrolling APK and source provenance. Current branch integrates develop 61fdefc through merge 6185531 (the squash tree equals original round-3 head 5107327). The preserved specification checkpoint is a05c051. No publication is authorized.
 
 Scope is the eight selected packages below, with the owner's accepted implementation defaults: schema-15 ordered examples and local addition dates; JSON v3 with v1/v2 import; persistent Collection view settings; Compact/target-first/ungrouped/original-order defaults; lexical NFC lowercase sorting with stable ties and unknown dates last; transient collapsed groups and UUID-owned editors; default-on question examples captured per presentation; shared Import/Export with retained session drafts. Exclude Active/Inactive, answer-card editing, compact-editor redesign, proficiency/Mastered, manual Speed selection and other unscheduled features. Revisions and acceptance are maintained in the owning specifications. The older planning authorization statements below retain their historical scope.
 
@@ -134,7 +134,7 @@ Header investigation starts with the existing normal/Speed route headers unchang
 
 Owner candidate: `piko-round4-561e269.apk`, source `561e26955748efd3e73692bb8fe4c356cb6c7326`, SHA-256 `a24355202d9308ce16fa2a9a723699358d4ac8c7c73e89f32871e016bd1e8c83`. Normal application ID `io.github.nexa16.piko`, build number 3 (installed prior build 2), unchanged version name 0.1.0, ARM32/ARM64/x64, min SDK 24 / target SDK 36. Signature verification passes and the certificate matches the retained fallback. The immutable APK, checksum and committed source archive are retained privately. This is a development review candidate, not a release or publication.
 
-Verified app/test source: `561e26955748efd3e73692bb8fe4c356cb6c7326`, on `codex/round-4-implementation`, integrating develop `61fdefc` without rewriting retained APK commits. Later documentation-only commits do not change the candidate's app source. No excluded feature or non-color prototype redesign was added. The fallback APK and checksum above remain unchanged.
+Verified app/test source: `561e26955748efd3e73692bb8fe4c356cb6c7326`, on `codex/round-4-implementation`, integrating develop `61fdefc`, with original APK source archives retained privately. Later documentation-only commits do not change the candidate's app source. No excluded feature or non-color prototype redesign was added. The fallback APK and checksum above remain unchanged.
 
 | Covered requirements | Implementation and evidence |
 | --- | --- |
@@ -156,3 +156,15 @@ Installation was direct and fail-closed; insufficient storage never triggered cl
 Remaining limits: the two owner-reported header recordings are still unverified; the retained scrolling fix's intermittent phone stall remains unproven beyond its earlier Android evidence and current host preservation checks. The normal candidate is not installed over preserved personal emulator data. Physical-phone update/learning and changed-flow acceptance are pending. No release, tag, store upload, push, PR or merge has occurred.
 
 Publication review covers the complete proposed file set and all retained/new commits, including the original pre-squash ancestry. Commit author/committer identities use the existing GitHub noreply address; the history/file pattern scan found no credential, machine-path or private-artifact matches. Required generated Dart/schema sources and prepared PNG/XML assets are intentional; APKs, databases, raw captures and detailed logs stay private. Owner manual review/publication approval remains required before push/PR, followed by the standing phone/check/review gates before squash integration.
+
+
+### Publication documentation cleanup — 2026-10-16
+
+The owner authorized a documentation-only rewrite of the 24 unpublished round-4 commits. Published `develop` (`61fdefc`) and round-3 history (`5107327`) are unchanged. A verified recovery bundle and complete commit map are retained privately outside the repository. Each rewritten commit has exactly the same `app`, `shared` and `mockups` trees as its original; only documentation and parent hashes changed. Original build/test manifests and APKs remain immutable and were not relabeled or rebuilt.
+
+| Artifact / evidence | Original build/test source | Equivalent rewritten source |
+| --- | --- | --- |
+| Final round-4 candidate and Android evidence | `561e26955748efd3e73692bb8fe4c356cb6c7326` | `7ba94536c3bee717389436ed7ec0d2d3154caef3` |
+| Retained scrolling fallback | `626baa56a57af764b04b4cdbb710a4bc7019a640` | `c5e8e57f214cae7e33c45403fc8cb6a0f8aff1cc` |
+
+Earlier evidence references identify the actual source used at capture/build time. Use the equivalent rewritten commit to inspect the same application source in the current branch. The final candidate SHA-256 above is unchanged. Public README/product/roadmap summaries now match the verified scope while preserving excluded work, unreproduced cases and owner acceptance gates. No push or publication occurred during this cleanup.
