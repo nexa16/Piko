@@ -8,6 +8,7 @@
 - Keep raw or identifiable user research outside the public repository.
 - Keep secrets out of tracked files and examples.
 - Update documentation whenever an accepted decision changes.
+- Before UX specification or UI implementation work, read `docs/ux-quality.md` and the relevant entries in `docs/ux-findings.json`. Keep proposed design choices explicit; follow the accepted review scope and require revision-specific Android verification before marking a finding fixed.
 - When implementation begins, add tests alongside behavior.
 - Use focused branches named codex/<short-description> for substantive work.
 - Keep commits narrowly scoped and explain observable outcomes.

@@ -1,0 +1,1540 @@
+{
+  "schemaVersion": 1,
+  "revision": 5,
+  "updated": "2026-10-16",
+  "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+  "sourceRevision": "b6b840c",
+  "statusPolicy": [
+    "open",
+    "specified",
+    "in_progress",
+    "needs_verification",
+    "fixed",
+    "deferred"
+  ],
+  "priorityPolicy": {
+    "P0": "Task blocking",
+    "P1": "Significant clarity or interaction problem",
+    "P2": "Visual refinement or lower-impact concern"
+  },
+  "findings": [
+    {
+      "id": "F01",
+      "revision": 3,
+      "priority": "P1",
+      "title": "Give Save & Next and Finish visibly different names",
+      "kind": "Likely usability concern",
+      "screen": "Vocabulary entry; inline editing",
+      "requirements": [
+        "UX-ENTRY-002",
+        "UX-SYSTEM-001"
+      ],
+      "summary": "The entry screen presents a checkmark at the top right and another inside the draft. They have different outcomes but nearly identical visual language. Inline editing adds another checkmark/X pair while the autosave explanation is at the bottom of the card.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "entry",
+      "acceptance": [
+        "Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior.",
+        "Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable.",
+        "Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls."
+      ],
+      "baselineEvidence": [
+        "014",
+        "029",
+        "118"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "A person using touch has to remember which checkmark saves another word, exits the session, or ends an inline edit. Accessible names and tooltips help other interaction modes but do not resolve the immediate visual ambiguity.",
+      "confidence": "High for the visual ambiguity; medium for predicted user mistakes.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "014"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "029"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "118"
+        }
+      ],
+      "reach": "Vocabulary entry; inline editing",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior. Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable. Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls.",
+      "requirementRevisions": {
+        "UX-ENTRY-002": 2,
+        "UX-SYSTEM-001": 6
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1,
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F02",
+      "revision": 3,
+      "priority": "P1",
+      "title": "Make the JSON workflow’s next action and result obvious",
+      "kind": "Likely usability concern",
+      "screen": "JSON input, analysis, import and export",
+      "requirements": [
+        "UX-IMPORT-JSON-001",
+        "UX-IMPORT-JSON-002",
+        "UX-SYSTEM-001"
+      ],
+      "summary": "Analyze JSON, file/clipboard actions and export actions all look like muted text controls. The long page interleaves explanations, replacement choices and export; successful import feedback appears below the export section.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "json",
+      "acceptance": [
+        "Follow UX-IMPORT-JSON-001/002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.",
+        "Make the applicable next action prominent and place success/errors next to the step that produced them.",
+        "Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled."
+      ],
+      "baselineEvidence": [
+        "074",
+        "081",
+        "095"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "The main next step is difficult to distinguish from helper actions. After confirmation, people may need to search down the page to discover whether the import succeeded.",
+      "confidence": "High for the hierarchy/placement; medium for predicted hesitation.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "074"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "081"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "095"
+        }
+      ],
+      "reach": "JSON input, analysis, import and export",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Follow UX-IMPORT-JSON-001/002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import. Make the applicable next action prominent and place success/errors next to the step that produced them. Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled.",
+      "requirementRevisions": {
+        "UX-IMPORT-JSON-001": 3,
+        "UX-IMPORT-JSON-002": 2,
+        "UX-SYSTEM-001": 6
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          2,
+          4
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F03",
+      "revision": 3,
+      "priority": "P1",
+      "title": "Keep selection dialogs still while their footer changes",
+      "kind": "Observed interaction defect",
+      "screen": "Category assignment and Filters: unchanged → changed",
+      "requirements": [
+        "UX-DIALOG-001",
+        "UX-CAT-001",
+        "FILTER-002"
+      ],
+      "summary": "Selecting an item adds the Apply footer and recenters the popup. The Filters popup also adds Clear filters, moving the title and selected row substantially upward. The shift recurs in category assignment.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation",
+      "acceptance": [
+        "Changed-only Apply remains absent when unchanged/reverted.",
+        "Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell.",
+        "At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved."
+      ],
+      "baselineEvidence": [
+        "026",
+        "027",
+        "060",
+        "061"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "The control under the user’s finger moves after selection. This weakens spatial continuity during a simple multi-selection task and makes the form feel unstable.",
+      "confidence": "High: visible in two before/after sequences.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "026"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "027"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "060"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "061"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Changed-only Apply remains absent when unchanged/reverted. Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell. At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved.",
+      "requirementRevisions": {
+        "UX-DIALOG-001": 4,
+        "UX-CAT-001": 5,
+        "FILTER-002": 4
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F04",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Tighten Collection Detail’s vertical rhythm and alignment",
+      "kind": "Aesthetic judgment with a usability concern",
+      "screen": "Collection Detail; shared page headers",
+      "requirements": [
+        "UX-COLL-008",
+        "UX-HEADER-001",
+        "UX-HEADER-002",
+        "UX-MASCOT-001",
+        "UX-COLL-007",
+        "UX-SETUP-002"
+      ],
+      "summary": "With two due directions, the navigation, title, action stack, vocabulary heading, search and Filters place the first vocabulary card roughly two-thirds down the screen. The first review action is left aligned, the second centered; their different heights and pill shapes amplify the uneven rhythm.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation/collection",
+      "acceptance": [
+        "Use one leading alignment for title, direction labels, search and list content; retain the useful language/count subtitle. Speed preview: left-align both text lines on a common edge beside the lightning icon; preserve the two-column layout and allow wrapping. Accepted during four-state review.",
+        "Adopt shared 4/8/12/16/24 spacing steps; remove additive margins instead of reducing touch targets.",
+        "Use a compact navigation row with one icon-only Back, 48 logical-pixel target and localized name; retain existing Back behavior and the accepted 64px mascot slot."
+      ],
+      "baselineEvidence": [
+        "038",
+        "102",
+        "126"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted four state previews, including left-aligned Speed text and X dismissal. Specified; not implemented or Fixed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Vocabulary feels distant even in a two-word collection, while the collection identity and controls occupy disproportionate attention. The top navigation spacing also feels detached on sparse pages.",
+      "confidence": "High for the visible arrangement; medium for the preferred density.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "038"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "102"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "126"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use one leading alignment for title, direction labels, search and list content; retain the useful language/count subtitle. Speed preview: left-align both text lines on a common edge beside the lightning icon; preserve the two-column layout and allow wrapping. Accepted during four-state review. Adopt shared 4/8/12/16/24 spacing steps; remove additive margins instead of reducing touch targets. Use a compact navigation row with one icon-only Back, 48 logical-pixel target and localized name; retain existing Back behavior and the accepted 64px mascot slot.",
+      "requirementRevisions": {
+        "UX-COLL-008": 4,
+        "UX-HEADER-001": 1,
+        "UX-HEADER-002": 2,
+        "UX-MASCOT-001": 2,
+        "UX-COLL-007": 4,
+        "UX-SETUP-002": 7
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1,
+          2,
+          3
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F05",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Move the palette closer to Piko’s blue, cream and navy",
+      "kind": "Aesthetic judgment",
+      "screen": "Shared surfaces and primary actions",
+      "requirements": [
+        "UX-SYSTEM-001",
+        "UX-MASCOT-001"
+      ],
+      "summary": "The saturated Cobalt/white/slate system is coherent, but its large primary blocks feel more institutional than the warm cream rabbit, powder-blue book, navy outline and small golden details.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation",
+      "acceptance": [
+        "Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt.",
+        "Define primary, secondary, safe, disabled, pressed, focus, warning, danger and success states together. Do not rely on unreviewed ColorScheme.fromSeed defaults.",
+        "Use cream text on blue/red/green, navy on gold; grade labels and behavior remain explicit."
+      ],
+      "baselineEvidence": [
+        "038",
+        "040",
+        "048"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Piko reads as a decorative addition rather than the visual source of the interface. Color can make the same layout feel more connected to the character.",
+      "confidence": "Medium: an informed visual preference, not a measured user preference.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "038"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "040"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "048"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt. Define primary, secondary, safe, disabled, pressed, focus, warning, danger and success states together. Do not rely on unreviewed ColorScheme.fromSeed defaults. Use cream text on blue/red/green, navy on gold; grade labels and behavior remain explicit.",
+      "requirementRevisions": {
+        "UX-SYSTEM-001": 6,
+        "UX-MASCOT-001": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F06",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Give dialog backdrops a neutral navy cast",
+      "kind": "Aesthetic judgment",
+      "screen": "Setup, summaries and confirmations",
+      "requirements": [
+        "UX-DIALOG-001",
+        "UX-SYSTEM-001"
+      ],
+      "summary": "The dimming layer produces a green/olive cast over the blue interface. It is especially noticeable beside the cream-and-blue artwork and warm proposed surfaces.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation",
+      "acceptance": [
+        "Use palette navy as dialog backdrop at the existing opacity first; check both text separation and the underlying artwork.",
+        "Change opacity only after a contextual comparison; retain one shared backdrop mapping."
+      ],
+      "baselineEvidence": [
+        "048",
+        "050",
+        "122"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Dialogs feel visually detached from the rest of the system even though their shapes and actions are mostly consistent.",
+      "confidence": "High for the cast; medium for the preferred alternative.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "048"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "050"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "122"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use palette navy as dialog backdrop at the existing opacity first; check both text separation and the underlying artwork. Change opacity only after a contextual comparison; retain one shared backdrop mapping.",
+      "requirementRevisions": {
+        "UX-DIALOG-001": 4,
+        "UX-SYSTEM-001": 6
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1,
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F07",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Align category rows and clarify management levels",
+      "kind": "Aesthetic judgment with a usability concern",
+      "screen": "Vocabulary category rows; expanded More options",
+      "requirements": [
+        "UX-CAT-001",
+        "UX-SYSTEM-001"
+      ],
+      "summary": "Dimension rows are centered between left-aligned fields and actions. In management, nested dimension/value controls, dividers and red deletion actions compete at several levels inside the same large popup.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "categories",
+      "acceptance": [
+        "Align group titles, field labels and value rows to common leading edges.",
+        "Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration.",
+        "Keep in-place management, two visible selection modes, changed-only confirmation and explicit assignment. No new management page or reorder."
+      ],
+      "baselineEvidence": [
+        "021",
+        "057",
+        "070"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "The eye repeatedly changes alignment, and the distinction between a dimension and its values takes more effort to scan.",
+      "confidence": "High for the alignment; medium for expected scan improvement.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "021"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "057"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "070"
+        }
+      ],
+      "reach": "Vocabulary category rows; expanded More options",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Align group titles, field labels and value rows to common leading edges. Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration. Keep in-place management, two visible selection modes, changed-only confirmation and explicit assignment. No new management page or reorder.",
+      "requirementRevisions": {
+        "UX-CAT-001": 5,
+        "UX-SYSTEM-001": 6
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1,
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F08",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Wrap review progress deliberately",
+      "kind": "Observed layout defect",
+      "screen": "Normal review question, reveal and waiting",
+      "requirements": [
+        "UX-HEADER-001",
+        "CARD-UI-002",
+        "UX-REVIEW-004"
+      ],
+      "summary": "The first-try progress phrase breaks with “correct” alone on a line at the normal English viewport.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "review",
+      "acceptance": [
+        "Give direction its own row; show completed/total and first-try-correct as complete label/value groups below it.",
+        "Let groups wrap as units, not an orphaned last word. Preserve counts and first-try semantics.",
+        "Use the same first-try wording in progress and summary."
+      ],
+      "baselineEvidence": [
+        "039",
+        "040",
+        "046"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "A small supporting label becomes visually ragged and harder to scan; this is avoidable without changing the progress model.",
+      "confidence": "High at the reviewed viewport.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "039"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "040"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "046"
+        }
+      ],
+      "reach": "Normal review question, reveal and waiting",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Give direction its own row; show completed/total and first-try-correct as complete label/value groups below it. Let groups wrap as units, not an orphaned last word. Preserve counts and first-try semantics. Use the same first-try wording in progress and summary.",
+      "requirementRevisions": {
+        "UX-HEADER-001": 1,
+        "CARD-UI-002": 1,
+        "UX-REVIEW-004": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F09",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Use a correction role instead of a danger role",
+      "kind": "Likely usability concern",
+      "screen": "Previous-review correction",
+      "requirements": [
+        "UX-REVIEW-002",
+        "UX-REVIEW-003"
+      ],
+      "summary": "“Correct previous review” is red despite being an undo/correction action. In the correction banner, the old grade follows the instructions without a strong separate label.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "review",
+      "acceptance": [
+        "Use primary outline/text for the correction action, with the existing undo icon.",
+        "Label context explicitly as Previous grade: Incorrect/Correct; retain Hard when applicable.",
+        "Only expose on the hidden question side; exact history correction and guards are unchanged."
+      ],
+      "baselineEvidence": [
+        "042",
+        "043"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Red suggests risk or failure, while the previous grade can read as part of the new instruction rather than context.",
+      "confidence": "High for the visible treatment; medium for user interpretation.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "042"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "043"
+        }
+      ],
+      "reach": "Previous-review correction",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use primary outline/text for the correction action, with the existing undo icon. Label context explicitly as Previous grade: Incorrect/Correct; retain Hard when applicable. Only expose on the hidden question side; exact history correction and guards are unchanged.",
+      "requirementRevisions": {
+        "UX-REVIEW-002": 2,
+        "UX-REVIEW-003": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F10",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Make the empty Collection’s first step more direct",
+      "kind": "Likely usability concern",
+      "screen": "Empty Collection Detail",
+      "requirements": [
+        "UX-COLL-003",
+        "UX-COLL-008"
+      ],
+      "summary": "The empty screen still gives substantial space to search and Filters. Its message points to a “plus button”, while the actual action is a labeled “+ New” control above the empty region.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "collection",
+      "acceptance": [
+        "For a genuinely empty collection show one prominent Add first word action in the vocabulary heading and one brief explanation.",
+        "Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist.",
+        "Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states."
+      ],
+      "baselineEvidence": [
+        "013"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted four state previews, including left-aligned Speed text and X dismissal. Specified; not implemented or Fixed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "The invitation to add the first word is indirect, and controls with no useful result compete with it.",
+      "confidence": "High for the mismatch; medium for the proposed empty-state treatment.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "013"
+        }
+      ],
+      "reach": "Empty Collection Detail",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "For a genuinely empty collection show one prominent Add first word action in the vocabulary heading and one brief explanation. Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist. Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states.",
+      "requirementRevisions": {
+        "UX-COLL-003": 3,
+        "UX-COLL-008": 4
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F11",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Show enough active-filter context outside the popup",
+      "kind": "Likely usability concern",
+      "screen": "Filtered no-results state",
+      "requirements": [
+        "UX-CAT-001",
+        "FILTER-002"
+      ],
+      "summary": "The page offers Clear filters, but does not identify the active category criteria beside the filter control or empty result.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "categories",
+      "acceptance": [
+        "Show Filters (n) for active confirmed filters, counting distinct selected category-value IDs.",
+        "Use an accessible full label; keep Clear filters separate from clearing the search query.",
+        "Keep selected-value summaries inside the existing dialog in the first implementation; do not add a second chip toolbar.",
+        "When confirmed category filters are active, show Clear filters beside Filters (n) in the toolbar. It clears those filters directly and preserves search; popup Clear filters remains staged until Apply."
+      ],
+      "baselineEvidence": [
+        "062",
+        "065"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted four state previews, including left-aligned Speed text and X dismissal. Specified; not implemented or Fixed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "People can recover, but must reopen the dialog to understand why expected vocabulary disappeared.",
+      "confidence": "High for visible absence; medium for the benefit of added context.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "062"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "065"
+        }
+      ],
+      "reach": "Filtered no-results state",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Show Filters (n) for active confirmed filters, counting distinct selected category-value IDs. Use an accessible full label; keep Clear filters separate from clearing the search query. Keep selected-value summaries inside the existing dialog in the first implementation; do not add a second chip toolbar. When confirmed category filters are active, show Clear filters beside Filters (n) in the toolbar. It clears those filters directly and preserves search; popup Clear filters remains staged until Apply.",
+      "requirementRevisions": {
+        "UX-CAT-001": 5,
+        "FILTER-002": 4
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          2,
+          3
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F12",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Make Speed setup easier to scan without hiding its rules",
+      "kind": "Aesthetic judgment with a usability concern",
+      "screen": "Speed setup",
+      "requirements": [
+        "UX-SETUP-002",
+        "SPEED-006",
+        "SPEED-008"
+      ],
+      "summary": "A large warning paragraph, pool-size explanation and exit rules compete with the count and Start action. The content is useful but visually reads as one dense briefing.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "speed",
+      "acceptance": [
+        "Keep direction, eligible count, warning and pool-size control visible.",
+        "Separate explanation into Rules and Leaving this round; preserve complete-pass, N=1 and completion-time reset semantics.",
+        "Explicitly distinguish discarded unfinished work from already committed completed-word results."
+      ],
+      "baselineEvidence": [
+        "050",
+        "103"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "The important reset condition is harder to isolate, and the setup feels heavy for a short learning activity.",
+      "confidence": "High for density; medium for the preferred wording/layout.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "050"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "103"
+        }
+      ],
+      "reach": "Speed setup",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Keep direction, eligible count, warning and pool-size control visible. Separate explanation into Rules and Leaving this round; preserve complete-pass, N=1 and completion-time reset semantics. Explicitly distinguish discarded unfinished work from already committed completed-word results.",
+      "requirementRevisions": {
+        "UX-SETUP-002": 7,
+        "SPEED-006": 1,
+        "SPEED-008": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F13",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Consider a modest completion cue for Speed",
+      "kind": "Likely usability concern",
+      "screen": "Return from completed Speed round",
+      "requirements": [
+        "SPEED-008",
+        "UX-MASCOT-003"
+      ],
+      "summary": "Finishing the last word returns directly to Collection. This follows the accepted behavior, but the transition itself offers little explicit confirmation that the round finished.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "speed",
+      "acceptance": [
+        "after all words complete, show one inline completion notice on Collection with count and a top-right X dismiss control (48 logical-pixel target, localized accessible name). Accepted during four-state review.",
+        "Keep it until close, another learning launch or leaving that Collection; no timer, extra summary popup or new mascot.",
+        "No notice on exit, interruption, failed completion write or empty launch. Announce once politely without stealing focus."
+      ],
+      "baselineEvidence": [
+        "052",
+        "055"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted four state previews, including left-aligned Speed text and X dismissal. Specified; not implemented or Fixed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "A person may briefly wonder whether they completed the round or left it, particularly when the list and actions change at the same time.",
+      "confidence": "High for the transition; medium for the need for extra feedback.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "052"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "055"
+        }
+      ],
+      "reach": "Return from completed Speed round",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "after all words complete, show one inline completion notice on Collection with count and a top-right X dismiss control (48 logical-pixel target, localized accessible name). Accepted during four-state review. Keep it until close, another learning launch or leaving that Collection; no timer, extra summary popup or new mascot. No notice on exit, interruption, failed completion write or empty launch. Announce once politely without stealing focus.",
+      "requirementRevisions": {
+        "SPEED-008": 2,
+        "UX-MASCOT-003": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F14",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Separate essential field boundaries from decorative borders",
+      "kind": "Likely accessibility concern",
+      "screen": "Unfocused fields; proposed palette control states",
+      "requirements": [
+        "UX-SYSTEM-001"
+      ],
+      "summary": "Unfocused fields rely on a very pale outline. Carrying the existing 14% ink border into the candidate palette gives about 1.28:1 against cream; cream against the page is only 1.05:1.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation",
+      "acceptance": [
+        "Use supporting-text color #62657D for essential enabled field boundaries on cream; focus uses primary and error uses red plus explicit text.",
+        "Decorative card borders retain a quieter documented navy alpha; do not reuse that treatment for essential fields.",
+        "The earlier #8A8FA6 proposal is superseded; no additional independent grey token."
+      ],
+      "baselineEvidence": [
+        "073",
+        "118",
+        "126"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Where that outline is needed to identify an editable control, the distinction is weak. Quiet decorative cards need not acquire equally strong borders.",
+      "confidence": "High for token calculations; medium for a complete accessibility judgment, which needs rendered-state and interaction checks.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "073"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "118"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "126"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use supporting-text color #62657D for essential enabled field boundaries on cream; focus uses primary and error uses red plus explicit text. Decorative card borders retain a quieter documented navy alpha; do not reuse that treatment for essential fields. The earlier #8A8FA6 proposal is superseded; no additional independent grey token.",
+      "requirementRevisions": {
+        "UX-SYSTEM-001": 6
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F15",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Give the Speed consequence warning clear visual emphasis",
+      "kind": "Owner feedback and visual-design recommendation",
+      "screen": "Speed setup · refined palette proposal",
+      "requirements": [
+        "UX-SETUP-002",
+        "UX-SYSTEM-001",
+        "SPEED-006"
+      ],
+      "summary": "After reviewing the blue/gold palette, the owner asked for stronger warning emphasis. The earlier refined preview used cream with a thin red border and body text, making this important consequence look too similar to ordinary explanatory content. This finding concerns the design preview; it is not a newly observed Android defect.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "speed/foundation",
+      "acceptance": [
+        "Use 12% red over cream, red icon/heading/border and navy body; solid red remains for Incorrect/destructive actions.",
+        "Use a compact heading; preserve the full condition: completed after a mistake, studied direction only, opposite unchanged.",
+        "Verify large-text warning, control and launch action remain reachable without horizontal page overflow.",
+        "Preserve the newer UX-SETUP-002 conditional trigger: no warning or reserved warning space without actual existing studied-direction progress; no warning for entirely new-word rounds."
+      ],
+      "baselineEvidence": [
+        "P01",
+        "P02",
+        "050"
+      ],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Imported from original Android review; no fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "People should notice the possible reset of learning progress before starting, while still being able to read the precise condition comfortably.",
+      "confidence": "High for the owner-stated preference and calculated contrast; medium for predicted user impact. The example has been visually checked in the browser, not on Android.",
+      "evidenceRefs": [
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Design preview · proposal",
+          "id": "P01"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Design preview · proposal",
+          "id": "P02"
+        },
+        {
+          "review": "original-review",
+          "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
+          "kind": "Current Android capture",
+          "id": "050"
+        }
+      ],
+      "reach": "Speed setup · refined palette proposal",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use 12% red over cream, red icon/heading/border and navy body; solid red remains for Incorrect/destructive actions. Use a compact heading; preserve the full condition: completed after a mistake, studied direction only, opposite unchanged. Verify large-text warning, control and launch action remain reachable without horizontal page overflow. Preserve the newer UX-SETUP-002 conditional trigger: no warning or reserved warning space without actual existing studied-direction progress; no warning for entirely new-word rounds.",
+      "requirementRevisions": {
+        "UX-SETUP-002": 7,
+        "UX-SYSTEM-001": 6,
+        "SPEED-006": 1
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F16",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Consolidate typography and reflow rules",
+      "kind": "Design recommendation and browser stress observation",
+      "screen": "Shared typography, headers, entry and learning cards",
+      "requirements": [
+        "UX-SYSTEM-001",
+        "UX-HEADER-002",
+        "UX-ENTRY-002",
+        "UX-I18N-001"
+      ],
+      "summary": "System families differ across browser/Android; Flutter does not explicitly consume typography.family. Browser stress examples show fragmented titles and long-heading overflow with both alternatives. These stress observations are not newly confirmed Android defects.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "foundation",
+      "acceptance": [
+        "Use selected Nunito Sans through explicit browser and Flutter family/weight adapters; verify German and Korean glyphs and fallbacks offline.",
+        "Accepted type roles: page title 26/700/1.2; dialog 20/700/1.3; section 18/700/1.35; body and input 16/400/1.5; control 14/700/1.4; helper 14/400/1.45; answer 37/600/1.3; revealed prompt 22/400/1.4.",
+        "Remove inherited bold field-input text and decorative negative title tracking; title/action layout must reflow before forced character-level breaks. Long unspaced content may break as a last resort without shrinking accessibility text."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Added during typography/style/copy review."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Inconsistent text roles and reflow can weaken hierarchy or obscure labels. Font choice alone will not repair constrained layouts.",
+      "confidence": "High for catalog/theme and browser observations; medium for proposed visual improvement; Android reflow remains to verify.",
+      "evidenceRefs": [
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "audit.html"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "entry-de-320-200-long.jpg"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "entry-draft-de-320-200.jpg"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "review-de-320-200-long.jpg"
+        }
+      ],
+      "reach": "Shared consumers across screens",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Use selected Nunito Sans through explicit browser and Flutter family/weight adapters; verify German and Korean glyphs and fallbacks offline. Accepted type roles: page title 26/700/1.2; dialog 20/700/1.3; section 18/700/1.35; body and input 16/400/1.5; control 14/700/1.4; helper 14/400/1.45; answer 37/600/1.3; revealed prompt 22/400/1.4. Remove inherited bold field-input text and decorative negative title tracking; title/action layout must reflow before forced character-level breaks. Long unspaced content may break as a last resort without shrinking accessibility text.",
+      "requirementRevisions": {
+        "UX-SYSTEM-001": 6,
+        "UX-HEADER-002": 2,
+        "UX-ENTRY-002": 2,
+        "UX-I18N-001": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F17",
+      "revision": 3,
+      "priority": "P1",
+      "title": "Keep learning-state wording accurate in both languages",
+      "kind": "Observed catalog inconsistency; likely usability concern",
+      "screen": "No-due and completion messages",
+      "requirements": [
+        "UX-COLL-008",
+        "UX-REVIEW-004",
+        "UX-I18N-001"
+      ],
+      "summary": "r2.caughtUp translates a current no-due state as “du hast alles gelernt”. summary.completed labels a session completion count as vocabulary learned. Both need precise wording; the latter revises accepted terminology.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "copy",
+      "acceptance": [
+        "No-due text describes current due work, not permanent mastery.",
+        "Completed-count wording describes the session metric without promising durable learning.",
+        "Use equivalent EN/DE meaning; distinguish completed, correct on first try and currently due in every context."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Added during typography/style/copy review."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "People may interpret a current no-due state or a completed session as permanent mastery.",
+      "confidence": "High for wording mismatch; medium for predicted interpretation.",
+      "evidenceRefs": [
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "audit.html"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "copy-inventory.json"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "copy-proposals.json"
+        }
+      ],
+      "reach": "No-due and completion messages",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "No-due text describes current due work, not permanent mastery. Completed-count wording describes the session metric without promising durable learning. Use equivalent EN/DE meaning; distinguish completed, correct on first try and currently due in every context.",
+      "requirementRevisions": {
+        "UX-COLL-008": 4,
+        "UX-REVIEW-004": 2,
+        "UX-I18N-001": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F18",
+      "revision": 3,
+      "priority": "P2",
+      "title": "Use consistent user-facing vocabulary and category terms",
+      "kind": "Copy recommendation",
+      "screen": "Category management and vocabulary entry",
+      "requirements": [
+        "UX-CAT-001",
+        "UX-ENTRY-002",
+        "UX-I18N-002"
+      ],
+      "summary": "Visible copy mixes dimension/category terminology and Eintrag/Wort/Vokabel. Choose a small glossary and apply it consistently; do not rename internal model types.",
+      "status": "specified",
+      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "workPackage": "copy/categories",
+      "acceptance": [
+        "Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag.",
+        "Apply the same terms to create, edit, validation, failure and deletion copy. Internal IDs and JSON names remain unchanged.",
+        "Prefer Vocabulary/Vokabeln in page titles and help; avoid technical entry-session jargon. Keep Speed/Intensiv lernen as existing mode names for now."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Added during typography/style/copy review."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted all reviewed new copy and text-style changes; design/specification handoff finalized, implementation and verification still pending."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Included in round 3 by owner-authorized handoff; not implemented or verified."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        }
+      ],
+      "impact": "Different terms for the same level make category creation and assignment harder to understand.",
+      "confidence": "High for catalog variation; medium for the proposed glossary.",
+      "evidenceRefs": [
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "audit.html"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "copy-inventory.json"
+        },
+        {
+          "review": "style-copy-review",
+          "kind": "source or browser evidence; not Android verification",
+          "ref": "copy-proposals.json"
+        }
+      ],
+      "reach": "Category management and vocabulary entry",
+      "dependencies": [
+        "Owning implementation package and shared foundation contract"
+      ],
+      "suggestedChange": "Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag. Apply the same terms to create, edit, validation, failure and deletion copy. Internal IDs and JSON names remain unchanged. Prefer Vocabulary/Vokabeln in page titles and help; avoid technical entry-session jargon. Keep Speed/Intensiv lernen as existing mode names for now.",
+      "requirementRevisions": {
+        "UX-CAT-001": 5,
+        "UX-ENTRY-002": 2,
+        "UX-I18N-002": 2
+      },
+      "implementationRound": 3,
+      "reconciliation": {
+        "relatedCheckpoints": [
+          1,
+          2
+        ],
+        "implementationLedger": "implementation-round-3.md",
+        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    }
+  ],
+  "implementationRound": 3,
+  "reconciliation": {
+    "date": "2026-10-16",
+    "comparedSourceRevision": "51073276ceaaaca07c2ed3ba1aa78e2116977386",
+    "appSourceRevision": "2bacd76",
+    "implementationLedger": "implementation-round-3.md",
+    "statusPolicy": "Historical observations and accepted criteria preserved. Related checkpoint evidence is mapped below, but no finding is closed without full per-finding acceptance review."
+  }
+}

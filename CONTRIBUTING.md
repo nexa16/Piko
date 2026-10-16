@@ -11,6 +11,8 @@ Implementation rounds 1 and 2 describe planning scope, not published releases. T
 
 Trivial owner-only corrections do not need a formal Pull Request unless a branch rule requires one. The main branch rules take precedence; emergency bypass is reserved for emergencies, not ordinary work.
 
+Owner findings, bugs, defects and feature requests follow the [clarification and investigation workflow](AGENTS.md#owner-findings-and-feature-requests): understand the intended outcome, clarify material details, make a small focused reproduction attempt where possible, and document evidence and agreed behavior in the owning specifications. A report or accepted specification does not authorize app or mockup implementation; that requires an explicit owner request for the clarified scope.
+
 Keep research anonymous and secrets outside tracked files. See [security guidance](SECURITY.md).
 
 Before the first public push, review all proposed files, history, and commit identity metadata with the owner and obtain approval. Review new content before subsequent pushes; escalate any questionable data before publication.
