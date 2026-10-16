@@ -865,6 +865,12 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 - **Shared family audit:** Include every round-2 popup and the reused summary. Collection/category deletion and entry-draft exit use the accepted explicit safe/action pair without X; forms/setup keep X and meaningful primary actions; direct-launch direction choices and summaries retain no extra footer. Content-width actions align right and stack affirmative above safe when needed, with matching DOM/tab order and safe initial focus. Destructive fills consume canonical danger/white; safe actions are neutral.
 - **Traceability:** UX-DIALOG-001 revision 3, UX-CAT-001 revision 3, CAT-009 revision 3 and FILTER-002 revision 3. Scope is specifications and sample-data prototype; no Android behavior or publication is claimed.
 
+## Reduced screenshot delivery — accepted, 2026-10-16
+
+- **Decision:** The owner requests only the important application pages in one language at normal view size, replacing the planned exhaustive language/text-size screenshot catalogue.
+- **Implementation:** Deliver a curated English normal-size gallery, reusing reviewed captures with honest per-image provenance. Stop further variant capture runs. Preserve existing private evidence without publishing it.
+- **Boundary:** This narrows screenshot delivery, not product accessibility requirements. Record uncompleted enlarged-text verification and known cosmetic limitations explicitly; do not infer they passed.
+
 ## Next decision template
 
 - **Date:** To be decided — when was this choice accepted?

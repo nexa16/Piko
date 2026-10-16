@@ -1,8 +1,8 @@
 # Piko
 
-**Status: Implementation round 2 under integrated host and Android verification. Not a published product release.**
+**Status: Implementation round 2 is ready for owner testing, with bounded Android evidence and documented verification limitations. Not a published product release.**
 
-The local-first Flutter app includes round-2 JSON interchange, Speed learning, categories, filtering/search and usability changes. The reading mascot's Collection Detail placement is approved and integration is in progress; the implementation ledger distinguishes that work from verified behavior and pending Android acceptance. The HTML/CSS mockup remains the design reference; neither the mockup nor written code alone establishes application acceptance.
+The local-first Flutter app includes round-2 JSON interchange, Speed learning, categories, filtering/search, usability changes and the approved reading mascot. The final candidate passed 1,022 host tests and static analysis; the implementation ledger records scoped Android results, preservation checks and remaining limitations. A local test APK and one English normal-size screenshot gallery are available privately. The HTML/CSS mockup remains the design reference; neither the mockup nor written code alone establishes application acceptance.
 
 This repository contains Piko's product planning, interactive mockups and local-first Flutter implementation.
 
