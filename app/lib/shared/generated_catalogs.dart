@@ -1009,8 +1009,8 @@ const copyCatalog = <String, Object?>{
 "en": "Unchanged — skipped",
 },
 "json.unsupportedVersion": <String, Object?>{
-"de": "Verwende schemaVersion 1.",
-"en": "Use schemaVersion 1.",
+"de": "Verwende schemaVersion 1 oder 2.",
+"en": "Use schemaVersion 1 or 2.",
 },
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",
@@ -1748,6 +1748,10 @@ const copyCatalog = <String, Object?>{
 "de": "Detailliert",
 "en": "Detailed",
 },
+"vocab.contentDefaultLoadFailed": <String, Object?>{
+"de": "Die Hinweis-Sichtbarkeit konnte nicht geladen werden. Versuche es erneut.",
+"en": "Hint visibility could not be loaded. Try again.",
+},
 "vocab.delete": <String, Object?>{
 "de": "Vokabel löschen",
 "en": "Delete vocabulary",
@@ -1763,6 +1767,42 @@ const copyCatalog = <String, Object?>{
 "vocab.editPair": <String, Object?>{
 "de": "{target} · {native} bearbeiten",
 "en": "Edit {target} · {native}",
+},
+"vocab.examplePair": <String, Object?>{
+"de": "Beispielpaar",
+"en": "Example pair",
+},
+"vocab.examplePairRequired": <String, Object?>{
+"de": "Gib beide Beispielsprachen ein oder lasse beide leer.",
+"en": "Enter both example languages, or leave both empty.",
+},
+"vocab.exampleTarget": <String, Object?>{
+"de": "Beispiel auf {language}",
+"en": "Example in {language}",
+},
+"vocab.exampleTooLong": <String, Object?>{
+"de": "Jedes Beispiel darf höchstens 1000 Zeichen enthalten.",
+"en": "Each example may contain at most 1000 characters.",
+},
+"vocab.hint": <String, Object?>{
+"de": "Hinweis",
+"en": "Hint",
+},
+"vocab.hintAlways": <String, Object?>{
+"de": "Immer sichtbar",
+"en": "Always visible",
+},
+"vocab.hintHidden": <String, Object?>{
+"de": "Bis zum Antippen verborgen",
+"en": "Hidden until tapped",
+},
+"vocab.hintTooLong": <String, Object?>{
+"de": "Der Hinweis darf höchstens 2000 Zeichen enthalten.",
+"en": "The hint may contain at most 2000 characters.",
+},
+"vocab.hintVisibility": <String, Object?>{
+"de": "Hinweis beim Lernen",
+"en": "Hint during learning",
 },
 "vocab.inlineAutoSave": <String, Object?>{
 "de": "Gültige Änderungen werden automatisch gespeichert.",
@@ -1803,6 +1843,14 @@ const copyCatalog = <String, Object?>{
 "vocab.loading": <String, Object?>{
 "de": "Vokabeln werden geladen…",
 "en": "Loading vocabulary…",
+},
+"vocab.makeHintDefault": <String, Object?>{
+"de": "Diese Sichtbarkeit für neue Vokabeln verwenden",
+"en": "Use this visibility for new vocabulary",
+},
+"vocab.revealHint": <String, Object?>{
+"de": "Hinweis anzeigen",
+"en": "Show hint",
 },
 "vocab.statusDue": <String, Object?>{
 "de": "Jetzt fällig",

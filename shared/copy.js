@@ -432,8 +432,8 @@ globalThis.PIKO_COPY = {
       "de": "JSON konnte nicht gelesen werden. Prüfe Kommas, Anführungszeichen und Klammern."
     },
     "json.unsupportedVersion": {
-      "en": "Use schemaVersion 1.",
-      "de": "Verwende schemaVersion 1."
+      "en": "Use schemaVersion 1 or 2.",
+      "de": "Verwende schemaVersion 1 oder 2."
     },
     "json.oneCollection": {
       "en": "Include exactly one collection.",
@@ -1492,6 +1492,18 @@ globalThis.PIKO_COPY = {
     "vocab.statusDue": { "en": "Due now", "de": "Jetzt fällig" },
     "vocab.statusNext": { "en": "Next review: {date} {time}", "de": "Nächste Wiederholung: {date} {time}" },
     "vocab.statusSpeedCompleted": { "en": "Speed completed", "de": "Intensivlernen abgeschlossen" },
+    "vocab.examplePair": { "en": "Example pair", "de": "Beispielpaar" },
+    "vocab.exampleTarget": { "en": "Example in {language}", "de": "Beispiel auf {language}" },
+    "vocab.hint": { "en": "Hint", "de": "Hinweis" },
+    "vocab.hintVisibility": { "en": "Hint during learning", "de": "Hinweis beim Lernen" },
+    "vocab.hintAlways": { "en": "Always visible", "de": "Immer sichtbar" },
+    "vocab.hintHidden": { "en": "Hidden until tapped", "de": "Bis zum Antippen verborgen" },
+    "vocab.makeHintDefault": { "en": "Use this visibility for new vocabulary", "de": "Diese Sichtbarkeit für neue Vokabeln verwenden" },
+    "vocab.revealHint": { "en": "Show hint", "de": "Hinweis anzeigen" },
+    "vocab.examplePairRequired": { "en": "Enter both example languages, or leave both empty.", "de": "Gib beide Beispielsprachen ein oder lasse beide leer." },
+    "vocab.exampleTooLong": { "en": "Each example may contain at most 1000 characters.", "de": "Jedes Beispiel darf höchstens 1000 Zeichen enthalten." },
+    "vocab.hintTooLong": { "en": "The hint may contain at most 2000 characters.", "de": "Der Hinweis darf höchstens 2000 Zeichen enthalten." },
+    "vocab.contentDefaultLoadFailed": { "en": "Hint visibility could not be loaded. Try again.", "de": "Die Hinweis-Sichtbarkeit konnte nicht geladen werden. Versuche es erneut." },
     "speed.rulesTitle": {
       "en": "Rules",
       "de": "Regeln"
