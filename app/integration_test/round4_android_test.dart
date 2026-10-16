@@ -324,6 +324,18 @@ void main() {
             (template['collections'] as List).single['entries'].single as Map;
         templateEntry['targetText'] = 'poire';
         templateEntry['nativeText'] = 'Birne';
+        // Keep definitions distinct from the fixture's existing Topic UUID.
+        (template['collections'] as List)
+                .single['categoryDimensions']
+                .first['name'] =
+            'Template Topic';
+        expect(
+          (await SqliteVocabularyJsonService(db).analyzeImport(
+            collectionId: collection.id,
+            json: jsonEncode(template),
+          )).issues,
+          isEmpty,
+        );
         await tester.enterText(key('json-input'), jsonEncode(template));
         await tap(button(copy.text('json.analyze')));
         await present(button(copy.text('json.apply')));
