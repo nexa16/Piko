@@ -280,6 +280,8 @@ void main() {
         expect(service.selected, {
           VocabularyJsonGroup.targetText,
           VocabularyJsonGroup.categoryAssignments,
+          VocabularyJsonGroup.example,
+          VocabularyJsonGroup.hint,
         });
         final staleApply = tester
             .widget<PikoButton>(
