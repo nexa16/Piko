@@ -80,13 +80,13 @@ const designCatalog = <String, Object?>{
 },
 "entryHeader": <String, Object?>{
 "actionPadding": 10,
-"backWeight": 750,
+"backWeight": 700,
 "compactBreakpoint": 400,
-"compactTitleSize": 18,
+"compactTitleSize": 26,
 "gap": 10,
 "maxTitleLines": 2,
-"titleLetterSpacing": -1,
-"titleSize": 22,
+"titleLetterSpacing": 0,
+"titleSize": 26,
 },
 "entryStack": <String, Object?>{
 "compactMinHeight": 100,
@@ -99,8 +99,8 @@ const designCatalog = <String, Object?>{
 },
 "fields": <String, Object?>{
 "focusWidth": 1,
-"labelSize": 12,
-"labelWeight": 750,
+"labelSize": 14,
+"labelWeight": 600,
 "padding": 13,
 "radius": 12,
 },
@@ -641,8 +641,8 @@ const copyCatalog = <String, Object?>{
 "en": "Valid edits save automatically",
 },
 "entry.complete": <String, Object?>{
-"de": "Letzten Eintrag speichern & Eingabe beenden",
-"en": "Save last entry & end session",
+"de": "Fertig",
+"en": "Finish",
 },
 "entry.completed": <String, Object?>{
 "de": "Eingabesitzung beendet",
@@ -848,6 +848,10 @@ const copyCatalog = <String, Object?>{
 "de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen.",
 "en": "Clipboard unavailable. Select and copy the JSON below, or paste manually.",
 },
+"json.collapseInput": <String, Object?>{
+"de": "JSON-Eingabe verkleinern",
+"en": "Collapse JSON input",
+},
 "json.collectionMissing": <String, Object?>{
 "de": "Diese Sammlung ist nicht mehr verfügbar.",
 "en": "This collection is no longer available.",
@@ -884,6 +888,10 @@ const copyCatalog = <String, Object?>{
 "de": "Die JSON-Vorlage enthält erfundene Beispieldaten.",
 "en": "Example JSON contains synthetic data.",
 },
+"json.expandInput": <String, Object?>{
+"de": "JSON-Eingabe vergrößern",
+"en": "Expand JSON input",
+},
 "json.export": <String, Object?>{
 "de": "Aktuelle Sammlung exportieren",
 "en": "Export current collection",
@@ -891,6 +899,10 @@ const copyCatalog = <String, Object?>{
 "json.exportFailed": <String, Object?>{
 "de": "Diese Sammlung konnte nicht exportiert werden. Versuche es erneut.",
 "en": "Couldn't export this collection. Try again.",
+},
+"json.exportTab": <String, Object?>{
+"de": "Exportieren",
+"en": "Export",
 },
 "json.file": <String, Object?>{
 "de": "JSON-Datei auswählen",
@@ -911,6 +923,10 @@ const copyCatalog = <String, Object?>{
 "json.importApplied": <String, Object?>{
 "de": "Import abgeschlossen: {added} neu · {updated} aktualisiert · {unchanged} unverändert.",
 "en": "Import complete: {added} new · {updated} updated · {unchanged} unchanged.",
+},
+"json.importTab": <String, Object?>{
+"de": "Importieren",
+"en": "Import",
 },
 "json.input": <String, Object?>{
 "de": "JSON einfügen oder bearbeiten",
@@ -963,6 +979,10 @@ const copyCatalog = <String, Object?>{
 "json.paste": <String, Object?>{
 "de": "Aus Zwischenablage einfügen",
 "en": "Paste from clipboard",
+},
+"json.returnToCollection": <String, Object?>{
+"de": "Zur Sammlung",
+"en": "Back to collection",
 },
 "json.review": <String, Object?>{
 "de": "Vor dem Import prüfen",

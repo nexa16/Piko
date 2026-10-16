@@ -3,6 +3,11 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+    "json.importTab": {"en":"Import","de":"Importieren"},
+    "json.exportTab": {"en":"Export","de":"Exportieren"},
+    "json.expandInput": {"en":"Expand JSON input","de":"JSON-Eingabe vergrößern"},
+    "json.collapseInput": {"en":"Collapse JSON input","de":"JSON-Eingabe verkleinern"},
+    "json.returnToCollection": {"en":"Back to collection","de":"Zur Sammlung"},
     "learn.completedGroup": {"en":"{completed} / {total} completed","de":"{completed} / {total} abgeschlossen"},
     "learn.firstTryGroup": {"en":"{correct} correct on first try","de":"{correct} beim ersten Versuch richtig"},
     "learn.previousGrade": {"en":"Previous grade: {grade}","de":"Vorherige Bewertung: {grade}"},
@@ -837,8 +842,8 @@ globalThis.PIKO_COPY = {
       "de": "Eingabe beenden"
     },
     "entry.complete": {
-      "en": "Save last entry & end session",
-      "de": "Letzten Eintrag speichern & Eingabe beenden"
+      "en": "Finish",
+      "de": "Fertig"
     },
     "entry.completed": {
       "en": "Entry session ended",
