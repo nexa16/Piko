@@ -266,26 +266,23 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                       padding: EdgeInsets.only(
                         top: d.dimension('components.reviewContext.topMargin'),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        spacing: d.dimension('spacing.2'),
+                        runSpacing: d.dimension('spacing.2'),
                         children: [
-                          Flexible(
-                            child: Text(
-                              reviewDirectionLabel(
-                                widget.collection,
-                                state.direction,
-                              ),
-                              key: const ValueKey('speed-fixed-direction'),
+                          Text(
+                            reviewDirectionLabel(
+                              widget.collection,
+                              state.direction,
                             ),
+                            key: const ValueKey('speed-fixed-direction'),
                           ),
-                          SizedBox(width: d.dimension('spacing.2')),
-                          Expanded(
-                            child: Text(
-                              description,
-                              key: const ValueKey('speed-progress-count'),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(color: d.color('muted')),
-                            ),
+                          Text(
+                            description,
+                            key: const ValueKey('speed-progress-count'),
+                            textAlign: TextAlign.right,
+                            style: TextStyle(color: d.color('muted')),
                           ),
                         ],
                       ),
