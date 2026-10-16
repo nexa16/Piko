@@ -302,8 +302,8 @@ void main() {
       expect(heading.style!.fontSize, 17);
       expect(heading.style!.fontWeight, FontWeight.w700);
       expect(
-        tester.getRect(add).center.dy,
-        closeTo(tester.getRect(find.text('Vokabeln')).center.dy, 1),
+        tester.getRect(add).top,
+        greaterThanOrEqualTo(tester.getRect(find.text('Vokabeln')).bottom),
       );
       final semantics = tester.ensureSemantics();
       expect(find.bySemanticsLabel('Eintrag hinzufügen'), findsOneWidget);
