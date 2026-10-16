@@ -363,8 +363,22 @@ void main() {
       );
       expect(
         tester.getSize(quick.first).height,
-        pikoDesign.dimension('controls.largeHeight'),
+        greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')),
       );
+
+      // The accepted font's intrinsic line height may grow the control beyond
+      // its minimum. Normal-size content must still be wholly inside it.
+      for (final action in [quick.at(0), quick.at(1)]) {
+        final box = tester.getRect(action);
+        final texts = find.descendant(of: action, matching: find.byType(Text));
+        for (final text in texts.evaluate()) {
+          final label = tester.getRect(find.byWidget(text.widget));
+          expect(label.left, greaterThanOrEqualTo(box.left));
+          expect(label.right, lessThanOrEqualTo(box.right));
+          expect(label.top, greaterThanOrEqualTo(box.top));
+          expect(label.bottom, lessThanOrEqualTo(box.bottom));
+        }
+      }
 
       await mount(2);
       for (final action in [quick.at(0), quick.at(1)]) {
