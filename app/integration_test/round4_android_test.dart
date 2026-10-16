@@ -388,7 +388,9 @@ void main() {
         await capture('07-retry-resumed', at: key('review-exit'));
         await tap(key('review-exit'));
         await present(find.byType(CollectionDetail));
-        await tap(key('collection-speed-targetToNative'));
+        // Normal review has consumed target-to-native newness; the opposite
+        // direction remains eligible and keeps its independent learning state.
+        await tap(key('collection-speed-nativeToTarget'));
         await present(find.byType(SpeedSetupDialog));
         await capture('07a-speed-setup');
         await tap(button(copy.text('learn.startSpeed')));
