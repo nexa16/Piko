@@ -24,6 +24,8 @@ Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belon
 
 ## Specifications and current phase
 
+Current execution is the owner-approved [round-3 incremental implementation](implementation-round-3.md), building on accepted round 2. Local APK checkpoints, precise verification evidence and explicitly deferred work determine delivery; an implementation round is not a published version. The following round-1 scope remains historical context.
+
 The owner has authorized implementation round 1: collections, focused manual entry, inline vocabulary editing, deletion with Undo, single-direction self-assessment with FSRS and reinforcement retries, previous-grade correction, a summary popup, and English/German language settings. The [implementation ledger](implementation-round-1.md) records dependency order and verification evidence. Earlier discovery questions and incomplete planning tags do not override that accepted scope. The prototype itself remains illustrative and does not establish production persistence or scheduling.
 
 - [Functional specification](piko-functional.md): behavior, data, validation, learning rules, and open functional decisions.

@@ -1,5 +1,7 @@
 # Roadmap
 
+**Current execution, 2026-10-16:** Round 3 is authorized from accepted round-2 `develop` baseline 17677e3. Follow [the incremental checkpoint ledger](implementation-round-3.md): learning/foundation, interchange/daily-use UX, preferred direction/status, then one example pair and Hint as a complete storage/editor/learning/JSON package if capacity permits. Preserve local verified APKs and a 20% allowance reserve. No publication, merge or release is authorized. Earlier sequences below are historical.
+
 **Execution update, 2026-10-15:** PR #2 is merged into develop at d36a285. The historical feature-extraction proposal below is superseded; do not split merged history. Follow [implementation-round-2.md](implementation-round-2.md): one implementation branch, one spec per implementation commit and targeted batched verification. No release or publication is authorized.
 
 The owner has authorized the local-first Flutter implementation round 1, with Android verification. No release date is implied. The detailed ordered requirements and evidence live in the [implementation ledger](implementation-round-1.md); functional behavior and UX remain defined in their canonical specifications.
