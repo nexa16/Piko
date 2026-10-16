@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 6,
+  "revision": 8,
   "updated": "2026-10-16",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -20,7 +20,7 @@
   "findings": [
     {
       "id": "F01",
-      "revision": 3,
+      "revision": 4,
       "priority": "P1",
       "title": "Give Save & Next and Finish visibly different names",
       "kind": "Likely usability concern",
@@ -60,6 +60,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Current cross-references follow UX-ENTRY-002 r2 → r3. Historical evidence retains its original scope; the round-4 entry/navigation changes are pending and do not close this finding."
         }
       ],
       "impact": "A person using touch has to remember which checkmark saves another word, exits the session, or ends an inline edit. Accessible names and tooltips help other interaction modes but do not resolve the immediate visual ambiguity.",
@@ -90,7 +94,7 @@
       ],
       "suggestedChange": "Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior. Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable. Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls.",
       "requirementRevisions": {
-        "UX-ENTRY-002": 2,
+        "UX-ENTRY-002": 3,
         "UX-SYSTEM-001": 6
       },
       "implementationRound": 3,
@@ -105,7 +109,7 @@
     },
     {
       "id": "F02",
-      "revision": 4,
+      "revision": 5,
       "priority": "P1",
       "title": "Make the JSON workflow’s next action and result obvious",
       "kind": "Likely usability concern",
@@ -113,16 +117,18 @@
       "requirements": [
         "UX-IMPORT-JSON-001",
         "UX-IMPORT-JSON-002",
-        "UX-SYSTEM-001"
+        "UX-SYSTEM-001",
+        "ENTRY-012"
       ],
       "summary": "Analyze JSON, file/clipboard actions and export actions all look like muted text controls. The long page interleaves explanations, replacement choices and export; successful import feedback appears below the export section.",
       "status": "specified",
-      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
+      "decision": "Round-4 navigation and disclosure accepted under ENTRY-012 and UX-IMPORT-JSON-001 r4 / 002 r3. Source inspection at 639b336 confirms JSON access inside manual entry; this is not runtime reproduction. App/mockup implementation and verification remain pending.",
       "workPackage": "json",
       "acceptance": [
-        "Follow UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.",
-        "Make the applicable next action prominent and place success/errors next to the step that produced them.",
-        "Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled."
+        "Use an extensible Manual/Import chooser before method details; Manual opens the existing editor and Import the shared Collection-scoped popup. Collection menu Import/Export opens that same popup directly without a manual draft.",
+        "Follow UX-IMPORT-JSON-001 revision 4 and UX-IMPORT-JSON-002 revision 3: distinct import/export operations; example → input → replacement choices/check → result/import. Initial menu operation and unsubmitted-input preservation remain open.",
+        "Make the applicable next action prominent and place success/errors beside the step that produced them. Preserve atomic apply, stale-preview invalidation, learning, pending-write guards, safe dismissal/focus restoration and return to the Collection.",
+        "IMPORT-JSON-003 is selected for round 4. Resolve multiple-example representation, date-added metadata and migration before implementation; round-3 single-pair evidence does not verify these additions."
       ],
       "baselineEvidence": [
         "074",
@@ -150,6 +156,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner confirmed round-4 add-method chooser and shared Import/Export popup reachable from the Collection menu. Previous UX-IMPORT-JSON-001 r3 / 002 r2 evidence remains historical; no new runtime verification or finding closure."
         }
       ],
       "impact": "The main next step is difficult to distinguish from helper actions. After confirmation, people may need to search down the page to discover whether the import succeeded.",
@@ -178,11 +188,12 @@
       "dependencies": [
         "Owning implementation package and shared foundation contract"
       ],
-      "suggestedChange": "Follow UX-IMPORT-JSON-001/002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import. Make the applicable next action prominent and place success/errors next to the step that produced them. Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled.",
+      "suggestedChange": "Use an extensible Manual/Import chooser before method details; Manual opens the existing editor and Import the shared Collection-scoped popup. Collection menu Import/Export opens that same popup directly without a manual draft. Follow UX-IMPORT-JSON-001 revision 4 and UX-IMPORT-JSON-002 revision 3: distinct import/export operations; example → input → replacement choices/check → result/import. Initial menu operation and unsubmitted-input preservation remain open. Make the applicable next action prominent and place success/errors beside the step that produced them. Preserve atomic apply, stale-preview invalidation, learning, pending-write guards, safe dismissal/focus restoration and return to the Collection. IMPORT-JSON-003 is selected for round 4. Resolve multiple-example representation, date-added metadata and migration before implementation; round-3 single-pair evidence does not verify these additions.",
       "requirementRevisions": {
-        "UX-IMPORT-JSON-001": 3,
-        "UX-IMPORT-JSON-002": 2,
-        "UX-SYSTEM-001": 6
+        "UX-IMPORT-JSON-001": 4,
+        "UX-IMPORT-JSON-002": 3,
+        "UX-SYSTEM-001": 6,
+        "ENTRY-012": 1
       },
       "implementationRound": 3,
       "reconciliation": {
@@ -192,7 +203,8 @@
         ],
         "implementationLedger": "implementation-round-3.md",
         "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
-      }
+      },
+      "plannedUpdateRound": 4
     },
     {
       "id": "F03",
@@ -297,7 +309,7 @@
     },
     {
       "id": "F04",
-      "revision": 3,
+      "revision": 4,
       "priority": "P2",
       "title": "Tighten Collection Detail’s vertical rhythm and alignment",
       "kind": "Aesthetic judgment with a usability concern",
@@ -345,6 +357,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Current cross-references follow UX-COLL-007 r4 → r5. Historical evidence retains its original scope; the round-4 entry/navigation changes are pending and do not close this finding."
         }
       ],
       "impact": "Vocabulary feels distant even in a two-word collection, while the collection identity and controls occupy disproportionate attention. The top navigation spacing also feels detached on sparse pages.",
@@ -379,7 +395,7 @@
         "UX-HEADER-001": 1,
         "UX-HEADER-002": 2,
         "UX-MASCOT-001": 2,
-        "UX-COLL-007": 4,
+        "UX-COLL-007": 5,
         "UX-SETUP-002": 7
       },
       "implementationRound": 3,
@@ -824,7 +840,7 @@
     },
     {
       "id": "F10",
-      "revision": 4,
+      "revision": 5,
       "priority": "P2",
       "title": "Make the empty Collection’s first step more direct",
       "kind": "Likely usability concern",
@@ -840,7 +856,8 @@
       "acceptance": [
         "For a genuinely empty collection show one prominent Add first word action below the Vocabulary heading, following UX-COLL-003 revision 3 and one brief explanation.",
         "Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist.",
-        "Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states."
+        "Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states.",
+        "Round-4 Add first word opens the same extensible Manual/Import chooser as + New under UX-COLL-003 revision 4; preserve the genuine-empty/loading/error/filter distinctions."
       ],
       "baselineEvidence": [
         "013"
@@ -870,6 +887,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Updated the accepted empty-state CTA destination to the round-4 method chooser; prior UX-COLL-003 r3 evidence remains historical. No implementation, verification or closure claimed."
         }
       ],
       "impact": "The invitation to add the first word is indirect, and controls with no useful result compete with it.",
@@ -886,9 +907,9 @@
       "dependencies": [
         "Owning implementation package and shared foundation contract"
       ],
-      "suggestedChange": "For a genuinely empty collection show one prominent Add first word action in the vocabulary heading and one brief explanation. Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist. Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states.",
+      "suggestedChange": "For a genuinely empty collection show one prominent Add first word action below the Vocabulary heading, following UX-COLL-003 revision 3 and one brief explanation. Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist. Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states. Round-4 Add first word opens the same extensible Manual/Import chooser as + New under UX-COLL-003 revision 4; preserve the genuine-empty/loading/error/filter distinctions.",
       "requirementRevisions": {
-        "UX-COLL-003": 3,
+        "UX-COLL-003": 4,
         "UX-COLL-008": 4
       },
       "implementationRound": 3,
@@ -898,7 +919,8 @@
         ],
         "implementationLedger": "implementation-round-3.md",
         "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
-      }
+      },
+      "plannedUpdateRound": 4
     },
     {
       "id": "F11",
@@ -1314,7 +1336,7 @@
     },
     {
       "id": "F16",
-      "revision": 4,
+      "revision": 5,
       "priority": "P2",
       "title": "Consolidate typography and reflow rules",
       "kind": "Design recommendation and browser stress observation",
@@ -1355,6 +1377,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Current cross-references follow UX-ENTRY-002 r2 → r3. Historical evidence retains its original scope; the round-4 entry/navigation changes are pending and do not close this finding."
         }
       ],
       "impact": "Inconsistent text roles and reflow can weaken hierarchy or obscure labels. Font choice alone will not repair constrained layouts.",
@@ -1389,7 +1415,7 @@
       "requirementRevisions": {
         "UX-SYSTEM-001": 6,
         "UX-HEADER-002": 2,
-        "UX-ENTRY-002": 2,
+        "UX-ENTRY-002": 3,
         "UX-I18N-001": 2
       },
       "implementationRound": 3,
@@ -1485,7 +1511,7 @@
     },
     {
       "id": "F18",
-      "revision": 4,
+      "revision": 5,
       "priority": "P2",
       "title": "Use consistent user-facing vocabulary and category terms",
       "kind": "Copy recommendation",
@@ -1525,6 +1551,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Current cross-references follow UX-ENTRY-002 r2 → r3. Historical evidence retains its original scope; the round-4 entry/navigation changes are pending and do not close this finding."
         }
       ],
       "impact": "Different terms for the same level make category creation and assignment harder to understand.",
@@ -1553,7 +1583,7 @@
       "suggestedChange": "Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag. Apply the same terms to create, edit, validation, failure and deletion copy. Internal IDs and JSON names remain unchanged. Prefer Vocabulary/Vokabeln in page titles and help; avoid technical entry-session jargon. Keep Speed/Intensiv lernen as existing mode names for now.",
       "requirementRevisions": {
         "UX-CAT-001": 5,
-        "UX-ENTRY-002": 2,
+        "UX-ENTRY-002": 3,
         "UX-I18N-002": 2
       },
       "implementationRound": 3,
@@ -1564,6 +1594,55 @@
         ],
         "implementationLedger": "implementation-round-3.md",
         "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+      }
+    },
+    {
+      "id": "F19",
+      "revision": 1,
+      "priority": "P2",
+      "title": "Shorten the vocabulary editor",
+      "kind": "Owner-reported usability concern; bounded Android observation",
+      "screen": "Vocabulary inline editor; shared entry content",
+      "requirements": [
+        "UX-COLL-011"
+      ],
+      "summary": "Empty Example Pair and Hint fields, two visibility radio rows, a default checkbox and category/Delete controls remain expanded in a long editor card.",
+      "status": "specified",
+      "decision": "Owner accepted compact optional sections and a Hint visibility switch, explicitly for Later and outside round 4. No implementation round assigned.",
+      "workPackage": "entry",
+      "acceptance": [
+        "Follow UX-COLL-011 r2 for compact empty/populated sections, switch mapping and separate explicit global-default choice.",
+        "Preserve raw drafts, errors, content, autosave/Discard, categories and learning across disclosure changes.",
+        "Complete revision-specific Android checks for keyboard, accessibility, narrow/enlarged text and both Hint states before closure."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Owner reported excessive editor length and proposed a toggle. Bounded live Android observation confirms expanded empty optional fields and two visibility rows; source inspection is recorded separately."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner accepted compact optional sections and switch, then explicitly deferred to Later outside round 4. Specified only; no implementation or fix claimed."
+        }
+      ],
+      "impact": "Optional controls occupy substantial vertical space even when no optional content is present.",
+      "confidence": "High for the observed expanded state; no whole-card measurement or repeated reproduction. Improvement remains to verify.",
+      "evidenceRefs": [
+        {
+          "review": "vocabulary-editor-review-2026-10-16",
+          "kind": "Live Android observation; installed source revision unverified",
+          "ref": "piko-ux.md#shared-prototype-components-and-collection-detail--accepted-2026-10-13"
+        }
+      ],
+      "requirementRevisions": {
+        "UX-COLL-011": 2
+      },
+      "implementationRound": null,
+      "reconciliation": {
+        "implementationLedger": "implementation-round-4.md",
+        "findingClosure": "Later, explicitly excluded from round 4; implementation and Android verification pending."
       }
     }
   ],

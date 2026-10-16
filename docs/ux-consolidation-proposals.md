@@ -4,9 +4,17 @@ Reconciliation status, 2026-10-16: this preserves the accepted preparation crite
 
 Design handoff accepted on 2026-10-16. All findings retain specified status; related app implementation is recorded separately in the round-3 ledger. Owning requirement revisions and DESIGN.md are authoritative; this register view is the implementation checklist.
 
+## Later specification — edit within the answer card
+
+VOCAB-EDIT-003 r1 / UX-CARD-014 r1 are general specifications for Later, excluded from round 4 with no implementation round assigned. They add a secondary pencil icon after reveal in normal and Speed Learning. Open the existing vocabulary-list editor in the same card; retain the learning header/progress, reuse editable content and Finish/Discard, and return to the same revealed answer without a grade or advance. Use the existing icon/copy and accessible target. Exact placement and editor-specific Exit/system-Back behavior remain open. This new feature is not a finding closure: implementation and Android verification are pending, and F01–F18 retain their existing status/evidence.
+
+## F19 — Shorten the vocabulary editor
+
+Status: specified for Later, explicitly excluded from round 4; no implementation round assigned. Requirement: UX-COLL-011 r2. Keep required fields visible; use compact optional Examples/Hint entry points or summaries and a labeled automatic-Hint switch inside Hint. The owning requirement contains draft/default-preservation rules, the bounded Android observation and pending acceptance scenarios. This is an accepted design, not an implemented or verified fix; F01–F18 retain their original scope and evidence.
+
 ## F01 — Give Save & Next and Finish visibly different names
 
-Status: specified. Requirements: UX-ENTRY-002 r2, UX-SYSTEM-001 r7.
+Status: specified. Requirements: UX-ENTRY-002 r3, UX-SYSTEM-001 r7.
 
 - Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior.
 - Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable.
@@ -14,11 +22,12 @@ Status: specified. Requirements: UX-ENTRY-002 r2, UX-SYSTEM-001 r7.
 
 ## F02 — Make the JSON workflow’s next action and result obvious
 
-Status: specified. Requirements: UX-IMPORT-JSON-001 r3, UX-IMPORT-JSON-002 r2, UX-SYSTEM-001 r7.
+Status: specified. Requirements: UX-IMPORT-JSON-001 r4, UX-IMPORT-JSON-002 r3, UX-SYSTEM-001 r7.
 
-- Follow UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2: distinct Import and Export views; example → input → replacement choices/check → result/import.
+- Follow ENTRY-012 and UX-IMPORT-JSON-001 revision 4 / UX-IMPORT-JSON-002 revision 3: + New → extensible Manual/Import chooser; Manual → existing editor, Import → shared popup. Collection ellipsis → Import/Export opens that same popup directly. Show chosen-method details only; no binary method tabs or JSON action inside manual entry.
+- Keep distinct Import/Export operations in the popup; import follows example → input → replacement choices/check → result/import. The menu entry's initial operation and unsubmitted-input preservation remain open.
 - Make the applicable next action prominent and place success/errors next to the step that produced them.
-- Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. Pair with IMPORT-JSON-003 only if that feature is scheduled.
+- Retain stale-preview invalidation, atomic apply, existing learning preservation, pending guards and return to the owning Collection. IMPORT-JSON-003 is now explicitly selected for round-4 planning. Multiple-example encoding/migration decisions remain pending; prior round-3 evidence does not verify the new popup or content extension.
 
 ## F03 — Keep selection actions visible and stationary
 
@@ -33,7 +42,7 @@ Status: revised and accepted 2026-10-16; implementation and verification pending
 
 ## F04 — Tighten Collection Detail’s vertical rhythm and alignment
 
-Status: specified. Requirements: UX-COLL-008 r4, UX-HEADER-001 r1, UX-HEADER-002 r2, UX-MASCOT-001 r2, UX-COLL-007 r4, UX-SETUP-002 r7.
+Status: specified. Requirements: UX-COLL-008 r4, UX-HEADER-001 r1, UX-HEADER-002 r2, UX-MASCOT-001 r2, UX-COLL-007 r5, UX-SETUP-002 r7.
 
 - Use one leading alignment for title, direction labels, search and list content; retain the useful language/count subtitle. Speed preview: left-align both text lines on a common edge beside the lightning icon; preserve the two-column layout and allow wrapping. Accepted during four-state review.
 - Adopt shared 4/8/12/16/24 spacing steps; remove additive margins instead of reducing touch targets.
@@ -84,9 +93,9 @@ Status: specified. Requirements: UX-REVIEW-002 r2, UX-REVIEW-003 r2.
 
 ## F10 — Make the empty Collection’s first step more direct
 
-Status: specified. Requirements: UX-COLL-003 r3, UX-COLL-008 r4.
+Status: specified. Requirements: UX-COLL-003 r4, UX-COLL-008 r4.
 
-- For a genuinely empty collection show one prominent Add first word action below the Vocabulary heading, following UX-COLL-003 revision 3 and one brief explanation.
+- For a genuinely empty collection show one prominent Add first word action below the Vocabulary heading, following UX-COLL-003 revision 4 and one brief explanation. The action opens the same Manual/Import chooser as + New; do not open the manual editor before a method is selected.
 - Omit search/filter controls while there are no entries; restore the normal toolbar as soon as entries exist.
 - Do not apply this treatment to loading, errors, filtered no-results or nonempty no-due states.
 
@@ -134,7 +143,7 @@ Status: specified. Requirements: UX-SETUP-002 r7, UX-SYSTEM-001 r7, SPEED-006 r1
 
 ## F16 — Consolidate typography and reflow rules
 
-Status: specified. Requirements: UX-SYSTEM-001 r7, UX-HEADER-002 r2, UX-ENTRY-002 r2, UX-I18N-001 r2.
+Status: specified. Requirements: UX-SYSTEM-001 r7, UX-HEADER-002 r2, UX-ENTRY-002 r3, UX-I18N-001 r2.
 
 - Use selected Nunito Sans through explicit browser and Flutter family/weight adapters; verify German and Korean glyphs and fallbacks offline.
 - Accepted type roles: page title 26/700/1.2; dialog 20/700/1.3; section 18/700/1.35; body and input 16/400/1.5; control 14/700/1.4; helper 14/400/1.45; answer 37/600/1.3; revealed prompt 22/400/1.4.
@@ -150,7 +159,7 @@ Status: specified. Requirements: UX-COLL-008 r4, UX-REVIEW-004 r2, UX-I18N-001 r
 
 ## F18 — Use consistent user-facing vocabulary and category terms
 
-Status: specified. Requirements: UX-CAT-001 r7, UX-ENTRY-002 r2, UX-I18N-002 r2.
+Status: specified. Requirements: UX-CAT-001 r7, UX-ENTRY-002 r3, UX-I18N-002 r2.
 
 - Accepted user-facing pair: Category group / Kategoriegruppe for a dimension, Value / Wert within its named group; the visible assigned representation remains a tag.
 - Apply the same terms to create, edit, validation, failure and deletion copy. Internal IDs and JSON names remain unchanged.

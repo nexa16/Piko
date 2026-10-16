@@ -10,12 +10,14 @@ Design acceptance is complete for this preparation package. F01–F18 are specif
 
 - Product and functional requirements own outcomes and data behavior. UX requirements own screen/state presentation. DESIGN owns shared visual rules. The findings register owns status, not a competing full specification.
 - Existing requirement IDs stay stable. Revise accepted requirements in place; add an ID only for a genuinely new shared requirement. Historical implementation checkpoints remain evidence of their recorded revision, not the current status.
-- Preserve the finished round-2 baseline and newer accepted definitions, including round-3 checkpoint evidence. JSON presentation follows UX-IMPORT-JSON-001 revision 3 and UX-IMPORT-JSON-002 revision 2; IMPORT-JSON-003 is selected for round-4 planning with scope clarification pending, and the plain-book launcher remains pending integration. Do not revert those boundaries while integrating this package.
+- Preserve the finished round-2 baseline and newer accepted definitions, including round-3 checkpoint evidence. JSON presentation follows UX-IMPORT-JSON-001 revision 4 and UX-IMPORT-JSON-002 revision 3; IMPORT-JSON-003 is selected for round-4 planning with scope clarification pending, and the plain-book launcher remains pending integration. Do not revert those boundaries while integrating this package.
 - Canonical tokens and EN/DE copy remain single sources. Prototypes are illustrative. Do not reproduce known prototype defects in Android.
 
 ## Before a UI feature is ready to implement
 
 Specify its owning requirement/revision, user outcome, shared components and roles, copy keys, meaningful empty/loading/error/pending/success/disabled states, keyboard/dismissal behavior and long-content/text-scaling behavior. Include testable acceptance scenarios and relevant open findings. A required exception is documented with rationale; it is not silently introduced as a screen-local default.
+
+Follow [design autonomy](../AGENTS.md#design-autonomy-and-efficient-clarification): the agent completes routine details using the accepted design principles, without an owner approval for each item above. The selected round-4 scope needs no further alignment or preliminary mockup. Inspect the working app during implementation; use a mockup only when it resolves a genuine uncertainty or is requested. Preserve the verification requirements below.
 
 ## Shared design contract
 

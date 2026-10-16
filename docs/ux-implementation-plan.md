@@ -18,9 +18,9 @@ Gate: unchanged → changed → cleared → reverted selections change only acti
 
 ## 3. JSON workflow clarity
 
-F02, after package 1; can proceed independently of package 2. Follow the latest accepted separate Import/Export flow, primary Check/Import steps, retained expandable input and adjacent feedback. Keep atomic writes, stale-preview invalidation and pending guards. Do not automatically pull IMPORT-JSON-003 or unrelated future features into this package.
+F02, after package 1 and the shared popup shell in package 2. Round-4 planning now includes ENTRY-012's extensible add-method chooser, existing manual editor and shared Import/Export popup reachable directly from the Collection menu. Follow UX-IMPORT-JSON-001 r4 / 002 r3: selected-method details only, separate import/export operations, primary Check/Import steps, retained expandable input and adjacent feedback. Keep atomic writes, stale-preview invalidation, pending guards and return to Collection. IMPORT-JSON-003 is explicitly scheduled for round 4; the multiple-example extension also needs its open data-format decisions resolved. No additional methods or unrelated features are included.
 
-Gate: invalid input, valid preview, changed input after preview, confirmed import success/failure and export/system destination are checked. Existing data/learning is preserved; success is never inferred from merely issuing a write. Record native clipboard/file-interface limitations explicitly.
+Gate: add CTA → chooser → Manual/Import and Collection menu → the same Import/Export popup are checked, including safe dismissal/focus restoration and no draft creation merely for export. Invalid input, valid preview, changed input after preview, confirmed import success/failure and export/system destination are checked. Existing data/learning is preserved; success is never inferred from merely issuing a write. Record native clipboard/file-interface limitations explicitly.
 
 ## 4. Collection and categories
 

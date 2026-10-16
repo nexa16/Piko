@@ -71,17 +71,31 @@ test('round 3 deltas retain original scope and distinguish specified work from v
   assert.ok(matchesRound(completion,'3'));assert.match(completion.body,/text-only/);
   assert.match(completion.implementation,/pending/);
 });
-test('recovered specifications preserve deferred implementation and unresolved fixes', () => {
+test('round 4 planning preserves pending implementation and separately deferred learning features', () => {
   const rows=canonicalRows();
   const template=rows.find(r=>r.id==='IMPORT-JSON-003');
   assert.equal(template.revision,1);assert.equal(template.status,'Confirmed');
-  assert.equal(template.round,'Later');assert.match(template.implementation,/deferred/);
+  assert.equal(template.round,'4');assert.match(template.implementation,/pending/);
   for(const round of ['1','2','3'])assert.ok(!matchesRound(template,round),round);
   assert.match(template.body,/full export/);
   const brand=rows.find(r=>r.id==='UX-BRAND-001');
   assert.equal(brand.revision,3);assert.match(brand.implementation,/pending/);
   const header=rows.find(r=>r.id==='UX-HEADER-001');
-  assert.equal(header.fix,'Undecided');assert.ok(!matchesRound(header,'4'));
+  assert.equal(header.revision,1);assert.equal(header.round,'1');
+  assert.equal(header.fix,'4');assert.ok(matchesRound(header,'4'));
+  for(const id of ['ENTRY-012','COLL-008','GROUP-001','VOCAB-005','CARD-002','CARD-003','UX-COLL-001','UX-IMPORT-JSON-001']) {
+    const row=rows.find(r=>r.id===id);
+    assert.ok(matchesRound(row,'4'),id);assert.match(row.implementation,/pending|planned/i,id);
+  }
+  // Planning must retain complete acceptance paragraphs, not only the first line.
+  const interchange=rows.find(r=>r.id==='UX-IMPORT-JSON-001');
+  assert.equal(interchange.round,'2');assert.equal(interchange.updated,'4');
+  assert.match(interchange.body,/Source inspection/);assert.match(interchange.body,/Acceptance pending/);
+  for(const id of ['OPEN-FSRS-002','OPEN-LEARN-004','SPEED-004']) {
+    assert.ok(matchesRound(rows.find(r=>r.id===id),'Later'),id);
+    assert.ok(!matchesRound(rows.find(r=>r.id===id),'4'),id);
+  }
+  for(const id of ['LEARN-005','UX-LEARN-005'])assert.equal(rows.find(r=>r.id===id).revision,2,id);
 });
 test('prototype literal copy references exist in the shared bilingual catalog',()=>{
   const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),context={};

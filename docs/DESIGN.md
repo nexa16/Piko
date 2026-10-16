@@ -1,5 +1,25 @@
 # Design foundations and shared copy
 
+## Compact vocabulary editor — accepted for Later, 2026-10-16
+
+UX-COLL-011 r2 / F19 keep required vocabulary fields visible and place optional Examples/Hint behind compact entry points or populated summaries. Hint uses one Show hint automatically switch (on = always visible, off = reveal on tap), with the independent new-vocabulary-default choice inside that section. Preserve drafts, errors, autosave/Discard, learning and accessible targets. The owner explicitly excludes this redesign from round 4; no implementation round is assigned. The canonical requirement owns acceptance and the bounded installed-emulator observation. The existing [accepted criteria](ux-consolidation-proposals.md#f19--shorten-the-vocabulary-editor) is the reference summary; no app/mockup, catalog or studio interaction changes are authorized.
+
+## Vocabulary activity — requested behavior and visual proposal, 2026-10-16
+
+VOCAB-ACTIVE-001 r2 / UX-VOCAB-ACTIVE-001 r1 separate a manual Active/Inactive boolean from deferred proficiency/Mastered concepts. Inactive vocabulary stays visible, has a visual state indication and is excluded from normal and Speed learning in both directions until reactivated; activity adds no filter and preserves learning history. Proposed, not accepted: put an Active switch in the existing editor and a small Inactive label in an existing subtle color role on saved cards, keeping the vocabulary text readable and editable. Do not communicate state by color alone. Exact visuals, current-session transitions, readiness-label presentation and round assignment remain open; both-mode/both-direction exclusion is accepted. Implementation belongs in the canonical copy/design catalogs only after separate authorization; no runtime studio/mockup/app changes or Android verification are claimed.
+
+## Answer-card editing — accepted for Later, 2026-10-16
+
+On revealed normal and Speed answer cards, expose editing through a single small, low-emphasis pencil icon while preserving the shared accessible touch target. It opens the vocabulary-list editor in that same card, retaining the header and session context. Reuse its fields, autosave feedback and distinct Finish/Discard actions; return to the same revealed answer before grading resumes. UX-CARD-014 / VOCAB-EDIT-003 own this accepted addition. Exact icon placement and editor-specific Exit/system-Back behavior remain to be specified; implementation and Android checks are pending. This is a general specification for later, explicitly outside round 4 with no implementation round assigned.
+
+## Round-4 interaction additions — accepted, 2026-10-16
+
+Use progressive disclosure for adding vocabulary: an extensible choice of Manual entry or Import comes before either method's details. Manual opens the existing editor; Import opens the shared Import/Export popup. Collection menu → Import/Export opens that same popup without a new vocabulary draft. The method chooser is not a binary tab toggle. Apply shared modal, focus, pending-write and long-text rules; exact chooser arrangement and the popup's operation switch remain open under UX-IMPORT-JSON-001 r4. This supersedes the historical JSON-page-only arrangement below.
+
+In the grouped vocabulary view, begin with all groups collapsed and provide Collapse all / Expand all beside Filters; hide them when ungrouped. There is no setting for an initially expanded view. Retain the separate grouping/sort preferences, shared touch targets and responsive action wrapping under UX-COLL-001 r2. Category-editor ordering/configurable expansion remain deferred. Sort vocabulary by the accepted target/native text or added-date options under COLL-008; category-value alphabetical order stays governed by CAT-009.
+
+Support multiple example pairs with clear sentence/translation association, reachable controls and an optional global question-side hiding preference; answers retain every pair. Detailed long-list/editor layout remains open. Existing readiness labels do not represent proficiency. Proficiency levels and Mastered remain deferred in full. The independent vocabulary activity request and its proposed visual treatment are recorded separately above. New copy/controls must use shared/copy.js and shared/design-config.js during later implementation; this documentation update does not change the running studio, mockup or application. The existing [accepted criteria](ux-consolidation-proposals.md) remain the reference handoff, with no new studio panel.
+
 ## Accepted design contract — 2026-10-16
 
 The owner accepted the new copy proposals and text-style changes after inspecting the interactive style review. Nunito Sans and F04/F10/F11/F13 were already accepted. The following rules supersede conflicting older design trials; they remain the accepted design contract. Round-3 checkpoint 1 records canonical token/copy/font integration and scoped Android checks. That evidence does not close all F01–F18 acceptance criteria.
@@ -188,7 +208,7 @@ Local inspection found that the Flutter shared header already uses top alignment
 
 Historical evidence: the changed-only visibility described below is superseded by the 2026-10-16 persistent selection-action decision. These checks do not verify revision 5.
 
-The round-2 sample controller now applies the shared family to all eleven popup cases (menu, collection create/rename/delete, review direction, assignment, filters, dimension creation, category deletion, Speed and entry-draft exit), plus the reused review summary. JSON transfer stays a page, not a new popup. Assignment/Filters use changed-only Apply; a dimension confirms name and mode below the whole form; a single inline value retains its adjacent checkmark. Create collection and Start remain explicit actions even when their prefilled defaults are unchanged.
+The round-2 sample controller now applies the shared family to all eleven popup cases (menu, collection create/rename/delete, review direction, assignment, filters, dimension creation, category deletion, Speed and entry-draft exit), plus the reused review summary. At that round-2 checkpoint JSON transfer remained a page; the accepted round-4 shared popup above supersedes that arrangement. Assignment/Filters use changed-only Apply; a dimension confirms name and mode below the whole form; a single inline value retains its adjacent checkmark. Create collection and Start remain explicit actions even when their prefilled defaults are unchanged.
 
 The shared footer measures available space and stacks affirmative above safe dismissal only when necessary, including DOM/tab order. Confirmations initially focus the safe action. Controls reuse shared tokens and 48px minimum targets, wrapping labels instead of clipping them. Modal viewport listeners and focus handlers are released when closing, replacing a popup or switching implementation rounds. The reused summary receives the same viewport fitting and cleanup.
 
