@@ -9,6 +9,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
@@ -1013,33 +1014,31 @@ class _CollectionDetailState extends State<CollectionDetail> {
                         'components.sectionHeading.bottomMargin',
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Semantics(
-                            header: true,
-                            headingLevel: 2,
-                            child: Text(
-                              copy.text('collection.vocabulary'),
-                              style: TextStyle(
-                                fontSize: pikoDesign.dimension(
-                                  'components.sectionHeading.size',
-                                ),
-                                fontWeight: pikoDesign.weight(
-                                  'components.sectionHeading.weight',
-                                ),
-                                color: pikoDesign.color('ink'),
+                    child: Builder(
+                      builder: (context) {
+                        final heading = Semantics(
+                          header: true,
+                          headingLevel: 2,
+                          child: Text(
+                            copy.text('collection.vocabulary'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension(
+                                'components.sectionHeading.size',
                               ),
+                              fontWeight: pikoDesign.weight(
+                                'components.sectionHeading.weight',
+                              ),
+                              color: pikoDesign.color('ink'),
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: pikoDesign.dimension(
+                        );
+                        if (widget.entrySessionFactory == null) return heading;
+                        return PikoHeadingAction(
+                          heading: heading,
+                          gap: pikoDesign.dimension(
                             'components.sectionHeading.gap',
                           ),
-                        ),
-                        if (widget.entrySessionFactory != null)
-                          Tooltip(
+                          action: Tooltip(
                             message: copy.text('action.addEntry'),
                             excludeFromSemantics: true,
                             child: Semantics(
@@ -1076,7 +1075,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
                               ),
                             ),
                           ),
-                      ],
+                        );
+                      },
                     ),
                   ),
                 if (ready && widget.queryBinding != null)

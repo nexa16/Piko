@@ -7,6 +7,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_language_badge.dart';
@@ -127,79 +128,61 @@ class _CollectionsHomeState extends State<CollectionsHome> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    copy.text('app.name'),
-                    key: const ValueKey('home-brand'),
-                    style: TextStyle(
-                      fontSize: pikoDesign.dimension(
-                        'components.homeHeader.brandSize',
-                      ),
-                      fontWeight: pikoDesign.weight(
-                        'components.homeHeader.brandWeight',
-                      ),
-                      letterSpacing: pikoDesign.dimension(
-                        'components.homeHeader.brandLetterSpacing',
-                      ),
-                      color: pikoDesign.color('ink'),
-                    ),
+            PikoHeadingAction(
+              heading: Text(
+                copy.text('app.name'),
+                key: const ValueKey('home-brand'),
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension(
+                    'components.homeHeader.brandSize',
                   ),
+                  fontWeight: pikoDesign.weight(
+                    'components.homeHeader.brandWeight',
+                  ),
+                  letterSpacing: pikoDesign.dimension(
+                    'components.homeHeader.brandLetterSpacing',
+                  ),
+                  color: pikoDesign.color('ink'),
                 ),
-                if (widget.onOpenSettings != null) ...[
-                  SizedBox(width: pikoDesign.dimension('spacing.3')),
-                  Flexible(
-                    flex: 3,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: PikoButton(
-                        label: copy.text('nav.settings'),
-                        icon: const PikoIcon(PikoIconName.settings),
-                        variant: PikoButtonVariant.ghost,
-                        onPressed: widget.onOpenSettings,
-                      ),
+              ),
+              action: widget.onOpenSettings == null
+                  ? const SizedBox.shrink()
+                  : PikoButton(
+                      label: copy.text('nav.settings'),
+                      icon: const PikoIcon(PikoIconName.settings),
+                      variant: PikoButtonVariant.ghost,
+                      onPressed: widget.onOpenSettings,
                     ),
-                  ),
-                ],
-              ],
+              gap: pikoDesign.dimension('spacing.3'),
             ),
             SizedBox(
               height: pikoDesign.dimension('components.homeHeader.sectionGap'),
             ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Semantics(
-                    header: true,
-                    headingLevel: 1,
-                    child: Text(
-                      copy.text('home.collections'),
-                      key: const ValueKey('home-collections-heading'),
-                      style: TextStyle(
-                        fontSize: pikoDesign.dimension(
-                          'components.sectionHeading.size',
-                        ),
-                        fontWeight: pikoDesign.weight(
-                          'components.sectionHeading.weight',
-                        ),
-                        color: pikoDesign.color('ink'),
-                      ),
+            PikoHeadingAction(
+              heading: Semantics(
+                header: true,
+                headingLevel: 1,
+                child: Text(
+                  copy.text('home.collections'),
+                  key: const ValueKey('home-collections-heading'),
+                  style: TextStyle(
+                    fontSize: pikoDesign.dimension(
+                      'components.sectionHeading.size',
                     ),
+                    fontWeight: pikoDesign.weight(
+                      'components.sectionHeading.weight',
+                    ),
+                    color: pikoDesign.color('ink'),
                   ),
                 ),
-                SizedBox(
-                  width: pikoDesign.dimension('components.sectionHeading.gap'),
-                ),
-                PikoButton(
-                  label: copy.text('action.new'),
-                  icon: const PikoIcon(PikoIconName.plus),
-                  variant: PikoButtonVariant.ghost,
-                  onPressed: _createCollection,
-                ),
-              ],
+              ),
+              action: PikoButton(
+                label: copy.text('action.new'),
+                icon: const PikoIcon(PikoIconName.plus),
+                variant: PikoButtonVariant.ghost,
+                onPressed: _createCollection,
+              ),
+              gap: pikoDesign.dimension('components.sectionHeading.gap'),
             ),
             StreamBuilder<List<CollectionRecord>>(
               stream: _collections,
