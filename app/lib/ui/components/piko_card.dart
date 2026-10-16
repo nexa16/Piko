@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
+import 'piko_focus_highlight.dart';
 
 class PikoCard extends StatelessWidget {
   const PikoCard({
@@ -22,32 +23,39 @@ class PikoCard extends StatelessWidget {
     final contentPadding =
         padding ??
         EdgeInsets.all(pikoDesign.dimension('components.cards.padding'));
-    final decoration = BoxDecoration(
-      color: pikoDesign.color('surface'),
-      borderRadius: BorderRadius.circular(pikoDesign.dimension('radii.card')),
-      border: Border.all(
-        color: selected || focused
-            ? pikoDesign.color('primary')
-            : PikoTheme.border,
-        width: pikoDesign.dimension(
-          focused ? 'states.focusWidth' : 'states.borderWidth',
-        ),
-      ),
-    );
-    if (animationDuration != null) {
-      return AnimatedContainer(
-        duration: animationDuration!,
-        padding: contentPadding,
-        constraints: constraints,
-        decoration: decoration,
-        child: child,
-      );
-    }
-    return Container(
-      padding: contentPadding,
-      constraints: constraints,
-      decoration: decoration,
-      child: child,
+    return PikoFocusHighlight(
+      builder: (context, showFocus) {
+        final visibleFocus = focused && showFocus;
+        final decoration = BoxDecoration(
+          color: pikoDesign.color('surface'),
+          borderRadius: BorderRadius.circular(
+            pikoDesign.dimension('radii.card'),
+          ),
+          border: Border.all(
+            color: selected || visibleFocus
+                ? pikoDesign.color('primary')
+                : PikoTheme.border,
+            width: pikoDesign.dimension(
+              visibleFocus ? 'states.focusWidth' : 'states.borderWidth',
+            ),
+          ),
+        );
+        if (animationDuration != null) {
+          return AnimatedContainer(
+            duration: animationDuration!,
+            padding: contentPadding,
+            constraints: constraints,
+            decoration: decoration,
+            child: child,
+          );
+        }
+        return Container(
+          padding: contentPadding,
+          constraints: constraints,
+          decoration: decoration,
+          child: child,
+        );
+      },
     );
   }
 }

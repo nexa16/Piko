@@ -10,6 +10,8 @@ import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/piko_theme.dart';
 import '../data/regular_reviews_test.dart' show instant;
 import 'review_launch_test.dart' as launch;
 import 'review_no_due_test.dart' show snapshot;
@@ -17,7 +19,7 @@ import 'review_no_due_test.dart' show snapshot;
 void main() {
   for (final language in ['en', 'de']) {
     launch.testWidgets(
-      '$language explicit semantic/keyboard Exit preserves submitted event and every unanswered item',
+      '$language icon-only semantic/keyboard Exit preserves submitted event and every unanswered item',
       (tester) async {
         final f = launch.fixture();
         await tester.runAsync(f.initialize);
@@ -46,14 +48,22 @@ void main() {
         final beforeExit = await tester.runAsync(() => snapshot(f));
         expect(session.unreviewedMembers, hasLength(1));
         expect(launch.button(copy.text('learn.exit')), findsOneWidget);
+        final exit = find.byKey(const ValueKey('review-exit'));
+        expect(find.text(copy.text('learn.exit')), findsNothing);
+        expect(find.byTooltip(copy.text('learn.exit')), findsOneWidget);
+        final size = tester.getSize(exit);
+        expect(size.width, greaterThanOrEqualTo(44));
+        expect(size.height, greaterThanOrEqualTo(44));
+        expect(size.width, greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')));
+        expect(size.height, greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')));
+        final icon = find.descendant(of: exit, matching: find.byType(PikoIcon));
+        expect(tester.widget<PikoIcon>(icon).name, PikoIconName.arrowLeft);
         // A real prior answer is now correctable, independently of Exit.
         expect(launch.button(copy.text('learn.correctPrevious')), findsOneWidget);
         expect(launch.button(copy.text('common.back')), findsNothing);
         final semantics = tester.ensureSemantics();
         try {
-          final node = tester.getSemantics(
-            launch.button(copy.text('learn.exit')),
-          );
+          final node = tester.getSemantics(exit);
           expect(node.label, contains(copy.text('learn.exit')));
           expect(node.flagsCollection.isButton, isTrue);
         } finally {
@@ -62,11 +72,7 @@ void main() {
         final stale = tester
             .widget<PikoButton>(launch.button(copy.text('learn.exit')))
             .onPressed!;
-        final exitFocus = find.descendant(
-          of: launch.button(copy.text('learn.exit')),
-          matching: find.text(copy.text('learn.exit')),
-        );
-        Focus.of(tester.element(exitFocus)).requestFocus();
+        Focus.of(tester.element(icon)).requestFocus();
         await tester.pump();
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);
         await h.finish(tester);

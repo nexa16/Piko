@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:fsrs/fsrs.dart' as fsrs;
 import '../../core/clock.dart';
+import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
 import '../vocabulary_normalization.dart';
 
@@ -23,6 +23,9 @@ class Collections extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@TableIndex.sql(
+  'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries(id, collection_id)',
+)
 class VocabularyEntries extends Table {
   TextColumn get id => text()();
   TextColumn get collectionId =>
@@ -43,6 +46,62 @@ class VocabularyEntries extends Table {
   ];
 }
 
+@DataClassName('StoredCategoryDimension')
+class CategoryDimensions extends Table {
+  TextColumn get id => text()();
+  TextColumn get collectionId =>
+      text().references(Collections, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  TextColumn get nameKey => text()();
+  TextColumn get mode => text()();
+  IntColumn get position => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(name)) > 0)',
+    "CHECK(mode IN ('single', 'multiple'))",
+    'CHECK(position >= 0)',
+    'UNIQUE(collection_id, name_key)',
+    'UNIQUE(id, collection_id)',
+  ];
+}
+
+@DataClassName('StoredCategoryValue')
+class CategoryValues extends Table {
+  TextColumn get id => text()();
+  TextColumn get dimensionId =>
+      text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  TextColumn get nameKey => text()();
+  IntColumn get position => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK(length(trim(name)) > 0)',
+    'CHECK(position >= 0)',
+    'UNIQUE(dimension_id, name_key)',
+    'UNIQUE(id, dimension_id)',
+  ];
+}
+
+@DataClassName('StoredCategoryAssignment')
+class VocabularyCategoryAssignments extends Table {
+  TextColumn get entryId => text()();
+  TextColumn get collectionId => text()();
+  TextColumn get dimensionId => text()();
+  TextColumn get valueId => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {entryId, valueId};
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY(entry_id, collection_id) REFERENCES vocabulary_entries(id, collection_id) ON DELETE CASCADE',
+    'FOREIGN KEY(dimension_id, collection_id) REFERENCES category_dimensions(id, collection_id) ON DELETE CASCADE',
+    'FOREIGN KEY(value_id, dimension_id) REFERENCES category_values(id, dimension_id) ON DELETE CASCADE',
+  ];
+}
+
 class LearningItems extends Table {
   IntColumn get id => integer()();
   TextColumn get entryId =>
@@ -56,6 +115,8 @@ class LearningItems extends Table {
   IntColumn get reviewRevision => integer()
       .withDefault(const Constant(0))
       .check(const CustomExpression<bool>('review_revision >= 0'))();
+  BoolColumn get speedCompleted =>
+      boolean().withDefault(const Constant(false))();
   @override
   Set<Column<Object>> get primaryKey => {id};
   @override
@@ -176,14 +237,18 @@ class VocabularyOrderSequence extends Table {
     ScopeAnswerOrdinals,
     LearningIdentitySequence,
     VocabularyOrderSequence,
+    CategoryDimensions,
+    CategoryValues,
+    VocabularyCategoryAssignments,
   ],
 )
 class PikoDatabase extends _$PikoDatabase {
   PikoDatabase(super.executor, {this.clock = const SystemPikoClock()});
   final PikoClock clock;
+  final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -249,11 +314,25 @@ class PikoDatabase extends _$PikoDatabase {
         if (from < 10 && from >= 8) {
           await m.addColumn(retryObligations, retryObligations.waitEligibleAt);
         }
+        if (from < 11) {
+          await _createVocabularyOwnershipIndex();
+          await m.createTable(categoryDimensions);
+          await m.createTable(categoryValues);
+          await m.createTable(vocabularyCategoryAssignments);
+        }
+        // Pre-5 upgrades already create the latest LearningItems shape.
+        if (from < 12 && from >= 5) {
+          await m.addColumn(learningItems, learningItems.speedCompleted);
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
+  );
+
+  Future<void> _createVocabularyOwnershipIndex() => customStatement(
+    'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries(id, collection_id)',
   );
 
   Future<void> _initializeVocabularyOrder() => customStatement(
@@ -288,7 +367,7 @@ class PikoDatabase extends _$PikoDatabase {
           await (update(learningIdentitySequence)
                 ..where((row) => row.singleton.equals(1)))
               .write(LearningIdentitySequenceCompanion(nextId: Value(id + 1)));
-          final card = fsrs.Card(cardId: id, due: instant);
+          final card = _scheduler.initialCard(itemId: id, at: instant);
           await into(learningItems).insert(
             LearningItemsCompanion.insert(
               id: Value(id),

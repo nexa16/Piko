@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
+import 'piko_focus_highlight.dart';
 
 enum PikoButtonVariant {
   primary,
+  tint,
+  reviewPrimary,
+  reviewSecondary,
   ghost,
   dangerGhost,
   dangerOutline,
+  dangerFilled,
+  neutral,
   gradeIncorrect,
   gradeCorrect,
 }
@@ -25,6 +31,9 @@ class PikoButton extends StatelessWidget {
     this.labelWeight,
     this.iconLabelSpacing,
     this.trailingSpacing,
+    this.autofocus = false,
+    this.expandLabel = false,
+    this.labelAlignment = TextAlign.center,
   });
   final String label;
   final VoidCallback? onPressed;
@@ -38,6 +47,9 @@ class PikoButton extends StatelessWidget {
   final FontWeight? labelWeight;
   final double? iconLabelSpacing;
   final double? trailingSpacing;
+  final bool autofocus;
+  final bool expandLabel;
+  final TextAlign labelAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +62,30 @@ class PikoButton extends StatelessWidget {
     final danger =
         variant == PikoButtonVariant.dangerGhost ||
         variant == PikoButtonVariant.dangerOutline ||
+        variant == PikoButtonVariant.dangerFilled ||
         variant == PikoButtonVariant.gradeIncorrect;
-    final color = grade || (primary && primaryStyle == 'flat')
+    final color = variant == PikoButtonVariant.reviewPrimary
         ? d.color('onPrimary')
-        : d.color(danger ? 'danger' : 'primary');
-    final background = grade
+        : variant == PikoButtonVariant.reviewSecondary
+        ? d.color('onReviewSecondary')
+        : grade || variant == PikoButtonVariant.dangerFilled
+        ? d.color(danger ? 'onDanger' : 'onSuccess')
+        : primary && primaryStyle == 'flat'
+        ? d.color('onPrimary')
+        : d.color(
+            variant == PikoButtonVariant.neutral
+                ? 'muted'
+                : danger
+                ? 'danger'
+                : 'primary',
+          );
+    final background = variant == PikoButtonVariant.tint
+        ? d.color('tint')
+        : variant == PikoButtonVariant.reviewPrimary
+        ? d.color('primary')
+        : variant == PikoButtonVariant.reviewSecondary
+        ? d.color('reviewSecondary')
+        : grade || variant == PikoButtonVariant.dangerFilled
         ? d.color(danger ? 'danger' : 'success')
         : primary
         ? d.color(
@@ -65,86 +96,96 @@ class PikoButton extends StatelessWidget {
                 : 'tint',
           )
         : Colors.transparent;
-    return TextButton(
-      onPressed: onPressed,
-      focusNode: focusNode,
-      style: ButtonStyle(
-        animationDuration: PikoTheme.motion(context),
-        minimumSize: WidgetStatePropertyAll(
-          minimumSize ??
-              Size(
-                d.dimension('components.buttons.height'),
-                d.dimension(
-                  grade ? 'controls.largeHeight' : 'components.buttons.height',
+    return PikoFocusHighlight(
+      builder: (context, showFocus) => TextButton(
+        onPressed: onPressed,
+        autofocus: autofocus,
+        focusNode: focusNode,
+        style: ButtonStyle(
+          animationDuration: PikoTheme.motion(context),
+          minimumSize: WidgetStatePropertyAll(
+            minimumSize ??
+                Size(
+                  d.dimension('components.buttons.height'),
+                  d.dimension(
+                    grade
+                        ? 'controls.largeHeight'
+                        : 'components.buttons.height',
+                  ),
+                ),
+          ),
+          padding: WidgetStatePropertyAll(
+            padding ??
+                EdgeInsets.symmetric(
+                  horizontal: d.dimension('components.buttons.padding'),
+                  vertical: d.dimension('spacing.2'),
+                ),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                d.dimension('components.buttons.radius'),
+              ),
+            ),
+          ),
+          textStyle: WidgetStatePropertyAll(
+            TextStyle(
+              fontSize: labelSize ?? d.dimension('typography.label'),
+              fontWeight: labelWeight ?? d.weight('components.buttons.weight'),
+            ),
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.disabled)
+                ? color.withValues(alpha: d.dimension('states.disabledOpacity'))
+                : color,
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.disabled)
+                ? background.withValues(
+                    alpha: background.a * d.dimension('states.disabledOpacity'),
+                  )
+                : background,
+          ),
+          side: WidgetStateProperty.resolveWith(
+            (s) => BorderSide(
+              color: showFocus && s.contains(WidgetState.focused)
+                  ? d.color('primary')
+                  : variant == PikoButtonVariant.dangerOutline ||
+                        (primary && primaryStyle == 'outline')
+                  ? color
+                  : Colors.transparent,
+              width: d.dimension(
+                showFocus && s.contains(WidgetState.focused)
+                    ? 'states.focusWidth'
+                    : 'states.borderWidth',
+              ),
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null)
+              ExcludeSemantics(
+                child: IconTheme.merge(
+                  data: IconThemeData(
+                    size: d.dimension('components.icons.size'),
+                  ),
+                  child: icon!,
                 ),
               ),
-        ),
-        padding: WidgetStatePropertyAll(
-          padding ??
-              EdgeInsets.symmetric(
-                horizontal: d.dimension('components.buttons.padding'),
-                vertical: d.dimension('spacing.2'),
+            if (icon != null && label.isNotEmpty)
+              SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
+            if (label.isNotEmpty)
+              Flexible(
+                fit: expandLabel ? FlexFit.tight : FlexFit.loose,
+                child: Text(label, textAlign: labelAlignment),
               ),
+            if (trailing != null)
+              SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
+            ?trailing,
+          ],
         ),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              d.dimension('components.buttons.radius'),
-            ),
-          ),
-        ),
-        textStyle: WidgetStatePropertyAll(
-          TextStyle(
-            fontSize: labelSize ?? d.dimension('typography.label'),
-            fontWeight: labelWeight ?? d.weight('components.buttons.weight'),
-          ),
-        ),
-        foregroundColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.disabled)
-              ? color.withValues(alpha: d.dimension('states.disabledOpacity'))
-              : color,
-        ),
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.disabled)
-              ? background.withValues(
-                  alpha: background.a * d.dimension('states.disabledOpacity'),
-                )
-              : background,
-        ),
-        side: WidgetStateProperty.resolveWith(
-          (s) => BorderSide(
-            color: s.contains(WidgetState.focused)
-                ? d.color('primary')
-                : variant == PikoButtonVariant.dangerOutline ||
-                      (primary && primaryStyle == 'outline')
-                ? color
-                : Colors.transparent,
-            width: d.dimension(
-              s.contains(WidgetState.focused)
-                  ? 'states.focusWidth'
-                  : 'states.borderWidth',
-            ),
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null)
-            ExcludeSemantics(
-              child: IconTheme.merge(
-                data: IconThemeData(size: d.dimension('components.icons.size')),
-                child: icon!,
-              ),
-            ),
-          if (icon != null && label.isNotEmpty)
-            SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
-          if (label.isNotEmpty)
-            Flexible(child: Text(label, textAlign: TextAlign.center)),
-          if (trailing != null)
-            SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
-          ?trailing,
-        ],
       ),
     );
   }

@@ -166,7 +166,7 @@ void main() {
         expect(find.text(copy.text('learn.retryWaiting')), findsOneWidget);
 
         final beforeExit = await snapshot(db);
-        await correction.tapVisible(tester, button(copy.text('learn.exit')));
+        await correction.tapVisible(tester, find.byTooltip(copy.text('learn.exit')));
         await correction.waitUntil(
           tester,
           () => find.byType(CollectionDetail).evaluate().isNotEmpty,
@@ -212,7 +212,7 @@ void main() {
 
         // Leaving the eligible retry unanswered is also write-free: no second
         // FSRS transition, regular event, successful retry, or gap mutation.
-        await correction.tapVisible(tester, button(copy.text('learn.exit')));
+        await correction.tapVisible(tester, find.byTooltip(copy.text('learn.exit')));
         await correction.waitUntil(
           tester,
           () => find.byType(CollectionDetail).evaluate().isNotEmpty,

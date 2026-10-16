@@ -25,16 +25,85 @@ class PikoSwipeReveal extends StatefulWidget {
 }
 
 class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
+  // Expando keys do not retain popped routes. Each state explicitly releases
+  // its ownership as well, so a live route never retains a retired row.
+  static final _groups = Expando<_SwipeRevealGroup>('swipe-reveal-route');
+  _SwipeRevealGroup? _group;
+  ModalRoute<dynamic>? _route;
   Offset? start;
   int? pointer;
   bool open = false;
+  int _presentation = 0;
+  int _animation = 0;
   final focus = FocusNode();
   bool get enabled => widget.enabled && widget.onDelete != null;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    final Object scope = route ?? FocusScope.of(context);
+    final group = _groups[scope] ??= _SwipeRevealGroup();
+    if (!identical(group, _group) || route?.isCurrent == false) {
+      _close(rebuild: false);
+    }
+    _group = group;
+    _route = route;
+  }
+
+  void _close({
+    bool rebuild = true,
+    bool restoreFocus = false,
+    bool immediate = false,
+  }) {
+    final wasOpen = open;
+    void clear() {
+      open = false;
+      _presentation++;
+      if (immediate && wasOpen) _animation++;
+    }
+
+    if (open && rebuild && mounted) {
+      setState(clear);
+    } else {
+      clear();
+    }
+    _group?.release(this);
+    // A disabled, already-closed wrapper can contain a live text editor.
+    // Rebuilds must not steal that editor's focus or trigger a caret scroll.
+    if (wasOpen && focus.hasFocus) focus.unfocus();
+    if (wasOpen && restoreFocus && mounted) focus.requestFocus();
+  }
+
+  void _reveal() {
+    if (!enabled || _route?.isCurrent == false || open) return;
+    _group!.claim(this);
+    setState(() {
+      open = true;
+      _presentation++;
+    });
+    focus.requestFocus();
+  }
+
+  void _delete(int presentation) {
+    if (!mounted ||
+        !enabled ||
+        !open ||
+        presentation != _presentation ||
+        _route?.isCurrent == false ||
+        !identical(_group?.owner, this)) {
+      return;
+    }
+    final delete = widget.onDelete;
+    _close(restoreFocus: true);
+    delete?.call();
+  }
+
   @override
   void didUpdateWidget(PikoSwipeReveal oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!enabled) {
-      open = false;
+      _close(rebuild: false, immediate: true);
       start = null;
       pointer = null;
     }
@@ -42,6 +111,7 @@ class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
 
   @override
   void dispose() {
+    _group?.release(this);
     focus.dispose();
     super.dispose();
   }
@@ -55,8 +125,7 @@ class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
         if (open &&
             event is KeyDownEvent &&
             event.logicalKey == LogicalKeyboardKey.escape) {
-          setState(() => open = false);
-          focus.requestFocus();
+          _close(restoreFocus: true);
           return KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
@@ -84,8 +153,11 @@ class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
               delta.dx.abs() >
                   delta.dy.abs() *
                       d.dimension('components.swipe.axisDominance')) {
-            setState(() => open = delta.dx < 0);
-            if (open) focus.requestFocus();
+            if (delta.dx < 0) {
+              _reveal();
+            } else {
+              _close();
+            }
           }
         },
         child: LayoutBuilder(
@@ -109,47 +181,80 @@ class _PikoSwipeRevealState extends State<PikoSwipeReveal> {
                   2 * d.dimension('components.buttons.padding'),
             );
             text.dispose();
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(d.dimension('radii.card')),
-              child: Stack(
-                children: [
-                  AnimatedContainer(
-                    duration: PikoTheme.motion(context),
-                    transform: Matrix4.translationValues(
-                      open ? -width : 0,
-                      0,
-                      0,
-                    ),
-                    child: widget.child,
+            final presentation = _presentation;
+            return TweenAnimationBuilder<double>(
+              key: ValueKey(_animation),
+              tween: Tween(begin: 0, end: open ? 1 : 0),
+              duration: PikoTheme.motion(context),
+              child: widget.child,
+              builder: (context, reveal, child) {
+                // A partial reveal cannot contain a full action target. Keep
+                // its label/focus/semantics absent until it is wholly exposed,
+                // and remove them immediately when closing or swapping rows.
+                final actionReady =
+                    open &&
+                    enabled &&
+                    reveal == 1 &&
+                    identical(_group?.owner, this);
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    d.dimension('radii.card'),
                   ),
-                  if (open)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: width,
-                      child: ColoredBox(
-                        color: d.color('surface'),
-                        child: Center(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        // A closed card's antialiased border must not blend
+                        // with an otherwise hidden red deletion surface.
+                        child: ColoredBox(
+                          color: reveal > 0
+                              ? d.color('danger')
+                              : Colors.transparent,
+                        ),
+                      ),
+                      if (actionReady)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: width,
                           child: PikoButton(
                             label: widget.label,
                             icon: const PikoIcon(PikoIconName.trash),
-                            variant: PikoButtonVariant.dangerGhost,
-                            onPressed: () {
-                              setState(() => open = false);
-                              focus.requestFocus();
-                              widget.onDelete?.call();
-                            },
+                            variant: PikoButtonVariant.dangerFilled,
+                            onPressed: () => _delete(presentation),
                           ),
                         ),
+                      // The complete underlay extends beneath the foreground's
+                      // rounded trailing corners, including during close.
+                      Transform.translate(
+                        key: const ValueKey('swipe-foreground'),
+                        offset: Offset(-width * reveal, 0),
+                        child: child,
                       ),
-                    ),
-                ],
-              ),
+                    ],
+                  ),
+                );
+              },
             );
           },
         ),
       ),
     );
+  }
+}
+
+final class _SwipeRevealGroup {
+  _PikoSwipeRevealState? owner;
+
+  void claim(_PikoSwipeRevealState next) {
+    if (identical(owner, next)) return;
+    // A group handoff closes the previous foreground immediately, rather than
+    // leaving two revealed rows while independent animations race to finish.
+    owner?._close(immediate: true);
+    owner = next;
+  }
+
+  void release(_PikoSwipeRevealState state) {
+    if (identical(owner, state)) owner = null;
   }
 }

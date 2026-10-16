@@ -89,6 +89,10 @@ void main() {
         ),
         2,
       );
+      expect(directionalReviewCounts(records), {
+        LearningDirection.targetToNative: 1,
+        LearningDirection.nativeToTarget: 1,
+      });
     },
   );
 

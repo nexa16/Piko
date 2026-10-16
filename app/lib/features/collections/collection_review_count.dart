@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../core/clock.dart';
 import '../../data/review_due_membership.dart';
+import '../../data/learning_item.dart';
 
 /// The owner-selected meaning of a Collection's due badge.
 ///
@@ -59,10 +60,14 @@ final class CollectionReviewCount extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
   Timer? _refreshTimer;
+  Map<LearningDirection, int> _directionCounts = const {};
+  int _pendingRetryCount = 0;
 
   int? get value => _value;
   Object? get error => _error;
   bool get loading => _loading;
+  Map<LearningDirection, int> get directionCounts => _directionCounts;
+  int get pendingRetryCount => _pendingRetryCount;
 
   void _cancelScheduledRefresh() {
     _refreshTimer?.cancel();
@@ -91,16 +96,19 @@ final class CollectionReviewCount extends ChangeNotifier {
     _value = null;
     notifyListeners();
     try {
-      final memberships = await loader(
+      final loaded = await loader(
         collectionId: collectionId,
         at: clock.now().toUtc(),
       );
       if (_disposed || generation != _generation) return;
+      final memberships = loaded.toList();
       _value = aggregateCollectionReviewCount(memberships, policy);
+      _directionCounts = directionalReviewCounts(memberships);
+      _pendingRetryCount = memberships
+          .where((item) => !item.regularDue && !item.eligibleRetry)
+          .length;
       _scheduleRefresh(
-        memberships is ReviewDueMembershipSnapshot
-            ? memberships.nextChangeAt
-            : null,
+        loaded is ReviewDueMembershipSnapshot ? loaded.nextChangeAt : null,
       );
     } catch (error) {
       if (_disposed || generation != _generation) return;
@@ -121,6 +129,18 @@ final class CollectionReviewCount extends ChangeNotifier {
     super.dispose();
   }
 }
+
+Map<LearningDirection, int> directionalReviewCounts(
+  Iterable<ReviewDueMembership> memberships,
+) => Map.unmodifiable({
+  for (final direction in LearningDirection.values)
+    direction: {
+      for (final item in memberships)
+        if (item.direction == direction &&
+            (item.regularDue || item.eligibleRetry))
+          item.entryId,
+    }.length,
+});
 
 typedef CollectionReviewCountWidgetBuilder =
     Widget Function(

@@ -73,6 +73,10 @@ void main() {
                 .width,
             0,
           );
+          expect(
+            tester.getSize(find.byKey(const ValueKey('review-progress-fill'))).height,
+            bar.height,
+          );
           await tester.ensureVisible(card);
           await grading.reveal(tester);
           expect(session.progress.completed, 0);
@@ -94,6 +98,19 @@ void main() {
                 .width,
             closeTo(tester.getSize(progress).width / 2, .01),
           );
+          expect(
+            tester.getSize(find.byKey(const ValueKey('review-progress-fill'))).height,
+            tester.getSize(progress).height,
+          );
+          await tester.ensureVisible(card);
+          await grading.reveal(tester);
+          await tester.ensureVisible(grading.gradeButton(AnswerGrade.correct));
+          await tester.tap(grading.gradeButton(AnswerGrade.correct));
+          await h.finish(tester);
+          final filled = tester.getSize(find.byKey(const ValueKey('review-progress-fill')));
+          expect(filled.width, closeTo(tester.getSize(progress).width, .01));
+          expect(filled.height, tester.getSize(progress).height);
+          expect(session.progress.completed, 2);
           expect(tester.takeException(), isNull);
         } finally {
           semantics.dispose();

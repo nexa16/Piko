@@ -683,7 +683,7 @@ void main() {
       final previous = find.byKey(const ValueKey('review-correct-previous'));
       expect(previous, findsOneWidget);
       expect(
-        find.widgetWithText(PikoButton, PikoCopy('en').text('learn.exit')),
+        launch.button(PikoCopy('en').text('learn.exit')),
         findsOneWidget,
       );
       final stale = tester.widget<PikoButton>(previous).onPressed!;
@@ -722,7 +722,7 @@ void main() {
         findsWidgets,
       );
       expect(
-        find.widgetWithText(PikoButton, PikoCopy('en').text('learn.exit')),
+        launch.button(PikoCopy('en').text('learn.exit')),
         findsOneWidget,
       );
       expect(

@@ -30,6 +30,7 @@ const allowedColumns = <String, Set<String>>{
     'card_json',
     'generation',
     'review_revision',
+    'speed_completed',
   },
   'regular_reviews': {'id', 'item_id', 'generation', 'reviewed_at', 'rating'},
   'retry_obligations': {
@@ -52,6 +53,24 @@ const allowedColumns = <String, Set<String>>{
   },
   'learning_identity_sequence': {'singleton', 'next_id'},
   'vocabulary_order_sequence': {'singleton', 'next_row_id'},
+  // CAT-001: portable Collection-owned definitions and explicit assignments.
+  // Positions retain definition creation order; comparison keys enforce names.
+  'category_dimensions': {
+    'id',
+    'collection_id',
+    'name',
+    'name_key',
+    'mode',
+    'position',
+  },
+  'category_values': {'id', 'dimension_id', 'name', 'name_key', 'position'},
+  // Collection/dimension columns enforce ownership through composite FKs.
+  'vocabulary_category_assignments': {
+    'entry_id',
+    'collection_id',
+    'dimension_id',
+    'value_id',
+  },
 };
 
 Future<void> assertInventory(PikoDatabase db) async {

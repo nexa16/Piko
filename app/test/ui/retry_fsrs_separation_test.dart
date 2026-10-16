@@ -7,6 +7,7 @@ import 'package:piko/data/retry_answer.dart';
 import 'package:piko/features/learning/due_learning_session.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/learning/regular_grading_coordinator.dart';
+import 'package:piko/features/learning/review_summary_dialog.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
 import '../data/regular_reviews_test.dart' show rows;
@@ -51,14 +52,24 @@ void main() {
           }
 
           Future<void> exit() async {
-            await tester.tap(
-              launch.button(
+            if (find.byType(ReviewSummaryDialog).evaluate().isNotEmpty) {
+              final close = find.descendant(
+                of: find.byType(ReviewSummaryDialog),
+                matching: find.byTooltip(copy.text('common.close')),
+              );
+              expect(close.hitTestable(), findsOneWidget);
+              await tester.tap(close);
+            } else {
+              final exit = launch.button(
                 copy.text(
                   h.sessions.last.hasInitialWork ? 'learn.exit' : 'common.back',
                 ),
-              ),
-            );
+              );
+              expect(exit.hitTestable(), findsOneWidget);
+              await tester.tap(exit);
+            }
             await h.finish(tester);
+            expect(h.sessions.last.isStopped, isTrue);
           }
 
           Future<void> wake() async {
@@ -200,6 +211,9 @@ void main() {
               'app_settings',
               'learning_identity_sequence',
               'vocabulary_order_sequence',
+              'category_dimensions',
+              'category_values',
+              'vocabulary_category_assignments',
             },
           ); // Only current retry state exists, never an attempt-history table.
           await exit();

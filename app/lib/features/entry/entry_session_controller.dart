@@ -4,14 +4,36 @@ import '../../core/clock.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_normalization.dart';
+import '../../data/categories_repository.dart';
 
 /// Raw editing values; persistence normalization never rewrites this buffer.
 @immutable
 final class EntryDraft {
-  const EntryDraft({this.targetText = '', this.nativeText = ''});
+  const EntryDraft({this.targetText = '', this.nativeText = ''})
+    : assignments = const {};
+  EntryDraft.categorized({
+    this.targetText = '',
+    this.nativeText = '',
+    Map<String, Set<String>> assignments = const {},
+  }) : assignments = _freezeEntryAssignments(assignments);
   final String targetText;
   final String nativeText;
+  final Map<String, Set<String>> assignments;
 }
+
+Map<String, Set<String>> _freezeEntryAssignments(
+  Map<String, Set<String>> values,
+) => Map.unmodifiable({
+  for (final group in values.entries)
+    if (group.value.isNotEmpty)
+      group.key: Set<String>.unmodifiable(group.value),
+});
+bool _sameEntryAssignments(
+  Map<String, Set<String>> first,
+  Map<String, Set<String>> second,
+) =>
+    first.length == second.length &&
+    first.entries.every((group) => setEquals(group.value, second[group.key]));
 
 @immutable
 final class SavedEntryEditState {
@@ -28,11 +50,14 @@ final class SavedEntryEditState {
 }
 
 final class _SavedEntryBuffer {
-  _SavedEntryBuffer(this.committed)
-    : draft = EntryDraft(
-        targetText: committed.targetText,
-        nativeText: committed.nativeText,
-      );
+  _SavedEntryBuffer(
+    this.committed, [
+    Map<String, Set<String>> assignments = const {},
+  ]) : draft = EntryDraft.categorized(
+         targetText: committed.targetText,
+         nativeText: committed.nativeText,
+         assignments: assignments,
+       );
   VocabularyRecord committed;
   EntryDraft draft;
   int revision = 0;
@@ -56,8 +81,9 @@ final class EntryUndoState {
 }
 
 final class _SessionDeletion {
-  _SessionDeletion(this.receipt);
+  _SessionDeletion(this.receipt, this.assignments);
   final VocabularyDeletionReceipt receipt;
+  final Map<String, Set<String>> assignments;
   Timer? timer;
   Object? error;
 }
@@ -90,6 +116,7 @@ final class EntrySessionController extends ChangeNotifier {
   Future<VocabularyRecord>? _restoring;
   String? _deletingId, _restoringId;
   bool get supportsDeletion => _deletionService != null;
+  bool get supportsCategories => _repository is CategorizedVocabularyRepository;
   int get advancementRevision => _advancementRevision;
   bool get isMutating =>
       !_disposed && (_deleting != null || _restoring != null);
@@ -103,6 +130,9 @@ final class EntrySessionController extends ChangeNotifier {
     ),
   );
   EntryDraft _draft = const EntryDraft();
+  Object? _draftError;
+  int _draftRevision = 0, _activationRevision = 0;
+  final Map<String, Future<void>> _rechecks = {};
   bool _disposed = false;
   final List<VocabularyRecord> _confirmedEntries = [];
   String? _activeEntryId;
@@ -111,12 +141,15 @@ final class EntrySessionController extends ChangeNotifier {
   bool _completed = false, _completing = false;
   final Map<String, _SavedEntryBuffer> _savedBuffers = {};
   final Map<String, Future<void>> _savedWorkers = {};
+  Future<void>? _categoryMetadata;
+  bool _categoryMetadataRequested = false;
   bool get isConfirming => !_disposed && _pendingConfirmation != null;
   bool get isCompleting => !_disposed && _completing;
   bool get isBusy => isConfirming || isCompleting || isMutating;
   bool get isCompleted => !_disposed && _completed;
 
   EntryDraft get draft => _draft;
+  Object? get draftError => _draftError;
   List<VocabularyRecord> get confirmedEntries =>
       List.unmodifiable(_confirmedEntries);
 
@@ -144,16 +177,30 @@ final class EntrySessionController extends ChangeNotifier {
     );
   }
 
-  void editSavedEntry(String id, {String? targetText, String? nativeText}) {
+  void editSavedEntry(
+    String id, {
+    String? targetText,
+    String? nativeText,
+    Map<String, Set<String>>? assignments,
+  }) {
     _ensureEditable();
+    if (assignments != null && !supportsCategories) {
+      throw StateError('Category editing is unavailable.');
+    }
     final buffer = _savedBuffer(id);
     final target = targetText ?? buffer.draft.targetText;
     final native = nativeText ?? buffer.draft.nativeText;
     if (target == buffer.draft.targetText &&
-        native == buffer.draft.nativeText) {
+        native == buffer.draft.nativeText &&
+        (assignments == null ||
+            _sameEntryAssignments(assignments, buffer.draft.assignments))) {
       return;
     }
-    buffer.draft = EntryDraft(targetText: target, nativeText: native);
+    buffer.draft = EntryDraft.categorized(
+      targetText: target,
+      nativeText: native,
+      assignments: assignments ?? buffer.draft.assignments,
+    );
     buffer.revision++;
     if (normalizeVocabularyText(target).isEmpty) {
       buffer.error = VocabularyValidation.requiredTarget;
@@ -180,6 +227,11 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     final buffer = _savedBuffer(id);
     if (_savedWorkers.containsKey(id)) return;
+    if (buffer.error == null ||
+        buffer.error is VocabularyValidation ||
+        buffer.error is CategoryValidation) {
+      return;
+    }
     if (normalizeVocabularyText(buffer.draft.targetText).isEmpty) {
       buffer.error = VocabularyValidation.requiredTarget;
     } else if (normalizeVocabularyText(buffer.draft.nativeText).isEmpty) {
@@ -202,11 +254,19 @@ final class EntrySessionController extends ChangeNotifier {
       final (revision, snapshot) = buffer.pending!;
       buffer.pending = null;
       try {
-        final saved = await _repository.update(
-          id: id,
-          targetText: snapshot.targetText,
-          nativeText: snapshot.nativeText,
-        );
+        final repository = _repository;
+        final saved = repository is CategorizedVocabularyRepository
+            ? await repository.updateCategorized(
+                id: id,
+                targetText: snapshot.targetText,
+                nativeText: snapshot.nativeText,
+                assignments: snapshot.assignments,
+              )
+            : await repository.update(
+                id: id,
+                targetText: snapshot.targetText,
+                nativeText: snapshot.nativeText,
+              );
         if (saved.id != id || saved.collectionId != collectionId) {
           throw StateError('Saved edit returned a different entry identity.');
         }
@@ -229,9 +289,166 @@ final class EntrySessionController extends ChangeNotifier {
   /// Resolves when all accepted saved-edit queues are idle, including additions
   /// made while draining. Errors remain on each saved-entry state.
   Future<void> awaitSavedEdits() async {
-    while (_savedWorkers.isNotEmpty) {
-      await Future.wait(_savedWorkers.values.toList(growable: false));
+    while (_savedWorkers.isNotEmpty ||
+        _rechecks.isNotEmpty ||
+        _categoryMetadata != null) {
+      await Future.wait([
+        ..._savedWorkers.values,
+        ..._rechecks.values,
+        ?_categoryMetadata,
+      ]);
     }
+  }
+
+  /// Deleting one card must not wait for an unrelated entry's held write.
+  /// Its own recheck may still accept a save, so drain again after each await.
+  Future<void> _awaitSavedEntryEdits(String id) async {
+    while (true) {
+      final worker = _savedWorkers[id];
+      final pending = <Future<void>>[
+        ?worker,
+        for (final recheck in _rechecks.entries)
+          if (recheck.key.startsWith('$id:')) recheck.value,
+      ];
+      if (pending.isEmpty) return;
+      await Future.wait(pending);
+    }
+  }
+
+  /// Reconcile this session's saved cards after an external confirmed import.
+  /// Unconfirmed/raw failed drafts remain owned by the editor, never re-saved
+  /// simply because another route changed the stored vocabulary.
+  Future<void> refreshSavedEntries() async {
+    await awaitSavedEdits();
+    if (_disposed) return;
+    final revisions = {
+      for (final e in _savedBuffers.entries) e.key: e.value.revision,
+    };
+    final rows = await _repository.watchByCollection(collectionId).first;
+    if (_disposed) return;
+    final categoryAssignments = <String, Map<String, Set<String>>>{};
+    final repository = _repository;
+    if (repository is CategorizedVocabularyRepository) {
+      for (final entry in rows.where(
+        (entry) => _confirmedEntries.any((saved) => saved.id == entry.id),
+      )) {
+        categoryAssignments[entry.id] = await repository.categorizedAssignments(
+          entry.id,
+        );
+        if (_disposed) return;
+      }
+    }
+    final byId = {for (final entry in rows) entry.id: entry};
+    for (var index = 0; index < _confirmedEntries.length; index++) {
+      final id = _confirmedEntries[index].id;
+      final buffer = _savedBuffers[id];
+      if (_savedWorkers.containsKey(id) ||
+          (buffer != null && buffer.revision != revisions[id])) {
+        continue;
+      }
+      final updated = byId[id];
+      if (updated == null) {
+        if (buffer != null) buffer.error = VocabularyValidation.entryNotFound;
+        continue;
+      }
+      _confirmedEntries[index] = updated;
+      if (buffer != null) {
+        if (buffer.error == null) {
+          buffer.draft = EntryDraft.categorized(
+            targetText: updated.targetText,
+            nativeText: updated.nativeText,
+            assignments: categoryAssignments[id] ?? buffer.draft.assignments,
+          );
+        }
+        buffer.committed = updated;
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Read-only validation never rewrites the user's raw buffer. The subsequent
+  /// update remains authoritative if another writer races this snapshot.
+  Future<Object?> _pairError(EntryDraft value, {String? excludingId}) async {
+    if (normalizeVocabularyText(value.targetText).isEmpty) {
+      return VocabularyValidation.requiredTarget;
+    }
+    if (normalizeVocabularyText(value.nativeText).isEmpty) {
+      return VocabularyValidation.requiredNative;
+    }
+    final entries = await _repository.watchByCollection(collectionId).first;
+    final target = vocabularyComparisonKey(value.targetText);
+    final native = vocabularyComparisonKey(value.nativeText);
+    return entries.any(
+          (entry) =>
+              entry.collectionId == collectionId &&
+              entry.id != excludingId &&
+              vocabularyComparisonKey(entry.targetText) == target &&
+              vocabularyComparisonKey(entry.nativeText) == native,
+        )
+        ? VocabularyValidation.duplicatePair
+        : null;
+  }
+
+  void _recheckSavedEntry(String id) {
+    final buffer = _savedBuffers[id];
+    if (buffer == null || buffer.error != VocabularyValidation.duplicatePair) {
+      return;
+    }
+    final activation = _activationRevision;
+    final revision = buffer.revision;
+    final snapshot = buffer.draft;
+    final key = '$id:$activation';
+    final done = Completer<void>();
+    _rechecks[key] = done.future;
+    unawaited(() async {
+      try {
+        final error = await _pairError(snapshot, excludingId: id);
+        if (_disposed ||
+            _activationRevision != activation ||
+            buffer.revision != revision ||
+            !identical(_savedBuffers[id], buffer)) {
+          return;
+        }
+        buffer.error = error;
+        if (error == null) {
+          buffer.pending = (revision, snapshot);
+          _startSavedWorker(id, buffer);
+        }
+        notifyListeners();
+      } catch (_) {
+        // A failed read cannot establish that the retained conflict is gone.
+      } finally {
+        _rechecks.remove(key);
+        done.complete();
+      }
+    }());
+  }
+
+  void _recheckDraft() {
+    if (_draftError != VocabularyValidation.duplicatePair) return;
+    final activation = _activationRevision;
+    final revision = _draftRevision;
+    final snapshot = _draft;
+    final key = 'draft:$activation';
+    final done = Completer<void>();
+    _rechecks[key] = done.future;
+    unawaited(() async {
+      try {
+        final error = await _pairError(snapshot);
+        if (_disposed ||
+            _activationRevision != activation ||
+            _draftRevision != revision) {
+          return;
+        }
+        _draftError = error;
+        notifyListeners();
+      } catch (_) {
+        // Retain duplicate feedback until a successful current read.
+      } finally {
+        _rechecks.remove(key);
+        done.complete();
+      }
+    }());
   }
 
   Future<VocabularyDeletionReceipt> deleteSavedEntry(String id) {
@@ -256,9 +473,12 @@ final class EntrySessionController extends ChangeNotifier {
     Completer<VocabularyDeletionReceipt> result,
   ) async {
     try {
-      while (_savedWorkers.containsKey(id)) {
-        await _savedWorkers[id];
-      }
+      await _awaitSavedEntryEdits(id);
+      if (_disposed) throw StateError('The entry session has ended.');
+      final repository = _repository;
+      final assignments = repository is CategorizedVocabularyRepository
+          ? _freezeEntryAssignments(await repository.categorizedAssignments(id))
+          : const <String, Set<String>>{};
       if (_disposed) throw StateError('The entry session has ended.');
       final startedAt = _clock.now().toUtc();
       final receipt = await _deletionService!.delete(id);
@@ -279,7 +499,7 @@ final class EntrySessionController extends ChangeNotifier {
               : null;
         }
         if (undoLifetime == _undoLifetime) {
-          final deleted = _SessionDeletion(receipt);
+          final deleted = _SessionDeletion(receipt, assignments);
           _deletions[id] = deleted;
           _scheduleUndo(deleted, fallbackNow: startedAt);
         } else {
@@ -321,6 +541,18 @@ final class EntrySessionController extends ChangeNotifier {
       if (entry.id != id || entry.collectionId != collectionId) {
         throw StateError('Undo returned a different entry identity.');
       }
+      final repository = _repository;
+      var assignments = deleted.assignments;
+      if (repository is CategorizedVocabularyRepository) {
+        try {
+          assignments = _freezeEntryAssignments(
+            await repository.categorizedAssignments(id),
+          );
+        } catch (_) {
+          // The restore already committed. A fallible presentation read must
+          // not report Undo failure or retain a consumed receipt.
+        }
+      }
       if (!_disposed) {
         if (!_confirmedEntries.any((value) => value.id == id)) {
           _confirmedEntries.add(entry);
@@ -328,7 +560,7 @@ final class EntrySessionController extends ChangeNotifier {
         _confirmedEntries.sort(
           (a, b) => _ordinals[a.id]!.compareTo(_ordinals[b.id]!),
         );
-        _savedBuffers[id] = _SavedEntryBuffer(entry);
+        _savedBuffers[id] = _SavedEntryBuffer(entry, assignments);
         if (identical(_deletions[id], deleted)) _forgetUndo(id);
       }
       result.complete(entry);
@@ -417,12 +649,17 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     final snapshot = _draft;
     if (normalizeVocabularyText(snapshot.targetText).isEmpty) {
+      _draftError = VocabularyValidation.requiredTarget;
+      notifyListeners();
       return Future.error(VocabularyValidation.requiredTarget);
     }
     if (normalizeVocabularyText(snapshot.nativeText).isEmpty) {
+      _draftError = VocabularyValidation.requiredNative;
+      notifyListeners();
       return Future.error(VocabularyValidation.requiredNative);
     }
     final result = Completer<VocabularyRecord>();
+    _draftError = null;
     _pendingConfirmation = result.future;
     notifyListeners();
     unawaited(_confirm(snapshot, result));
@@ -461,15 +698,13 @@ final class EntrySessionController extends ChangeNotifier {
       }
       final target = normalizeVocabularyText(snapshot.targetText);
       final native = normalizeVocabularyText(snapshot.nativeText);
-      if (target.isNotEmpty || native.isNotEmpty) {
+      if (target.isNotEmpty ||
+          native.isNotEmpty ||
+          snapshot.assignments.isNotEmpty) {
         _activeEntryId = null;
         if (target.isEmpty) throw VocabularyValidation.requiredTarget;
         if (native.isEmpty) throw VocabularyValidation.requiredNative;
-        final record = await _repository.create(
-          collectionId: collectionId,
-          targetText: snapshot.targetText,
-          nativeText: snapshot.nativeText,
-        );
+        final record = await _create(snapshot);
         if (record.collectionId != collectionId) {
           throw StateError(
             'Completion returned an entry from another Collection.',
@@ -477,6 +712,10 @@ final class EntrySessionController extends ChangeNotifier {
         }
         if (!_disposed) {
           _confirmedEntries.add(record);
+          _savedBuffers[record.id] = _SavedEntryBuffer(
+            record,
+            snapshot.assignments,
+          );
           _ordinals[record.id] = _nextOrdinal++;
           _activeEntryId = record.id;
         }
@@ -488,6 +727,9 @@ final class EntrySessionController extends ChangeNotifier {
     } catch (error, stack) {
       _completion = null;
       _completing = false;
+      if (!_disposed && error is! SavedEntryCompletionBlocked) {
+        _draftError = error;
+      }
       if (!_disposed) notifyListeners();
       result.completeError(error, stack);
     }
@@ -498,11 +740,7 @@ final class EntrySessionController extends ChangeNotifier {
     Completer<VocabularyRecord> result,
   ) async {
     try {
-      final record = await _repository.create(
-        collectionId: collectionId,
-        targetText: snapshot.targetText,
-        nativeText: snapshot.nativeText,
-      );
+      final record = await _create(snapshot);
       if (record.collectionId != collectionId) {
         throw StateError(
           'Confirmation returned an entry from another Collection.',
@@ -511,15 +749,23 @@ final class EntrySessionController extends ChangeNotifier {
       _pendingConfirmation = null;
       if (!_disposed) {
         _confirmedEntries.add(record);
+        _savedBuffers[record.id] = _SavedEntryBuffer(
+          record,
+          snapshot.assignments,
+        );
         _ordinals[record.id] = _nextOrdinal++;
         _advancementRevision++;
         _draft = const EntryDraft();
+        _draftRevision++;
+        _draftError = null;
+        _activationRevision++;
         _activeEntryId = null;
         notifyListeners();
       }
       result.complete(record);
     } catch (error, stack) {
       _pendingConfirmation = null;
+      if (!_disposed) _draftError = error;
       if (!_disposed) notifyListeners();
       result.completeError(error, stack);
     }
@@ -532,6 +778,8 @@ final class EntrySessionController extends ChangeNotifier {
     }
     if (_activeEntryId == id) return;
     _activeEntryId = id;
+    _activationRevision++;
+    _recheckSavedEntry(id);
     notifyListeners();
   }
 
@@ -539,6 +787,8 @@ final class EntrySessionController extends ChangeNotifier {
     _ensureEditable();
     if (_activeEntryId == null) return;
     _activeEntryId = null;
+    _activationRevision++;
+    _recheckDraft();
     notifyListeners();
   }
 
@@ -558,8 +808,166 @@ final class EntrySessionController extends ChangeNotifier {
   void _setDraft(String target, String native) {
     _ensureEditable();
     if (target == _draft.targetText && native == _draft.nativeText) return;
-    _draft = EntryDraft(targetText: target, nativeText: native);
+    _draft = EntryDraft.categorized(
+      targetText: target,
+      nativeText: native,
+      assignments: _draft.assignments,
+    );
+    _draftRevision++;
+    _draftError = null;
     notifyListeners();
+  }
+
+  Future<VocabularyRecord> _create(EntryDraft snapshot) {
+    final repository = _repository;
+    if (repository is CategorizedVocabularyRepository) {
+      return repository.createCategorized(
+        collectionId: collectionId,
+        targetText: snapshot.targetText,
+        nativeText: snapshot.nativeText,
+        assignments: snapshot.assignments,
+      );
+    }
+    if (snapshot.assignments.isNotEmpty) {
+      throw StateError('Category editing is unavailable.');
+    }
+    return repository.create(
+      collectionId: collectionId,
+      targetText: snapshot.targetText,
+      nativeText: snapshot.nativeText,
+    );
+  }
+
+  void setCategoryValues({
+    String? entryId,
+    required String dimensionId,
+    required Set<String> valueIds,
+  }) {
+    _ensureEditable();
+    if (!supportsCategories) {
+      throw StateError('Category editing is unavailable.');
+    }
+    if (entryId != null) {
+      final buffer = _savedBuffer(entryId);
+      editSavedEntry(
+        entryId,
+        assignments: {...buffer.draft.assignments, dimensionId: valueIds},
+      );
+      return;
+    }
+    final next = _freezeEntryAssignments({
+      ..._draft.assignments,
+      dimensionId: valueIds,
+    });
+    if (_sameEntryAssignments(next, _draft.assignments)) return;
+    _draft = EntryDraft.categorized(
+      targetText: _draft.targetText,
+      nativeText: _draft.nativeText,
+      assignments: next,
+    );
+    _draftRevision++;
+    _draftError = null;
+    notifyListeners();
+  }
+
+  /// Definition deletions are authoritative only after fresh successful reads.
+  /// Older projections and failed reads must not erase new picker selections.
+  Future<void> refreshCategoryReferences(CategoriesRepository repository) {
+    _ensureActive();
+    if (isBusy || !supportsCategories) return Future.value();
+    _categoryMetadataRequested = true;
+    if (_categoryMetadata != null) return _categoryMetadata!;
+    final done = Completer<void>();
+    _categoryMetadata = done.future;
+    unawaited(() async {
+      try {
+        while (_categoryMetadataRequested && !_disposed && !isBusy) {
+          _categoryMetadataRequested = false;
+          final draftRevision = _draftRevision;
+          final revisions = {
+            for (final entry in _savedBuffers.entries)
+              entry.key: entry.value.revision,
+          };
+          final dimensions = await repository.dimensions(collectionId);
+          if (_disposed || isBusy) return;
+          final allowed = <String, Set<String>>{};
+          for (final dimension in dimensions.where(
+            (dimension) => dimension.collectionId == collectionId,
+          )) {
+            final values = await repository.values(dimension.id);
+            if (_disposed || isBusy) return;
+            allowed[dimension.id] = values
+                .where((value) => value.dimensionId == dimension.id)
+                .map((value) => value.id)
+                .toSet();
+          }
+          if (_draftRevision != draftRevision ||
+              _savedBuffers.entries.any(
+                (entry) => revisions[entry.key] != entry.value.revision,
+              )) {
+            _categoryMetadataRequested = true;
+            continue;
+          }
+          Map<String, Set<String>> prune(
+            Map<String, Set<String>> assignments,
+          ) => _freezeEntryAssignments({
+            for (final group in assignments.entries)
+              if (allowed.containsKey(group.key))
+                group.key: group.value.intersection(allowed[group.key]!),
+          });
+          EntryDraft pruned(EntryDraft value) => EntryDraft.categorized(
+            targetText: value.targetText,
+            nativeText: value.nativeText,
+            assignments: prune(value.assignments),
+          );
+          var changed = false;
+          final next = pruned(_draft);
+          if (!_sameEntryAssignments(next.assignments, _draft.assignments)) {
+            _draft = next;
+            _draftRevision++;
+            if (_draftError is CategoryValidation &&
+                _draftError != CategoryValidation.cardinalityViolation) {
+              _draftError = null;
+            }
+            changed = true;
+          }
+          for (final entry in _savedBuffers.entries) {
+            final buffer = entry.value;
+            final next = pruned(buffer.draft);
+            if (_sameEntryAssignments(
+              next.assignments,
+              buffer.draft.assignments,
+            )) {
+              continue;
+            }
+            buffer.draft = next;
+            buffer.revision++;
+            final pending = buffer.pending;
+            if (pending != null) {
+              buffer.pending = (pending.$1, pruned(pending.$2));
+            }
+            if (buffer.error is CategoryValidation &&
+                buffer.error != CategoryValidation.cardinalityViolation) {
+              buffer.error = null;
+            }
+            if (buffer.error == null &&
+                normalizeVocabularyText(next.targetText).isNotEmpty &&
+                normalizeVocabularyText(next.nativeText).isNotEmpty) {
+              buffer.pending = (buffer.revision, next);
+              _startSavedWorker(entry.key, buffer);
+            }
+            changed = true;
+          }
+          if (changed) notifyListeners();
+        }
+      } catch (_) {
+        // No authoritative proof of deletion: preserve all raw assignments.
+      } finally {
+        _categoryMetadata = null;
+        done.complete();
+      }
+    }());
+    return done.future;
   }
 
   @override

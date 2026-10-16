@@ -16,11 +16,14 @@ InputDecoration pikoInputDecoration({String? error}) {
     contentPadding: EdgeInsets.all(d.dimension('components.fields.padding')),
     enabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
     disabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
-    focusedBorder: border(d.color('primary'), d.dimension('states.focusWidth')),
+    focusedBorder: border(
+      d.color('primary'),
+      d.dimension('components.fields.focusWidth'),
+    ),
     errorBorder: border(d.color('danger'), d.dimension('states.borderWidth')),
     focusedErrorBorder: border(
       d.color('danger'),
-      d.dimension('states.focusWidth'),
+      d.dimension('components.fields.focusWidth'),
     ),
   );
 }
@@ -57,6 +60,10 @@ class PikoTextField extends StatelessWidget {
     this.focusNode,
     this.enabled = true,
     this.style,
+    this.textInputAction,
+    this.onSubmitted,
+    this.onEditingComplete,
+    this.autofocus = false,
   });
   final String label;
   final TextEditingController controller;
@@ -65,6 +72,10 @@ class PikoTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final bool enabled;
   final TextStyle? style;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onEditingComplete;
+  final bool autofocus;
   @override
   Widget build(BuildContext context) => PikoField(
     label: label,
@@ -76,6 +87,10 @@ class PikoTextField extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         focusNode: focusNode,
+        autofocus: autofocus,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
+        onEditingComplete: onEditingComplete,
         decoration: pikoInputDecoration(error: error),
       ),
     ),

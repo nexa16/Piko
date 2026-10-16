@@ -128,11 +128,83 @@ Future<void> mount(
 }
 
 Future<void> openConfirmation(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('collection-menu')));
+  await tester.pumpAndSettle();
   await tester.tap(deletion());
   await tester.pumpAndSettle();
 }
 
 void main() {
+  testWidgets(
+    'neutral Collection menu hides Delete, safely dismisses and restores keyboard focus',
+    (tester) async {
+      final f = CollectionDeletionFixture();
+      await tester.runAsync(f.initialize);
+      final repository = ControlledCollections(f.collections);
+      await mount(tester, f, repository);
+      final opener = find.byKey(const ValueKey('collection-menu'));
+      expect(deletion(), findsNothing);
+      expect(find.text('Edit categories'), findsNothing);
+      expect(tester.getSize(opener).shortestSide, greaterThanOrEqualTo(48));
+      final control = tester.widget<PikoIconButton>(opener);
+      expect(control.semanticLabel, 'More options');
+      expect(control.variant, PikoButtonVariant.neutral);
+      for (final mode in ['escape', 'backdrop', 'system', 'close']) {
+        control.focusNode!.requestFocus();
+        await tester.pump();
+        control.onPressed!();
+        control.onPressed!();
+        await tester.pumpAndSettle();
+        expect(find.byType(PikoDialog), findsOneWidget);
+        expect(deletion(), findsOneWidget);
+        if (mode == 'escape') {
+          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        } else if (mode == 'backdrop') {
+          await tester.tapAt(const Offset(1, 1));
+        } else if (mode == 'system') {
+          await tester.binding.handlePopRoute();
+        } else {
+          await tester.tap(find.byTooltip('Close'));
+        }
+        await tester.pumpAndSettle();
+        expect(deletion(), findsNothing, reason: '$mode safely dismisses menu');
+        expect(control.focusNode!.hasFocus, isTrue, reason: '$mode restores opener focus');
+        expect(repository.deletes, 0);
+      }
+    },
+  );
+  testWidgets('category management expands inside the owned Collection menu', (
+    tester,
+  ) async {
+    final f = CollectionDeletionFixture();
+    await tester.runAsync(f.initialize);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      await tester.runAsync(f.dispose);
+    });
+    await tester.pumpWidget(
+      PikoApp(
+        home: CollectionDetail(
+          repository: f.collections,
+          collectionId: f.owner.id,
+          categoryManagementBuilder: (_) =>
+              const Text('Injected category controls'),
+        ),
+      ),
+    );
+    await flush(tester, f);
+    await tester.tap(find.byKey(const ValueKey('collection-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit categories'), findsOneWidget);
+    expect(find.text('Injected category controls'), findsNothing);
+    await tester.tap(find.text('Edit categories'));
+    await tester.pumpAndSettle();
+    expect(find.text('Injected category controls'), findsOneWidget);
+    expect(find.byType(CollectionDetail), findsOneWidget);
+    expect(find.byType(PikoDialog), findsOneWidget);
+    expect(deletion(), findsOneWidget);
+  });
   testWidgets('accepted Discard drains before confirmed Collection cascade', (
     tester,
   ) async {
@@ -217,13 +289,7 @@ void main() {
       await flush(tester, f);
       await openConfirmation(tester);
       final stale = tester.widget<PikoButton>(confirm()).onPressed!;
-      final staleClose = tester
-          .widget<PikoIconButton>(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          )
-          .onPressed!;
+      final staleClose = tester.widget<PikoButton>(button('Cancel')).onPressed!;
       identity.value = other.id;
       await flush(tester, f);
       expect(find.byType(PikoDialog), findsNothing);
@@ -232,7 +298,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Other'), findsOneWidget);
       expect(repository.deletes, 0);
-      tester.widget<PikoButton>(deletion()).onPressed!();
+      tester
+          .widget<PikoIconButton>(find.byKey(const ValueKey('collection-menu')))
+          .onPressed!();
       identity.value = f.owner.id;
       await flush(tester, f);
       expect(find.byType(PikoDialog), findsNothing);
@@ -333,7 +401,9 @@ void main() {
       await tester.runAsync(f.initialize);
       final repository = ControlledCollections(f.collections);
       await mount(tester, f, repository);
-      for (final mode in ['x', 'escape', 'backdrop', 'system']) {
+      for (final mode in ['cancel', 'escape', 'backdrop', 'system']) {
+        await tester.tap(find.byKey(const ValueKey('collection-menu')));
+        await tester.pumpAndSettle();
         final open = tester.widget<PikoButton>(deletion()).onPressed!;
         open();
         open();
@@ -345,12 +415,9 @@ void main() {
           ),
           findsOneWidget,
         );
-        if (mode == 'x') {
-          await tester.tap(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          );
+        expect(find.byTooltip('Close'), findsNothing);
+        if (mode == 'cancel') {
+          await tester.tap(button('Cancel'));
         } else if (mode == 'escape') {
           await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         } else if (mode == 'backdrop') {
@@ -377,7 +444,7 @@ void main() {
     },
   );
   testWidgets(
-    'duplicate names delete only captured UUID; stale confirm and X cannot pop Detail while storage is pending',
+    'duplicate names delete only captured UUID; stale confirm and Cancel cannot pop Detail while storage is pending',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -393,13 +460,7 @@ void main() {
       await mount(tester, f, repository);
       await openConfirmation(tester);
       final action = tester.widget<PikoButton>(confirm()).onPressed!;
-      final close = tester
-          .widget<PikoIconButton>(
-            find.byWidgetPredicate(
-              (w) => w is PikoIconButton && w.semanticLabel == 'Close',
-            ),
-          )
-          .onPressed!;
+      final close = tester.widget<PikoButton>(button('Cancel')).onPressed!;
       action();
       action();
       close();
@@ -566,7 +627,9 @@ void main() {
         scale: 2,
         keyboard: 300,
       );
-      await tester.ensureVisible(button('Sammlung löschen'));
+      await tester.ensureVisible(find.byKey(const ValueKey('collection-menu')));
+      await tester.tap(find.byKey(const ValueKey('collection-menu')));
+      await tester.pumpAndSettle();
       await tester.tap(button('Sammlung löschen'));
       await tester.pumpAndSettle();
       expect(

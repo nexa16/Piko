@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
+import '../../data/categories_repository.dart';
+import '../categories/vocabulary_categories.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -23,20 +25,34 @@ class EntrySessionScreen extends StatefulWidget {
   const EntrySessionScreen({
     required this.collection,
     required this.session,
+    this.onOpenInterchange,
+    this.onPendingWrites,
+    this.categoriesRepository,
     super.key,
   });
   final CollectionRecord collection;
   final EntrySessionController session;
+  final Future<void> Function()? onOpenInterchange;
+  final ValueChanged<Future<void>>? onPendingWrites;
+  final CategoriesRepository? categoriesRepository;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
 
 class _Editors {
-  _Editors(EntryDraft value)
+  _Editors(EntryDraft value, VoidCallback onFocus)
     : target = TextEditingController(text: value.targetText),
-      native = TextEditingController(text: value.nativeText);
+      native = TextEditingController(text: value.nativeText) {
+    targetFocus.addListener(() {
+      if (targetFocus.hasFocus) onFocus();
+    });
+    nativeFocus.addListener(() {
+      if (nativeFocus.hasFocus) onFocus();
+    });
+  }
   final TextEditingController target, native;
   final targetFocus = FocusNode(), nativeFocus = FocusNode();
+  final targetBounds = GlobalKey(), nativeBounds = GlobalKey();
   void sync(EntryDraft value) {
     if (target.text != value.targetText) target.text = value.targetText;
     if (native.text != value.nativeText) native.text = value.nativeText;
@@ -58,15 +74,22 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   final cards = <String, GlobalKey>{};
   final editors = <String, _Editors>{};
   final retiredEditors = <_Editors>{};
-  double topPadding = 0, bottomPadding = 0;
+  double bottomPadding = 0;
+  double structuralGap = 0;
+  String? structuralGapBefore;
+  double? lastViewportHeight;
+  double? lastKeyboardInset;
+  bool visibilityRequested = true, followEditor = true, alignDraftStart = true;
   bool userScrolling = false, scheduled = false, adjusting = false;
+  ScrollDirection userScrollDirection = ScrollDirection.idle;
+  ScrollDirection deferredScrollDirection = ScrollDirection.idle;
   bool centerRequested = true;
   bool releaseAnchor = false, jumping = false;
   bool settleSelection = false;
   bool structuralAnchoring = false;
+  bool draftFocusRequested = true;
   String? anchorId;
   double? anchorCenter;
-  Object? confirmError;
   Object? deletionError, undoFeedback;
   String? deletionErrorId;
   Object? exitRequest;
@@ -76,7 +99,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   late String previousActiveId;
   late List<String> previousIds;
   (String?, Object?) previousUndo = (null, null);
-  late EntryDraft lastDraft;
   EntrySessionController get session => widget.session;
   String get activeId => session.activeEntryId ?? draftId;
   List<String> get ids => [
@@ -91,7 +113,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     advancementRevision = session.advancementRevision;
     previousActiveId = activeId;
     previousIds = ids;
-    lastDraft = session.draft;
+    draftFocusRequested = activeId == draftId;
     session.addListener(changed);
   }
 
@@ -106,7 +128,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       }
       editors.clear();
       cards.clear();
-      confirmError = null;
       deletionError = null;
       deletionErrorId = null;
       undoFeedback = null;
@@ -114,9 +135,17 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       exitDraining = false;
       allowPop = false;
       dismissOwnedExitDialog();
-      topPadding = 0;
       bottomPadding = 0;
+      structuralGap = 0;
+      structuralGapBefore = null;
+      lastViewportHeight = null;
+      lastKeyboardInset = null;
+      visibilityRequested = true;
+      followEditor = true;
+      alignDraftStart = activeId == draftId;
       userScrolling = false;
+      userScrollDirection = ScrollDirection.idle;
+      deferredScrollDirection = ScrollDirection.idle;
       adjusting = false;
       releaseAnchor = false;
       settleSelection = false;
@@ -128,8 +157,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       previousIds = ids;
       previousUndo = (null, null);
       structuralAnchoring = false;
-      lastDraft = session.draft;
       centerRequested = true;
+      draftFocusRequested = activeId == draftId;
       session.addListener(changed);
     }
   }
@@ -143,11 +172,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
 
   void changed() {
     if (!mounted) return;
-    if (lastDraft.targetText != session.draft.targetText ||
-        lastDraft.nativeText != session.draft.nativeText) {
-      confirmError = null;
-    }
-    lastDraft = session.draft;
     for (final id in editors.keys.where((id) => !ids.contains(id)).toList()) {
       final editor = editors.remove(id)!;
       cards.remove(id);
@@ -172,11 +196,26 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (advanced || (activeId != previousActiveId && !adjusting)) {
       advancementRevision = session.advancementRevision;
       centerRequested = true;
-      if (advanced) confirmError = null;
       structuralAnchoring = false;
     } else if (!adjusting && !structuralAnchoring) {
       anchorId = activeId;
       anchorCenter = center(activeId);
+    }
+    if (advanced || activeId != previousActiveId) {
+      structuralGap = 0;
+      structuralGapBefore = null;
+      draftFocusRequested = activeId == draftId;
+      visibilityRequested = draftFocusRequested;
+      followEditor = draftFocusRequested;
+      alignDraftStart = draftFocusRequested;
+      if (!draftFocusRequested) {
+        // Browsing a saved card must not carry a hidden draft's input focus or
+        // reopen the software keyboard. Stack keyboard focus stays independent.
+        for (final editor in editors.values) {
+          if (editor.targetFocus.hasFocus) editor.targetFocus.unfocus();
+          if (editor.nativeFocus.hasFocus) editor.nativeFocus.unfocus();
+        }
+      }
     }
     previousActiveId = activeId;
     previousIds = ids;
@@ -194,22 +233,25 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       if (!mounted || !scroll.hasClients) return;
       final box = viewport.currentContext?.findRenderObject();
       if (box is! RenderBox || !box.hasSize) return;
-      final first = cards[ids.first]?.currentContext?.findRenderObject();
       final last = cards[draftId]?.currentContext?.findRenderObject();
-      if (first is! RenderBox || last is! RenderBox) return;
-      var nextTop = math.max(0.0, (box.size.height - first.size.height) / 2);
+      if (last is! RenderBox) return;
+      final viewportChanged = lastViewportHeight != box.size.height;
+      lastViewportHeight = box.size.height;
+      final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+      final keyboardChanged = lastKeyboardInset != keyboardInset;
+      lastKeyboardInset = keyboardInset;
+      // Undo/footer reflow belongs to the retained structural anchor, not a
+      // fresh field reveal. A real IME transition still keeps labeled input
+      // reachable; deliberate user scrolling has already disabled following.
+      if (followEditor &&
+          (keyboardChanged || viewportChanged && !structuralAnchoring)) {
+        visibilityRequested = true;
+      }
       var nextBottom = math.max(0.0, (box.size.height - last.size.height) / 2);
-      // Structural changes can resize the viewport (the Undo bar appears or
-      // disappears). Keep sufficient derived edge space for the same anchor,
-      // including the first/last card, rather than clamping it to a new center.
+      // Ordinary card placement uses trailing space, never a leading centering
+      // gap. Explicit deletion compensation below is local to its retained card.
       if (!centerRequested && anchorCenter != null && !userScrolling) {
         final viewportTop = box.localToGlobal(Offset.zero).dy;
-        if (anchorId == ids.first) {
-          nextTop = math.max(
-            nextTop,
-            anchorCenter! - viewportTop - first.size.height / 2,
-          );
-        }
         if (anchorId == draftId) {
           nextBottom = math.max(
             nextBottom,
@@ -220,20 +262,52 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           );
         }
       }
-      if ((topPadding - nextTop).abs() > 0.5 ||
-          (bottomPadding - nextBottom).abs() > 0.5) {
+      if (structuralAnchoring &&
+          !centerRequested &&
+          anchorCenter != null &&
+          !userScrolling) {
+        final current = center(activeId);
+        if (current != null) {
+          final previousGap = structuralGapBefore == activeId
+              ? structuralGap
+              : 0.0;
+          final requiredGap = math.max(
+            0.0,
+            previousGap - (scroll.offset + current - anchorCenter!),
+          );
+          if ((requiredGap - previousGap).abs() > 0.5) {
+            // A deleted predecessor can leave too little content above the
+            // anchor for a nonnegative scroll offset. Retain only that missing
+            // space before this card, never a startup centering spacer.
+            jump(
+              scroll.offset +
+                  current -
+                  anchorCenter! +
+                  requiredGap -
+                  previousGap,
+            );
+            setState(() {
+              structuralGap = requiredGap;
+              structuralGapBefore = requiredGap == 0 ? null : activeId;
+              bottomPadding = nextBottom;
+            });
+            scheduleLayout();
+            return;
+          }
+        }
+      }
+      if ((bottomPadding - nextBottom).abs() > 0.5) {
         if (!centerRequested && anchorId == activeId && anchorCenter != null) {
           final current = center(activeId);
           if (current != null) jump(scroll.offset + current - anchorCenter!);
         }
         setState(() {
-          topPadding = nextTop;
           bottomPadding = nextBottom;
         });
         scheduleLayout();
         return;
       }
-      if (centerRequested) {
+      if (centerRequested && activeId != draftId) {
         centerRequested = false;
         final current = center(activeId);
         final middle = box.localToGlobal(Offset(0, box.size.height / 2)).dy;
@@ -241,10 +315,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           jump(scroll.offset + current - middle);
           if (anchorId == activeId) anchorCenter = middle;
         }
-      } else if (anchorId == activeId && anchorCenter != null) {
+      } else if (!visibilityRequested &&
+          anchorId == activeId &&
+          anchorCenter != null) {
         final current = center(activeId);
         if (current != null) jump(scroll.offset + current - anchorCenter!);
       }
+      centerRequested = false;
       structuralAnchoring = false;
       if (releaseAnchor || MediaQuery.disableAnimationsOf(context)) {
         anchorId = null;
@@ -255,18 +332,67 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           settleSelection = false;
           final wasScrolling = userScrolling;
           userScrolling = true;
+          userScrollDirection = deferredScrollDirection;
+          deferredScrollDirection = ScrollDirection.idle;
           nearest();
+          userScrollDirection = ScrollDirection.idle;
           userScrolling = wasScrolling;
         }
       }
       final editor = editors[activeId];
-      final focused = editor?.targetFocus.hasFocus == true
-          ? editor?.targetFocus
-          : editor?.nativeFocus.hasFocus == true
-          ? editor?.nativeFocus
-          : null;
-      if (focused?.context != null && !userScrolling && !adjusting) {
-        Scrollable.ensureVisible(focused!.context!, duration: Duration.zero);
+      if (draftFocusRequested &&
+          activeId == draftId &&
+          !session.isBusy &&
+          !exitDraining &&
+          !userScrolling &&
+          !adjusting &&
+          editor != null) {
+        draftFocusRequested = false;
+        editor.targetFocus.requestFocus();
+        // Focus and EditableText's caret reveal settle on the next layout. Its
+        // old native-field geometry must not drive the fresh draft's reveal.
+        visibilityRequested = true;
+        scheduleLayout();
+        return;
+      }
+      if (visibilityRequested &&
+          !userScrolling &&
+          !adjusting &&
+          editor != null) {
+        final target = editor.targetBounds.currentContext?.findRenderObject();
+        final native = editor.nativeBounds.currentContext?.findRenderObject();
+        if (target is RenderBox &&
+            native is RenderBox &&
+            target.hasSize &&
+            native.hasSize) {
+          final viewportTop = box.localToGlobal(Offset.zero).dy;
+          final viewportBottom = viewportTop + box.size.height;
+          final firstTop = target.localToGlobal(Offset.zero).dy;
+          final lastBottom = native
+              .localToGlobal(Offset(0, native.size.height))
+              .dy;
+          final pairFits = lastBottom - firstTop <= box.size.height;
+          final focused = editor.nativeFocus.hasFocus && !alignDraftStart
+              ? native
+              : target;
+          final top = pairFits
+              ? firstTop
+              : focused.localToGlobal(Offset.zero).dy;
+          final bottom = pairFits
+              ? lastBottom
+              : focused.localToGlobal(Offset(0, focused.size.height)).dy;
+          var delta = 0.0;
+          if (alignDraftStart ||
+              top < viewportTop ||
+              bottom - top > box.size.height) {
+            delta = top - viewportTop;
+          } else if (bottom > viewportBottom) {
+            delta = bottom - viewportBottom;
+          }
+          jump(scroll.offset + delta);
+          visibilityRequested = false;
+          alignDraftStart = false;
+        }
       }
     });
   }
@@ -286,7 +412,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   void select(String id, {bool centerCard = false}) {
     if (session.isBusy || exitDraining || id == activeId) return;
     anchorId = id;
-    anchorCenter = center(id);
+    // At the top boundary expansion grows down from the content edge. Keeping
+    // the old compact center would scroll away the first card's beginning.
+    anchorCenter =
+        id == ids.first &&
+            scroll.offset <= scroll.position.minScrollExtent + 0.5
+        ? null
+        : center(id);
     adjusting = true;
     releaseAnchor = false;
     centerRequested = centerCard;
@@ -308,6 +440,26 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
     final box = viewport.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
+    if (scroll.position.maxScrollExtent - scroll.position.minScrollExtent <=
+        0.5) {
+      // A short stack can fit completely, so geometry cannot distinguish a
+      // deliberate forward/backward gesture. Advance one card in that gesture's
+      // direction without adding artificial scroll space or selecting on reveal.
+      final step = switch (userScrollDirection) {
+        ScrollDirection.forward => -1,
+        ScrollDirection.reverse => 1,
+        ScrollDirection.idle => 0,
+      };
+      userScrollDirection = ScrollDirection.idle;
+      if (step != 0) {
+        select(ids[(ids.indexOf(activeId) + step).clamp(0, ids.length - 1)]);
+      }
+      return;
+    }
+    if (scroll.offset <= scroll.position.minScrollExtent + 0.5) {
+      select(ids.first);
+      return;
+    }
     final middle = box.localToGlobal(Offset(0, box.size.height / 2)).dy;
     var best = activeId;
     var distance = ((center(best) ?? middle) - middle).abs();
@@ -326,8 +478,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (jumping) return false;
     if (event is UserScrollNotification) {
       if (event.direction != ScrollDirection.idle) {
+        userScrollDirection = event.direction;
+        if (structuralGap != 0) {
+          setState(() {
+            structuralGap = 0;
+            structuralGapBefore = null;
+          });
+        }
         structuralAnchoring = false;
         userScrolling = true;
+        followEditor = false;
+        visibilityRequested = false;
+        alignDraftStart = false;
       }
     }
     if (event is ScrollUpdateNotification &&
@@ -335,16 +497,31 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         anchorCenter != null) {
       anchorCenter = anchorCenter! - (event.scrollDelta ?? 0);
     }
-    if (event is ScrollUpdateNotification && userScrolling && !adjusting) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => nearest());
+    if (event is ScrollUpdateNotification &&
+        !userScrolling &&
+        followEditor &&
+        !structuralAnchoring &&
+        !adjusting &&
+        !session.isBusy) {
+      // EditableText can reveal only its caret after focus or a structural
+      // change. Reconcile that completed movement with the full labeled field.
+      // Deliberate user scrolling has already disabled this follow behavior.
+      visibilityRequested = true;
+      scheduleLayout();
     }
     if (event is ScrollEndNotification) {
       if (adjusting) {
         settleSelection = true;
+        if (userScrolling) {
+          // Preserve only real user intent until expansion has measurable
+          // geometry; programmatic ScrollEnd events must not invent a direction.
+          deferredScrollDirection = userScrollDirection;
+        }
       } else {
         nearest();
       }
       userScrolling = false;
+      userScrollDirection = ScrollDirection.idle;
     }
     return false;
   }
@@ -370,17 +547,15 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   Future<void> confirm() async {
     if (exitDraining || exitRequest != null) return;
     final initiatingSession = session;
-    setState(() {
-      confirmError = null;
-    });
     try {
-      await initiatingSession.confirmAndNext();
-    } catch (error) {
-      if (mounted && identical(session, initiatingSession)) {
-        setState(() {
-          confirmError = error;
-        });
-      }
+      final operation = initiatingSession.confirmAndNext();
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      await operation;
+    } catch (_) {
+      // The controller owns revision-aware validation, including rechecks when
+      // reopening the same raw draft after a conflicting saved entry changes.
     }
   }
 
@@ -508,20 +683,56 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
     try {
-      await initiatingSession.completeSession();
+      final operation = initiatingSession.completeSession();
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      await operation;
       if (!mounted ||
           !identical(session, initiatingSession) ||
           route?.isCurrent != true) {
         return;
       }
       await requestExit();
-    } catch (error) {
+    } catch (_) {
       if (!mounted || !identical(session, initiatingSession)) return;
       setState(() {
-        if (error is! SavedEntryCompletionBlocked) confirmError = error;
         centerRequested = true;
       });
       scheduleLayout();
+    }
+  }
+
+  Future<void> openInterchange() async {
+    final open = widget.onOpenInterchange;
+    if (open == null || exitDraining || exitRequest != null || session.isBusy) {
+      return;
+    }
+    final owner = session;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent != true) return;
+    setState(() => exitDraining = true);
+    FocusScope.of(context).unfocus();
+    try {
+      final draining = owner.awaitSavedEdits();
+      widget.onPendingWrites?.call(draining);
+      await draining;
+      if (!mounted || session != owner || route?.isCurrent != true) return;
+      await open();
+      if (!mounted || session != owner || route?.isCurrent != true) return;
+      final refreshing = owner.refreshSavedEntries();
+      widget.onPendingWrites?.call(refreshing);
+      await refreshing;
+    } catch (_) {
+      if (mounted && session == owner && route?.isCurrent == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(PikoCopyScope.of(context).text('entry.saveFailed')),
+          ),
+        );
+      }
+    } finally {
+      if (mounted && session == owner) setState(() => exitDraining = false);
     }
   }
 
@@ -542,7 +753,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       final draft = initiatingSession.draft;
       if (!initiatingSession.isCompleted &&
           (draft.targetText.trim().isNotEmpty ||
-              draft.nativeText.trim().isNotEmpty)) {
+              draft.nativeText.trim().isNotEmpty ||
+              draft.assignments.isNotEmpty)) {
         final discard = await showPikoDialog<bool>(
           context,
           builder: (dialogContext) {
@@ -560,16 +772,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
             exitDialog = dialogRoute;
             final copy = PikoCopyScope.of(dialogContext);
             return PikoDialog(
+              purpose: PikoDialogPurpose.confirmation,
               title: copy.text('entry.exitTitle'),
               body: Text(copy.text('entry.exitWarning')),
               actions: [
-                PikoButton(
+                PikoDialogAction(
                   label: copy.text('entry.continue'),
+                  role: PikoDialogActionRole.safe,
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                 ),
-                PikoButton(
+                PikoDialogAction(
                   label: copy.text('entry.discard'),
-                  variant: PikoButtonVariant.dangerOutline,
+                  role: PikoDialogActionRole.destructive,
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                 ),
               ],
@@ -615,18 +829,27 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     VocabularyValidation.requiredNative => 'entry.requiredNative',
     VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
     VocabularyValidation.entryNotFound => 'entry.notFound',
+    CategoryValidation() => 'category.selectionInvalid',
     _ => 'entry.saveFailed',
   };
 
   Widget card(String id, int index, BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final owningSession = session;
     final draft = id == draftId;
     final saved = draft ? null : session.savedEntryState(id);
     final values = draft ? session.draft : saved!.draft;
-    final editor = editors.putIfAbsent(id, () => _Editors(values))
-      ..sync(values);
+    final editor = editors.putIfAbsent(
+      id,
+      () => _Editors(values, () {
+        if (!mounted || id != activeId || userScrolling) return;
+        visibilityRequested = true;
+        followEditor = true;
+        scheduleLayout();
+      }),
+    )..sync(values);
     final active = id == activeId;
-    final error = draft ? confirmError : saved!.error;
+    final error = draft ? session.draftError : saved!.error;
     final metaStyle = TextStyle(
       color: pikoDesign.color('muted'),
       fontSize: pikoDesign.dimension('typography.small'),
@@ -645,28 +868,43 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           targetText: target ? value : null,
           nativeText: target ? null : value,
         );
+        widget.onPendingWrites?.call(session.awaitSavedEdits());
       }
     }
 
-    Widget field(bool target) => PikoTextField(
-      key: ValueKey('$id-${target ? 'target' : 'native'}'),
-      label: copy.text(
-        (target
-                ? widget.collection.targetLanguage
-                : widget.collection.nativeLanguage)
-            .copyKey,
+    Widget field(bool target) => SizedBox(
+      key: target ? editor.targetBounds : editor.nativeBounds,
+      child: PikoTextField(
+        key: ValueKey('$id-${target ? 'target' : 'native'}'),
+        label: copy.text(
+          (target
+                  ? widget.collection.targetLanguage
+                  : widget.collection.nativeLanguage)
+              .copyKey,
+        ),
+        controller: target ? editor.target : editor.native,
+        focusNode: target ? editor.targetFocus : editor.nativeFocus,
+        enabled: !session.isBusy && !exitDraining,
+        textInputAction: target ? TextInputAction.next : TextInputAction.done,
+        // Keep traversal inside this editor and guard even a cached IME callback.
+        onEditingComplete: () {},
+        onSubmitted: (_) {
+          if (session.isBusy || exitDraining || id != activeId) return;
+          if (target) {
+            editor.nativeFocus.requestFocus();
+          } else {
+            editor.nativeFocus.unfocus();
+          }
+        },
+        error:
+            error ==
+                (target
+                    ? VocabularyValidation.requiredTarget
+                    : VocabularyValidation.requiredNative)
+            ? copy.text(errorKey(error!))
+            : null,
+        onChanged: (value) => edit(target, value),
       ),
-      controller: target ? editor.target : editor.native,
-      focusNode: target ? editor.targetFocus : editor.nativeFocus,
-      enabled: !session.isBusy && !exitDraining,
-      error:
-          error ==
-              (target
-                  ? VocabularyValidation.requiredTarget
-                  : VocabularyValidation.requiredNative)
-          ? copy.text(errorKey(error!))
-          : null,
-      onChanged: (value) => edit(target, value),
     );
     Widget reveal(Widget child) => draft
         ? child
@@ -766,31 +1004,58 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          values.targetText.isEmpty
-                              ? copy.text('entry.targetPlaceholder')
-                              : values.targetText,
-                          style: TextStyle(
-                            fontSize: pikoDesign.dimension('typography.body'),
-                            fontWeight: pikoDesign.weight(
-                              'typography.titleWeight',
+                        if (draft &&
+                            values.targetText.trim().isEmpty &&
+                            values.nativeText.trim().isEmpty)
+                          Text(
+                            copy.text('entry.newVocabulary'),
+                            style: TextStyle(
+                              fontSize: pikoDesign.dimension('typography.body'),
+                              fontWeight: pikoDesign.weight(
+                                'typography.titleWeight',
+                              ),
                             ),
+                          )
+                        else ...[
+                          if (values.targetText.trim().isNotEmpty)
+                            Text(
+                              values.targetText,
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'typography.body',
+                                ),
+                                fontWeight: pikoDesign.weight(
+                                  'typography.titleWeight',
+                                ),
+                              ),
+                            ),
+                          if (values.targetText.trim().isNotEmpty &&
+                              values.nativeText.trim().isNotEmpty)
+                            SizedBox(
+                              height: pikoDesign.dimension(
+                                'components.entryStack.previewGap',
+                              ),
+                            ),
+                          if (values.nativeText.trim().isNotEmpty)
+                            Text(
+                              values.nativeText,
+                              style: TextStyle(
+                                fontSize: pikoDesign.dimension(
+                                  'typography.body',
+                                ),
+                                color: pikoDesign.color('muted'),
+                              ),
+                            ),
+                        ],
+                        if (widget.categoriesRepository != null &&
+                            values.assignments.isNotEmpty)
+                          VocabularyCategories(
+                            key: ObjectKey(owningSession),
+                            collectionId: widget.collection.id,
+                            entryId: draft ? null : id,
+                            repository: widget.categoriesRepository!,
+                            draftAssignments: values.assignments,
                           ),
-                        ),
-                        SizedBox(
-                          height: pikoDesign.dimension(
-                            'components.entryStack.previewGap',
-                          ),
-                        ),
-                        Text(
-                          values.nativeText.isEmpty
-                              ? copy.text('entry.nativePlaceholder')
-                              : values.nativeText,
-                          style: TextStyle(
-                            fontSize: pikoDesign.dimension('typography.body'),
-                            color: pikoDesign.color('muted'),
-                          ),
-                        ),
                         if (error != null)
                           Text(
                             copy.text(errorKey(error)),
@@ -822,6 +1087,69 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           field(true),
                           SizedBox(height: pikoDesign.dimension('spacing.4')),
                           field(false),
+                          if (widget.categoriesRepository != null &&
+                              session.supportsCategories)
+                            VocabularyCategories(
+                              key: ObjectKey(owningSession),
+                              collectionId: widget.collection.id,
+                              entryId: draft ? null : id,
+                              repository: widget.categoriesRepository!,
+                              draftAssignments: values.assignments,
+                              disabled:
+                                  !active ||
+                                  session.isBusy ||
+                                  exitDraining ||
+                                  exitRequest != null,
+                              onPendingWrites: widget.onPendingWrites,
+                              onMetadataChanged:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : () {
+                                      if (!mounted ||
+                                          session != owningSession) {
+                                        return;
+                                      }
+                                      final owner = session;
+                                      final refreshing = owner
+                                          .refreshCategoryReferences(
+                                            widget.categoriesRepository!,
+                                          );
+                                      widget.onPendingWrites?.call(
+                                        refreshing.then(
+                                          (_) => owner.awaitSavedEdits(),
+                                        ),
+                                      );
+                                    },
+                              onSelection: (assignment) {
+                                if (!mounted ||
+                                    session != owningSession ||
+                                    !active ||
+                                    id != activeId ||
+                                    session.isBusy ||
+                                    exitDraining ||
+                                    exitRequest != null ||
+                                    ModalRoute.of(context)?.isCurrent != true) {
+                                  return;
+                                }
+                                session.setCategoryValues(
+                                  entryId: draft ? null : id,
+                                  dimensionId: assignment.dimensionId,
+                                  valueIds: assignment.valueIds,
+                                );
+                                final owner = session;
+                                final refreshing = owner
+                                    .refreshCategoryReferences(
+                                      widget.categoriesRepository!,
+                                    );
+                                widget.onPendingWrites?.call(
+                                  refreshing.then(
+                                    (_) => owner.awaitSavedEdits(),
+                                  ),
+                                );
+                              },
+                            ),
                           SizedBox(height: pikoDesign.dimension('spacing.3')),
                           if (draft)
                             Wrap(
@@ -871,13 +1199,15 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ),
                               ),
                             ),
-                          if (!draft &&
-                              error != null &&
-                              error is! VocabularyValidation)
+                          if (error != null &&
+                              error is! VocabularyValidation &&
+                              error is! CategoryValidation)
                             PikoButton(
                               label: copy.text('action.retry'),
                               onPressed: session.isBusy || exitDraining
                                   ? null
+                                  : draft
+                                  ? confirm
                                   : () => session.retrySavedEntry(id),
                             ),
                           if (!draft && session.supportsDeletion)
@@ -963,6 +1293,20 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                               ? null
                               : complete,
                         ),
+                        if (widget.onOpenInterchange != null)
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: PikoButton(
+                              label: copy.text('json.title'),
+                              variant: PikoButtonVariant.ghost,
+                              onPressed:
+                                  session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : openInterchange,
+                            ),
+                          ),
                         Expanded(
                           child: session.isCompleted
                               ? Center(
@@ -983,9 +1327,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                           physics:
                                               session.isBusy || exitDraining
                                               ? const NeverScrollableScrollPhysics()
-                                              : const ClampingScrollPhysics(),
+                                              : const AlwaysScrollableScrollPhysics(
+                                                  parent:
+                                                      ClampingScrollPhysics(),
+                                                ),
                                           padding: EdgeInsets.only(
-                                            top: topPadding,
                                             bottom: bottomPadding,
                                           ),
                                           child: Column(
@@ -994,8 +1340,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                                 var i = 0;
                                                 i < ids.length;
                                                 i++
-                                              )
+                                              ) ...[
+                                                if (structuralGapBefore ==
+                                                        ids[i] &&
+                                                    structuralGap > 0)
+                                                  SizedBox(
+                                                    key: ValueKey(
+                                                      'entry-structural-gap-${ids[i]}',
+                                                    ),
+                                                    height: structuralGap,
+                                                  ),
                                                 card(ids[i], i, context),
+                                              ],
                                             ],
                                           ),
                                         ),

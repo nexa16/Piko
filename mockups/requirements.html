@@ -16,40 +16,23 @@
 <label>Umfang<select id="scope"><option value="All">Alle</option><option value="Base">Base</option><option value="Minimum">Minimum</option><option value="Base+Minimum">Base + Minimum</option><option value="Additional">Additional</option><option value="Unclassified">Ohne Zuordnung</option></select></label>
 <label>Ablauf<select id="flow"><option value="All">Alle</option><option value="collection">Sammlungen</option><option value="entry">Eintragen</option><option value="review">Wiederholen</option><option value="settings">Einstellungen</option></select></label>
 </form>
-<label>Release<select id="release"><option value="All">Alle</option><option value="First">Erstes Release</option><option value="Later">Später</option><option value="Undecided">Offen</option><option value="Superseded">Überholt</option></select></label>
-<p>Release ist unabhängig von Base/Minimum/Additional. Offene Zuordnungen sind noch keine Release-Zusage.</p>
+<label>Implementierungsrunde<select id="round"><option value="All">Alle</option><option value="1">Implementierungsrunde 1</option><option value="2">Implementierungsrunde 2</option><option value="Later">Später</option><option value="Undecided">Offen</option><option value="Superseded">Überholt</option></select></label>
+<p>Implementierungsrunden beschreiben den Planungsumfang, keine veröffentlichten Versionen. Sie sind unabhängig von Base/Minimum/Additional.</p>
 <button id="refresh" type="button">Aus Originaldateien neu laden</button><p id="count" role="status" aria-live="polite">Spezifikationen werden geladen …</p>
 <div id="error" class="error" hidden><div id="errorText"></div><button id="retry" type="button">Erneut laden</button></div>
 <section id="results" aria-label="Gefilterte Anforderungen"></section>
 </main>
+<script src="requirements-parser.js"></script>
 <script>
-const controls = Object.fromEntries(['q','source','scope','flow','release'].map(id => [id,document.getElementById(id)]));
+const controls = Object.fromEntries(['q','source','scope','flow','round'].map(id => [id,document.getElementById(id)]));
 const results = document.getElementById('results');
 const count = document.getElementById('count');
 let requirements = [];
-function parse(text, source, path) {
-  const rows=[];let current=null;let context='';
-  for (const [index,line] of text.split(/\r?\n/).entries()) {
-    if (/^#{1,6}\s/.test(line)) {context=line;current=null;continue;}
-    const match=line.match(/^- \*\*([A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3})(.*?)\*\*(.*)$/);
-    if (match) {
-      const metadata=match[2]+match[3];
-      const explicit=metadata.match(/\[(Confirmed|Proposed|Open|Partly resolved|Partly superseded|Resolved|Superseded)\]/i);
-      const scope=metadata.match(/\[Scope:\s*(Base|Minimum|Additional)\]/i);
-      const release=metadata.match(/\[Release:\s*(First|Later|Undecided|Superseded)\]/i);
-      const flows=[...metadata.matchAll(/\[Flow:\s*([^\]]+)\]/gi)].flatMap(item=>item[1].split(',').map(value=>value.trim().toLowerCase()));
-      const status=explicit ? explicit[1] : match[1].startsWith('OPEN-') ? 'Open' : /confirmed/i.test(context) ? 'Confirmed' : /open/i.test(context) ? 'Open' : 'Nicht angegeben';
-      current={id:match[1],source,path,line:index+1,status,release:release ? release[1] : 'Undecided',scope:scope ? scope[1] : 'Unclassified',flows,body:match[3].replace(/\[(?:Scope|Flow|Release):[^\]]*\]/gi,'').replace(/^\s*:\s*/,'').trim()};
-      rows.push(current);
-    } else if (current && line.trim() && !/^[-*]\s|^\|/.test(line)) {current.body+='\n'+line.trim();}
-    else if (!line.trim()) {current=null;}
-  }
-  return rows;
-}
+const parse = PikoRequirements.parse;
 function restore() {
  const params=new URLSearchParams(location.hash.slice(1));
  for(const [key,control] of Object.entries(controls)) {
-   const value=params.get(key)|| (key==='q'?'':'All');
+   const value=key==='round'?PikoRequirements.normalizeRound(params.get('round')||params.get('release')||'All'):(params.get(key)|| (key==='q'?'':'All'));
    control.value=key==='q'||[...control.options].some(option=>option.value===value)?value:'All';
  }
 }
@@ -57,14 +40,14 @@ function render(updateURL=true) {
  const state=Object.fromEntries(Object.entries(controls).map(([key,control])=>[key,control.value]));
  if(updateURL){const params=new URLSearchParams();for(const [key,value]of Object.entries(state)){if(value&&value!=='All')params.set(key,value);}history.replaceState(null,'',location.pathname+location.search+(params.size?'#'+params:''));}
  const query=state.q.trim().toLowerCase();
- const filtered=requirements.filter(row=>(state.source==='All'||row.source===state.source)&&(state.scope==='All'||row.scope===state.scope||(state.scope==='Base+Minimum'&&['Base','Minimum'].includes(row.scope)))&&(state.release==='All'||row.release===state.release)&&(state.flow==='All'||row.flows.includes(state.flow))&&(!query||(row.id+' '+row.body).toLowerCase().includes(query)));
+ const filtered=requirements.filter(row=>(state.source==='All'||row.source===state.source)&&(state.scope==='All'||row.scope===state.scope||(state.scope==='Base+Minimum'&&['Base','Minimum'].includes(row.scope)))&&PikoRequirements.matchesRound(row,state.round)&&(state.flow==='All'||row.flows.includes(state.flow))&&(!query||(row.id+' '+row.body).toLowerCase().includes(query)));
  results.replaceChildren();
  count.textContent=filtered.length+' von '+requirements.length+' Anforderungen';
  const fragment=document.createDocumentFragment();
  for(const row of filtered){
    const article=document.createElement('article');const heading=document.createElement('h2');heading.textContent=row.id;article.append(heading);
    const tags=document.createElement('div');tags.className='tags';
-   for(const value of [row.source,row.status,'Release: '+({First:'Erstes Release',Later:'Später',Undecided:'Offen',Superseded:'Überholt'}[row.release]),row.scope==='Unclassified'?'Ohne Umfangszuordnung':row.scope,...row.flows]){const tag=document.createElement('span');tag.className='tag';tag.textContent=value;tags.append(tag);}article.append(tags);
+   for(const value of [row.source,row.status,'Implementierungsrunde: '+({1:'1',2:'2',Later:'Später',Undecided:'Offen',Superseded:'Überholt'}[row.round]),'Revision: '+row.revision,...(row.updated?['Geändert in Runde: '+row.updated]:[]),...(row.fix?['Fix in Runde: '+row.fix]:[]),...(row.implementation?['Implementation: '+row.implementation]:[]),row.scope==='Unclassified'?'Ohne Umfangszuordnung':row.scope,...row.flows]){const tag=document.createElement('span');tag.className='tag';tag.textContent=value;tags.append(tag);}article.append(tags);
    const link=document.createElement('a');link.className='source';link.href=row.path;link.textContent='Original: '+row.path.split('/').pop()+' · Zeile '+row.line;article.append(link);
    const body=document.createElement('p');body.className='body';body.textContent=row.body;article.append(body);fragment.append(article);
  }results.append(fragment);

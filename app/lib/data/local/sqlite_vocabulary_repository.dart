@@ -4,15 +4,19 @@ import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import '../vocabulary_repository.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
+import 'sqlite_categories_repository.dart';
 
-final class _OpeningSnapshot implements VocabularyOpeningSnapshot {
-  const _OpeningSnapshot(this.entry, this.issuer);
+final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
+  const _OpeningSnapshot(this.entry, this.issuer, this.assignments);
   @override
   final VocabularyRecord entry;
   final Object issuer;
+  @override
+  final Map<String, Set<String>> assignments;
 }
 
-final class SqliteVocabularyRepository implements VocabularyRepository {
+final class SqliteVocabularyRepository
+    implements CategorizedVocabularyRepository {
   SqliteVocabularyRepository(this.database);
   final PikoDatabase database;
   final _issuer = Object();
@@ -21,7 +25,7 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
   Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
     required String entryId,
     required String collectionId,
-  }) async {
+  }) => database.transaction(() async {
     final row =
         await (database.select(database.vocabularyEntries)..where(
               (row) =>
@@ -30,7 +34,75 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
             ))
             .getSingleOrNull();
     if (row == null) throw VocabularyValidation.entryNotFound;
-    return _OpeningSnapshot(_record(row), _issuer);
+    return _OpeningSnapshot(
+      _record(row),
+      _issuer,
+      await categorizedAssignments(entryId),
+    );
+  });
+
+  @override
+  Future<Map<String, Set<String>>> categorizedAssignments(
+    String entryId,
+  ) async => Map.unmodifiable({
+    for (final group in await SqliteCategoriesRepository(
+      database,
+    ).assignments(entryId))
+      group.dimensionId: Set<String>.unmodifiable(group.valueIds),
+  });
+
+  @override
+  Future<VocabularyRecord> createCategorized({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) {
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final categories = SqliteCategoriesRepository(database);
+      await categories.validateAssignments(
+        collectionId: collectionId,
+        assignments: requested,
+      );
+      final saved = await create(
+        collectionId: collectionId,
+        targetText: targetText,
+        nativeText: nativeText,
+      );
+      await categories.replaceAssignments(
+        entryId: saved.id,
+        assignments: requested,
+      );
+      return saved;
+    });
+  }
+
+  @override
+  Future<VocabularyRecord> updateCategorized({
+    required String id,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+  }) {
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final saved = await update(
+        id: id,
+        targetText: targetText,
+        nativeText: nativeText,
+      );
+      await SqliteCategoriesRepository(
+        database,
+      ).replaceAssignments(entryId: id, assignments: requested);
+      return saved;
+    });
   }
 
   @override
@@ -74,6 +146,27 @@ final class SqliteVocabularyRepository implements VocabularyRepository {
                 ),
               );
       if (count != 1) throw VocabularyValidation.entryNotFound;
+      // Explicit deletion of definitions remains effective: Discard restores
+      // surviving assignments, never recreates a deleted category or value.
+      final categories = SqliteCategoriesRepository(database);
+      final assignments = <String, Set<String>>{};
+      for (final group in snapshot.assignments.entries) {
+        final dimension = await categories.dimensionById(group.key);
+        if (dimension == null ||
+            dimension.collectionId != original.collectionId) {
+          continue;
+        }
+        final surviving = <String>{};
+        for (final id in group.value) {
+          final value = await categories.valueById(id);
+          if (value?.dimensionId == group.key) surviving.add(id);
+        }
+        if (surviving.isNotEmpty) assignments[group.key] = surviving;
+      }
+      await categories.replaceAssignments(
+        entryId: original.id,
+        assignments: assignments,
+      );
       return original;
     });
   }

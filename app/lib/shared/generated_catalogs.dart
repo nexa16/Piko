@@ -7,11 +7,18 @@ const designCatalog = <String, Object?>{
 "ink": "#1E293B",
 "muted": "#526177",
 "name": "Cobalt",
+"onDanger": "#FFFFFF",
 "onPrimary": "#FFFFFF",
+"onReviewSecondary": "#42516B",
+"onSuccess": "#FFFFFF",
+"onWarning": "#9A3412",
 "primary": "#2956B8",
+"reviewSecondary": "#E9EEF6",
 "success": "#166534",
 "surface": "#FFFFFF",
 "tint": "#E7EEFC",
+"warningBorder": "#FB923C",
+"warningSurface": "#FFF7ED",
 },
 "components": <String, Object?>{
 "buttons": <String, Object?>{
@@ -23,6 +30,9 @@ const designCatalog = <String, Object?>{
 },
 "cards": <String, Object?>{
 "padding": 19,
+},
+"categoryPicker": <String, Object?>{
+"listHeight": 264,
 },
 "checkboxes": <String, Object?>{
 "paddingY": 10,
@@ -37,6 +47,8 @@ const designCatalog = <String, Object?>{
 "collectionReview": <String, Object?>{
 "cardMinHeight": 86,
 "cardPadding": 20,
+"mascotGap": 8,
+"mascotSize": 64,
 "quickActionsBottom": 15,
 "quickCountMinWidth": 24,
 "quickCountSize": 12,
@@ -71,6 +83,7 @@ const designCatalog = <String, Object?>{
 "compactBreakpoint": 400,
 "compactTitleSize": 18,
 "gap": 10,
+"maxTitleLines": 2,
 "titleLetterSpacing": -1,
 "titleSize": 22,
 },
@@ -84,6 +97,7 @@ const designCatalog = <String, Object?>{
 "statusSize": 11,
 },
 "fields": <String, Object?>{
+"focusWidth": 1,
 "labelSize": 12,
 "labelWeight": 750,
 "padding": 13,
@@ -165,6 +179,9 @@ const designCatalog = <String, Object?>{
 "settings": <String, Object?>{
 "fieldMarginY": 17,
 },
+"speedGame": <String, Object?>{
+"columns": 5,
+},
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
 "revealDistance": 60,
@@ -180,6 +197,26 @@ const designCatalog = <String, Object?>{
 "mobilePadding": 18,
 "pagePadding": 24,
 "pageTop": 20,
+},
+"previews": <String, Object?>{
+"round2": <String, Object?>{
+"categoryListHeight": 264,
+"entrySettleMs": 160,
+"gameColumns": 5,
+"gradingCorrect": "#22C55E",
+"gradingIncorrect": "#EF4444",
+"gradingText": "#111827",
+"inputFocusWidth": 1,
+"keyboardFocusWidth": 2,
+"learningGap": 8,
+"learningPadding": 16,
+"learningSectionGap": 16,
+"reviewSecondaryBackground": "#E9EEF6",
+"reviewSecondaryText": "#42516B",
+"warningBackground": "#FFF7ED",
+"warningBorder": "#FB923C",
+"warningText": "#9A3412",
+},
 },
 "radii": <String, Object?>{
 "card": 16,
@@ -316,6 +353,26 @@ const copyCatalog = <String, Object?>{
 "de": "Dimension hinzufügen",
 "en": "Add dimension",
 },
+"category.deleteDimension": <String, Object?>{
+"de": "Dimension löschen",
+"en": "Delete dimension",
+},
+"category.deleteDimensionWarning": <String, Object?>{
+"de": "{name} mit allen Werten und Zuordnungen löschen? Vokabeln und Lernstand bleiben erhalten.",
+"en": "Delete {name} and all its values and assignments? Vocabulary and learning are kept.",
+},
+"category.deleteFailed": <String, Object?>{
+"de": "Diese Kategorie konnte nicht gelöscht werden. Versuche es erneut.",
+"en": "Couldn't delete this category. Try again.",
+},
+"category.deleteValue": <String, Object?>{
+"de": "Wert löschen",
+"en": "Delete value",
+},
+"category.deleteValueWarning": <String, Object?>{
+"de": "{name} und seine Zuordnungen löschen? Vokabeln und Lernstand bleiben erhalten.",
+"en": "Delete {name} and its assignments? Vocabulary and learning are kept.",
+},
 "category.description": <String, Object?>{
 "de": "Dimensionen und Werte",
 "en": "Dimensions and values",
@@ -323,6 +380,34 @@ const copyCatalog = <String, Object?>{
 "category.difficulty": <String, Object?>{
 "de": "Schwierigkeit",
 "en": "Difficulty",
+},
+"category.dimensionNameInvalid": <String, Object?>{
+"de": "Gib einen eindeutigen, nicht leeren Dimensionsnamen ein.",
+"en": "Enter a unique, nonempty dimension name.",
+},
+"category.dimensionSaveFailed": <String, Object?>{
+"de": "Diese Dimension konnte nicht gespeichert werden. Versuche es erneut.",
+"en": "Couldn't save this dimension. Try again.",
+},
+"category.emptyValues": <String, Object?>{
+"de": "Noch keine Werte.",
+"en": "No values yet.",
+},
+"category.loadFailed": <String, Object?>{
+"de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
+"en": "Couldn't load category values. Try again.",
+},
+"category.managementLoadFailed": <String, Object?>{
+"de": "Kategorien konnten nicht geladen werden. Versuche es erneut.",
+"en": "Couldn't load categories. Try again.",
+},
+"category.saveDimension": <String, Object?>{
+"de": "Dimension speichern",
+"en": "Save dimension",
+},
+"category.selectionInvalid": <String, Object?>{
+"de": "Kategoriewerte wurden geändert. Prüfe die Auswahl vor dem Übernehmen.",
+"en": "Category values changed. Review the selection before applying.",
 },
 "category.settings": <String, Object?>{
 "de": "Sammlungseinstellungen",
@@ -339,6 +424,10 @@ const copyCatalog = <String, Object?>{
 "category.unit": <String, Object?>{
 "de": "Einheit",
 "en": "Unit",
+},
+"category.valueSaveFailed": <String, Object?>{
+"de": "Dieser Wert konnte nicht gespeichert werden. Versuche es erneut.",
+"en": "Couldn't save this value. Try again.",
 },
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
@@ -363,6 +452,10 @@ const copyCatalog = <String, Object?>{
 "collection.empty": <String, Object?>{
 "de": "Noch keine Vokabeln. Füge mit dem Plus deine erste Vokabel hinzu.",
 "en": "No vocabulary yet. Add your first entry using the plus button.",
+},
+"collection.filteredNoReview": <String, Object?>{
+"de": "In dieser Auswahl gibt es gerade nichts zu wiederholen.",
+"en": "Nothing to review in this selection right now.",
 },
 "collection.languagePair": <String, Object?>{
 "de": "{target} · {native}",
@@ -455,6 +548,10 @@ const copyCatalog = <String, Object?>{
 "common.entries": <String, Object?>{
 "de": "{count} Einträge",
 "en": "{count} entries",
+},
+"common.entry": <String, Object?>{
+"de": "{count} Eintrag",
+"en": "{count} entry",
 },
 "dialog.ai": <String, Object?>{
 "de": "Einstellungen zur KI-Unterstützung",
@@ -555,6 +652,10 @@ const copyCatalog = <String, Object?>{
 "entry.new": <String, Object?>{
 "de": "Neu",
 "en": "New",
+},
+"entry.newVocabulary": <String, Object?>{
+"de": "Neue Vokabel",
+"en": "New vocabulary",
 },
 "entry.notFound": <String, Object?>{
 "de": "Dieser Eintrag ist nicht mehr verfügbar.",
@@ -692,13 +793,41 @@ const copyCatalog = <String, Object?>{
 "de": "JSON analysieren",
 "en": "Analyze JSON",
 },
+"json.analyzeFailed": <String, Object?>{
+"de": "JSON konnte nicht geprüft werden. Versuche es erneut.",
+"en": "Couldn't analyze the JSON. Try again.",
+},
 "json.applied": <String, Object?>{
 "de": "{count} Beispielvokabeln hinzugefügt. Bestehende Wörter wurden nicht überschrieben.",
 "en": "Added {count} sample words. Existing words were not overwritten.",
 },
+"json.apply": <String, Object?>{
+"de": "Vokabeln importieren",
+"en": "Import vocabulary",
+},
+"json.applyFailed": <String, Object?>{
+"de": "Import fehlgeschlagen. Es wurden keine Änderungen gespeichert. Prüfe JSON erneut, um es nochmals zu versuchen.",
+"en": "Import failed. No changes were saved. Analyze again to retry.",
+},
 "json.clipboardFailed": <String, Object?>{
 "de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen.",
 "en": "Clipboard unavailable. Select and copy the JSON below, or paste manually.",
+},
+"json.collectionMissing": <String, Object?>{
+"de": "Diese Sammlung ist nicht mehr verfügbar.",
+"en": "This collection is no longer available.",
+},
+"json.collectionNotice": <String, Object?>{
+"de": "Exporte enthalten die gespeicherten Vokabeln und den Lernstand dieser Sammlung.",
+"en": "Exports contain the saved vocabulary and learning from this collection.",
+},
+"json.confirmReplacement": <String, Object?>{
+"de": "Diesen Import auf {name} anwenden? Bestehende IDs ersetzen die gewählten Inhalte. Der Lernstand bleibt unverändert.",
+"en": "Apply this batch to {name}? Existing IDs replace selected content. Learning stays unchanged.",
+},
+"json.confirmTitle": <String, Object?>{
+"de": "Vokabeln importieren?",
+"en": "Import vocabulary?",
 },
 "json.copied": <String, Object?>{
 "de": "JSON kopiert.",
@@ -716,13 +845,37 @@ const copyCatalog = <String, Object?>{
 "de": "JSON-Vorlage kopieren",
 "en": "Copy example JSON",
 },
+"json.exampleNotice": <String, Object?>{
+"de": "Die JSON-Vorlage enthält erfundene Beispieldaten.",
+"en": "Example JSON contains synthetic data.",
+},
 "json.export": <String, Object?>{
 "de": "Aktuelle Sammlung exportieren",
 "en": "Export current collection",
 },
+"json.exportFailed": <String, Object?>{
+"de": "Diese Sammlung konnte nicht exportiert werden. Versuche es erneut.",
+"en": "Couldn't export this collection. Try again.",
+},
 "json.file": <String, Object?>{
 "de": "JSON-Datei auswählen",
 "en": "Choose JSON file",
+},
+"json.fileFailed": <String, Object?>{
+"de": "Die JSON-Datei konnte nicht geöffnet werden. Versuche es erneut oder füge JSON ein.",
+"en": "Couldn't open the JSON file. Try again or paste the JSON.",
+},
+"json.fileSaved": <String, Object?>{
+"de": "JSON-Datei gespeichert.",
+"en": "JSON file saved.",
+},
+"json.foreignId": <String, Object?>{
+"de": "Diese ID gehört zu einer anderen Sammlung. Prüfe die Zuordnung der Vokabeln, Dimensionen und Werte.",
+"en": "This ID belongs to another collection. Check vocabulary, dimension and value ownership.",
+},
+"json.importApplied": <String, Object?>{
+"de": "Import abgeschlossen: {added} neu · {updated} aktualisiert · {unchanged} unverändert.",
+"en": "Import complete: {added} new · {updated} updated · {unchanged} unchanged.",
 },
 "json.input": <String, Object?>{
 "de": "JSON einfügen oder bearbeiten",
@@ -731,6 +884,26 @@ const copyCatalog = <String, Object?>{
 "json.invalid": <String, Object?>{
 "de": "Piko-JSON Version 1 mit einer Sammlung und 1–1.000 vollständigen Wortpaaren verwenden (maximal 1 MB).",
 "en": "Use version 1 Piko JSON with one collection and 1–1,000 nonempty word pairs (maximum 1 MB).",
+},
+"json.invalidField": <String, Object?>{
+"de": "Dieses Feld hat einen ungültigen Typ oder Wert. Prüfe die JSON-Vorlage.",
+"en": "This field has an invalid type or value. Check the example JSON.",
+},
+"json.invalidSyntax": <String, Object?>{
+"de": "JSON konnte nicht gelesen werden. Prüfe Kommas, Anführungszeichen und Klammern.",
+"en": "JSON could not be parsed. Check commas, quotes and brackets.",
+},
+"json.invalidUtf8": <String, Object?>{
+"de": "Die Datei muss gültigen UTF-8-Text enthalten.",
+"en": "The file must contain valid UTF-8 text.",
+},
+"json.issueLocation": <String, Object?>{
+"de": "Zeile {row} · {path}",
+"en": "Row {row} · {path}",
+},
+"json.issuePath": <String, Object?>{
+"de": "{path}",
+"en": "{path}",
 },
 "json.languages": <String, Object?>{
 "de": "Das Sprachpaar muss dieser Sammlung entsprechen.",
@@ -748,6 +921,10 @@ const copyCatalog = <String, Object?>{
 "de": "Prototyp: Importe ändern Beispieldaten bis zum Neuladen. Exporte enthalten nur diese Beispielvokabeln, keinen echten Lernverlauf.",
 "en": "Prototype: imports change sample vocabulary until reload. Exports contain these sample words only, not real learning history.",
 },
+"json.oneCollection": <String, Object?>{
+"de": "Gib genau eine Sammlung an.",
+"en": "Include exactly one collection.",
+},
 "json.paste": <String, Object?>{
 "de": "Aus Zwischenablage einfügen",
 "en": "Paste from clipboard",
@@ -756,17 +933,37 @@ const copyCatalog = <String, Object?>{
 "de": "Vor dem Import prüfen",
 "en": "Review before importing",
 },
+"json.saveFailed": <String, Object?>{
+"de": "Die Datei konnte nicht gespeichert werden. Dein JSON steht unten weiterhin zum Kopieren bereit.",
+"en": "Couldn't save the file. Your JSON is still available below to copy.",
+},
+"json.stalePreview": <String, Object?>{
+"de": "Die Sammlung wurde geändert. Prüfe JSON vor dem Import erneut.",
+"en": "The collection changed. Analyze the JSON again before importing.",
+},
 "json.title": <String, Object?>{
 "de": "JSON importieren / exportieren",
 "en": "JSON import / export",
+},
+"json.tooLarge": <String, Object?>{
+"de": "JSON darf höchstens 1 MB groß sein (1.000.000 UTF-8-Bytes).",
+"en": "JSON must be no larger than 1 MB (1,000,000 UTF-8 bytes).",
 },
 "json.unchanged": <String, Object?>{
 "de": "Unverändert — übersprungen",
 "en": "Unchanged — skipped",
 },
+"json.unsupportedVersion": <String, Object?>{
+"de": "Verwende schemaVersion 1.",
+"en": "Use schemaVersion 1.",
+},
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",
 "en": "Import vocabulary only (do not restore progress)",
+},
+"json.working": <String, Object?>{
+"de": "Wird verarbeitet…",
+"en": "Working…",
 },
 "language.english": <String, Object?>{
 "de": "Englisch",
@@ -807,6 +1004,10 @@ const copyCatalog = <String, Object?>{
 "learn.exit": <String, Object?>{
 "de": "Wiederholung beenden",
 "en": "Exit review",
+},
+"learn.exitSpeed": <String, Object?>{
+"de": "Intensives Lernen beenden",
+"en": "Exit Speed",
 },
 "learn.gradeFailed": <String, Object?>{
 "de": "Diese Bewertung konnte nicht gespeichert werden. Wähle die Bewertung erneut, um es noch einmal zu versuchen.",
@@ -856,6 +1057,10 @@ const copyCatalog = <String, Object?>{
 "de": "Beispielwiederholung · Bewertungen und Fortschritt bleiben nur im Seitenspeicher. Keine echte Planung oder FSRS-Berechnung.",
 "en": "Sample review · grades and progress stay in page memory only. No real scheduling or FSRS calculations.",
 },
+"learn.retryCountdown": <String, Object?>{
+"de": "Nächste Wiederholung in {seconds} Sekunden",
+"en": "Next repetition in {seconds} seconds",
+},
 "learn.retryLoadFailed": <String, Object?>{
 "de": "Der Wiederholungsstand konnte nicht geladen werden. Bitte erneut versuchen.",
 "en": "Retry state could not be loaded. Try again.",
@@ -888,6 +1093,10 @@ const copyCatalog = <String, Object?>{
 "de": "Lernrichtung wählen",
 "en": "Choose review direction",
 },
+"learn.speedProgress": <String, Object?>{
+"de": "{completed} / {total} abgeschlossen",
+"en": "{completed} / {total} completed",
+},
 "learn.speedTitle": <String, Object?>{
 "de": "Intensives Lernen",
 "en": "Speed Learning",
@@ -895,6 +1104,10 @@ const copyCatalog = <String, Object?>{
 "learn.start": <String, Object?>{
 "de": "Wiederholung starten",
 "en": "Start review",
+},
+"learn.startSpeed": <String, Object?>{
+"de": "Intensives Lernen starten",
+"en": "Start Speed",
 },
 "learn.summaryEncouragement": <String, Object?>{
 "de": "Gut gemacht! Jede Wiederholung zählt.",
@@ -959,6 +1172,346 @@ const copyCatalog = <String, Object?>{
 "prototype.noSave": <String, Object?>{
 "de": "Nur Prototyp · Änderungen bleiben bis zum Neuladen",
 "en": "Prototype only · changes last until reload",
+},
+"r2.addValue": <String, Object?>{
+"de": "Wert hinzufügen",
+"en": "Add value",
+},
+"r2.apply": <String, Object?>{
+"de": "Übernehmen",
+"en": "Apply",
+},
+"r2.categoryAssignments": <String, Object?>{
+"de": "Kategoriezuordnungen",
+"en": "Category assignments",
+},
+"r2.categoryInvalid": <String, Object?>{
+"de": "Verwende einen eindeutigen, nicht leeren Namen. Mehrfachzuordnungen müssen vor dem Wechsel auf einen Wert aufgelöst werden.",
+"en": "Use a unique, nonempty name. Multiple assignments must be resolved before switching to one value.",
+},
+"r2.categorySearch": <String, Object?>{
+"de": "Kategoriewert suchen",
+"en": "Find category value",
+},
+"r2.caughtUp": <String, Object?>{
+"de": "Super, du hast alles gelernt!",
+"en": "Great work! You're all caught up.",
+},
+"r2.changed": <String, Object?>{
+"de": "Änderungen gespeichert",
+"en": "Changes saved",
+},
+"r2.clear": <String, Object?>{
+"de": "Suche und Filter zurücksetzen",
+"en": "Clear search and filters",
+},
+"r2.clearFilters": <String, Object?>{
+"de": "Filter zurücksetzen",
+"en": "Clear filters",
+},
+"r2.clearSearch": <String, Object?>{
+"de": "Suche löschen",
+"en": "Clear search",
+},
+"r2.clearSelection": <String, Object?>{
+"de": "Auswahl aufheben",
+"en": "Clear selection",
+},
+"r2.continue": <String, Object?>{
+"de": "Wiederholung fortsetzen",
+"en": "Continue review",
+},
+"r2.default": <String, Object?>{
+"de": "Beide Richtungen fällig",
+"en": "Both directions due",
+},
+"r2.deleteCategory": <String, Object?>{
+"de": "Kategorie löschen",
+"en": "Delete category",
+},
+"r2.deleteCategoryWarning": <String, Object?>{
+"de": "Diese Kategorie und ihre Zuordnungen entfernen? Vokabeln und Lernstand bleiben erhalten.",
+"en": "Remove this category and its assignments? Vocabulary and learning are kept.",
+},
+"r2.done": <String, Object?>{
+"de": "Alles gelernt",
+"en": "All caught up",
+},
+"r2.due": <String, Object?>{
+"de": "{direction} · {count} zum Wiederholen",
+"en": "{direction} · {count} to review",
+},
+"r2.editCategories": <String, Object?>{
+"de": "Kategorien bearbeiten",
+"en": "Edit categories",
+},
+"r2.editDimension": <String, Object?>{
+"de": "Kategoriedimension bearbeiten",
+"en": "Edit category dimension",
+},
+"r2.editValue": <String, Object?>{
+"de": "Kategoriewert bearbeiten",
+"en": "Edit category value",
+},
+"r2.empty": <String, Object?>{
+"de": "Leere Sammlung",
+"en": "Empty collection",
+},
+"r2.first": <String, Object?>{
+"de": "Implementierungsrunde 1",
+"en": "Implementation round 1",
+},
+"r2.food": <String, Object?>{
+"de": "Essen",
+"en": "Food",
+},
+"r2.game": <String, Object?>{
+"de": "Eine kurze Pause",
+"en": "A quick break",
+},
+"r2.gameHint": <String, Object?>{
+"de": "Tippe 1 bis 10 der Reihe nach an, um den nächsten Durchgang zu starten. Ohne Zeitlimit.",
+"en": "Tap 1 to 10 in order to start the next pass. No time limit.",
+},
+"r2.gameNext": <String, Object?>{
+"de": "Als Nächstes: {number}",
+"en": "Next: {number}",
+},
+"r2.jsonApplied": <String, Object?>{
+"de": "Import auf die Beispielsammlung angewendet.",
+"en": "Import applied to the sample collection.",
+},
+"r2.jsonCategory": <String, Object?>{
+"de": "Ungültige Kategorie-Referenz, Bezeichnung oder Einzelzuweisung.",
+"en": "Invalid category reference, name or single-value assignment.",
+},
+"r2.jsonDemo": <String, Object?>{
+"de": "Fehlerhafte JSON-Vorschau",
+"en": "Invalid JSON preview",
+},
+"r2.jsonDuplicate": <String, Object?>{
+"de": "Das Ergebnis würde doppelte Vokabelpaare enthalten.",
+"en": "The result would contain duplicate vocabulary pairs.",
+},
+"r2.jsonGroups": <String, Object?>{
+"de": "Inhalte ersetzen (ohne Lernstand)",
+"en": "Replace content (learning is excluded)",
+},
+"r2.jsonGroupsRequired": <String, Object?>{
+"de": "Wähle mindestens eine Inhaltsgruppe.",
+"en": "Select at least one content group.",
+},
+"r2.jsonIdentity": <String, Object?>{
+"de": "Ungültige, wiederholte oder fremde Vokabel-ID.",
+"en": "Invalid, repeated or foreign-owned vocabulary ID.",
+},
+"r2.jsonInvalid": <String, Object?>{
+"de": "Ungültiges JSON-Format. Verwende eine Sammlung und Schema-Version 1.",
+"en": "Invalid JSON envelope. Use one collection and schema version 1.",
+},
+"r2.jsonMetadata": <String, Object?>{
+"de": "Bestehende Kategorienamen und Einstellungen bleiben erhalten. Nur Zuordnungen ändern sich.",
+"en": "Existing category names and settings are kept. Only assignments change.",
+},
+"r2.jsonNotice": <String, Object?>{
+"de": "Gleiche IDs ersetzen die gewählten Inhalte. Der Lernstand bleibt immer erhalten; importierter Lernstand wird ignoriert. Neue Wörter starten frisch. Fehlende Wörter werden nicht gelöscht.",
+"en": "Matching IDs replace selected content. Learning is always preserved; imported learning is ignored. New words start fresh. Omitted words are not deleted.",
+},
+"r2.jsonSummary": <String, Object?>{
+"de": "Neu: {added} · Aktualisiert: {updated} · Unverändert: {unchanged} · Fehler: {errors}",
+"en": "New: {added} · Updated: {updated} · Unchanged: {unchanged} · Errors: {errors}",
+},
+"r2.jsonText": <String, Object?>{
+"de": "Beide Vokabeltexte müssen ausgefüllt sein.",
+"en": "Both vocabulary texts must be nonempty.",
+},
+"r2.menu": <String, Object?>{
+"de": "Sammlungsaktionen",
+"en": "Collection actions",
+},
+"r2.mode": <String, Object?>{
+"de": "Auswahlmodus",
+"en": "Selection mode",
+},
+"r2.more": <String, Object?>{
+"de": "Weitere Optionen",
+"en": "More options",
+},
+"r2.multiple": <String, Object?>{
+"de": "Mehrere Werte",
+"en": "Multiple values",
+},
+"r2.name": <String, Object?>{
+"de": "Name",
+"en": "Name",
+},
+"r2.nativeText": <String, Object?>{
+"de": "Text der Muttersprache",
+"en": "Native-language text",
+},
+"r2.noCategories": <String, Object?>{
+"de": "Noch keine Kategorien. Füge eine Dimension wie Thema hinzu.",
+"en": "No categories yet. Add a dimension such as Topic.",
+},
+"r2.noMatches": <String, Object?>{
+"de": "Keine passenden Vokabeln.",
+"en": "No matching vocabulary.",
+},
+"r2.noValueMatches": <String, Object?>{
+"de": "Keine passenden Werte.",
+"en": "No matching values.",
+},
+"r2.noValues": <String, Object?>{
+"de": "Noch keine Werte. Füge unten den ersten hinzu.",
+"en": "No values yet. Add the first one below.",
+},
+"r2.notice": <String, Object?>{
+"de": "Interaktive Beispieldaten · Änderungen bis zum Neuladen · keine echte Lernplanung",
+"en": "Interactive sample data · changes last until reload · no real scheduling",
+},
+"r2.one": <String, Object?>{
+"de": "Nur Rückrichtung fällig",
+"en": "Only reverse direction due",
+},
+"r2.pending": <String, Object?>{
+"de": "Eine Wiederholung wartet auf dich.",
+"en": "A repetition is waiting for you.",
+},
+"r2.pool": <String, Object?>{
+"de": "Größe des rotierenden Wortpools",
+"en": "Rotating pool size",
+},
+"r2.poolHint": <String, Object?>{
+"de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, liegt zwischen den Durchgängen ein Zahlenspiel. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen.",
+"en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, a number game separates passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
+},
+"r2.poolInvalid": <String, Object?>{
+"de": "Wähle eine positive ganze Poolgröße und mindestens ein Wort.",
+"en": "Choose a positive whole-number pool size and at least one word.",
+},
+"r2.release": <String, Object?>{
+"de": "Implementierungsrunde",
+"en": "Implementation round",
+},
+"r2.reset": <String, Object?>{
+"de": "Beispieldaten zurücksetzen",
+"en": "Reset sample data",
+},
+"r2.save": <String, Object?>{
+"de": "Speichern",
+"en": "Save",
+},
+"r2.saveValue": <String, Object?>{
+"de": "Wert speichern",
+"en": "Save value",
+},
+"r2.scenario": <String, Object?>{
+"de": "Beispielzustand",
+"en": "Sample state",
+},
+"r2.school": <String, Object?>{
+"de": "Schule",
+"en": "School",
+},
+"r2.second": <String, Object?>{
+"de": "Implementierungsrunde 2",
+"en": "Implementation round 2",
+},
+"r2.selectVocabulary": <String, Object?>{
+"de": "Auswählen",
+"en": "Select",
+},
+"r2.selectWord": <String, Object?>{
+"de": "{target} — {native} auswählen",
+"en": "Select {target} — {native}",
+},
+"r2.selected": <String, Object?>{
+"de": "{count} Wörter ausgewählt",
+"en": "{count} words selected",
+},
+"r2.selectedOne": <String, Object?>{
+"de": "1 Wort ausgewählt",
+"en": "1 word selected",
+},
+"r2.selectionDone": <String, Object?>{
+"de": "Auswahl fertig",
+"en": "Done selecting",
+},
+"r2.single": <String, Object?>{
+"de": "Ein Wert",
+"en": "One value",
+},
+"r2.speedAutomatic": <String, Object?>{
+"de": "Standard: neue Wörter passend zu deinen Filtern",
+"en": "Default: new words matching your filters",
+},
+"r2.speedDemo": <String, Object?>{
+"de": "Speed: Pause bei kleinem Pool",
+"en": "Speed: short pool break",
+},
+"r2.speedDirectionAction": <String, Object?>{
+"de": "Intensiv lernen · {direction} · {count} Vokabeln",
+"en": "Speed · {direction} · {count} words",
+},
+"r2.speedDirectionCount": <String, Object?>{
+"de": "{direction} · {count}",
+"en": "{direction} · {count}",
+},
+"r2.speedDirectionOne": <String, Object?>{
+"de": "Intensiv lernen · {direction} · 1 Vokabel",
+"en": "Speed · {direction} · 1 word",
+},
+"r2.speedManual": <String, Object?>{
+"de": "Manuelle Auswahl hat Vorrang vor Filtern und kann bereits gelernte Wörter enthalten.",
+"en": "Manual selection takes priority over filters and can include learned words.",
+},
+"r2.speedManualCount": <String, Object?>{
+"de": "{count} Vokabeln manuell ausgewählt",
+"en": "{count} words selected manually",
+},
+"r2.speedManualOne": <String, Object?>{
+"de": "1 Vokabel manuell ausgewählt",
+"en": "1 word selected manually",
+},
+"r2.speedNewCount": <String, Object?>{
+"de": "{count} neue Vokabeln zum Lernen",
+"en": "{count} new words to learn",
+},
+"r2.speedNewOne": <String, Object?>{
+"de": "1 neue Vokabel zum Lernen",
+"en": "1 new word to learn",
+},
+"r2.speedResetWarning": <String, Object?>{
+"de": "Wenn du eine Vokabel in diesem Modus nach einem Fehler abschließt, wird ihr normaler Lernstand in dieser Richtung zurückgesetzt. Die Gegenrichtung bleibt unverändert.",
+"en": "If you finish a word in Speed after a mistake, its normal-learning progress resets in this direction. The opposite direction stays unchanged.",
+},
+"r2.speedSelection": <String, Object?>{
+"de": "Vokabeln auswählen",
+"en": "Choose vocabulary",
+},
+"r2.targetText": <String, Object?>{
+"de": "Text der Lernsprache",
+"en": "Target-language text",
+},
+"r2.topic": <String, Object?>{
+"de": "Thema",
+"en": "Topic",
+},
+"r2.valueInvalid": <String, Object?>{
+"de": "Gib einen eindeutigen, nicht leeren Namen ein.",
+"en": "Enter a unique, nonempty value name.",
+},
+"r2.valueName": <String, Object?>{
+"de": "Name des Werts",
+"en": "Value name",
+},
+"r2.wait": <String, Object?>{
+"de": "Nächste Wiederholung in {seconds} Sekunden",
+"en": "Next repetition in {seconds} seconds",
+},
+"r2.waitDemo": <String, Object?>{
+"de": "Wiederholungs-Countdown",
+"en": "Retry countdown",
 },
 "settings.ai": <String, Object?>{
 "de": "KI-Unterstützung",
@@ -1109,8 +1662,8 @@ const copyCatalog = <String, Object?>{
 "en": "Discarding changes…",
 },
 "vocab.inlineDuplicate": <String, Object?>{
-"de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden.",
-"en": "This vocabulary pair already exists in this collection.",
+"de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden. Ändere dieses Paar oder den bereits gespeicherten Eintrag.",
+"en": "This vocabulary pair already exists in this collection. Change this pair or edit the conflicting saved entry.",
 },
 "vocab.inlineEdit": <String, Object?>{
 "de": "Vokabel bearbeiten",

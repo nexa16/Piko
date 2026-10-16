@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../shared/copy_scope.dart';
-import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
@@ -132,7 +131,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
         ],
       ),
       actions: [
-        PikoButton(
+        PikoDialogAction(
           label: copy.text('action.create'),
           onPressed: submitting ? null : submit,
         ),

@@ -19,6 +19,12 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
       TableUpdate.onTable(database.learningItems, kind: UpdateKind.delete),
       TableUpdate.onTable(database.regularReviews, kind: UpdateKind.delete),
       TableUpdate.onTable(database.retryObligations, kind: UpdateKind.delete),
+      TableUpdate.onTable(database.categoryDimensions, kind: UpdateKind.delete),
+      TableUpdate.onTable(database.categoryValues, kind: UpdateKind.delete),
+      TableUpdate.onTable(
+        database.vocabularyCategoryAssignments,
+        kind: UpdateKind.delete,
+      ),
       TableUpdate.onTable(
         database.scopeAnswerOrdinals,
         kind: UpdateKind.delete,

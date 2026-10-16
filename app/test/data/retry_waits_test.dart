@@ -526,6 +526,10 @@ void main() {
         db = upgraded;
         final expected = <String, Object?>{
           ...before,
+          'learning_items': [
+            for (final row in (before['learning_items'] as List).cast<Map>())
+              {...row, 'speed_completed': 0},
+          ],
           'retry_obligations': [
             for (final row in (before['retry_obligations'] as List).cast<Map>())
               {...row, 'wait_eligible_at': null},
@@ -535,7 +539,7 @@ void main() {
         expect(
           (await upgraded.customSelect('PRAGMA user_version').getSingle())
               .read<int>('user_version'),
-          10,
+          upgraded.schemaVersion,
         );
         final source = await gateway(upgraded, 'owner');
         final unarmed = (await source.retryState(at: instant)).rounds.single;

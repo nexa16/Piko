@@ -25,7 +25,13 @@ import '../support/mutable_clock.dart';
 import '../support/entry_deletion_fixture.dart' show GatedEntryRepository;
 import '../features/due_learning_session_test.dart' show GatedSource;
 
-Finder button(String label) => find.widgetWithText(PikoButton, label);
+Finder button(String label) => find.byElementPredicate((element) {
+  final widget = element.widget;
+  if (widget is! PikoButton) return false;
+  return widget.label == label ||
+      element.findAncestorWidgetOfExactType<PikoIconButton>()?.semanticLabel ==
+          label;
+});
 Finder dropdown = find.byType(DropdownButton<LearningDirection>);
 final close = find.byTooltip('Close');
 
@@ -168,6 +174,36 @@ class Harness {
     await flush(tester);
   }
 
+  Future<void> mountDirectional(
+    WidgetTester tester, {
+    required Map<LearningDirection, int> counts,
+    ReviewLaunchPresentation presentation =
+        ReviewLaunchPresentation.collectionQuick,
+    Future<Map<LearningDirection, int>> Function()? loader,
+    Future<void> Function()? before,
+  }) async {
+    activeHarness = this;
+    await tester.pumpWidget(
+      PikoApp(
+        home: Scaffold(
+          body: ReviewLaunch(
+            collection: f.owner,
+            factory: factory,
+            vocabularyRepository: f.vocabulary,
+            beforeLaunch: before ?? () async {},
+            onPendingWrites: drains.add,
+            onBusyChanged: (_) {},
+            presentation: presentation,
+            dueCount: counts.values.fold<int>(0, (a, b) => a + b),
+            directionCounts: counts,
+            directionCountsLoader: loader,
+          ),
+        ),
+      ),
+    );
+    await flush(tester);
+  }
+
   Future<void> cleanup(WidgetTester tester) async {
     for (final gate
         in gatedVocabulary?.updateGates.values ?? <Completer<void>>[]) {
@@ -228,6 +264,78 @@ class ClosingDatabase extends PikoDatabase {
 }
 
 void main() {
+  testWidgets(
+    'one due direction bypasses setup and drains before revalidation',
+    (tester) async {
+      final f = fixture();
+      await tester.runAsync(f.initialize);
+      final h = Harness(f);
+      final events = <String>[];
+      await h.mountDirectional(
+        tester,
+        counts: {
+          LearningDirection.targetToNative: 0,
+          LearningDirection.nativeToTarget: 2,
+        },
+        before: () async {
+          events.add('drain');
+        },
+        loader: () async {
+          events.add('read');
+          return {LearningDirection.nativeToTarget: 2};
+        },
+      );
+      await tester.tap(button('Review'));
+      await h.finish(tester);
+      expect(events, ['drain', 'read']);
+      expect(h.selections, [LearningDirection.nativeToTarget]);
+      expect(find.byType(ReviewDirectionDialog), findsNothing);
+      expect(find.byType(ReviewSessionRoute), findsOneWidget);
+    },
+  );
+  testWidgets('two due directions show counted direct choices without Start', (
+    tester,
+  ) async {
+    final f = fixture();
+    await tester.runAsync(f.initialize);
+    final h = Harness(f);
+    await h.mountDirectional(
+      tester,
+      counts: {
+        LearningDirection.targetToNative: 2,
+        LearningDirection.nativeToTarget: 3,
+      },
+    );
+    await tester.tap(button('Review'));
+    await tester.pumpAndSettle();
+    expect(find.text('FR → DE · 2 to review'), findsOneWidget);
+    expect(find.text('DE → FR · 3 to review'), findsOneWidget);
+    expect(button('Start review'), findsNothing);
+    expect(dropdown, findsNothing);
+    await tester.tap(button('DE → FR · 3 to review'));
+    await h.finish(tester);
+    expect(h.selections, [LearningDirection.nativeToTarget]);
+  });
+  testWidgets('detail only offers its due direction and starts directly', (
+    tester,
+  ) async {
+    final f = fixture();
+    await tester.runAsync(f.initialize);
+    final h = Harness(f);
+    await h.mountDirectional(
+      tester,
+      presentation: ReviewLaunchPresentation.collectionCard,
+      counts: {
+        LearningDirection.targetToNative: 0,
+        LearningDirection.nativeToTarget: 3,
+      },
+    );
+    expect(find.text('FR → DE · 0 to review'), findsNothing);
+    await tester.tap(button('DE → FR · 3 to review'));
+    await h.finish(tester);
+    expect(h.selections, [LearningDirection.nativeToTarget]);
+    expect(find.byType(ReviewDirectionDialog), findsNothing);
+  });
   testWidgets(
     'not-ready Collection disables setup Start and stale callback; recovery keeps choice and can launch',
     (tester) async {

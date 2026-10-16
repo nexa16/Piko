@@ -58,6 +58,7 @@ extension _SqliteReviewCorrection on SqliteLearningRepository {
         expected.prior.entryId != expected.next.entryId ||
         expected.prior.direction != expected.next.direction ||
         expected.prior.generation != expected.next.generation ||
+        expected.prior.speedCompleted != expected.next.speedCompleted ||
         expected.prior.formatVersion != expected.next.formatVersion) {
       throw ReviewCorrectionFailure.invalidReceipt;
     }
@@ -183,6 +184,7 @@ extension _SqliteReviewCorrection on SqliteLearningRepository {
           formatVersion: current.formatVersion,
           generation: current.generation,
           reviewRevision: current.reviewRevision + 1,
+          speedCompleted: current.speedCompleted,
         );
         // Same UUID/row/time; there is still exactly one corresponding review.
         await (database.update(database.regularReviews)

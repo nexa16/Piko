@@ -3,6 +3,8 @@ import 'package:piko/data/retry_answer.dart';
 import 'package:piko/features/learning/due_learning_session.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/learning/regular_grading_coordinator.dart';
+import 'package:piko/features/learning/review_session_route.dart';
+import 'package:piko/features/learning/review_summary_dialog.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -159,7 +161,7 @@ void main() {
     },
   );
   launch.testWidgets(
-    'actual displayed retry expiry removes unanswered card without false success/no-due or count; Exit stays usable',
+    'actual displayed retry expiry removes unanswered card without false success/no-due or count; summary dismissal returns safely',
     (tester) async {
       final f = launch.fixture();
       await tester.runAsync(f.initialize);
@@ -203,9 +205,27 @@ void main() {
         await tester.runAsync(() => rows(f.db, 'regular_reviews')),
         history,
       );
-      await tester.tap(launch.button(const PikoCopy('en').text('learn.exit')));
+      expect(find.byType(ReviewSummaryDialog), findsOneWidget);
+      expect(session.progress.completed, 0);
+      expect(session.progress.firstTryCorrect, 0);
+      final close = find.descendant(
+        of: find.byType(ReviewSummaryDialog),
+        matching: find.byTooltip(const PikoCopy('en').text('common.close')),
+      );
+      expect(close.hitTestable(), findsOneWidget);
+      await tester.tap(close);
       await h.finish(tester);
       expect(session.isStopped, isTrue);
+      expect(find.byType(ReviewSessionRoute), findsNothing);
+      expect(await tester.runAsync(() => rows(f.db, 'learning_items')), cards);
+      expect(
+        await tester.runAsync(() => rows(f.db, 'regular_reviews')),
+        history,
+      );
+      expect(
+        await tester.runAsync(() => rows(f.db, 'scope_answer_ordinals')),
+        counter,
+      );
       expect(tester.takeException(), isNull);
     },
   );

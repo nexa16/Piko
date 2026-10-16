@@ -135,12 +135,14 @@ void main() {
       final before = await rows(f.db, 'learning_items'),
           history = await rows(f.db, 'regular_reviews'),
           ordinals = await rows(f.db, 'scope_answer_ordinals');
-      expect(wakes.last.duration, const Duration(seconds: 10));
+      expect(wakes.last.duration, const Duration(seconds: 1));
+      expect(session.retryWaitSeconds, 10);
       clock.advance(const Duration(seconds: 4));
       wakes.last.fire();
       await session.awaitPending();
       expect(session.current, isNull);
-      expect(wakes.last.duration, const Duration(seconds: 6));
+      expect(wakes.last.duration, const Duration(seconds: 1));
+      expect(session.retryWaitSeconds, 6);
       final cancelled = wakes.last;
       session.setPresentationActive(false);
       clock.advance(const Duration(seconds: 6));
@@ -167,7 +169,8 @@ void main() {
         )).rounds.single.sameStateAs(wait),
         isTrue,
       );
-      expect(wakes.last.duration, const Duration(seconds: 5));
+      expect(wakes.last.duration, const Duration(seconds: 1));
+      expect(session.retryWaitSeconds, 5);
       clock.set(wait.waitEligibleAt!);
       wakes.last.fire();
       await session.awaitPending();

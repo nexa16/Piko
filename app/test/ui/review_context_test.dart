@@ -51,7 +51,10 @@ void main() {
         await h.finish(tester);
         expect(card, findsNothing);
         expect(session.progress.completed, 0);
-        expect(find.text(copy.text('learn.retryWaiting')), findsOneWidget);
+        expect(
+          find.text(copy.text('learn.retryCountdown', {'seconds': 10})),
+          findsOneWidget,
+        );
         expect(tester.widget<Text>(direction).data, fixed);
         expect(
           tester.widget<Text>(counter).data,

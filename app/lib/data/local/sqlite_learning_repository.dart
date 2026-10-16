@@ -7,12 +7,14 @@ import '../retry_obligation.dart';
 import '../retry_answer.dart';
 import '../review_correction.dart';
 import '../review_due_membership.dart';
+import '../speed_completion.dart';
 import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
 
 part 'sqlite_review_correction.dart';
+part 'sqlite_speed_completion.dart';
 
 final class SqliteLearningRepository implements RegularReviewWriter {
   SqliteLearningRepository(this.database);
@@ -23,12 +25,24 @@ final class SqliteLearningRepository implements RegularReviewWriter {
   Future<CollectionReviewGateway> forCollection({
     required String collectionId,
     required LearningDirection direction,
+    Set<String>? entryIds,
   }) async {
+    final selected = entryIds == null
+        ? null
+        : Set<String>.unmodifiable(entryIds);
     final collection = await (database.select(
       database.collections,
     )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
     if (collection == null) throw RegularReviewFailure.collectionNotFound;
-    return CollectionReviewGateway._(this, collection.id, direction);
+    if (selected != null) {
+      final owned = await (database.select(
+        database.vocabularyEntries,
+      )..where((row) => row.collectionId.equals(collectionId))).get();
+      if (!owned.map((entry) => entry.id).toSet().containsAll(selected)) {
+        throw RegularReviewFailure.outOfScope;
+      }
+    }
+    return CollectionReviewGateway._(this, collection.id, direction, selected);
   }
 
   Future<List<LearningItemRecord>> _scopedItems(
@@ -50,7 +64,18 @@ final class SqliteLearningRepository implements RegularReviewWriter {
               )
               ..orderBy([OrderingTerm(expression: items.id)]))
             .get();
-    return List.unmodifiable(rows.map((row) => _record(row.readTable(items))));
+    final selected = rows
+        .where(
+          (row) =>
+              scope.entryIds == null ||
+              scope.entryIds!.contains(row.readTable(entries).id),
+        )
+        .map((row) => _record(row.readTable(items)))
+        .toList(growable: false);
+    if (scope.entryIds != null && selected.length != scope.entryIds!.length) {
+      throw RegularReviewFailure.itemNotFound;
+    }
+    return List.unmodifiable(selected);
   });
 
   LearningItemRecord _record(LearningItem row) {
@@ -62,6 +87,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       formatVersion: row.formatVersion,
       generation: row.generation,
       reviewRevision: row.reviewRevision,
+      speedCompleted: row.speedCompleted,
     );
     record.card;
     return record;
@@ -138,7 +164,11 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             .get();
     // Validate all rows before any expiry cleanup; corruption fails closed.
     final validated = <RetryObligation>[];
-    for (final row in rows) {
+    for (final row in rows.where(
+      (row) =>
+          scope.entryIds == null ||
+          scope.entryIds!.contains(row.readTable(entries).id),
+    )) {
       validated.add(
         await _retryRecord(
           row.readTable(retries),
@@ -393,6 +423,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       actual.formatVersion == expected.formatVersion &&
       actual.generation == expected.generation &&
       actual.reviewRevision == expected.reviewRevision &&
+      actual.speedCompleted == expected.speedCompleted &&
       actual.cardJson == expected.cardJson;
 
   Future<RetryAnswerReceipt> _answerRetry(
@@ -535,7 +566,8 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         // Recheck authoritative ownership in the event/card write transaction.
         // Neither a discovered list nor the caller's prior can establish scope.
         if (entry.collectionId != scope.collectionId ||
-            row.direction != scope.direction.name) {
+            row.direction != scope.direction.name ||
+            scope.entryIds != null && !scope.entryIds!.contains(entry.id)) {
           throw RegularReviewFailure.outOfScope;
         }
       }
@@ -545,6 +577,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           prior.formatVersion != expectedPrior.formatVersion ||
           prior.generation != expectedPrior.generation ||
           prior.reviewRevision != expectedPrior.reviewRevision ||
+          prior.speedCompleted != expectedPrior.speedCompleted ||
           prior.cardJson != expectedPrior.cardJson) {
         throw RegularReviewFailure.staleState;
       }
@@ -641,6 +674,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           formatVersion: transition.next.formatVersion,
           generation: transition.next.generation,
           reviewRevision: prior.reviewRevision + 1,
+          speedCompleted: prior.speedCompleted,
         ),
         event: event,
         retryPrior: retryPrior,
@@ -699,6 +733,39 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         .toList(growable: false);
   }
 
+  /// Authoritative SPEED-005 eligibility, independent of FSRS dates/state and
+  /// historical reviews from older generations. The optional scope is the
+  /// Collection's visible search/category subset; results retain display order.
+  Future<List<LearningItemRecord>> newSpeedItems({
+    required String collectionId,
+    required LearningDirection direction,
+    Set<String>? entryIds,
+  }) {
+    final visible = entryIds == null ? null : Set<String>.of(entryIds);
+    return database.transaction(() async {
+      final owner = await (database.select(
+        database.collections,
+      )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
+      if (owner == null) throw RegularReviewFailure.collectionNotFound;
+      final rows = await database
+          .customSelect(
+            'SELECT l.* FROM learning_items l '
+            'JOIN vocabulary_entries v ON v.id = l.entry_id '
+            'WHERE v.collection_id = ? AND l.direction = ? AND l.speed_completed = 0 '
+            'AND NOT EXISTS (SELECT 1 FROM regular_reviews r '
+            'WHERE r.item_id = l.id AND r.generation = l.generation) '
+            'ORDER BY v.rowid',
+            variables: [Variable(collectionId), Variable(direction.name)],
+          )
+          .get();
+      return List.unmodifiable(
+        rows
+            .map((row) => _record(database.learningItems.map(row.data)))
+            .where((item) => visible == null || visible.contains(item.entryId)),
+      );
+    });
+  }
+
   /// Direct state support for fixtures; production regular reviews must use [review]
   /// so their event, optimistic revision and complete card commit together.
   Future<void> saveCard(int id, fsrs.Card card) async {
@@ -716,17 +783,43 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 
 /// Fixed Collection/direction boundary, not a due set or session launcher.
 final class CollectionReviewGateway
-    implements RetryReviewSource, ReviewCorrectionSource {
+    implements
+        RetryReviewSource,
+        ReviewCorrectionSource,
+        SpeedCompletionWriter {
   const CollectionReviewGateway._(
     this._repository,
     this.collectionId,
     this.direction,
+    this.entryIds,
   );
   final SqliteLearningRepository _repository;
   @override
   final String collectionId;
   @override
   final LearningDirection direction;
+
+  /// Immutable visible membership; counters remain Collection/direction-scoped.
+  final Set<String>? entryIds;
+
+  @override
+  Future<SpeedCompletionResult> completeSpeedItem({
+    required LearningItemRecord expectedPrior,
+    required int errors,
+    required DateTime completedAt,
+  }) =>
+      _repository._completeSpeedItem(this, expectedPrior, errors, completedAt);
+
+  Future<List<LearningItemRecord>> newSpeedItems({Set<String>? entryIds}) =>
+      _repository.newSpeedItems(
+        collectionId: collectionId,
+        direction: direction,
+        entryIds: this.entryIds == null
+            ? entryIds
+            : entryIds == null
+            ? this.entryIds
+            : this.entryIds!.intersection(entryIds),
+      );
 
   @override
   Future<LearningAnswerReceipt> replaceAnswer({

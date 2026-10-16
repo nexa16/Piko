@@ -24,7 +24,11 @@ void main() {
         await h.open(tester);
         await tester.tap(launch.button(copy.text('learn.start')));
         await h.finish(tester);
-        expect(find.text(copy.text('learn.retryWaiting')), findsOneWidget);
+        expect(
+          find.text(copy.text('learn.retryCountdown', {'seconds': 10})),
+          findsOneWidget,
+        );
+        expect(launch.button(copy.text('action.retry')), findsNothing);
         expect(find.text(copy.text('learn.prepareFailed')), findsNothing);
         expect(find.byType(ReviewSessionRoute), findsOneWidget);
         expect(find.byKey(const ValueKey('review-no-due')), findsNothing);
@@ -53,6 +57,11 @@ void main() {
         await tester.pump(const Duration(seconds: 9));
         await h.finish(tester);
         expect(card, findsNothing);
+        expect(
+          find.text(copy.text('learn.retryCountdown', {'seconds': 1})),
+          findsOneWidget,
+        );
+        expect(launch.button(copy.text('action.retry')), findsNothing);
         await tester.tap(launch.button(copy.text('learn.exit')));
         await h.finish(tester);
         await h.open(tester);
@@ -60,6 +69,10 @@ void main() {
         await h.finish(tester);
         expect(h.sessions.last.waitMutations, isEmpty);
         expect(card, findsNothing);
+        expect(
+          find.text(copy.text('learn.retryCountdown', {'seconds': 1})),
+          findsOneWidget,
+        );
         expect(await tester.runAsync(() => snapshot(f)), armed);
         clock.advance(const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 1));

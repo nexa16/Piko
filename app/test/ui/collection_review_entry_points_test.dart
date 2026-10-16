@@ -168,7 +168,8 @@ void main() {
         await tester.runAsync(() => loaded.future);
         await tester.pumpAndSettle();
 
-        expect(find.text('1 vocabulary items ready to review'), findsOneWidget);
+        expect(find.text('FR → DE · 1 to review'), findsOneWidget);
+        expect(find.text('DE → FR · 1 to review'), findsOneWidget);
         expect(await tester.runAsync(() => snapshot(f)), before);
         expect(f.db.clock.now(), instant);
       } finally {
@@ -225,7 +226,7 @@ void main() {
   );
 
   testWidgets(
-    'detail uses a full-width actual-count card and circular review icon',
+    'detail uses full-width directional actions and launches without setup',
     (tester) async {
       Future<List<ReviewDueMembership>> load({
         required String collectionId,
@@ -234,6 +235,7 @@ void main() {
         due(collectionId, 1),
         due(collectionId, 1, direction: LearningDirection.nativeToTarget),
       ];
+      LearningDirection? selected;
       await tester.pumpWidget(
         PikoApp(
           home: CollectionDetail(
@@ -242,15 +244,20 @@ void main() {
             vocabularyRepository: const Vocabulary(),
             reviewMembershipLoader: load,
             reviewCountPolicy: CollectionReviewCountPolicy.distinctVocabulary,
-            reviewSessionFactory: (id, direction) async =>
-                throw StateError('Start was not requested'),
+            reviewSessionFactory: (id, direction) async {
+              selected = direction;
+              throw StateError('preparation failure');
+            },
           ),
         ),
       );
       await settleReads(tester);
 
-      final card = find.byKey(const ValueKey('collection-review-card'));
-      expect(find.text('1 vocabulary items ready to review'), findsOneWidget);
+      final card = find.byKey(
+        const ValueKey('collection-review-targetToNative'),
+      );
+      expect(find.text('FR → DE · 1 to review'), findsOneWidget);
+      expect(find.text('DE → FR · 1 to review'), findsOneWidget);
       expect(
         tester.getSize(card).width,
         tester
@@ -259,13 +266,12 @@ void main() {
       );
       expect(
         tester.getSize(card).height,
-        greaterThanOrEqualTo(
-          pikoDesign.dimension('components.collectionReview.cardMinHeight'),
-        ),
+        greaterThanOrEqualTo(pikoDesign.dimension('components.buttons.height')),
       );
       await tester.tap(card);
       await tester.pumpAndSettle();
-      expect(find.byType(ReviewDirectionDialog), findsOneWidget);
+      expect(find.byType(ReviewDirectionDialog), findsNothing);
+      expect(selected, LearningDirection.targetToNative);
     },
   );
 
@@ -511,11 +517,11 @@ void main() {
       );
       await settleReads(tester);
       expect(reads, 1);
-      expect(find.text('1 vocabulary items ready to review'), findsOneWidget);
+      expect(find.text('FR → DE · 1 to review'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('collection-review-card')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start review'));
+      await tester.tap(
+        find.byKey(const ValueKey('collection-review-targetToNative')),
+      );
       await tester.pump();
       await tester.runAsync(() => f.db.customSelect('SELECT 1').get());
       await tester.pumpAndSettle();
@@ -525,8 +531,8 @@ void main() {
       await tester.pump();
       await tester.runAsync(() => f.db.customSelect('SELECT 1').get());
       await tester.pumpAndSettle();
-      expect(reads, 2);
-      expect(find.text('2 vocabulary items ready to review'), findsOneWidget);
+      expect(reads, 3); // Opening revalidates after draining accepted writes.
+      expect(find.text('FR → DE · 3 to review'), findsOneWidget);
     } finally {
       await tester.pumpWidget(const SizedBox());
       await tester.pump();

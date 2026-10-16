@@ -27,19 +27,20 @@ void main() {
                   result = await showPikoDialog<String>(
                     context,
                     builder: (context) => PikoDialog(
+                      purpose: PikoDialogPurpose.form,
                       title: PikoCopyScope.of(
                         context,
                       ).text('dialog.newCollection'),
                       body: TextField(controller: draft),
                       actions: [
-                        TextButton(
+                        PikoDialogAction(
                           onPressed: () {
                             positive++;
                             Navigator.of(context).pop('created');
                           },
-                          child: Text(
-                            PikoCopyScope.of(context).text('action.create'),
-                          ),
+                          label: PikoCopyScope.of(
+                            context,
+                          ).text('action.create'),
                         ),
                       ],
                     ),
@@ -56,9 +57,13 @@ void main() {
       await tester.tap(find.text('Open test dialog'));
       await tester.pumpAndSettle();
       expect(find.text('Cancel'), findsNothing);
-      final title = tester.widget<Text>(find.text('New Collection'));
-      expect(title.style!.fontSize, 20);
-      expect(title.style!.fontWeight, FontWeight.w700);
+      final titleFinder = find.text('New Collection');
+      final title = tester.widget<Text>(titleFinder);
+      final titleStyle = DefaultTextStyle.of(
+        tester.element(titleFinder),
+      ).style.merge(title.style);
+      expect(titleStyle.fontSize, 20);
+      expect(titleStyle.fontWeight, FontWeight.w700);
       expect(tester.widget<Dialog>(find.byType(Dialog)).elevation, 0);
       switch (dismissal) {
         case 'close':
@@ -147,11 +152,9 @@ void main() {
                     }),
                   ),
                   actions: [
-                    TextButton(
+                    PikoDialogAction(
                       onPressed: () {},
-                      child: Text(
-                        PikoCopyScope.of(context).text('action.create'),
-                      ),
+                      label: PikoCopyScope.of(context).text('action.create'),
                     ),
                   ],
                 ),

@@ -67,6 +67,10 @@ void main() {
   testWidgets(
     'disabled actions do not run; keyboard focus has visible treatment',
     (tester) async {
+      final oldStrategy = FocusManager.instance.highlightStrategy;
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      addTearDown(() => FocusManager.instance.highlightStrategy = oldStrategy);
       final focus = FocusNode();
       addTearDown(focus.dispose);
       await tester.pumpWidget(

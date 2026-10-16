@@ -8,10 +8,17 @@ import 'data/local/sqlite_vocabulary_repository.dart';
 import 'data/local/sqlite_vocabulary_deletion.dart';
 import 'data/local/sqlite_learning_repository.dart';
 import 'data/local/sqlite_settings_repository.dart';
+import 'data/local/sqlite_vocabulary_json_service.dart';
+import 'data/local/sqlite_collection_query.dart';
+import 'data/local/sqlite_categories_repository.dart';
+import 'features/interchange/vocabulary_json_page.dart';
+import 'platform/vocabulary_json_platform.dart';
 import 'data/learning_item.dart';
 import 'data/review_due_membership.dart';
 import 'data/settings_repository.dart';
 import 'features/collections/collection_review_count.dart';
+import 'features/collections/collection_query_binding.dart';
+import 'features/collections/collection_view_scope.dart';
 import 'features/learning/due_learning_session.dart';
 import 'features/collections/collections_home.dart';
 import 'features/entry/entry_session_controller.dart';
@@ -24,6 +31,7 @@ import 'shared/copy_scope.dart';
 import 'ui/components/piko_button.dart';
 import 'ui/components/piko_page.dart';
 import 'ui/piko_theme.dart';
+import 'speed_runtime.dart';
 
 /// Owns private runtime storage. Injected feature repositories remain caller-owned.
 class PikoRuntime extends StatefulWidget {
@@ -31,6 +39,7 @@ class PikoRuntime extends StatefulWidget {
     super.key,
     this.databaseFactory,
     this.settingsRepositoryFactory,
+    this.jsonPlatform,
   });
 
   /// Test/composition injection; the runtime owns the returned database.
@@ -38,6 +47,7 @@ class PikoRuntime extends StatefulWidget {
 
   /// Composition seam; uses the same runtime-owned database, never a second store.
   final SettingsRepository Function(PikoDatabase)? settingsRepositoryFactory;
+  final VocabularyJsonPlatform? jsonPlatform;
   @override
   State<PikoRuntime> createState() => _PikoRuntimeState();
 }
@@ -48,7 +58,17 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
   late final collections = SqliteCollectionsRepository(database);
   late final vocabulary = SqliteVocabularyRepository(database);
+  late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
+  late final jsonService = SqliteVocabularyJsonService(database);
+  late final collectionQuery = SqliteCollectionQueryService(database);
+  late final speedRuntime = PikoSpeedRuntime(
+    learning: learning,
+    clock: database.clock,
+    onPendingWrites: trackWrites,
+  );
+  late final jsonPlatform =
+      widget.jsonPlatform ?? SystemVocabularyJsonPlatform();
   late final settings =
       widget.settingsRepositoryFactory?.call(database) ??
       SqliteSettingsRepository(database);
@@ -56,6 +76,21 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   final _languageBinding = ValueNotifier<AppLanguageController?>(null);
   Future<void> _languageDependencies = Future<void>.value();
   bool _bootstrapped = false;
+  final _collectionScopes = CollectionViewScopes();
+  final _collectionBindings = <String, CollectionQueryBinding>{};
+
+  CollectionQueryBinding _collectionBinding(String id) =>
+      _collectionBindings.putIfAbsent(
+        id,
+        () => CollectionQueryBinding(
+          collectionId: id,
+          service: collectionQuery,
+          scope: _collectionScopes.forCollection(id),
+          invalidations: database.tableUpdates().map((_) {}),
+          clock: database.clock,
+          onPendingWrites: trackWrites,
+        ),
+      );
 
   @override
   void didChangeDependencies() {
@@ -129,6 +164,14 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   EntrySessionResources _entrySession(String collectionId) {
     final deletion = SqliteVocabularyDeletionService(database);
     return EntrySessionResources(
+      categoriesRepository: categories,
+      interchangeBuilder: (_, collection) => VocabularyJsonPage(
+        collection: collection,
+        service: jsonService,
+        platform: jsonPlatform,
+        onPendingWrites: trackWrites,
+      ),
+      onPendingWrites: trackWrites,
       session: EntrySessionController(
         collectionId: collectionId,
         repository: vocabulary,
@@ -156,31 +199,44 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  Future<DueLearningSession> _detailReviewSession(
+    String collectionId,
+    LearningDirection direction,
+  ) async {
+    final scope = _collectionScopes.forCollection(collectionId);
+    final snapshot = await collectionQuery.query(
+      collectionId: collectionId,
+      at: database.clock.now().toUtc(),
+      search: scope.search,
+      filters: scope.filters,
+    );
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+      entryIds: snapshot.entries.map((entry) => entry.id).toSet(),
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
+      onPendingWrites: trackWrites,
+      presentationActive: false,
+    );
+  }
+
   Future<ReviewDueMembershipSnapshot> _reviewDueMemberships({
     required String collectionId,
     required DateTime at,
   }) async {
-    final memberships = await Future.wait(
-      LearningDirection.values.map((direction) async {
-        final source = await learning.forCollection(
-          collectionId: collectionId,
-          direction: direction,
-        );
-        return source.dueMemberships(at: at);
-      }),
+    final snapshot = await collectionQuery.query(
+      collectionId: collectionId,
+      at: at,
     );
-    DateTime? nextChangeAt;
-    for (final group in memberships) {
-      final candidate = group.nextChangeAt;
-      final current = nextChangeAt;
-      if (candidate != null &&
-          (current == null || candidate.isBefore(current))) {
-        nextChangeAt = candidate;
-      }
-    }
     return ReviewDueMembershipSnapshot(
-      memberships: memberships.expand((group) => group),
-      nextChangeAt: nextChangeAt,
+      memberships: snapshot.directions.values.expand(
+        (direction) => direction.review,
+      ),
+      nextChangeAt: snapshot.nextChangeAt,
     );
   }
 
@@ -193,6 +249,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
+    for (final binding in _collectionBindings.values) {
+      binding.dispose();
+    }
+    _collectionScopes.dispose();
     _language?.removeListener(_languageChanged);
     _language?.dispose();
     _languageBinding.dispose();
@@ -248,11 +308,15 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             repository: collections,
             entrySessionFactory: _entrySession,
             vocabularyRepository: vocabulary,
+            categoriesRepository: categories,
             onPendingVocabularyWrites: trackWrites,
             vocabularyMutationsFactory: _collectionMutations,
             reviewSessionFactory: _reviewSession,
+            detailReviewSessionFactory: _detailReviewSession,
+            speedSessionFactory: speedRuntime.prepare,
+            queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
-            reviewCountPolicy: CollectionReviewCountPolicy.distinctVocabulary,
+            reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,
             reviewCountClock: database.clock,
             onOpenSettings: _openSettings,
           ),

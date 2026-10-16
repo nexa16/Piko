@@ -2,15 +2,32 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../data/vocabulary_normalization.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../data/categories_repository.dart';
 
 @immutable
 final class InlineVocabularyDraft {
-  const InlineVocabularyDraft({
+  InlineVocabularyDraft({
     required this.targetText,
     required this.nativeText,
-  });
+    Map<String, Set<String>> assignments = const {},
+  }) : assignments = _freezeAssignments(assignments);
   final String targetText, nativeText;
+  final Map<String, Set<String>> assignments;
 }
+
+Map<String, Set<String>> _freezeAssignments(Map<String, Set<String>> values) =>
+    Map.unmodifiable({
+      for (final entry in values.entries)
+        if (entry.value.isNotEmpty)
+          entry.key: Set<String>.unmodifiable(entry.value),
+    });
+
+bool _sameAssignments(
+  Map<String, Set<String>> first,
+  Map<String, Set<String>> second,
+) =>
+    first.length == second.length &&
+    first.entries.every((entry) => setEquals(entry.value, second[entry.key]));
 
 /// One existing entry's raw edit lifetime, independent of entry-session routing.
 /// Widgets own text/focus controllers; callers own repository/storage lifetime.
@@ -24,6 +41,19 @@ final class InlineVocabularyEditController extends ChangeNotifier {
        _draft = InlineVocabularyDraft(
          targetText: entry.targetText,
          nativeText: entry.nativeText,
+         assignments: opening is CategorizedVocabularyOpeningSnapshot
+             ? opening.assignments
+             : const {},
+       ),
+       _committedAssignments = _freezeAssignments(
+         opening is CategorizedVocabularyOpeningSnapshot
+             ? opening.assignments
+             : const {},
+       ),
+       _openingAssignments = _freezeAssignments(
+         opening is CategorizedVocabularyOpeningSnapshot
+             ? opening.assignments
+             : const {},
        ),
        _committed = entry,
        // Keep the public dependency name separate from its private field.
@@ -56,6 +86,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   final String entryId, collectionId;
   final VocabularyRepository _repository;
   VocabularyOpeningSnapshot? _opening;
+  Map<String, Set<String>> _committedAssignments, _openingAssignments;
+  bool get supportsCategories => _repository is CategorizedVocabularyRepository;
   Future<VocabularyRecord>? _discarding;
   Object? _discardError;
   Object? get discardError => _discardError;
@@ -72,7 +104,9 @@ final class InlineVocabularyEditController extends ChangeNotifier {
         _draft.targetText != opening.targetText ||
         _draft.nativeText != opening.nativeText ||
         _committed!.targetText != opening.targetText ||
-        _committed!.nativeText != opening.nativeText;
+        _committed!.nativeText != opening.nativeText ||
+        !_sameAssignments(_draft.assignments, _openingAssignments) ||
+        !_sameAssignments(_committedAssignments, _openingAssignments);
   }
 
   InlineVocabularyDraft _draft;
@@ -82,6 +116,10 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   bool _disposed = false;
   (int, InlineVocabularyDraft)? _pending;
   Future<void>? _worker;
+  Future<void>? _metadataWorker;
+  bool _metadataRequested = false;
+  int _lastPruneRevision = -1;
+  Map<String, Set<String>> _validCategoryValues = const {};
 
   InlineVocabularyDraft get draft => _draft;
   VocabularyRecord get committed {
@@ -100,22 +138,126 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     return normalizeVocabularyText(_draft.targetText) !=
             normalizeVocabularyText(_committed!.targetText) ||
         normalizeVocabularyText(_draft.nativeText) !=
-            normalizeVocabularyText(_committed!.nativeText);
+            normalizeVocabularyText(_committed!.nativeText) ||
+        !_sameAssignments(_draft.assignments, _committedAssignments);
   }
 
   void setTargetText(String value) => edit(targetText: value);
   void setNativeText(String value) => edit(nativeText: value);
 
-  void edit({String? targetText, String? nativeText}) {
+  void setCategoryValues(String dimensionId, Set<String> valueIds) {
+    if (!supportsCategories) {
+      throw StateError('Category editing is unavailable.');
+    }
+    edit(assignments: {..._draft.assignments, dimensionId: valueIds});
+  }
+
+  /// Explicit definition deletion remains effective in every open buffer. Only
+  /// a fresh repository read can remove UUIDs; an older query projection cannot
+  /// erase a value just created/confirmed in the picker. Mode conflicts remain.
+  Future<void> refreshCategoryReferences(CategoriesRepository repository) {
     _ensureActive();
+    _metadataRequested = true;
+    if (_metadataWorker != null) return _metadataWorker!;
+    final done = Completer<void>();
+    _metadataWorker = done.future;
+    unawaited(() async {
+      try {
+        while (_metadataRequested && !_disposed && !isDiscarding) {
+          _metadataRequested = false;
+          final revision = _revision;
+          final dimensions = await repository.dimensions(collectionId);
+          if (_disposed || isDiscarding) return;
+          final allowed = <String, Set<String>>{};
+          for (final dimension in dimensions) {
+            if (dimension.collectionId != collectionId) continue;
+            final values = await repository.values(dimension.id);
+            if (_disposed || isDiscarding) return;
+            allowed[dimension.id] = values
+                .where((value) => value.dimensionId == dimension.id)
+                .map((value) => value.id)
+                .toSet();
+          }
+          if (_revision != revision) {
+            _metadataRequested = true;
+            continue;
+          }
+          Map<String, Set<String>> prune(Map<String, Set<String>> map) =>
+              _freezeAssignments({
+                for (final group in map.entries)
+                  if (allowed.containsKey(group.key))
+                    group.key: group.value.intersection(allowed[group.key]!),
+              });
+          final next = prune(_draft.assignments);
+          final committed = prune(_committedAssignments);
+          final opening = prune(_openingAssignments);
+          if (_sameAssignments(next, _draft.assignments) &&
+              _sameAssignments(committed, _committedAssignments) &&
+              _sameAssignments(opening, _openingAssignments)) {
+            continue;
+          }
+          _revision++;
+          _lastPruneRevision = _revision;
+          _validCategoryValues = allowed;
+          _draft = InlineVocabularyDraft(
+            targetText: _draft.targetText,
+            nativeText: _draft.nativeText,
+            assignments: next,
+          );
+          _committedAssignments = committed;
+          _openingAssignments = opening;
+          final pending = _pending;
+          if (pending != null) {
+            _pending = (
+              pending.$1,
+              InlineVocabularyDraft(
+                targetText: pending.$2.targetText,
+                nativeText: pending.$2.nativeText,
+                assignments: prune(pending.$2.assignments),
+              ),
+            );
+          }
+          if (_error is CategoryValidation &&
+              _error != CategoryValidation.cardinalityViolation) {
+            _error = _requiredError(_draft);
+          }
+          if (_error == null &&
+              _requiredError(_draft) == null &&
+              hasUncommittedChanges) {
+            _pending = (_revision, _draft);
+            _startWorker();
+          }
+          notifyListeners();
+        }
+      } catch (_) {
+        // A failed metadata read is never evidence that definitions disappeared.
+      } finally {
+        _metadataWorker = null;
+        done.complete();
+      }
+    }());
+    return done.future;
+  }
+
+  void edit({
+    String? targetText,
+    String? nativeText,
+    Map<String, Set<String>>? assignments,
+  }) {
+    _ensureActive();
+    if (assignments != null && !supportsCategories) {
+      throw StateError('Category editing is unavailable.');
+    }
     if (isDiscarding) throw StateError('Discard is in progress.');
     _discardError = null;
     final next = InlineVocabularyDraft(
       targetText: targetText ?? _draft.targetText,
       nativeText: nativeText ?? _draft.nativeText,
+      assignments: assignments ?? _draft.assignments,
     );
     if (next.targetText == _draft.targetText &&
-        next.nativeText == _draft.nativeText) {
+        next.nativeText == _draft.nativeText &&
+        _sameAssignments(next.assignments, _draft.assignments)) {
       return;
     }
     _draft = next;
@@ -164,16 +306,33 @@ final class InlineVocabularyEditController extends ChangeNotifier {
       final (revision, snapshot) = _pending!;
       _pending = null;
       try {
-        final saved = await _repository.update(
-          id: entryId,
-          targetText: snapshot.targetText,
-          nativeText: snapshot.nativeText,
-        );
+        final repository = _repository;
+        final saved = repository is CategorizedVocabularyRepository
+            ? await repository.updateCategorized(
+                id: entryId,
+                targetText: snapshot.targetText,
+                nativeText: snapshot.nativeText,
+                assignments: snapshot.assignments,
+              )
+            : await repository.update(
+                id: entryId,
+                targetText: snapshot.targetText,
+                nativeText: snapshot.nativeText,
+              );
         if (saved.id != entryId || saved.collectionId != collectionId) {
           throw StateError('Inline edit returned a different entry identity.');
         }
         if (!_disposed) {
           _committed = saved;
+          _committedAssignments = revision < _lastPruneRevision
+              ? _freezeAssignments({
+                  for (final group in snapshot.assignments.entries)
+                    if (_validCategoryValues.containsKey(group.key))
+                      group.key: group.value.intersection(
+                        _validCategoryValues[group.key]!,
+                      ),
+                })
+              : snapshot.assignments;
           if (_revision == revision) _error = null;
         }
       } catch (error) {
@@ -189,8 +348,9 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   /// Drains accepted/coalesced writes, including additions while waiting. May
   /// be awaited after disposal before the caller closes its repository.
   Future<void> awaitSavedEdits() async {
-    while (_worker != null || _discarding != null) {
+    while (_worker != null || _discarding != null || _metadataWorker != null) {
       if (_worker != null) await _worker;
+      if (_metadataWorker != null) await _metadataWorker;
       final discard = _discarding;
       if (discard != null) {
         try {
@@ -226,12 +386,19 @@ final class InlineVocabularyEditController extends ChangeNotifier {
       if (restored.id != entryId || restored.collectionId != collectionId) {
         throw StateError('Discard returned a different identity.');
       }
+      final repository = _repository;
+      final restoredAssignments = repository is CategorizedVocabularyRepository
+          ? _freezeAssignments(await repository.categorizedAssignments(entryId))
+          : const <String, Set<String>>{};
       if (!_disposed) {
         _committed = restored;
         _draft = InlineVocabularyDraft(
           targetText: restored.targetText,
           nativeText: restored.nativeText,
+          assignments: restoredAssignments,
         );
+        _committedAssignments = restoredAssignments;
+        _openingAssignments = restoredAssignments;
         _error = null;
         _revision++;
       }
@@ -252,7 +419,9 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    _draft = const InlineVocabularyDraft(targetText: '', nativeText: '');
+    _draft = InlineVocabularyDraft(targetText: '', nativeText: '');
+    _committedAssignments = const {};
+    _openingAssignments = const {};
     _committed = null;
     _error = null;
     _opening = null;

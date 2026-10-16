@@ -12,6 +12,7 @@ enum PikoIconName {
   chartNoAxesColumn('chart-no-axes-column'),
   check('check'),
   chevronRight('chevron-right'),
+  ellipsis('ellipsis'),
   grid2x2('grid-2x2'),
   layers('layers'),
   listFilter('list-filter'),

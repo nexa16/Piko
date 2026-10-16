@@ -330,6 +330,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
       listenable: sessionForBuild,
       builder: (_, _) {
         _maybeScheduleSummary(sessionForBuild);
+        final waitSeconds = sessionForBuild.retryWaitSeconds;
         return PopScope(
           canPop: !_exiting && widget.session.isStopped,
           onPopInvokedWithResult: (didPop, _) {
@@ -342,14 +343,15 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                 children: [
                   PikoHeading(
                     title: widget.collection.name,
-                    leading: PikoButton(
-                      label: copy.text(
+                    leading: PikoIconButton(
+                      key: const ValueKey('review-exit'),
+                      semanticLabel: copy.text(
                         sessionForBuild.hasInitialWork
                             ? 'learn.exit'
                             : 'common.back',
                       ),
                       icon: const PikoIcon(PikoIconName.arrowLeft),
-                      variant: PikoButtonVariant.ghost,
+                      large: true,
                       onPressed: _exiting ? null : () => _exit(sessionForBuild),
                     ),
                   ),
@@ -472,29 +474,33 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            copy.text(
-                              sessionForBuild.error == null
-                                  ? 'learn.retryWaiting'
-                                  : 'learn.retryLoadFailed',
+                            sessionForBuild.selectionFailed
+                                ? copy.text('learn.retryLoadFailed')
+                                : waitSeconds != null
+                                ? copy.text('learn.retryCountdown', {
+                                    'seconds': waitSeconds,
+                                  })
+                                : copy.text('learn.retryWaiting'),
+                            key: const ValueKey('review-retry-wait'),
+                          ),
+                          if (sessionForBuild.selectionFailed)
+                            PikoButton(
+                              label: copy.text('action.retry'),
+                              onPressed: sessionForBuild.isSubmitting
+                                  ? null
+                                  : () {
+                                      if (mounted &&
+                                          identical(
+                                            widget.session,
+                                            sessionForBuild,
+                                          ) &&
+                                          ModalRoute.of(context)?.isCurrent ==
+                                              true &&
+                                          !sessionForBuild.isStopped) {
+                                        sessionForBuild.refreshRetries();
+                                      }
+                                    },
                             ),
-                          ),
-                          PikoButton(
-                            label: copy.text('action.retry'),
-                            onPressed: sessionForBuild.isSubmitting
-                                ? null
-                                : () {
-                                    if (mounted &&
-                                        identical(
-                                          widget.session,
-                                          sessionForBuild,
-                                        ) &&
-                                        ModalRoute.of(context)?.isCurrent ==
-                                            true &&
-                                        !sessionForBuild.isStopped) {
-                                      sessionForBuild.refreshRetries();
-                                    }
-                                  },
-                          ),
                         ],
                       ),
                     ),

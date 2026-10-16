@@ -26,7 +26,7 @@ test('review context and progress adapters share binding geometry and responsive
 });
 test('Collection review browser and Flutter adapters share binding geometry', () => {
   const config = readCatalog(new URL('../../shared/design-config.js', import.meta.url), 'PIKO_DESIGN');
-  config.components.collectionReview = {quickWidth:184,quickPaddingX:14,quickPaddingY:10,quickCountSize:13,quickCountMinWidth:26,quickOpenTop:18,quickOpenBottom:13,quickHorizontal:17,quickActionsBottom:16,cardMinHeight:90,cardPadding:22,titleLineHeight:1.6};
+  config.components.collectionReview = {quickWidth:184,quickPaddingX:14,quickPaddingY:10,quickCountSize:13,quickCountMinWidth:26,quickOpenTop:18,quickOpenBottom:13,quickHorizontal:17,quickActionsBottom:16,cardMinHeight:90,cardPadding:22,titleLineHeight:1.6,mascotSize:72,mascotGap:10};
   const properties = new Map();
   vm.runInNewContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), {
     PIKO_DESIGN: config, document: {documentElement: {dataset: {}, style: {setProperty: (key, value) => properties.set(key, value)}}}
@@ -35,6 +35,10 @@ test('Collection review browser and Flutter adapters share binding geometry', ()
     assert.equal(properties.get('--collection-review-'+name), value);
   }
   const generated = generate(config, {schemaVersion:1,defaultLocale:'en',entries:{}});
+  assert.equal(properties.get('--collection-review-mascot-size'), '72px');
+  assert.equal(properties.get('--collection-review-mascot-gap'), '10px');
+  assert.ok(generated.includes('"mascotSize": 72,'));
+  assert.ok(generated.includes('"mascotGap": 10,'));
   assert.ok(generated.includes('"collectionReview": <String, Object?>{'));
   assert.ok(generated.includes('"quickWidth": 184,'));
   const css = fs.readFileSync(new URL('../../shared/components.css', import.meta.url), 'utf8');

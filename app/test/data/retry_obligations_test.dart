@@ -696,7 +696,13 @@ void main() {
                       .get())
                   .map((row) => row.data)
                   .toList(),
-              before[table],
+              [
+                for (final row in before[table]!)
+                  if (table == 'learning_items')
+                    {...row, 'speed_completed': 0}
+                  else
+                    row,
+              ],
             );
           }
           expect(await rows(db, 'retry_obligations'), isEmpty);
