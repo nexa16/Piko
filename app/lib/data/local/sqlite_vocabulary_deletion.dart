@@ -4,6 +4,7 @@ import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import '../../core/clock.dart';
 import '../vocabulary_deletion.dart';
 import '../vocabulary_repository.dart';
+import '../vocabulary_content.dart';
 import '../retry_obligation.dart';
 import '../categories_repository.dart';
 import 'piko_database.dart';
@@ -207,6 +208,12 @@ final class SqliteVocabularyDeletionService
           collectionId: entry.collectionId,
           targetText: entry.targetText,
           nativeText: entry.nativeText,
+          content: VocabularyContent.fromStored(
+            exampleTargetText: entry.exampleTargetText,
+            exampleNativeText: entry.exampleNativeText,
+            hintText: entry.hintText,
+            hintVisibility: entry.hintVisibility,
+          ),
         ),
         expiresAt: deleteAt.add(undoDuration),
         snapshot: snapshot,
@@ -291,7 +298,7 @@ final class SqliteVocabularyDeletionService
           throw VocabularyUndoFailure.identityConflict;
         }
         await database.customInsert(
-          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, example_target_text, example_native_text, hint_text, hint_visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           variables: [
             Variable(snapshot.rowId),
             Variable(entry.id),
@@ -300,6 +307,10 @@ final class SqliteVocabularyDeletionService
             Variable(entry.nativeText),
             Variable(entry.targetKey),
             Variable(entry.nativeKey),
+            Variable(entry.exampleTargetText),
+            Variable(entry.exampleNativeText),
+            Variable(entry.hintText),
+            Variable(entry.hintVisibility),
           ],
           updates: {database.vocabularyEntries},
         );

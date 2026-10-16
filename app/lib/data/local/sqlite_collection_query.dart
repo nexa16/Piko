@@ -5,6 +5,7 @@ import '../collections_repository.dart';
 import '../learning_item.dart';
 import '../vocabulary_repository.dart';
 import '../vocabulary_learning_status.dart';
+import '../vocabulary_content.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
@@ -49,6 +50,12 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
                   collectionId: row.collectionId,
                   targetText: row.targetText,
                   nativeText: row.nativeText,
+                  content: VocabularyContent.fromStored(
+                    exampleTargetText: row.exampleTargetText,
+                    exampleNativeText: row.exampleNativeText,
+                    hintText: row.hintText,
+                    hintVisibility: row.hintVisibility,
+                  ),
                 ),
               )
               .toList(growable: false);

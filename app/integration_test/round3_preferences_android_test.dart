@@ -180,7 +180,17 @@ void main() {
         }
         for (final table in before.entries) {
           for (final stored in table.value! as List) {
-            final row = stored as Map<String, Object?>;
+            final row = Map<String, Object?>.of(stored as Map<String, Object?>);
+            if (table.key == 'vocabulary_entries') {
+              row.removeWhere(
+                (key, _) => const {
+                  'example_target_text',
+                  'example_native_text',
+                  'hint_text',
+                  'hint_visibility',
+                }.contains(key),
+              );
+            }
             final columns = row.keys
                 .map((key) => key == 'stored_rowid' ? 'rowid' : key)
                 .join(',');
@@ -210,7 +220,7 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        13,
+        db.schemaVersion,
       );
       mounted = true;
       await tester.pumpWidget(

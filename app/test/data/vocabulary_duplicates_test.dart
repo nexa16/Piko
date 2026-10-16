@@ -266,7 +266,12 @@ void main() {
         await oldSchema(file, version);
         final db = PikoDatabase(NativeDatabase(file));
         try {
-          expect((await db.select(db.appSettings).getSingle()).value, 'de');
+          expect(
+            (await (db.select(
+              db.appSettings,
+            )..where((row) => row.key.equals('locale'))).getSingle()).value,
+            'de',
+          );
           if (version == 2) {
             expect(await db.select(db.collections).get(), hasLength(2));
           }
@@ -323,7 +328,12 @@ void main() {
           await db.customSelect('PRAGMA foreign_key_check').get(),
           isEmpty,
         );
-        expect((await db.select(db.appSettings).getSingle()).value, 'de');
+        expect(
+          (await (db.select(
+            db.appSettings,
+          )..where((row) => row.key.equals('locale'))).getSingle()).value,
+          'de',
+        );
         expect(
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',

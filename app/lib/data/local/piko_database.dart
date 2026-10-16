@@ -35,6 +35,28 @@ class VocabularyEntries extends Table {
   TextColumn get nativeText => text()();
   TextColumn get targetKey => text()();
   TextColumn get nativeKey => text()();
+  TextColumn get exampleTargetText => text().nullable().check(
+    const CustomExpression<bool>(
+      'example_target_text IS NULL OR length(example_target_text) BETWEEN 1 AND 1000',
+    ),
+  )();
+  TextColumn get exampleNativeText => text().nullable().check(
+    const CustomExpression<bool>(
+      '(example_target_text IS NULL AND example_native_text IS NULL) OR '
+      '(example_target_text IS NOT NULL AND example_native_text IS NOT NULL '
+      'AND length(example_native_text) BETWEEN 1 AND 1000)',
+    ),
+  )();
+  TextColumn get hintText => text().nullable().check(
+    const CustomExpression<bool>(
+      'hint_text IS NULL OR length(hint_text) BETWEEN 1 AND 2000',
+    ),
+  )();
+  TextColumn get hintVisibility => text()
+      .withDefault(const Constant('always'))
+      .check(
+        const CustomExpression<bool>("hint_visibility IN ('always', 'hidden')"),
+      )();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -249,7 +271,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -272,15 +294,13 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createTable(learningIdentitySequence);
           await _initializeLearningSequence();
           final instant = clock.now().toUtc();
-          final entries =
-              await (select(vocabularyEntries)..orderBy([
-                    (_) => OrderingTerm(
-                      expression: const CustomExpression<int>('rowid'),
-                    ),
-                  ]))
-                  .get();
+          // Older vocabulary tables do not yet have later optional columns.
+          // Identity backfill needs only IDs, not the latest generated mapper.
+          final entries = await customSelect(
+            'SELECT id FROM vocabulary_entries ORDER BY rowid',
+          ).get();
           for (final entry in entries) {
-            await createLearningItems(entry.id, at: instant);
+            await createLearningItems(entry.read<String>('id'), at: instant);
           }
           if ((await customSelect(
             'PRAGMA foreign_key_check',
@@ -329,6 +349,22 @@ class PikoDatabase extends _$PikoDatabase {
         if (from < 13) {
           await _initializePreferredDirection(
             PreferredDirection.nativeToTarget,
+          );
+        }
+        // Pre-4 upgrades create/rebuild the latest vocabulary shape already.
+        if (from < 14 && from >= 4) {
+          await m.addColumn(
+            vocabularyEntries,
+            vocabularyEntries.exampleTargetText,
+          );
+          await m.addColumn(
+            vocabularyEntries,
+            vocabularyEntries.exampleNativeText,
+          );
+          await m.addColumn(vocabularyEntries, vocabularyEntries.hintText);
+          await m.addColumn(
+            vocabularyEntries,
+            vocabularyEntries.hintVisibility,
           );
         }
       });

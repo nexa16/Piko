@@ -318,7 +318,9 @@ void main() {
             );
           }
           expect(
-            (await migrated.select(migrated.appSettings).getSingle()).value,
+            (await (migrated.select(
+              migrated.appSettings,
+            )..where((row) => row.key.equals('locale'))).getSingle()).value,
             'de',
           );
           expect(

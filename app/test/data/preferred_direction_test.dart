@@ -64,7 +64,7 @@ void main() {
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',
           ),
-          13,
+          db.schemaVersion,
         );
       } finally {
         await db.close();
@@ -86,7 +86,7 @@ void main() {
         );
         final file = File('${directory.path}/legacy.sqlite');
         PikoDatabase? migrated;
-      var sourceClosed = false;
+        var sourceClosed = false;
         try {
           await f.initialize();
           await f.review(rating: LearningRating.again);
@@ -117,6 +117,16 @@ void main() {
                 final row = Map<String, Object?>.of(
                   stored as Map<String, Object?>,
                 );
+                if (table.key == 'vocabulary_entries') {
+                  for (final column in [
+                    'example_target_text',
+                    'example_native_text',
+                    'hint_text',
+                    'hint_visibility',
+                  ]) {
+                    row.remove(column);
+                  }
+                }
                 final columns = row.keys
                     .map((key) => key == 'stored_rowid' ? 'rowid' : key)
                     .join(',');
@@ -147,9 +157,9 @@ void main() {
                 },
               ],
           };
-        await f.db.close();
-        sourceClosed = true;
-        migrated = PikoDatabase(NativeDatabase(file));
+          await f.db.close();
+          sourceClosed = true;
+          migrated = PikoDatabase(NativeDatabase(file));
           expect(await completeSnapshot(migrated), expected);
           expect(
             await SqliteSettingsRepository(
@@ -166,7 +176,7 @@ void main() {
           expect(await completeSnapshot(migrated), expected);
         } finally {
           await migrated?.close();
-        if (!sourceClosed) await f.db.close();
+          if (!sourceClosed) await f.db.close();
           await directory.delete(recursive: true);
         }
       },

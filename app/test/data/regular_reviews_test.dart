@@ -776,7 +776,13 @@ void main() {
         try {
           expect(await rows(db, 'regular_reviews'), isEmpty);
           expect(await rows(db, 'retry_obligations'), isEmpty);
-          expect((await rows(db, 'app_settings')).single['value'], 'de');
+          expect(
+            (await rows(
+              db,
+              'app_settings',
+            )).singleWhere((row) => row['key'] == 'locale')['value'],
+            'de',
+          );
           if (version >= 3) {
             final vocabulary =
                 (await db

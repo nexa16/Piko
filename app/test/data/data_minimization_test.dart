@@ -22,6 +22,10 @@ const allowedColumns = <String, Set<String>>{
     'native_text',
     'target_key',
     'native_key',
+    'example_target_text',
+    'example_native_text',
+    'hint_text',
+    'hint_visibility',
   },
   'learning_items': {
     'id',
