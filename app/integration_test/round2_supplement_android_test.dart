@@ -25,6 +25,7 @@ import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_card.dart';
 import 'package:piko/ui/piko_theme.dart';
 import 'review_correction_android_test.dart' as review;
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
@@ -74,10 +75,82 @@ void main() {
     ) => review.waitUntil(tester, condition, description: description);
     Future<void> present(Finder finder, String description) =>
         wait(() => finder.evaluate().isNotEmpty, description);
-    Future<void> tap(Finder finder) => review.tapVisible(tester, finder);
+    Future<void> tap(Finder finder) async {
+      await present(finder, 'supplement action present');
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      expect(
+        finder.hitTestable(),
+        findsOneWidget,
+        reason: 'Supplement action must receive its tap after layout settles',
+      );
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> activateEntry(String id) async {
+      // Entry cards are scroll-driven, not tap-to-activate. Match the real
+      // gesture used by entry_stack_test.dart; never call controller selection.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await wait(
+        () =>
+            MediaQuery.viewInsetsOf(
+              tester.element(find.byType(EntrySessionScreen)),
+            ).bottom ==
+            0,
+        'keyboard hidden before deliberate Entry stack scroll',
+      );
+      await tester.pumpAndSettle();
+      final session = tester
+          .widget<EntrySessionScreen>(find.byType(EntrySessionScreen))
+          .session;
+      final desired = id == 'draft' ? null : id;
+      for (
+        var attempt = 0;
+        attempt < 8 && session.activeEntryId != desired;
+        attempt++
+      ) {
+        final viewport = tester.getRect(_key('entry-stack'));
+        final card = tester.getRect(_key('entry-card-$id'));
+        final ids = [
+          ...session.confirmedEntries.map((entry) => entry.id),
+          'draft',
+        ];
+        final forward =
+            ids.indexOf(id) > ids.indexOf(session.activeEntryId ?? 'draft');
+        var distance = viewport.center.dy - card.center.dy;
+        // A screenshot may already have programmatically centered an inactive
+        // card. A real nonzero scroll is still required to activate that card.
+        if (distance.abs() < 24) {
+          distance = forward ? -48 : 48;
+        }
+        final bounded = distance.clamp(
+          -viewport.height * .8,
+          viewport.height * .8,
+        );
+        await tester.dragFrom(
+          Offset(viewport.left + 4, viewport.center.dy),
+          Offset(0, bounded.toDouble()),
+        );
+        await tester.pumpAndSettle();
+      }
+      expect(
+        session.activeEntryId,
+        desired,
+        reason: 'Deliberate scrolling must activate Entry $id',
+      );
+      expect(tester.widget<PikoCard>(_key('entry-card-$id')).selected, isTrue);
+    }
+
     Future<void> enter(Finder finder, String text) async {
       await tester.ensureVisible(finder);
       await tester.pumpAndSettle();
+      expect(
+        finder.hitTestable(),
+        findsOneWidget,
+        reason: 'Supplement input must receive focus at its settled position',
+      );
       await tester.tap(finder);
       await tester.pumpAndSettle();
       await tester.enterText(finder, text);
@@ -356,7 +429,7 @@ void main() {
       final addedCard = _key('entry-card-${added.id}');
       await capture('entry-saved-card', at: addedCard);
       await capture('entry-new-draft', at: _key('entry-card-draft'));
-      await tap(addedCard);
+      await activateEntry(added.id);
       final savedNative = _field('${added.id}-native');
       await present(savedNative, 'saved Entry editor');
       final beforeInactiveDrafts = await learningSnapshot();
@@ -378,9 +451,9 @@ void main() {
       );
       await capture('entry-inactive-empty-draft', at: compactDraft);
       expect(entrySession.activeEntryId, added.id);
-      await tap(compactDraft);
+      await activateEntry('draft');
       await enter(_field('draft-target'), '부분 fixture');
-      await tap(addedCard);
+      await activateEntry(added.id);
       await wait(
         () => entrySession.activeEntryId == added.id,
         'partial draft remains inactive beside the saved editor',
@@ -403,13 +476,13 @@ void main() {
       await capture('entry-inactive-partial-draft', at: compactDraft);
       expect(entrySession.activeEntryId, added.id);
       expect(entrySession.draft.nativeText, isEmpty);
-      await tap(compactDraft);
+      await activateEntry('draft');
       expect(
         tester.widget<TextField>(_field('draft-target')).controller!.text,
         '부분 fixture',
       );
       await enter(_field('draft-target'), '');
-      await tap(addedCard);
+      await activateEntry(added.id);
       await present(
         savedNative,
         'saved editor after temporary draft is cleared',
@@ -449,7 +522,7 @@ void main() {
         'Freund fixture',
       );
       expect(await learningSnapshot(), beforeEntryDelete);
-      await tap(_key('entry-card-draft'));
+      await activateEntry('draft');
       await tap(find.byTooltip(copy.text('entry.complete')));
       await wait(
         () => find.byType(EntrySessionScreen).evaluate().isEmpty,
@@ -759,10 +832,9 @@ void main() {
       );
       final conflict = duplicateSession.confirmedEntries.first;
       final edited = duplicateSession.confirmedEntries.last;
-      final conflictCard = _key('entry-card-${conflict.id}');
       final editedCard = _key('entry-card-${edited.id}');
       final duplicateLearning = await learningSnapshot();
-      await tap(editedCard);
+      await activateEntry(edited.id);
       await enter(_field('${edited.id}-target'), conflict.targetText);
       await wait(
         () async =>
@@ -791,8 +863,8 @@ void main() {
         edited.nativeText,
       );
       await capture('entry-saved-duplicate', at: savedDuplicateError);
-      await tap(_key('entry-card-draft'));
-      await tap(editedCard);
+      await activateEntry('draft');
+      await activateEntry(edited.id);
       await present(
         _field('${edited.id}-native'),
         'duplicate saved editor reopened',
@@ -817,7 +889,7 @@ void main() {
         findsNothing,
       );
       await capture('entry-saved-duplicate-reopened', at: savedDuplicateError);
-      await tap(conflictCard);
+      await activateEntry(conflict.id);
       await enter(_field('${conflict.id}-native'), 'Eins geändert fixture');
       await wait(
         () async =>
@@ -825,7 +897,7 @@ void main() {
             'Eins geändert fixture',
         'conflicting saved entry changed and drained',
       );
-      await tap(editedCard);
+      await activateEntry(edited.id);
       await present(
         _field('${edited.id}-native'),
         'retained saved edit reopened after conflict removal',
@@ -844,7 +916,7 @@ void main() {
         at: _field('${edited.id}-native'),
       );
       expect(await learningSnapshot(), duplicateLearning);
-      await tap(_key('entry-card-draft'));
+      await activateEntry('draft');
       await tap(find.byTooltip(copy.text('entry.complete')));
       await wait(
         () => find.byType(EntrySessionScreen).evaluate().isEmpty,
