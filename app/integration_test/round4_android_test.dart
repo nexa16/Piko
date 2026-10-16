@@ -254,6 +254,7 @@ void main() {
         FocusManager.instance.primaryFocus?.unfocus();
         await tester.pumpAndSettle();
         await tap(key('content-example-native-1'));
+        debugPrint('PIKO_IME_WAIT:${config.runId}');
         var keyboardInset = 0.0;
         final keyboardDeadline = DateTime.now().add(
           const Duration(seconds: 15),
@@ -266,6 +267,9 @@ void main() {
           ).bottom;
           if (keyboardInset > 0) break;
         }
+        debugPrint(
+          'PIKO_IME_METRICS:media=$keyboardInset; view=${tester.view.viewInsets.bottom}; registered=${binding.registerTestTextInput}',
+        );
         expect(keyboardInset, greaterThan(0), reason: 'Real docked IME inset');
         evidence['nativeKeyboardInset'] = keyboardInset;
         await integrationChannel.invokeMethod<void>(
