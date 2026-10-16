@@ -301,10 +301,7 @@ void main() {
             .onPressed,
         isNull,
       );
-      expect(
-        tester.widget<PikoButton>(button('New')).onPressed,
-        isNull,
-      );
+      expect(tester.widget<PikoButton>(button('New')).onPressed, isNull);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       expect(name, findsOneWidget);
       h.repository.gate!.complete();
@@ -583,7 +580,17 @@ void main() {
       expect(tester.getRect(deletion).right, closeTo(392 - 18, 0.1));
       expect(
         tester.getRect(deletion).left,
-        greaterThan(tester.getRect(button('Zurück')).left),
+        greaterThan(
+          tester
+              .getRect(
+                find.byWidgetPredicate(
+                  (widget) =>
+                      widget is PikoIconButton &&
+                      widget.semanticLabel == 'Zurück',
+                ),
+              )
+              .left,
+        ),
       );
       expect(tester.getSize(find.text(long)).height, greaterThan(44));
       await tester.ensureVisible(rename);
