@@ -71,11 +71,11 @@ test('round 3 deltas retain original scope and distinguish specified work from v
   assert.ok(matchesRound(completion,'3'));assert.match(completion.body,/text-only/);
   assert.match(completion.implementation,/pending/);
 });
-test('round 4 planning preserves pending implementation and separately deferred learning features', () => {
+test('round 4 implementation evidence retains owner acceptance and separately deferred learning features', () => {
   const rows=canonicalRows();
   const template=rows.find(r=>r.id==='IMPORT-JSON-003');
   assert.equal(template.revision,1);assert.equal(template.status,'Confirmed');
-  assert.equal(template.round,'4');assert.match(template.implementation,/pending/);
+  assert.equal(template.round,'4');assert.match(template.implementation,/scope implemented/);assert.match(template.implementation,/owner acceptance pending/);
   for(const round of ['1','2','3'])assert.ok(!matchesRound(template,round),round);
   assert.match(template.body,/full export/);
   const brand=rows.find(r=>r.id==='UX-BRAND-001');

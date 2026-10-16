@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 8,
+  "revision": 9,
   "updated": "2026-10-16",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -220,8 +220,8 @@
         "FILTER-002"
       ],
       "summary": "Selecting an item adds the Apply footer and recenters the popup. The Filters popup also adds Clear filters, moving the title and selected row substantially upward. The shift recurs in category assignment.",
-      "status": "specified",
-      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
+      "status": "needs_verification",
+      "decision": "Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps.",
       "workPackage": "foundation",
       "acceptance": [
         "Apply remains visible, disabled while unchanged/reverted and enabled only for a changed selection. Filters also keeps Clear filters visible, disabled only when the pending selection is empty.",
@@ -258,6 +258,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Round-4 implementation and scoped Android verification at 561e26955748efd3e73692bb8fe4c356cb6c7326. Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps."
         }
       ],
       "impact": "The control under the user’s finger moves after selection. This weakens spatial continuity during a simple multi-selection task and makes the form feel unstable.",
@@ -292,20 +296,22 @@
       "dependencies": [
         "Owning implementation package and shared foundation contract"
       ],
-      "suggestedChange": "Changed-only Apply remains absent when unchanged/reverted. Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell. At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved.",
+      "suggestedChange": "Keep real Apply and applicable Clear actions visible in a bounded shared shell; state changes only enable or disable them. Preserve first-title-line X alignment, reachable actions, focus and pending-write guards.",
       "requirementRevisions": {
-        "UX-DIALOG-001": 4,
-        "UX-CAT-001": 5,
-        "FILTER-002": 4
+        "UX-DIALOG-001": 5,
+        "UX-CAT-001": 7,
+        "CAT-009": 5,
+        "FILTER-002": 5
       },
-      "implementationRound": 3,
+      "implementationRound": 4,
       "reconciliation": {
         "relatedCheckpoints": [
           2
         ],
-        "implementationLedger": "implementation-round-3.md",
-        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
-      }
+        "implementationLedger": "implementation-round-4.md",
+        "findingClosure": "Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps."
+      },
+      "historicalSuggestedChange": "Changed-only Apply remains absent when unchanged/reverted. Selecting an item or exposing Clear filters does not move the title or selected row; reserve footer space inside a bounded shared selection shell. At insufficient height the body scrolls, footer/actions remain reachable, and safe dismissal/focus restoration are preserved."
     },
     {
       "id": "F04",
@@ -422,8 +428,8 @@
         "UX-MASCOT-001"
       ],
       "summary": "The saturated Cobalt/white/slate system is coherent, but its large primary blocks feel more institutional than the warm cream rabbit, powder-blue book, navy outline and small golden details.",
-      "status": "specified",
-      "decision": "Current accepted criteria are reconciled with the newer owner specifications. Related round-3 evidence remains historical; revised popup, palette and alphabetical-value behavior is pending implementation and verification.",
+      "status": "needs_verification",
+      "decision": "Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps.",
       "workPackage": "foundation",
       "acceptance": [
         "Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt.",
@@ -459,6 +465,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Round-4 implementation and scoped Android verification at 561e26955748efd3e73692bb8fe4c356cb6c7326. Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps."
         }
       ],
       "impact": "Piko reads as a decorative addition rather than the visual source of the interface. Color can make the same layout feel more connected to the character.",
@@ -489,16 +499,16 @@
       ],
       "suggestedChange": "Map every app-owned semantic role to the nine allowed colors or documented alpha blends; keep original artwork and OS-owned interfaces exempt. Define primary, secondary, safe, disabled, pressed, focus, warning, danger and success states together. Do not rely on unreviewed ColorScheme.fromSeed defaults. Use cream text on blue/red/green, navy on gold; grade labels and behavior remain explicit.",
       "requirementRevisions": {
-        "UX-SYSTEM-001": 6,
-        "UX-MASCOT-001": 2
+        "UX-SYSTEM-001": 7,
+        "UX-LAB-001": 4
       },
-      "implementationRound": 3,
+      "implementationRound": 4,
       "reconciliation": {
         "relatedCheckpoints": [
           1
         ],
-        "implementationLedger": "implementation-round-3.md",
-        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+        "implementationLedger": "implementation-round-4.md",
+        "findingClosure": "Selected round-4 implementation and scoped checks are complete. Full finding closure remains separate; see the round-4 ledger for covered states and remaining historical/phone gaps."
       }
     },
     {
@@ -513,8 +523,8 @@
         "UX-SYSTEM-001"
       ],
       "summary": "The dimming layer produces a green/olive cast over the blue interface. It is especially noticeable beside the cream-and-blue artwork and warm proposed surfaces.",
-      "status": "specified",
-      "decision": "Design accepted. Related round-3 implementation is recorded in the checkpoint ledger; complete finding-specific acceptance review and closure remain pending.",
+      "status": "fixed",
+      "decision": "Shared navy backdrop verified in current Android View, Filters, JSON and Speed setup; existing opacity retained.",
       "workPackage": "foundation",
       "acceptance": [
         "Use palette navy as dialog backdrop at the existing opacity first; check both text separation and the underlying artwork.",
@@ -525,7 +535,7 @@
         "050",
         "122"
       ],
-      "verifiedAt": null,
+      "verifiedAt": "2026-10-16",
       "history": [
         {
           "date": "2026-10-16",
@@ -542,6 +552,10 @@
         {
           "date": "2026-10-16",
           "event": "Recovered and compared with committed round-3 checkpoint records. Preserved original observations, source/evidence history and specified status; no new device verification or automatic closure."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Round-4 implementation and scoped Android verification at 561e26955748efd3e73692bb8fe4c356cb6c7326. Shared navy backdrop verified in current Android View, Filters, JSON and Speed setup; existing opacity retained."
         }
       ],
       "impact": "Dialogs feel visually detached from the rest of the system even though their shapes and actions are mostly consistent.",
@@ -564,6 +578,30 @@
           "revision": "660f343938bbf195671a1714b6ff06dd16900bdb",
           "kind": "Current Android capture",
           "id": "122"
+        },
+        {
+          "kind": "Android contextual inspection",
+          "revision": "561e26955748efd3e73692bb8fe4c356cb6c7326",
+          "file": "round4-evidence-k/files/round4-round4-k/01a-filters-unchanged.png",
+          "review": "round4-k"
+        },
+        {
+          "kind": "Android contextual inspection",
+          "revision": "561e26955748efd3e73692bb8fe4c356cb6c7326",
+          "file": "round4-evidence-k/files/round4-round4-k/02-view-dialog.png",
+          "review": "round4-k"
+        },
+        {
+          "kind": "Android contextual inspection",
+          "revision": "561e26955748efd3e73692bb8fe4c356cb6c7326",
+          "file": "round4-evidence-k/files/round4-round4-k/05a-json-preview.png",
+          "review": "round4-k"
+        },
+        {
+          "kind": "Android contextual inspection",
+          "revision": "561e26955748efd3e73692bb8fe4c356cb6c7326",
+          "file": "round4-evidence-k/files/round4-round4-k/07a-speed-setup.png",
+          "review": "round4-k"
         }
       ],
       "reach": "Shared consumers across screens",
@@ -572,17 +610,43 @@
       ],
       "suggestedChange": "Use palette navy as dialog backdrop at the existing opacity first; check both text separation and the underlying artwork. Change opacity only after a contextual comparison; retain one shared backdrop mapping.",
       "requirementRevisions": {
-        "UX-DIALOG-001": 4,
-        "UX-SYSTEM-001": 6
+        "UX-DIALOG-001": 5,
+        "UX-SYSTEM-001": 7
       },
-      "implementationRound": 3,
+      "implementationRound": 4,
       "reconciliation": {
         "relatedCheckpoints": [
           1,
           2
         ],
-        "implementationLedger": "implementation-round-3.md",
-        "findingClosure": "Pending acceptance review; no fresh Android verification performed during reconciliation."
+        "implementationLedger": "implementation-round-4.md",
+        "findingClosure": "Shared navy backdrop verified in current Android View, Filters, JSON and Speed setup; existing opacity retained."
+      },
+      "verification": {
+        "implementationRevision": "561e26955748efd3e73692bb8fe4c356cb6c7326",
+        "requirementRevisions": {
+          "UX-DIALOG-001": 5,
+          "UX-SYSTEM-001": 7
+        },
+        "checks": [
+          "1153 host tests",
+          "static analysis",
+          "shared palette mapping",
+          "Android contextual inspection"
+        ],
+        "androidStates": [
+          "Filters unchanged/changed/cleared/reverted",
+          "View popup",
+          "JSON preview",
+          "Speed setup"
+        ],
+        "evidenceRefs": [
+          "round4-k/01a-filters-unchanged.png",
+          "round4-k/02-view-dialog.png",
+          "round4-k/05a-json-preview.png",
+          "round4-k/07a-speed-setup.png"
+        ],
+        "limitation": "Physical phone acceptance remains pending."
       }
     },
     {

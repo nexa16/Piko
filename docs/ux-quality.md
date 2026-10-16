@@ -1,10 +1,10 @@
 # UX quality workflow and design consolidation
 
-Reconciliation status, 2026-10-16: this preserves the accepted preparation criteria. Round-3 checkpoints 1–4 now record related implementation and scoped verification in [implementation-round-3.md](implementation-round-3.md). F01–F18 retain their recorded specified status until their complete acceptance criteria receive finding-specific evidence; historical preparation statements are not claims that the current app is unimplemented. New implementation is not authorized by this record.
+Reconciliation status, 2026-10-16: this preserves the accepted preparation criteria. Round-3 checkpoints 1–4 record historical implementation and scoped verification in [implementation-round-3.md](implementation-round-3.md). The [round-4 ledger](implementation-round-4.md#final-verification-and-owner-handoff) records current evidence: F06 is fixed with revision-specific Android inspection; F03/F05 need remaining finding-specific verification. Other findings retain their individual registry status. Historical preparation statements are not claims that the current app is unimplemented. New implementation is not authorized by this record.
 
-Status: workflow, reviewed typography/copy and four state designs accepted on 2026-10-16. Nunito Sans is the selected interface family. This document does not claim Android integration, fixed findings or release acceptance.
+Original preparation status: workflow, reviewed typography/copy and four state designs accepted on 2026-10-16. Nunito Sans is the selected interface family. That preparation acceptance did not establish Android integration, fixed findings or release acceptance; current evidence is recorded above.
 
-Design acceptance is complete for this preparation package. F01–F18 are specified; none is Fixed. Canonical runtime integration and native verification belong to the implementation packages.
+Design acceptance is complete for the original preparation package. Its original F01–F18 specified snapshot is historical; the registry now owns each finding's implementation and verification status. Canonical runtime integration and native verification belong to the implementation packages.
 
 ## Sources of truth
 

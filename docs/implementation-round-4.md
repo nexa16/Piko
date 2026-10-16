@@ -1,6 +1,6 @@
 # Round 4 implementation ledger
 
-**Status, 2026-10-16: owner explicitly authorized the complete round-4 plan. Implementation in progress; no publication or phone acceptance is claimed.**
+**Status, 2026-10-16: owner explicitly authorized the complete round-4 plan. Selected app scope implemented and verified locally; final owner-review APK ready. Header report remains unreproduced. No publication or phone acceptance is claimed.**
 
 ## Execution agreement — 2026-10-16
 
@@ -10,10 +10,10 @@ Scope is the eight selected packages below, with the owner's accepted implementa
 
 | Package | Status | Verification / limitations |
 | --- | --- | --- |
-| Shared dialogs, launcher and palette | Implemented locally | Shared-dialog host checks and prepared-resource geometry passed; Android pending |
-| Multiple examples, dates, JSON and navigation | Implemented locally | Populated schema-14 migration/reopen, v1/v2/v3, rollback, Discard/Undo, preference capture and popup retention host checks passed; Android pending |
-| Collection views and sorting | Implemented locally | Unicode/date ordering, preference persistence and duplicate raw-editor host checks passed; Android pending |
-| Header transitions | Investigation pending | Owner's two recording cases not independently reproduced |
+| Shared dialogs, launcher and palette | Implemented locally | Host geometry/accessibility and Android filter/View/setup states passed; installed book circle inspected |
+| Multiple examples, dates, JSON and navigation | Implemented locally | Host migration/reopen, v1/v2/v3, rollback/Undo and retention checks passed; Android editor/Discard, JSON and both learning modes passed |
+| Collection views and sorting | Implemented locally | Host ordering, persistence, duplicate raw-editor and retained long-scroll checks passed; Android grouped view and EN/DE 320px/200% View controls passed |
+| Header transitions | Synthetic investigation complete; no code correction justified | 42 samples / 14 screenshots retain header; owner’s two recordings remain unidentified and unreproduced |
 
 ## Scope and authorization
 
@@ -128,3 +128,31 @@ The owner clarified that VOCAB-EDIT-003 r1 / UX-CARD-014 r1 belong only in the g
 The first integrated full host run passed 1,150 tests and found one missing canonical Apply-key reference in the new View popup; that reference was corrected to the existing shared Apply key. Targeted regression caught and corrected the editor-occurrence handoff when an invalid draft blocks switching. Legacy migration fixtures now explicitly expect unknown addition dates; existing learning snapshots remain exact. New tests cover ordered child-row rollback, populated schema-14 upgrade/reopen, retired scalar-column isolation, list replacement/clear/stale preview, local date preservation, per-presentation question preferences, duplicate grouped appearances and popup reopening.
 
 Header investigation starts with the existing normal/Speed route headers unchanged. The new isolated Android fixture samples intermediate frames across normal grading/correction/retry waits and Speed grading/number-game boundaries. Source inspection finds the heading outside the conditional card branches; this is a hypothesis check, not reproduction or a fix. The owner’s two private recording cases remain separately unidentified.
+
+
+## Final verification and owner handoff
+
+Owner candidate: `piko-round4-561e269.apk`, source `561e26955748efd3e73692bb8fe4c356cb6c7326`, SHA-256 `a24355202d9308ce16fa2a9a723699358d4ac8c7c73e89f32871e016bd1e8c83`. Normal application ID `io.github.nexa16.piko`, build number 3 (installed prior build 2), unchanged version name 0.1.0, ARM32/ARM64/x64, min SDK 24 / target SDK 36. Signature verification passes and the certificate matches the retained fallback. The immutable APK, checksum and committed source archive are retained privately. This is a development review candidate, not a release or publication.
+
+Verified app/test source: `561e26955748efd3e73692bb8fe4c356cb6c7326`, on `codex/round-4-implementation`, integrating develop `61fdefc` without rewriting retained APK commits. Later documentation-only commits do not change the candidate's app source. No excluded feature or non-color prototype redesign was added. The fallback APK and checksum above remain unchanged.
+
+| Covered requirements | Implementation and evidence |
+| --- | --- |
+| UX-DIALOG-001 r5; CAT-009 r5 / UX-CAT-001 r7; FILTER-002 r5 | Bounded shared shell, real persistent Apply/Clear actions, first-title-line close alignment and guards. Host unchanged/changed/cleared/reverted geometry, wrapping titles, EN/DE narrow/large text, focus and pending-write cases; Android filter four-state geometry and View/setup/JSON consumers. |
+| UX-BRAND-001 r3; UX-SYSTEM-001 r7; UX-LAB-001 r4 (palette scope) | Prepared book resources unchanged; source-pixel/safe-circle host checks and installed circular launcher mask inspected. Shared palette/catalog checks and browser computed-color checks for both available historical round selectors; non-color preview differences retained. OEM/themed icon variants not exhaustively inspected. |
+| VOCAB-005 r3; CARD-003 r3; CARD-UI-003 r3; EXAMPLE-005 r1 | Ordered child rows and nullable UTC local addition dates, exact legacy backfill, multi-pair validation/rollback, Discard and deletion/Undo, question setting captured per presentation, all answer pairs and independent Hint. Populated frozen-schema upgrade/reopen and exact learning snapshots pass on host; real SQLite editor, partial draft, valid save/Discard, question hiding/answer display in normal and reverse Speed, native keyboard and reopen pass on Android. |
+| IMPORT-JSON-001/002 r3; IMPORT-JSON-003 r1; ENTRY-012 r1 | v3 export and v1/v2/v3 input; atomic list replacement/clear, omitted/unselected preservation, stale-preview guards and local date rules. Add chooser and shared Import/Export with session drafts, expansion and choices retained. Host real-runtime EN/DE navigation checks; Android template copying through synthetic transport, valid preview and v3 export. Clipboard/document-picker OS transport is unchanged and was not repeated in this run. |
+| GROUP-001 r2 / GROUP-002–003 r1; COLL-004–006 r1, COLL-008 r2, COLL-009–011 r1 | Persistent independent view choices, default Compact/target-first/ungrouped/original order, lexical/category/date ordering, unknown dates last, temporary collapsed groups and UUID-owned raw editor. Host sorting/persistence/dirty filtering/collapse/duplicate tests and 400-row lazy-scroll regression; Android grouped duplicate views and bilingual 320px/200% View checks. |
+| UX-HEADER-001 r1, Fix 4 | No header code edited. Synthetic normal grading, correction open/submit, retry wait/resume, Speed grading and number-game entry/exit inspected. Seven transitions × six samples (0/16/32/64/128/256 ms pump steps) retain the same heading element and bounds (top 44, bottom 141 logical pixels). All 14 captured title/header regions are pixel-identical. Screenshot work affects timing; this is sampled evidence, not continuous-frame or phone-recording reproduction. |
+
+Final host regression at this source: **1,153/1,153 passed**. Static analysis: **no issues**. Catalog generation/check and the eight requirements-parser tests pass. Earlier failures were corrected superseded expectations, the missing Apply copy key, editor-occurrence handoff, and acceptance-fixture/environment issues; only the final passing run is the final baseline.
+
+Android: existing Medium Phone API 36 emulator, Android 16, x86_64, 1080×2400 / 420 dpi (about 411×914 logical pixels), English normal text for main screenshots. Separate test application identity with isolated synthetic SQLite data. Integrated flow plus EN and DE View-dialog tests at 320 logical pixels / 200% text all pass (3 scenarios plus teardown). File reopen retains exported content; independent read of the closed synthetic database confirms Collection view preferences and questionExamples=false persist. The real docked IME inset is 336.38 logical pixels; the focused second example remains visible. Native screenshot retained separately because Flutter surface captures omit OS keyboard/system UI.
+
+Evidence: private run `round4-k`, manifest, 29 Flutter screenshots (including 14 transition frames), native keyboard screenshot, installed-launcher screenshot, full logs and frame-region comparison. Important states inspected: Compact and grouped Detailed Collection, View/filter states, multiple-example editor with native keyboard, JSON preview, revealed normal/Speed answers, Speed setup and intermediate headers. The private review index links the original captures; no personal screenshots or synthetic databases are tracked.
+
+Installation was direct and fail-closed; insufficient storage never triggered clearing, uninstall or a destructive fallback. Only the isolated test app's generated compiler cache was removed between test builds. Emulator storage-reserve, hardware-keyboard and handwriting settings were saved/restored and restoration verified. Gboard needed a restart to apply the temporary docked-keyboard configuration. Normal Piko was never started, replaced, cleared or inspected for private rows; its installed APK path/hash stayed unchanged. Earlier failed synthetic fixtures remain preserved privately.
+
+Remaining limits: the two owner-reported header recordings are still unverified; the retained scrolling fix's intermittent phone stall remains unproven beyond its earlier Android evidence and current host preservation checks. The normal candidate is not installed over preserved personal emulator data. Physical-phone update/learning and changed-flow acceptance are pending. No release, tag, store upload, push, PR or merge has occurred.
+
+Publication review covers the complete proposed file set and all retained/new commits, including the original pre-squash ancestry. Commit author/committer identities use the existing GitHub noreply address; the history/file pattern scan found no credential, machine-path or private-artifact matches. Required generated Dart/schema sources and prepared PNG/XML assets are intentional; APKs, databases, raw captures and detailed logs stay private. Owner manual review/publication approval remains required before push/PR, followed by the standing phone/check/review gates before squash integration.
