@@ -14,7 +14,7 @@ InputDecoration pikoInputDecoration({String? error}) {
     filled: true,
     fillColor: d.color('surface'),
     contentPadding: EdgeInsets.all(d.dimension('components.fields.padding')),
-    enabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
+    enabledBorder: border(d.color('muted'), d.dimension('states.borderWidth')),
     disabledBorder: border(PikoTheme.border, d.dimension('states.borderWidth')),
     focusedBorder: border(
       d.color('primary'),
@@ -38,7 +38,7 @@ class PikoField extends StatelessWidget {
     children: [
       Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelLarge!.copyWith(
           color: pikoDesign.color('muted'),
           fontSize: pikoDesign.dimension('components.fields.labelSize'),
           fontWeight: pikoDesign.weight('components.fields.labelWeight'),
@@ -82,7 +82,8 @@ class PikoTextField extends StatelessWidget {
     child: Semantics(
       label: label,
       child: TextField(
-        style: style,
+        // A field value must not inherit the label or Material title weight.
+        style: Theme.of(context).textTheme.bodyMedium!.merge(style),
         enabled: enabled,
         controller: controller,
         onChanged: onChanged,
@@ -125,7 +126,7 @@ class PikoDropdown<T> extends StatelessWidget {
               d.dimension('components.dropdowns.radius'),
             ),
             border: Border.all(
-              color: PikoTheme.border,
+              color: onChanged == null ? PikoTheme.border : d.color('muted'),
               width: d.dimension('states.borderWidth'),
             ),
           ),
@@ -145,11 +146,7 @@ class PikoDropdown<T> extends StatelessWidget {
                   onChanged: onChanged,
                   isExpanded: true,
                   itemHeight: null,
-                  style: TextStyle(
-                    color: d.color('ink'),
-                    fontSize: d.dimension('typography.body'),
-                    fontWeight: d.weight('components.dropdowns.weight'),
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
                   borderRadius: BorderRadius.circular(
                     d.dimension('components.dropdowns.radius'),
                   ),
