@@ -1,7 +1,8 @@
+import '../collections/collection_view_preferences.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'
-    show RenderAbstractViewport, ScrollDirection;
+    show MatrixUtils, RenderAbstractViewport, RenderSliver, ScrollDirection;
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
@@ -34,6 +35,7 @@ class CollectionVocabulary extends StatefulWidget {
     this.writeBarrier,
     this.queryBinding,
     this.categoriesRepository,
+    this.sliver = false,
     this.preferredDirections = const {
       LearningDirection.targetToNative,
       LearningDirection.nativeToTarget,
@@ -46,6 +48,9 @@ class CollectionVocabulary extends StatefulWidget {
   final CollectionWriteBarrier? writeBarrier;
   final CollectionQueryBinding? queryBinding;
   final CategoriesRepository? categoriesRepository;
+
+  /// Production Detail shares a single lazy viewport with its header.
+  final bool sliver;
   final Set<LearningDirection> preferredDirections;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
@@ -79,6 +84,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   int generation = 0;
   String? focusedId;
   _Editor? editor;
+  String? editorOccurrence;
   final retired = <_Editor>{};
   final rowKeys = <String, GlobalKey>{};
   double topSpace = 0, bottomSpace = 0;
@@ -253,19 +259,24 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       final content = context.findRenderObject();
       // Measure visible slack from actual bounds. A short list can be hundreds
       // of pixels below its viewport height despite maxScrollExtent == 0.
-      final slack = viewport != null && content is RenderBox
-          ? (viewport
-                        .localToGlobal(
-                          Offset(
-                            0,
-                            viewport.constraints.hasBoundedHeight
-                                ? viewport.constraints.maxHeight
-                                : position.viewportDimension,
-                          ),
-                        )
-                        .dy -
-                    content.localToGlobal(Offset(0, content.size.height)).dy)
-                .clamp(0, double.infinity)
+      final contentEnd = viewport != null && content is RenderSliver
+          ? MatrixUtils.transformPoint(
+              content.getTransformTo(viewport),
+              Offset(0, content.geometry!.scrollExtent),
+            ).dy
+          : viewport != null && content is RenderBox
+          ? viewport
+                .globalToLocal(
+                  content.localToGlobal(Offset(0, content.size.height)),
+                )
+                .dy
+          : null;
+      final slack = viewport != null && contentEnd != null
+          ? ((viewport.constraints.hasBoundedHeight
+                        ? viewport.constraints.maxHeight
+                        : position.viewportDimension) -
+                    contentEnd)
+                .clamp(0.0, double.infinity)
           : 0.0;
       if (desired < position.minScrollExtent ||
           desired > position.maxScrollExtent) {
@@ -483,52 +494,84 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     _ => 'vocab.inlineDiscardFailed',
   };
 
-  Widget row(VocabularyRecord record) {
+  String occurrence(String id, String? group) =>
+      group == null ? id : '$group/$id';
+  Future<void> activateOccurrence(String id, String? group) async {
+    if (actionBusy) return;
+    await activateRow(id);
+    if (mounted && editor?.edits.entryId == id) {
+      setState(() => editorOccurrence = occurrence(id, group));
+    }
+  }
+
+  Widget row(VocabularyRecord record, String? group) {
     final copy = PikoCopyScope.of(context);
-    final current = editor?.edits.entryId == record.id ? editor : null;
+    final current =
+        editor?.edits.entryId == record.id &&
+            editorOccurrence == occurrence(record.id, group)
+        ? editor
+        : null;
+    final view =
+        widget.queryBinding?.scope.view ?? const CollectionViewPreferences();
+    final first = view.targetFirst ? record.targetText : record.nativeText;
+    final second = view.targetFirst ? record.nativeText : record.targetText;
     final expanded = current != null;
     Widget content;
     if (current == null) {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ExcludeSemantics(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    record.targetText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: pikoDesign.dimension('typography.body'),
-                      fontWeight: pikoDesign.weight('typography.titleWeight'),
+          if (view.mode == VocabularyViewMode.detailed) ...[
+            Text(first, style: Theme.of(context).textTheme.titleMedium),
+            Text(second),
+            for (final pair in record.content.examples) ...[
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              Text(view.targetFirst ? pair.targetText : pair.nativeText),
+              Text(
+                view.targetFirst ? pair.nativeText : pair.targetText,
+                style: TextStyle(color: pikoDesign.color('muted')),
+              ),
+            ],
+            if (record.content.hintText != null) ...[
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              Text(record.content.hintText!),
+            ],
+          ] else
+            ExcludeSemantics(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      first,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                ),
-                SizedBox(width: pikoDesign.dimension('spacing.3')),
-                Expanded(
-                  child: Text(
-                    record.nativeText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: pikoDesign.dimension('typography.body'),
-                      color: pikoDesign.color('muted'),
+                  SizedBox(width: pikoDesign.dimension('spacing.3')),
+                  Expanded(
+                    child: Text(
+                      second,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: pikoDesign.color('muted')),
                     ),
                   ),
-                ),
-                SizedBox(width: pikoDesign.dimension('spacing.3')),
-                const PikoIcon(PikoIconName.pencil),
-              ],
+                  SizedBox(width: pikoDesign.dimension('spacing.3')),
+                  const PikoIcon(PikoIconName.pencil),
+                ],
+              ),
             ),
-          ),
           if (widget.categoriesRepository != null)
             VocabularyCategories(
               collectionId: widget.collection.id,
               entryId: record.id,
               repository: widget.categoriesRepository!,
               snapshot: widget.queryBinding?.snapshot,
+              excludedValues: {
+                ?group,
+                ...?widget.queryBinding?.scope.filters.values.expand((v) => v),
+              },
             ),
         ],
       );
@@ -811,13 +854,17 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             }),
       button: !expanded,
       expanded: expanded,
-      onTap: expanded || actionBusy ? null : () => activateRow(record.id),
+      onTap: expanded || actionBusy
+          ? null
+          : () => activateOccurrence(record.id, group),
       child: ExcludeSemantics(
         excluding: false,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: expanded || actionBusy ? null : () => activateRow(record.id),
+            onTap: expanded || actionBusy
+                ? null
+                : () => activateOccurrence(record.id, group),
             excludeFromSemantics: true,
             canRequestFocus: !expanded && !actionBusy,
             onFocusChange: (value) => setState(
@@ -831,7 +878,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               pikoDesign.dimension('radii.card'),
             ),
             child: PikoCard(
-              key: ValueKey('vocabulary-${record.id}'),
+              key: ValueKey('vocabulary-${occurrence(record.id, group)}'),
               focused: focusedId == record.id,
               padding: EdgeInsets.all(
                 pikoDesign.dimension(
@@ -854,7 +901,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
           PikoButton(
             label: copy.text('action.retry'),
-            onPressed: actionBusy ? null : () => activateRow(record.id),
+            onPressed: actionBusy
+                ? null
+                : () => activateOccurrence(record.id, group),
           ),
         ],
         if (widget.mutations == null)
@@ -943,65 +992,170 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    return Listener(
-      onPointerMove: (event) {
-        anchorRevision++;
-        if (Scrollable.maybeOf(context)?.position.userScrollDirection !=
-                ScrollDirection.idle &&
-            event.delta.dy.abs() > event.delta.dx.abs() &&
-            (topSpace != 0 || bottomSpace != 0)) {
-          setState(() {
-            topSpace = 0;
-            bottomSpace = 0;
-          });
-        }
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (topSpace > 0) SizedBox(height: topSpace),
-          if (waiting) Text(copy.text('vocab.loading')),
-          if (loadError != null) ...[
-            Text(copy.text('vocab.loadFailed')),
-            PikoButton(
-              label: copy.text('action.retry'),
-              onPressed:
-                  widget.writeBarrier?.frozen == true ||
-                      editor?.edits.isDiscarding == true
-                  ? null
-                  : widget.queryBinding?.refresh ?? () => setState(watch),
-            ),
-          ],
-          if (!waiting && loadError == null && rows.isEmpty)
-            PikoCard(
-              child: Text(
-                copy.text(
-                  widget.queryBinding?.snapshot?.allEntries.isNotEmpty ==
-                              true &&
-                          widget.queryBinding!.scope.restricted
-                      ? 'r2.noMatches'
-                      : 'collection.empty',
-                ),
-              ),
-            ),
-          for (var index = 0; index < rows.length; index++) ...[
-            if (index > 0) SizedBox(height: pikoDesign.dimension('spacing.3')),
-            KeyedSubtree(
-              key: ValueKey('vocabulary-row-${rows[index].id}'),
-              child: KeyedSubtree(
-                key: rowKeys.putIfAbsent(rows[index].id, GlobalKey.new),
-                child: row(rows[index]),
-              ),
-            ),
-          ],
-          if (widget.mutations?.latest case final offer?) ...[
-            SizedBox(height: pikoDesign.dimension('spacing.3')),
-            undoBar(offer),
-          ],
-          if (bottomSpace > 0) SizedBox(height: bottomSpace),
+    void onPointerMove(PointerMoveEvent event) {
+      anchorRevision++;
+      if (Scrollable.maybeOf(context)?.position.userScrollDirection !=
+              ScrollDirection.idle &&
+          event.delta.dy.abs() > event.delta.dx.abs() &&
+          (topSpace != 0 || bottomSpace != 0)) {
+        setState(() {
+          topSpace = 0;
+          bottomSpace = 0;
+        });
+      }
+    }
+
+    final leading = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (topSpace > 0) SizedBox(height: topSpace),
+        if (waiting) Text(copy.text('vocab.loading')),
+        if (loadError != null) ...[
+          Text(copy.text('vocab.loadFailed')),
+          PikoButton(
+            label: copy.text('action.retry'),
+            onPressed:
+                widget.writeBarrier?.frozen == true ||
+                    editor?.edits.isDiscarding == true
+                ? null
+                : widget.queryBinding?.refresh ?? () => setState(watch),
+          ),
         ],
-      ),
+        if (!waiting && loadError == null && rows.isEmpty)
+          PikoCard(
+            child: Text(
+              copy.text(
+                widget.queryBinding?.snapshot?.allEntries.isNotEmpty == true &&
+                        widget.queryBinding!.scope.restricted
+                    ? 'r2.noMatches'
+                    : 'collection.empty',
+              ),
+            ),
+          ),
+      ],
     );
+    final trailing = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.mutations?.latest case final offer?) ...[
+          SizedBox(height: pikoDesign.dimension('spacing.3')),
+          undoBar(offer),
+        ],
+        if (bottomSpace > 0) SizedBox(height: bottomSpace),
+      ],
+    );
+    final scope = widget.queryBinding?.scope;
+    final snapshot = widget.queryBinding?.snapshot;
+    final groups = snapshot != null && scope != null
+        ? groupVocabulary(snapshot, scope.view)
+        : [VocabularyViewGroup(null, null, rows)];
+    final items =
+        <({String key, VocabularyRecord? entry, VocabularyViewGroup group})>[];
+    for (final group in groups) {
+      if (group.id != null) {
+        items.add((key: 'group-${group.id}', entry: null, group: group));
+      }
+      if (group.id == null || scope!.expandedGroups.contains(group.id)) {
+        for (final entry in group.entries) {
+          items.add((
+            key: 'vocabulary-row-${occurrence(entry.id, group.id)}',
+            entry: entry,
+            group: group,
+          ));
+        }
+      }
+    }
+    // A view change may move the one UUID-owned editor to another occurrence.
+    if (editor != null &&
+        !items.any(
+          (i) =>
+              i.entry != null &&
+              occurrence(i.entry!.id, i.group.id) == editorOccurrence,
+        )) {
+      final visible = items
+          .where((i) => i.entry?.id == editor!.edits.entryId)
+          .firstOrNull;
+      if (visible != null) {
+        editorOccurrence = occurrence(visible.entry!.id, visible.group.id);
+      }
+    }
+    Widget item(int index) {
+      final item = items[index], record = item.entry;
+      if (record == null) {
+        final id = item.group.id!,
+            expanded = scope!.expandedGroups.contains(item.group.id);
+        return Padding(
+          key: ValueKey(item.key),
+          padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+          child: Semantics(
+            expanded: expanded,
+            child: PikoButton(
+              key: ValueKey('collection-group-$id'),
+              label:
+                  '${item.group.name ?? PikoCopyScope.of(context).text('view.unassigned')} (${item.group.entries.length})',
+              icon: RotatedBox(
+                quarterTurns: expanded ? 1 : 0,
+                child: const PikoIcon(PikoIconName.chevronRight),
+              ),
+              variant: PikoButtonVariant.neutral,
+              onPressed: actionBusy
+                  ? null
+                  : () => scope.expandGroups([id], !expanded),
+            ),
+          ),
+        );
+      }
+      final key = occurrence(record.id, item.group.id);
+      return _RetainedVocabularyRow(
+        key: ValueKey(item.key),
+        retain: editor?.edits.entryId == record.id && editorOccurrence == key,
+        child: Listener(
+          onPointerMove: onPointerMove,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: index == 0 ? 0 : pikoDesign.dimension('spacing.3'),
+            ),
+            child: KeyedSubtree(
+              key: rowKeys.putIfAbsent(key, GlobalKey.new),
+              child: row(record, item.group.id),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return widget.sliver
+        ? SliverMainAxisGroup(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Listener(onPointerMove: onPointerMove, child: leading),
+              ),
+              SliverList.builder(
+                itemCount: items.length,
+                findChildIndexCallback: (key) {
+                  final index = items.indexWhere(
+                    (item) => key == ValueKey(item.key),
+                  );
+                  return index < 0 ? null : index;
+                },
+                itemBuilder: (context, index) => item(index),
+              ),
+              SliverToBoxAdapter(
+                child: Listener(onPointerMove: onPointerMove, child: trailing),
+              ),
+            ],
+          )
+        : Listener(
+            onPointerMove: onPointerMove,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                leading,
+                for (var i = 0; i < items.length; i++) item(i),
+                trailing,
+              ],
+            ),
+          );
   }
 
   @override
@@ -1021,5 +1175,38 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     }
     retired.clear();
     super.dispose();
+  }
+}
+
+/// Keep the one active editor mounted outside the cache so scrolling cannot
+/// dispose its selection, focus, optional-content controls or validation.
+class _RetainedVocabularyRow extends StatefulWidget {
+  const _RetainedVocabularyRow({
+    super.key,
+    required this.retain,
+    required this.child,
+  });
+  final bool retain;
+  final Widget child;
+
+  @override
+  State<_RetainedVocabularyRow> createState() => _RetainedVocabularyRowState();
+}
+
+class _RetainedVocabularyRowState extends State<_RetainedVocabularyRow>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => widget.retain;
+
+  @override
+  void didUpdateWidget(_RetainedVocabularyRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.retain != widget.retain) updateKeepAlive();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

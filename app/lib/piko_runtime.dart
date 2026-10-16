@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
+import 'data/collections_repository.dart';
 import 'data/local/database_connection.dart';
 import 'data/local/piko_database.dart';
 import 'data/local/sqlite_collections_repository.dart';
@@ -83,7 +84,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   bool _directionStarted = false;
   Future<void> _languageDependencies = Future<void>.value();
   bool _bootstrapped = false;
-  final _collectionScopes = CollectionViewScopes();
+  late final _collectionScopes = CollectionViewScopes(
+    repository: settings,
+    registerPending: trackWrites,
+  );
   final _collectionBindings = <String, CollectionQueryBinding>{};
 
   CollectionQueryBinding _collectionBinding(String id) =>
@@ -152,6 +156,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
         builder: (_) => SettingsRoute(
           binding: _languageBinding,
           directionBinding: _directionBinding,
+          settingsRepository: settings,
+          registerPending: trackWrites,
         ),
       ),
     );
@@ -179,16 +185,21 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     await database.close();
   }
 
-  EntrySessionResources _entrySession(String collectionId) {
-    final deletion = SqliteVocabularyDeletionService(database);
-    return EntrySessionResources(
-      categoriesRepository: categories,
-      interchangeBuilder: (_, collection) => VocabularyJsonPage(
+  final _jsonDrafts = <String, VocabularyJsonDraft>{};
+  Widget _interchange(BuildContext context, CollectionRecord collection) =>
+      VocabularyJsonPage(
         collection: collection,
         service: jsonService,
         platform: jsonPlatform,
         onPendingWrites: trackWrites,
-      ),
+        asDialog: true,
+        draft: _jsonDrafts.putIfAbsent(collection.id, VocabularyJsonDraft.new),
+      );
+
+  EntrySessionResources _entrySession(String collectionId) {
+    final deletion = SqliteVocabularyDeletionService(database);
+    return EntrySessionResources(
+      categoriesRepository: categories,
       onPendingWrites: trackWrites,
       session: EntrySessionController(
         collectionId: collectionId,
@@ -327,6 +338,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
           child: CollectionsHome(
             repository: collections,
             entrySessionFactory: _entrySession,
+            interchangeBuilder: _interchange,
             vocabularyRepository: vocabulary,
             categoriesRepository: categories,
             onPendingVocabularyWrites: trackWrites,

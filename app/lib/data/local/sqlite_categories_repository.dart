@@ -1,3 +1,4 @@
+import '../vocabulary_normalization.dart' show compareVocabularyLabels;
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import 'package:uuid/uuid.dart';
@@ -97,13 +98,17 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     return row == null ? null : _dimension(row);
   }
 
+  List<CategoryValueRecord> _sortedValues(List<StoredCategoryValue> rows) =>
+      rows.map(_value).toList()..sort((a, b) {
+        final order = compareVocabularyLabels(a.name, b.name);
+        return order == 0 ? a.id.compareTo(b.id) : order;
+      });
   @override
   Future<List<CategoryValueRecord>> values(String dimensionId) async =>
-      (await _values(dimensionId).get()).map(_value).toList(growable: false);
+      _sortedValues(await _values(dimensionId).get());
   @override
-  Stream<List<CategoryValueRecord>> watchValues(String dimensionId) => _values(
-    dimensionId,
-  ).watch().map((rows) => rows.map(_value).toList(growable: false));
+  Stream<List<CategoryValueRecord>> watchValues(String dimensionId) =>
+      _values(dimensionId).watch().map(_sortedValues);
   @override
   Future<CategoryValueRecord?> valueById(String id) async {
     final row = await (database.select(

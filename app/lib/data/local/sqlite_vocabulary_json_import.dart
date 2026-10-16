@@ -133,6 +133,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
     if (decoded['schemaVersion'] is! int ||
         ![
           1,
+          2,
           VocabularyJsonFormat.schemaVersion,
         ].contains(decoded['schemaVersion'])) {
       issue(VocabularyJsonIssueCode.unsupportedVersion, 'schemaVersion');
@@ -285,11 +286,22 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
       issue(VocabularyJsonIssueCode.collectionNotFound, 'destination');
       return result();
     }
-    fingerprint = await _importFingerprint(request.collectionId);
+    fingerprint = jsonEncode([
+      await _importFingerprint(request.collectionId),
+      (await SqliteVocabularyContent(
+        database,
+      ).forCollection(request.collectionId)).map(
+        (id, pairs) => MapEntry(id, [
+          for (final p in pairs) [p.targetText, p.nativeText],
+        ]),
+      ),
+    ]);
     if (source['targetLanguage'] != owner.targetLanguage ||
         source['nativeLanguage'] != owner.nativeLanguage) {
       issue(VocabularyJsonIssueCode.languageMismatch, 'collections[0]');
     }
+    final exampleStore = SqliteVocabularyContent(database);
+    final examples = await exampleStore.forCollection(owner.id);
     final existing = {
       for (final row in await (database.select(
         database.vocabularyEntries,
@@ -491,20 +503,18 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
       final priorContent = old == null
           ? VocabularyContent(hintVisibility: defaultVisibility)
           : VocabularyContent.fromStored(
-              exampleTargetText: old.exampleTargetText,
-              exampleNativeText: old.exampleNativeText,
+              examples: examples[old.id] ?? const [],
               hintText: old.hintText,
               hintVisibility: old.hintVisibility,
             );
-      var exampleTarget = priorContent.exampleTargetText;
-      var exampleNative = priorContent.exampleNativeText;
+      var pairs = priorContent.examples;
       var hintText = priorContent.hintText;
       var visibility = priorContent.hintVisibility;
       final selectExample =
-          request.schemaVersion == 2 &&
+          request.schemaVersion >= 2 &&
           request.groups.contains(VocabularyJsonGroup.example);
       final selectHint =
-          request.schemaVersion == 2 &&
+          request.schemaVersion >= 2 &&
           request.groups.contains(VocabularyJsonGroup.hint);
       String? optionalText(Object? raw, String field, int maximum) {
         if (raw == null) return null;
@@ -527,43 +537,64 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         return value.isEmpty ? null : value;
       }
 
-      if (selectExample && row.containsKey('example')) {
-        final example = row['example'];
-        if (example == null) {
-          exampleTarget = null;
-          exampleNative = null;
-        } else if (example is! Map<String, dynamic>) {
+      final exampleField = request.schemaVersion == 2 ? 'example' : 'examples';
+      if (selectExample && row.containsKey(exampleField)) {
+        final raw = row[exampleField];
+        final list = raw == null
+            ? <Object?>[]
+            : request.schemaVersion == 2
+            ? [raw]
+            : raw;
+        if (list is! List) {
           issue(
             VocabularyJsonIssueCode.invalidField,
-            '$path.example',
+            '$path.$exampleField',
             rowNumber,
           );
         } else {
-          for (final field in ['targetText', 'nativeText']) {
-            if (example[field] == null) {
+          pairs = [];
+          for (var i = 0; i < list.length; i++) {
+            final pair = list[i];
+            final field = request.schemaVersion == 2
+                ? exampleField
+                : '$exampleField[$i]';
+            if (pair is! Map<String, dynamic>) {
               issue(
                 VocabularyJsonIssueCode.invalidField,
-                '$path.example.$field',
+                '$path.$field',
+                rowNumber,
+              );
+              continue;
+            }
+            for (final language in ['targetText', 'nativeText']) {
+              if (pair[language] is! String) {
+                issue(
+                  VocabularyJsonIssueCode.invalidField,
+                  '$path.$field.$language',
+                  rowNumber,
+                );
+              }
+            }
+            final target = optionalText(
+              pair['targetText'],
+              '$field.targetText',
+              VocabularyContent.maxExampleLength,
+            );
+            final native = optionalText(
+              pair['nativeText'],
+              '$field.nativeText',
+              VocabularyContent.maxExampleLength,
+            );
+            if ((target == null) != (native == null)) {
+              issue(
+                VocabularyJsonIssueCode.invalidField,
+                '$path.$field',
                 rowNumber,
               );
             }
-          }
-          exampleTarget = optionalText(
-            example['targetText'],
-            'example.targetText',
-            VocabularyContent.maxExampleLength,
-          );
-          exampleNative = optionalText(
-            example['nativeText'],
-            'example.nativeText',
-            VocabularyContent.maxExampleLength,
-          );
-          if ((exampleTarget == null) != (exampleNative == null)) {
-            issue(
-              VocabularyJsonIssueCode.invalidField,
-              '$path.example',
-              rowNumber,
-            );
+            if (target != null && native != null) {
+              pairs.add(ExamplePair(targetText: target, nativeText: native));
+            }
           }
         }
       }
@@ -600,8 +631,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
       }
       if (old == null && !explicitVisibility) usesDefaultVisibility = true;
       final content = VocabularyContent(
-        exampleTargetText: exampleTarget,
-        exampleNativeText: exampleNative,
+        examples: pairs,
         hintText: hintText,
         hintVisibility: visibility,
       );
@@ -914,7 +944,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           if (entry.isNew) {
             final rowId = await database.allocateVocabularyRowId();
             await database.customInsert(
-              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,example_target_text,example_native_text,hint_text,hint_visibility) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,hint_text,hint_visibility,added_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
               variables: [
                 Variable(rowId),
                 Variable(entry.id),
@@ -923,10 +953,10 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                 Variable(entry.native),
                 Variable(vocabularyComparisonKey(entry.target)),
                 Variable(vocabularyComparisonKey(entry.native)),
-                Variable<String>(entry.content.exampleTargetText),
-                Variable<String>(entry.content.exampleNativeText),
+
                 Variable<String>(entry.content.hintText),
                 Variable(entry.content.hintVisibility.name),
+                Variable(clock.now().toUtc().toIso8601String()),
               ],
               updates: {database.vocabularyEntries},
             );
@@ -941,13 +971,17 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                     nativeText: Value(entry.native),
                     targetKey: Value(vocabularyComparisonKey(entry.target)),
                     nativeKey: Value(vocabularyComparisonKey(entry.native)),
-                    exampleTargetText: Value(entry.content.exampleTargetText),
-                    exampleNativeText: Value(entry.content.exampleNativeText),
+
                     hintText: Value(entry.content.hintText),
                     hintVisibility: Value(entry.content.hintVisibility.name),
                   ),
                 );
             if (count != 1) throw StateError('Import vocabulary update failed');
+          }
+          if (entry.isNew || entry.changed) {
+            await SqliteVocabularyContent(
+              database,
+            ).replace(entry.id, entry.content);
           }
           if (entry.assignments != null && (entry.isNew || entry.changed)) {
             await categories.replaceAssignments(

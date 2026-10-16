@@ -204,6 +204,7 @@ void main() {
             {
               'collections',
               'vocabulary_entries',
+              'vocabulary_examples',
               'learning_items',
               'regular_reviews',
               'retry_obligations',

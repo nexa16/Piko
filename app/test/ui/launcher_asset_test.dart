@@ -70,66 +70,74 @@ void main() {
   );
 
   test(
-    'all Android densities preserve crisp colors and foreground inside the adaptive safe circle',
+    'prepared plain-book foreground retains exact padding, hard pixels and safe-circle bounds',
     () async {
-      for (final density in {
-        'mdpi': 1.0,
-        'hdpi': 1.5,
-        'xhdpi': 2.0,
-        'xxhdpi': 3.0,
-        'xxxhdpi': 4.0,
-      }.entries) {
-        for (final name in [
-          'ic_launcher',
-          'ic_launcher_foreground',
-          'ic_launcher_background',
-        ]) {
-          final codec = await ui.instantiateImageCodec(
-            await File(
-              'android/app/src/main/res/mipmap-${density.key}/$name.png',
-            ).readAsBytes(),
-          );
-          final image = (await codec.getNextFrame()).image;
-          codec.dispose();
-          try {
-            final size = ((name == 'ic_launcher' ? 48 : 108) * density.value)
-                .toInt();
-            expect(image.width, size);
-            expect(image.height, size);
-            final data = (await image.toByteData(
-              format: ui.ImageByteFormat.rawRgba,
-            ))!;
-            var painted = 0;
-            for (var y = 0; y < size; y++) {
-              for (var x = 0; x < size; x++) {
-                final i = (y * size + x) * 4,
-                    alpha = data.getUint8((y * size + x) * 4 + 3);
-                expect(alpha, anyOf(0, 255));
-                if (alpha == 0) continue;
-                painted++;
-                final color =
-                    (data.getUint8(i) << 16) |
-                    (data.getUint8(i + 1) << 8) |
-                    data.getUint8(i + 2);
-                expect(approvedColors, contains(color));
-                if (name == 'ic_launcher_foreground') {
-                  final radius = sqrt(
-                    pow((x + .5 - size / 2).abs() + .5, 2) +
-                        pow((y + .5 - size / 2).abs() + .5, 2),
-                  );
-                  expect(
-                    radius,
-                    lessThanOrEqualTo(33 * density.value),
-                    reason: '${density.key} clips a source pixel',
-                  );
-                }
-              }
-            }
-            expect(painted, greaterThan(0));
-          } finally {
-            image.dispose();
+      final codec = await ui.instantiateImageCodec(
+        await File(
+          'android/app/src/main/res/drawable-nodpi/piko_book_foreground.png',
+        ).readAsBytes(),
+      );
+      final image = (await codec.getNextFrame()).image;
+      codec.dispose();
+      try {
+        expect(image.width, 1080);
+        expect(image.height, 1080);
+        final bytes = (await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        ))!;
+        var left = 1080, top = 1080, right = 0, bottom = 0, count = 0;
+        for (var y = 0; y < 1080; y++) {
+          for (var x = 0; x < 1080; x++) {
+            final alpha = bytes.getUint8((y * 1080 + x) * 4 + 3);
+            expect(alpha, anyOf(0, 255));
+            if (alpha == 0) continue;
+            count++;
+            left = min(left, x);
+            top = min(top, y);
+            right = max(right, x + 1);
+            bottom = max(bottom, y + 1);
+            final radius = sqrt(
+              pow((x + .5 - 540).abs() + .5, 2) +
+                  pow((y + .5 - 540).abs() + .5, 2),
+            );
+            expect(radius, lessThanOrEqualTo(330));
           }
         }
+        expect([left, top, right, bottom], [264, 324, 816, 756]);
+        expect(count, 364 * 24 * 24);
+        final drawable = await File(
+          'android/app/src/main/res/drawable/ic_launcher_foreground.xml',
+        ).readAsString();
+        expect(drawable, contains('android:gravity="fill"'));
+        expect(drawable, isNot(contains('inset')));
+        expect(
+          await File(
+            'android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml',
+          ).readAsString(),
+          contains('monochrome'),
+        );
+        for (final density in {
+          'mdpi': 48,
+          'hdpi': 72,
+          'xhdpi': 96,
+          'xxhdpi': 144,
+          'xxxhdpi': 192,
+        }.entries) {
+          for (final name in ['ic_launcher', 'ic_launcher_round']) {
+            final legacy = await ui.instantiateImageCodec(
+              await File(
+                'android/app/src/main/res/mipmap-${density.key}/$name.png',
+              ).readAsBytes(),
+            );
+            final icon = (await legacy.getNextFrame()).image;
+            expect(icon.width, density.value);
+            expect(icon.height, density.value);
+            icon.dispose();
+            legacy.dispose();
+          }
+        }
+      } finally {
+        image.dispose();
       }
     },
   );

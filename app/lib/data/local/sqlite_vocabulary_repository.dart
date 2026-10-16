@@ -1,3 +1,4 @@
+import 'sqlite_vocabulary_content.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
@@ -17,10 +18,15 @@ final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
   final Map<String, Set<String>> assignments;
 }
 
-final class SqliteVocabularyRepository implements VocabularyContentRepository {
+final class SqliteVocabularyRepository
+    implements VocabularyContentRepository, QuestionExamplesRepository {
   SqliteVocabularyRepository(this.database);
   final PikoDatabase database;
   final _issuer = Object();
+  @override
+  Future<bool> readQuestionExamples() async =>
+      await SqliteSettingsRepository(database).read('questionExamples') !=
+      'false';
 
   @override
   Future<HintVisibility> readHintVisibilityDefault() async =>
@@ -40,13 +46,12 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
           database.vocabularyEntries,
         )..where((row) => row.id.equals(id))).write(
           VocabularyEntriesCompanion(
-            exampleTargetText: Value(content.exampleTargetText),
-            exampleNativeText: Value(content.exampleNativeText),
             hintText: Value(content.hintText),
             hintVisibility: Value(content.hintVisibility.name),
           ),
         );
     if (count != 1) throw VocabularyValidation.entryNotFound;
+    await SqliteVocabularyContent(database).replace(id, content);
     if (makeDefault) {
       await SqliteSettingsRepository(
         database,
@@ -82,6 +87,7 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
         targetText: saved.targetText,
         nativeText: saved.nativeText,
         content: normalized,
+        addedAt: saved.addedAt,
       );
     });
   }
@@ -114,6 +120,7 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
         targetText: saved.targetText,
         nativeText: saved.nativeText,
         content: normalized,
+        addedAt: saved.addedAt,
       );
     });
   }
@@ -132,7 +139,7 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
             .getSingleOrNull();
     if (row == null) throw VocabularyValidation.entryNotFound;
     return _OpeningSnapshot(
-      _record(row),
+      await _record(row),
       _issuer,
       await categorizedAssignments(entryId),
     );
@@ -240,13 +247,14 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
                   nativeKey: Value(
                     vocabularyComparisonKey(original.nativeText),
                   ),
-                  exampleTargetText: Value(original.content.exampleTargetText),
-                  exampleNativeText: Value(original.content.exampleNativeText),
                   hintText: Value(original.content.hintText),
                   hintVisibility: Value(original.content.hintVisibility.name),
                 ),
               );
       if (count != 1) throw VocabularyValidation.entryNotFound;
+      await SqliteVocabularyContent(
+        database,
+      ).replace(original.id, original.content);
       // Explicit deletion of definitions remains effective: Discard restores
       // surviving assignments, never recreates a deleted category or value.
       final categories = SqliteCategoriesRepository(database);
@@ -297,37 +305,61 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
     return (target, native);
   }
 
-  VocabularyRecord _record(VocabularyEntry row) => VocabularyRecord(
-    id: row.id,
-    collectionId: row.collectionId,
-    targetText: row.targetText,
-    nativeText: row.nativeText,
-    content: VocabularyContent.fromStored(
-      exampleTargetText: row.exampleTargetText,
-      exampleNativeText: row.exampleNativeText,
-      hintText: row.hintText,
-      hintVisibility: row.hintVisibility,
-    ),
-  );
+  Future<VocabularyRecord> _record(VocabularyEntry row) async =>
+      VocabularyRecord(
+        id: row.id,
+        collectionId: row.collectionId,
+        targetText: row.targetText,
+        nativeText: row.nativeText,
+        addedAt: row.addedAt == null
+            ? null
+            : DateTime.parse(row.addedAt!).toUtc(),
+        content: await SqliteVocabularyContent(database).read(row),
+      );
 
   @override
   Stream<List<VocabularyRecord>> watchByCollection(String collectionId) =>
       (database.select(database.vocabularyEntries)
-            ..where((row) => row.collectionId.equals(collectionId))
+            ..where((r) => r.collectionId.equals(collectionId))
             ..orderBy([
               (_) => OrderingTerm(
                 expression: const CustomExpression<int>('rowid'),
               ),
             ]))
           .watch()
-          .map((rows) => rows.map(_record).toList(growable: false));
+          .asyncMap(
+            (_) => database.transaction(() async {
+              final rows =
+                  await (database.select(database.vocabularyEntries)
+                        ..where((r) => r.collectionId.equals(collectionId))
+                        ..orderBy([
+                          (_) => OrderingTerm(
+                            expression: const CustomExpression<int>('rowid'),
+                          ),
+                        ]))
+                      .get();
+              final store = SqliteVocabularyContent(database),
+                  examples = await SqliteVocabularyContent(
+                    database,
+                  ).forCollection(collectionId);
+              return rows
+                  .map((row) => store.record(row, examples[row.id] ?? const []))
+                  .toList(growable: false);
+            }),
+          );
 
   @override
   Stream<VocabularyRecord?> watchById(String id) =>
-      (database.select(database.vocabularyEntries)
-            ..where((row) => row.id.equals(id)))
-          .watchSingleOrNull()
-          .map((row) => row == null ? null : _record(row));
+      (database.select(
+        database.vocabularyEntries,
+      )..where((r) => r.id.equals(id))).watchSingleOrNull().asyncMap(
+        (_) => database.transaction(() async {
+          final row = await (database.select(
+            database.vocabularyEntries,
+          )..where((r) => r.id.equals(id))).getSingleOrNull();
+          return row == null ? null : await _record(row);
+        }),
+      );
 
   @override
   Future<VocabularyRecord> create({
@@ -344,8 +376,9 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
       final id = const Uuid().v4();
       final rowId = await database.allocateVocabularyRowId();
       final visibility = await readHintVisibilityDefault();
+      final addedAt = database.clock.now().toUtc();
       await database.customInsert(
-        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_visibility, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         variables: [
           Variable(rowId),
           Variable(id),
@@ -355,6 +388,7 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
           Variable(vocabularyComparisonKey(target)),
           Variable(vocabularyComparisonKey(native)),
           Variable(visibility.name),
+          Variable(addedAt.toIso8601String()),
         ],
         updates: {database.vocabularyEntries},
       );
@@ -365,6 +399,7 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
         targetText: target,
         nativeText: native,
         content: VocabularyContent(hintVisibility: visibility),
+        addedAt: addedAt,
       );
     });
   }
@@ -396,7 +431,10 @@ final class SqliteVocabularyRepository implements VocabularyContentRepository {
         collectionId: existing.collectionId,
         targetText: target,
         nativeText: native,
-        content: _record(existing).content,
+        content: (await _record(existing)).content,
+        addedAt: existing.addedAt == null
+            ? null
+            : DateTime.parse(existing.addedAt!).toUtc(),
       );
     });
   }

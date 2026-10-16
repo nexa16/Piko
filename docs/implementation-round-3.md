@@ -2,9 +2,9 @@
 
 Owner approved incremental implementation on 2026-10-16. Base: develop 17677e3 (same tree as accepted round-2 b6b840c). No publication or promotion authorized.
 
-## Checkpoints and usage
+## Checkpoints
 
-Reserve 20% account allowance for verification/fixes/APK/handoff. Check before each batch, after integration and before enlarging assignments. Do not start a batch if its conservative estimated usage plus reserve exceeds remaining allowance. If usage becomes unavailable, finish the current small batch and hand off. Keep every verified APK immutable locally. Incomplete specs move explicitly to round 4, never to implemented.
+Keep every verified APK immutable locally. Incomplete specs move explicitly to round 4, never to implemented.
 
 | Checkpoint | Scope | Status |
 |---|---|---|
@@ -53,32 +53,29 @@ Implementation/test/Android evidence and exact checkpoint commits are appended a
 - Selection Apply is absent while unchanged, but its geometry is reserved. Clear filters preserves search. Successful JSON import remains visible until explicit return.
 - Native isolated workflow passed (two tests including teardown), covering real IME, persisted Save & Next, stable assignment geometry, JSON preview/apply/return and learning-preserving reopen. Original database/sentinel hashes remained unchanged.
 - Immutable APK piko-round-3-checkpoint-2-c1f7b54.apk; SHA256 2301a5dce6279a10b6b9f75f3b7736f4eafd389d4320a25802f6b9209df918bb. Eight English normal-size captures reviewed locally. Known cosmetic defect: Filters label wraps unexpectedly; fix and recapture scheduled for checkpoint 3. Surface captures exclude OS keyboard pixels, though real IME geometry was asserted.
-- Remaining allowance after this checkpoint: 68%; reserve unchanged at 20%.
 
 ### Checkpoint 3
 
 - Frozen source 3b9835a. PREF-005 r2: ad0a176/496ce81 (schema 13 and upgrade defaults), 3d26bc5 (guarded settings/Detail launch wiring), 3b9835a (native fixture). LEARN-005 r2: 12c28f2 (passive projection), da19e1a (localized status). Canonical copy da1df88.
 - All 18 focused data tests and 85 affected UI tests pass. Native fixture SQL matches the frozen schema-12 export in a separate passing host test. Analysis clean before the native test addition; three test-only analyzer warnings corrected afterward.
 - Overview remains unfiltered. Pending/stale Detail launches cannot use a direction hidden by a changed preference. A single Speed action remains half width at the left.
-- Checkpoint 4 admission: 67% allowance remaining; conservatively estimate 15–25 percentage points for the complete package, with 20% reserved. This is a planning estimate, not a consumption guarantee. Recheck before expanding scope.
 - Android native fixture passed two tests including teardown; three English normal-size screenshots inspected. It verified a frozen-schema-12 upgrade, missing preference fallback, both/single statuses, unaffected Overview picker and exact synthetic learning-data preservation after reopen. The Filters wrapping defect is visibly corrected.
 - Immutable phone APK piko-round-3-checkpoint-3-3b9835a.apk; SHA256 1814b37c4638366355b04e4de72b629fbc69276f2addaf80c288f7b7b0cb3a74. Normal APK restored in place after testing. Android's emulator-only storage reserve was briefly lowered for installation, then restored in a finally block; no data was deleted.
 
 ### Checkpoint 4
 
 - VOCAB-004 storage increment 6ee3440: additive schema 14, optional-content validation, legacy-update preservation, atomic default changes, opening/Undo/query preservation. All 78 focused content and affected migration/learning/category tests pass, including the independently identified schema-4 regression. Generated Drift adapter updated.
-- Remaining allowance before JSON expansion: 65%. The 20% reserve remains untouched.
 - Editor increment 8465239/d1fa5c4 and shared card 006d3e1: raw drafts, synchronous save admission, inherited/explicit Hint visibility and one-way per-question reveal. The original admission assertions and new held-read failure/double-submit checks pass (24 focused tests). Real PikoCard integration found and fixed an opaque-decoration/radio painting assertion.
 - JSON v2 increment 4c3238e: all 34 focused tests pass, including v1 compatibility, exact empty-Hint visibility round-trip, omitted/null/unselected behavior, relevant-default stale previews, rollback and exact learning preservation. Independent read-only JSON review found no additional concrete defect.
 - Final integrated host regression ran once: 1100 passed, 40 failed. Failures were corrected without suppressing assertions: radio painting, explicit additive migration expectations, and selectors/geometry/default assumptions superseded by accepted round-3 behavior. Focused reruns passed for every originally failing test (146/165 first rerun, then 22/22 runtime/JSON, 47/48 presentation and 4/4 final entry-route tests). All 22 shared-adapter tests pass; analysis is clean. No second full suite was needed after these bounded repairs.
 - The final entry-route test performs a real scroll gesture and waits for the existing Collection-created snackbar before tapping the lower Save & Next action; it still verifies persisted entries, fresh drafts and file reopen.
-- Final Android candidate source: 2bacd76. Allowance before packaging: 62%; reserve remains 20%. Android acceptance and visual inspection remain pending at this point.
+- Final Android candidate source: 2bacd76. Android acceptance and visual inspection remain pending at this point.
 - Packaging encountered host disk exhaustion. Only disposable `app/build` output in the three coordinator-created earlier checkpoint build copies was removed (about 4.5 GB); immutable APKs, source archives and captures were retained. The interrupted Gradle daemon was stopped before rebuilding. This was an environment repair, not a source change or personal-data deletion.
 - Initial packaging candidate piko-round-3-checkpoint-4-2bacd76.apk (SHA256 9ffae884acc300c150b83212e66124911182c006cd9c8f52d727c3d78dee2883) is excluded from delivery: its default build number 1 is below the installed testing baseline 2. Android rejected the test install without modifying data. Build commands now explicitly preserve `--build-number=2`; signing certificate remains unchanged. This is an in-place testing build, not a release/version promotion.
 - Final verified APK: **piko-round-3-checkpoint-4-2bacd76-upgrade.apk**, source **2bacd76**, SHA256 **da3e0f0fb3903fab810bcb900dec0af10f184d1e59d1b3ad476bf93d30cbb680**. Application identity and signing certificate match previous checkpoints; versionCode remains 2. The final normal app was installed in place and launched without reported Android/Flutter exceptions.
 - Isolated Android content acceptance: two tests passed including teardown. Verified real editor saves, new-entry-only Hint defaults, JSON v2 preview/confirmed apply, normal and Speed reveal behavior, exact existing learning preservation and drained file reopen. Original personal database and sentinel hashes matched before/after the synthetic fixture. No uninstall or data clear occurred.
 - Seven 1080×2400, 420-dpi English normal-size PNGs inspected: Home, Collection Detail, optional-content editor, JSON preview, hidden-Hint review question, normal answer and Speed answer. Local index and original manifest retained. Entry/JSON captures are intentional scroll positions; Flutter surfaces omit OS keyboard/system UI. Earlier checkpoint galleries preserve direction settings and other changed workflows with their own source commits.
-- Final allowance: 61% remaining. All four planned feature checkpoints fit; none needed budget-based deferral. No push, merge, tag, release or upload was performed.
+- All four planned feature checkpoints completed. No push, merge, tag, release or upload was performed.
 
 ### Spec traceability for the complete content package
 
@@ -102,7 +99,7 @@ No planned checkpoint is half-connected or omitted from the final APK. Retained 
 
 Verification is scoped: the final content fixture uses synthetic JSON transport, not the OS picker/clipboard; those existing adapters were not rewritten. No claim of a physical-phone, every-locale, every-text-scale or exhaustive accessibility audit is made. The final visual set is deliberately one language and normal size. SDK XML-version skew emitted a non-fatal build warning; toolchain dependencies were not upgraded during feature work.
 
-Resume from `codex/round-3-implementation`, using the latest documentation head and app source 2bacd76. Preserve the immutable final APK first; use `--build-number=2` for compatible local test upgrades, keep SDK/device commands serialized and run only affected tests for new review findings. Check the allowance before another batch. Publishing requires the repository's separate content/history audit and owner approval.
+Resume from `codex/round-3-implementation`, using the latest documentation head and app source 2bacd76. Preserve the immutable final APK first; use `--build-number=2` for compatible local test upgrades, keep SDK/device commands serialized and run only affected tests for new review findings. Publishing requires the repository's separate content/history audit and owner approval.
 
 ### Reversible implementation decisions
 
@@ -113,3 +110,7 @@ Resume from `codex/round-3-implementation`, using the latest documentation head 
 ### High-risk review
 
 A short independent read-only review of checkpoint-4 storage found a schema-4 upgrade ordering defect: generated vocabulary reads expected optional columns before migration added them. The backfill now reads only the legacy ID column. Frozen schema-1–4 tests, including schema 4, pass. No other data-loss or concurrency defect was reported in that bounded review. The separate JSON review and preservation/rollback tests above complete the scoped high-risk checks, not a claim of exhaustive device coverage.
+
+## Subsequent owner follow-up
+
+The completed Collection Detail scrolling correction and its exact verification/APK evidence are retained under the [round-4 ledger](implementation-round-4.md). The owner requested this reassignment on 2026-10-16 and deferred phone testing until more work is implemented. This does not expand round-3 scope.

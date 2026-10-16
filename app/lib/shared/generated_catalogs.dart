@@ -18,7 +18,6 @@ const designCatalog = <String, Object?>{
 "success": "#166534",
 "surface": "#FFFDF8",
 "tint": "#E8EFFA",
-"warningBorder": "#B42318",
 "warningSurface": "#FFFDF8",
 },
 "components": <String, Object?>{
@@ -204,19 +203,11 @@ const designCatalog = <String, Object?>{
 "categoryListHeight": 264,
 "entrySettleMs": 160,
 "gameColumns": 5,
-"gradingCorrect": "#22C55E",
-"gradingIncorrect": "#EF4444",
-"gradingText": "#111827",
 "inputFocusWidth": 1,
 "keyboardFocusWidth": 2,
 "learningGap": 8,
 "learningPadding": 16,
 "learningSectionGap": 16,
-"reviewSecondaryBackground": "#E9EEF6",
-"reviewSecondaryText": "#42516B",
-"warningBackground": "#FFF7ED",
-"warningBorder": "#FB923C",
-"warningText": "#9A3412",
 },
 },
 "radii": <String, Object?>{
@@ -640,6 +631,10 @@ const copyCatalog = <String, Object?>{
 "de": "Gültige Änderungen werden automatisch gespeichert",
 "en": "Valid edits save automatically",
 },
+"entry.chooseMethod": <String, Object?>{
+"de": "Vokabeln hinzufügen",
+"en": "Add vocabulary",
+},
 "entry.complete": <String, Object?>{
 "de": "Fertig",
 "en": "Finish",
@@ -679,6 +674,10 @@ const copyCatalog = <String, Object?>{
 "entry.exitWarning": <String, Object?>{
 "de": "Dein ungespeicherter Entwurf wird verworfen. Gespeicherte Vokabeln bleiben erhalten.",
 "en": "Your unsaved draft will be discarded. Saved vocabulary is kept.",
+},
+"entry.manualMethod": <String, Object?>{
+"de": "Manuell eingeben",
+"en": "Manual entry",
 },
 "entry.nativePlaceholder": <String, Object?>{
 "de": "Übersetzung in der Muttersprache",
@@ -1009,8 +1008,8 @@ const copyCatalog = <String, Object?>{
 "en": "Unchanged — skipped",
 },
 "json.unsupportedVersion": <String, Object?>{
-"de": "Verwende schemaVersion 1 oder 2.",
-"en": "Use schemaVersion 1 or 2.",
+"de": "Verwende schemaVersion 1, 2 oder 3.",
+"en": "Use schemaVersion 1, 2 or 3.",
 },
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",
@@ -1660,6 +1659,10 @@ const copyCatalog = <String, Object?>{
 "de": "Lernrichtung",
 "en": "Learning direction",
 },
+"settings.questionExamples": <String, Object?>{
+"de": "Beispiele auf Fragen anzeigen",
+"en": "Show examples on questions",
+},
 "settings.saveFailed": <String, Object?>{
 "de": "Die App-Sprache konnte nicht gespeichert werden. Die vorherige Sprache wurde wiederhergestellt. Bitte erneut versuchen.",
 "en": "App language could not be saved. The previous language was restored. Try again.",
@@ -1740,6 +1743,26 @@ const copyCatalog = <String, Object?>{
 "de": "Wiederholung abgeschlossen",
 "en": "Review complete",
 },
+"template.difficulty": <String, Object?>{
+"de": "Schwierigkeit",
+"en": "Difficulty",
+},
+"template.easy": <String, Object?>{
+"de": "Einfach",
+"en": "Easy",
+},
+"template.food": <String, Object?>{
+"de": "Essen",
+"en": "Food",
+},
+"template.topic": <String, Object?>{
+"de": "Thema",
+"en": "Topic",
+},
+"view.collapseAll": <String, Object?>{
+"de": "Alle einklappen",
+"en": "Collapse all",
+},
 "view.compact": <String, Object?>{
 "de": "Kompakt",
 "en": "Compact",
@@ -1747,6 +1770,78 @@ const copyCatalog = <String, Object?>{
 "view.detailed": <String, Object?>{
 "de": "Detailliert",
 "en": "Detailed",
+},
+"view.expandAll": <String, Object?>{
+"de": "Alle ausklappen",
+"en": "Expand all",
+},
+"view.grouping": <String, Object?>{
+"de": "Gruppieren nach",
+"en": "Group by",
+},
+"view.languageOrder": <String, Object?>{
+"de": "Sprachreihenfolge",
+"en": "Language order",
+},
+"view.mode": <String, Object?>{
+"de": "Darstellung",
+"en": "Layout",
+},
+"view.nativeFirst": <String, Object?>{
+"de": "Muttersprache zuerst",
+"en": "Native language first",
+},
+"view.sort": <String, Object?>{
+"de": "Sortierung",
+"en": "Sort",
+},
+"view.sort.nativeAscending": <String, Object?>{
+"de": "Muttersprache: A–Z",
+"en": "Native language: A–Z",
+},
+"view.sort.nativeDescending": <String, Object?>{
+"de": "Muttersprache: Z–A",
+"en": "Native language: Z–A",
+},
+"view.sort.newest": <String, Object?>{
+"de": "Neueste zuerst",
+"en": "Newest first",
+},
+"view.sort.oldest": <String, Object?>{
+"de": "Älteste zuerst",
+"en": "Oldest first",
+},
+"view.sort.original": <String, Object?>{
+"de": "Ursprüngliche Reihenfolge",
+"en": "Original order",
+},
+"view.sort.targetAscending": <String, Object?>{
+"de": "Zielsprache: A–Z",
+"en": "Target language: A–Z",
+},
+"view.sort.targetDescending": <String, Object?>{
+"de": "Zielsprache: Z–A",
+"en": "Target language: Z–A",
+},
+"view.targetFirst": <String, Object?>{
+"de": "Zielsprache zuerst",
+"en": "Target language first",
+},
+"view.title": <String, Object?>{
+"de": "Ansicht",
+"en": "View",
+},
+"view.unassigned": <String, Object?>{
+"de": "Nicht zugeordnet",
+"en": "Unassigned",
+},
+"view.ungrouped": <String, Object?>{
+"de": "Ohne Gruppierung",
+"en": "Ungrouped",
+},
+"vocab.addExample": <String, Object?>{
+"de": "Beispielpaar hinzufügen",
+"en": "Add example pair",
 },
 "vocab.contentDefaultLoadFailed": <String, Object?>{
 "de": "Die Hinweis-Sichtbarkeit konnte nicht geladen werden. Versuche es erneut.",
@@ -1783,6 +1878,10 @@ const copyCatalog = <String, Object?>{
 "vocab.exampleTooLong": <String, Object?>{
 "de": "Jedes Beispiel darf höchstens 1000 Zeichen enthalten.",
 "en": "Each example may contain at most 1000 characters.",
+},
+"vocab.examples": <String, Object?>{
+"de": "Beispielpaare",
+"en": "Example pairs",
 },
 "vocab.hint": <String, Object?>{
 "de": "Hinweis",
@@ -1847,6 +1946,10 @@ const copyCatalog = <String, Object?>{
 "vocab.makeHintDefault": <String, Object?>{
 "de": "Diese Sichtbarkeit für neue Vokabeln verwenden",
 "en": "Use this visibility for new vocabulary",
+},
+"vocab.removeExample": <String, Object?>{
+"de": "Beispiel {number} entfernen",
+"en": "Remove example {number}",
 },
 "vocab.revealHint": <String, Object?>{
 "de": "Hinweis anzeigen",

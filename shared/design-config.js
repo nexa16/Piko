@@ -1,8 +1,8 @@
 /* Single editable design configuration. Numeric dimensions are CSS px unless named otherwise. */
 globalThis.PIKO_DESIGN = {
   schemaVersion: 1,
-  previews: {round2: {gradingIncorrect:'#EF4444',gradingCorrect:'#22C55E',gradingText:'#111827',inputFocusWidth:1,keyboardFocusWidth:2,gameColumns:5,entrySettleMs:160,learningGap:8,learningPadding:16,learningSectionGap:16,categoryListHeight:264,reviewSecondaryBackground:'#E9EEF6',reviewSecondaryText:'#42516B',warningBackground:'#FFF7ED',warningBorder:'#FB923C',warningText:'#9A3412'}},
-  colors: {name:'Piko',primary:'#4D64AE',tint:'#E8EFFA',bg:'#F6F7FB',surface:'#FFFDF8',ink:'#34365B',muted:'#62657D',onPrimary:'#FFFDF8',danger:'#B42318',onDanger:'#FFFDF8',success:'#166534',onSuccess:'#FFFDF8',gold:'#FFE08A',warningSurface:'#FFFDF8',warningBorder:'#B42318',onWarning:'#34365B',reviewSecondary:'#E8EFFA',onReviewSecondary:'#62657D'},
+  previews: {round2: {inputFocusWidth:1,keyboardFocusWidth:2,gameColumns:5,entrySettleMs:160,learningGap:8,learningPadding:16,learningSectionGap:16,categoryListHeight:264}},
+  colors: {name:'Piko',primary:'#4D64AE',tint:'#E8EFFA',bg:'#F6F7FB',surface:'#FFFDF8',ink:'#34365B',muted:'#62657D',onPrimary:'#FFFDF8',danger:'#B42318',onDanger:'#FFFDF8',success:'#166534',onSuccess:'#FFFDF8',gold:'#FFE08A',warningSurface:'#FFFDF8',onWarning:'#34365B',reviewSecondary:'#E8EFFA',onReviewSecondary:'#62657D'},
   spacing: {'1':4,'2':8,'3':12,'4':16,'5':20,'6':24,'8':32},
   typography: {family:'Piko Nunito Sans',fallback:'Piko Noto Sans KR',body:16,bodyWeight:400,bodyLineHeight:1.5,small:14,label:14,title:26,titleWeight:700,titleLineHeight:1.2,dialogTitle:20,dialogTitleWeight:700,dialogLineHeight:1.3,section:18,sectionWeight:700,sectionLineHeight:1.35,control:14,controlWeight:700,controlLineHeight:1.4,helper:14,helperLineHeight:1.45,answer:37,answerWeight:600,answerLineHeight:1.3,answerPrompt:22,answerPromptWeight:400,answerPromptLineHeight:1.4},
   radii: {card:16,dialog:20},

@@ -45,11 +45,29 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
   int _revision = 0;
   bool _revealed = false, _showFocus = false, _focused = false;
   bool _hintRevealed = false;
+  bool _showExamples = true;
   VocabularyRecord? _visibleEntry;
   void _watch() {
     _revision++;
     _visibleEntry = null;
-    _entry = widget.repository.watchById(widget.entryId);
+    final repository = widget.repository,
+        id = widget.entryId,
+        revision = _revision;
+    if (repository is QuestionExamplesRepository) {
+      _entry =
+          Stream.fromFuture(
+            (repository as QuestionExamplesRepository).readQuestionExamples(),
+          ).asyncExpand((show) {
+            if (revision != _revision) {
+              return const Stream<VocabularyRecord?>.empty();
+            }
+            _showExamples = show;
+            return repository.watchById(id);
+          });
+    } else {
+      _showExamples = true;
+      _entry = repository.watchById(id);
+    }
   }
 
   @override
@@ -125,14 +143,13 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             ? entry.nativeText
             : entry.targetText;
         final content = entry.content;
-        final promptExample =
-            widget.direction == LearningDirection.targetToNative
-            ? content.exampleTargetText
-            : content.exampleNativeText;
-        final answerExample =
-            widget.direction == LearningDirection.targetToNative
-            ? content.exampleNativeText
-            : content.exampleTargetText;
+        final pairs = content.examples
+            .map(
+              (pair) => widget.direction == LearningDirection.targetToNative
+                  ? (pair.targetText, pair.nativeText)
+                  : (pair.nativeText, pair.targetText),
+            )
+            .toList();
         final hint = content.hintText ?? '';
         final hasHint = hint.isNotEmpty;
         final showHint =
@@ -144,9 +161,8 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
         final spoken = [
           prompt,
           if (_revealed) answer,
-          if (promptExample != null && promptExample.isNotEmpty) promptExample,
-          if (_revealed && answerExample != null && answerExample.isNotEmpty)
-            answerExample,
+          if (_revealed || _showExamples)
+            for (final pair in pairs) ...[pair.$1, if (_revealed) pair.$2],
           if (showHint) hint,
         ].join('\n');
         _visibleEntry = entry;
@@ -271,30 +287,37 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                         style: Theme.of(context).textTheme.displayLarge,
                       ),
                     ],
-                    if (promptExample != null && promptExample.isNotEmpty) ...[
-                      SizedBox(height: d.dimension('spacing.3')),
-                      ExcludeSemantics(
-                        child: Text(
-                          promptExample,
-                          key: const ValueKey('learning-prompt-example'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                    if (_revealed || _showExamples)
+                      for (var i = 0; i < pairs.length; i++) ...[
+                        SizedBox(height: d.dimension('spacing.3')),
+                        ExcludeSemantics(
+                          child: Text(
+                            pairs[i].$1,
+                            key: ValueKey(
+                              i == 0
+                                  ? 'learning-prompt-example'
+                                  : 'learning-prompt-example-$i',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ),
-                      ),
-                    ],
-                    if (_revealed &&
-                        answerExample != null &&
-                        answerExample.isNotEmpty) ...[
-                      SizedBox(height: d.dimension('spacing.2')),
-                      ExcludeSemantics(
-                        child: Text(
-                          answerExample,
-                          key: const ValueKey('learning-answer-example'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                    ],
+                        if (_revealed) ...[
+                          SizedBox(height: d.dimension('spacing.2')),
+                          ExcludeSemantics(
+                            child: Text(
+                              pairs[i].$2,
+                              key: ValueKey(
+                                i == 0
+                                    ? 'learning-answer-example'
+                                    : 'learning-answer-example-$i',
+                              ),
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ],
                     if (showHint) ...[
                       SizedBox(height: d.dimension('spacing.3')),
                       ExcludeSemantics(

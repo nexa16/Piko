@@ -395,7 +395,7 @@ void main() {
           VocabularyJsonIssueCode.unsupportedFormat,
         ),
         (
-          input([], envelope: {'schemaVersion': 3}),
+          input([], envelope: {'schemaVersion': 4}),
           VocabularyJsonIssueCode.unsupportedVersion,
         ),
         (

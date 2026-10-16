@@ -261,6 +261,7 @@ void main() {
                     'example_native_text': null,
                     'hint_text': null,
                     'hint_visibility': 'always',
+                    'added_at': null,
                   }
                 else
                   row,

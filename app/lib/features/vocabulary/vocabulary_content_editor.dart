@@ -1,3 +1,4 @@
+import '../../ui/components/piko_button.dart';
 import 'package:flutter/material.dart';
 import '../../data/vocabulary_content.dart';
 import '../../shared/copy_scope.dart';
@@ -13,7 +14,7 @@ String? vocabularyContentErrorKey(Object? error) => switch (error) {
   _ => null,
 };
 
-/// One optional pair and one Hint. Text buffers stay raw while repository
+/// Ordered optional pairs and one Hint. Text buffers stay raw while repository
 /// validation/normalization runs independently; no maxLength silently truncates.
 class VocabularyContentEditor extends StatefulWidget {
   const VocabularyContentEditor({
@@ -37,22 +38,44 @@ class VocabularyContentEditor extends StatefulWidget {
 }
 
 class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
-  late final target = TextEditingController(
-    text: widget.value.exampleTargetText ?? '',
-  );
-  late final native = TextEditingController(
-    text: widget.value.exampleNativeText ?? '',
-  );
+  final pairs = <(TextEditingController, TextEditingController)>[];
   late final hint = TextEditingController(text: widget.value.hintText ?? '');
+  @override
+  void initState() {
+    super.initState();
+    syncPairs();
+  }
+
+  void syncPairs() {
+    final values = widget.value.examples.isEmpty
+        ? [const ExamplePair(targetText: '', nativeText: '')]
+        : widget.value.examples;
+    while (pairs.length < values.length) {
+      pairs.add((TextEditingController(), TextEditingController()));
+    }
+    while (pairs.length > values.length) {
+      final removed = pairs.removeLast();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        removed.$1.dispose();
+        removed.$2.dispose();
+      });
+    }
+    for (var i = 0; i < values.length; i++) {
+      for (final field in [
+        (pairs[i].$1, values[i].targetText),
+        (pairs[i].$2, values[i].nativeText),
+      ]) {
+        if (field.$1.text != field.$2) field.$1.text = field.$2;
+      }
+    }
+  }
+
   @override
   void didUpdateWidget(VocabularyContentEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    for (final pair in [
-      (target, widget.value.exampleTargetText ?? ''),
-      (native, widget.value.exampleNativeText ?? ''),
-      (hint, widget.value.hintText ?? ''),
-    ]) {
-      if (pair.$1.text != pair.$2) pair.$1.text = pair.$2;
+    syncPairs();
+    if (hint.text != (widget.value.hintText ?? '')) {
+      hint.text = widget.value.hintText ?? '';
     }
   }
 
@@ -64,8 +87,10 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
     }
     widget.onChanged(
       VocabularyContent(
-        exampleTargetText: target.text,
-        exampleNativeText: native.text,
+        examples: [
+          for (final pair in pairs)
+            ExamplePair(targetText: pair.$1.text, nativeText: pair.$2.text),
+        ],
         hintText: hint.text,
         hintVisibility: visibility ?? widget.value.hintVisibility,
       ),
@@ -101,20 +126,62 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
       children: [
         SizedBox(height: gap),
         Text(
-          copy.text('vocab.examplePair'),
+          copy.text('vocab.examples'),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         SizedBox(height: gap),
-        field(
-          'content-example-target',
-          copy.text('vocab.exampleTarget', {'language': widget.targetLanguage}),
-          target,
-        ),
-        SizedBox(height: gap),
-        field(
-          'content-example-native',
-          copy.text('vocab.exampleTarget', {'language': widget.nativeLanguage}),
-          native,
+        for (var i = 0; i < pairs.length; i++) ...[
+          field(
+            i == 0 ? 'content-example-target' : 'content-example-target-$i',
+            copy.text('vocab.exampleTarget', {
+              'language': widget.targetLanguage,
+            }),
+            pairs[i].$1,
+          ),
+          SizedBox(height: gap),
+          field(
+            i == 0 ? 'content-example-native' : 'content-example-native-$i',
+            copy.text('vocab.exampleTarget', {
+              'language': widget.nativeLanguage,
+            }),
+            pairs[i].$2,
+          ),
+          PikoButton(
+            label: copy.text('vocab.removeExample', {'number': i + 1}),
+            variant: PikoButtonVariant.ghost,
+            onPressed: widget.enabled
+                ? () {
+                    final removed = pairs.removeAt(i);
+                    if (pairs.isEmpty) {
+                      pairs.add((
+                        TextEditingController(),
+                        TextEditingController(),
+                      ));
+                    }
+                    publish();
+                    setState(() {});
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      removed.$1.dispose();
+                      removed.$2.dispose();
+                    });
+                  }
+                : null,
+          ),
+          SizedBox(height: gap),
+        ],
+        PikoButton(
+          label: copy.text('vocab.addExample'),
+          onPressed: widget.enabled
+              ? () {
+                  setState(
+                    () => pairs.add((
+                      TextEditingController(),
+                      TextEditingController(),
+                    )),
+                  );
+                  publish();
+                }
+              : null,
         ),
         SizedBox(height: gap),
         field('content-hint', copy.text('vocab.hint'), hint),
@@ -167,8 +234,10 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
 
   @override
   void dispose() {
-    target.dispose();
-    native.dispose();
+    for (final pair in pairs) {
+      pair.$1.dispose();
+      pair.$2.dispose();
+    }
     hint.dispose();
     super.dispose();
   }

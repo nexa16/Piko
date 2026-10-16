@@ -11,15 +11,21 @@ import '../../ui/piko_theme.dart';
 import 'app_language_controller.dart';
 import 'preferred_direction_controller.dart';
 import 'preferred_direction_control.dart';
+import '../../data/settings_repository.dart';
+import 'question_examples_control.dart';
 
 class SettingsRoute extends StatelessWidget {
   const SettingsRoute({
     required this.binding,
     this.directionBinding,
+    this.settingsRepository,
+    this.registerPending,
     super.key,
   });
   final ValueListenable<AppLanguageController?> binding;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
+  final SettingsRepository? settingsRepository;
+  final ValueChanged<Future<void>>? registerPending;
 
   @override
   Widget build(BuildContext context) =>
@@ -123,6 +129,11 @@ class SettingsRoute extends StatelessWidget {
                   ],
                   if (directionBinding case final binding?)
                     PreferredDirectionControl(binding: binding),
+                  if (settingsRepository case final repository?)
+                    QuestionExamplesControl(
+                      repository: repository,
+                      registerPending: registerPending ?? (_) {},
+                    ),
                 ],
               ),
             ),

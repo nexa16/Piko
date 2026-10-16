@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import '../piko_theme.dart';
 
 class PikoPage extends StatelessWidget {
-  const PikoPage({super.key, required this.child});
-  final Widget child;
+  const PikoPage({super.key, required Widget this.child})
+    : slivers = null,
+      physics = null;
+  const PikoPage.slivers({super.key, required this.slivers, this.physics})
+    : child = null;
+  final Widget? child;
+  final List<Widget>? slivers;
+  final ScrollPhysics? physics;
   @override
   Widget build(BuildContext context) => SafeArea(
     child: LayoutBuilder(
@@ -14,21 +20,29 @@ class PikoPage extends StatelessWidget {
               ? 'layout.mobilePadding'
               : 'layout.pagePadding',
         );
+        final padding = EdgeInsets.fromLTRB(
+          horizontal,
+          d.dimension('layout.pageTop'),
+          horizontal,
+          d.dimension('spacing.6'),
+        );
         return Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: d.dimension('controls.contentWidth'),
             ),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                horizontal,
-                d.dimension('layout.pageTop'),
-                horizontal,
-                d.dimension('spacing.6'),
-              ),
-              child: child,
-            ),
+            child: slivers == null
+                ? SingleChildScrollView(padding: padding, child: child)
+                : CustomScrollView(
+                    physics: physics,
+                    slivers: [
+                      SliverPadding(
+                        padding: padding,
+                        sliver: SliverMainAxisGroup(slivers: slivers!),
+                      ),
+                    ],
+                  ),
           ),
         );
       },

@@ -121,3 +121,7 @@
 [data-round="2"] .r2-dialog-actions.is-stacked .btn{white-space:normal;overflow-wrap:anywhere}
 [data-round="2"] .btn.r2-safe{background:var(--piko-bg);color:var(--piko-ink);border-color:transparent}
 [data-round="2"] .btn.r2-destructive{background:var(--piko-danger);color:var(--piko-onDanger);border-color:transparent}
+
+/* Semantic aliases deliberately follow the one active palette in every round. */
+:root{--r2-grading-incorrect:var(--piko-danger);--r2-grading-correct:var(--piko-success);--r2-grading-text:var(--piko-surface);--r2-review-secondary-background:var(--piko-tint);--r2-review-secondary-text:var(--piko-ink);--r2-warning-background:color-mix(in srgb,var(--piko-danger) 12%,var(--piko-surface));--r2-warning-border:var(--piko-danger);--r2-warning-text:var(--piko-ink)}
+.r2-warning strong{color:var(--piko-danger)}

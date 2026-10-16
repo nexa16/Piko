@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Portable vocabulary interchange, not a whole-application backup.
 abstract interface class VocabularyJsonService {
   /// Captures exactly one existing Collection in a consistent read transaction.
@@ -103,8 +105,72 @@ final class VocabularyJsonApplyResult {
 enum VocabularyJsonExportFailure { collectionNotFound, incompleteLearning }
 
 abstract final class VocabularyJsonFormat {
+  static String minimalSample({
+    required String targetLanguage,
+    required String nativeLanguage,
+    String topic = 'Topic',
+    String food = 'Food',
+    String difficulty = 'Difficulty',
+    String easy = 'Easy',
+  }) {
+    const words = {'ko': '사과', 'fr': 'pomme', 'en': 'apple', 'de': 'Apfel'};
+    const collection = '8f8ce022-4a25-47ed-8944-8955dcf353da',
+        entry = '13e76e74-a952-4c30-b7d7-3016087ad6f1';
+    const topicId = 'd1db8c92-bd21-4c04-90d5-83eb2ad9e121',
+        foodId = 'b8376a27-ab64-41aa-974e-a56a16db1471';
+    const difficultyId = '2317a250-a3ae-4f8f-8d02-cd5516331962',
+        easyId = '1e56de42-7a49-4ef9-906a-a3bc7ba998e9';
+    return const JsonEncoder.withIndent('  ').convert({
+      'format': format,
+      'schemaVersion': 3,
+      'collections': [
+        {
+          'id': collection,
+          'name': 'Example',
+          'targetLanguage': targetLanguage,
+          'nativeLanguage': nativeLanguage,
+          'categoryDimensions': [
+            {
+              'id': topicId,
+              'name': topic,
+              'mode': 'multiple',
+              'values': [
+                {'id': foodId, 'name': food},
+              ],
+            },
+            {
+              'id': difficultyId,
+              'name': difficulty,
+              'mode': 'single',
+              'values': [
+                {'id': easyId, 'name': easy},
+              ],
+            },
+          ],
+          'entries': [
+            {
+              'id': entry,
+              'targetText': words[targetLanguage],
+              'nativeText': words[nativeLanguage],
+              'categoryAssignments': [
+                {
+                  'dimensionId': topicId,
+                  'valueIds': [foodId],
+                },
+                {
+                  'dimensionId': difficultyId,
+                  'valueIds': [easyId],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  }
+
   static const format = 'piko-vocabulary';
-  static const schemaVersion = 2;
+  static const schemaVersion = 3;
   static const schedulerLibrary = 'fsrs';
   static const schedulerVersion = '2.0.1';
   static const maxImportBytes = 1000000;

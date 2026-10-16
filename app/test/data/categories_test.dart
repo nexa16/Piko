@@ -379,6 +379,10 @@ void main() {
       await f.review(reverse: true, rating: LearningRating.again);
       await SqliteSettingsRepository(f.db).write('locale', 'de');
       final before = await storedSnapshot(f.db);
+      // Recreate the historical schema, where addition dates were unknown.
+      for (final row in before['vocabulary_entries'] as List) {
+        (row as Map)['added_at'] = null;
+      }
       final directory = await Directory.systemTemp.createTemp(
         'piko-categories-v10-',
       );
@@ -407,6 +411,7 @@ void main() {
               if (table.key == 'vocabulary_entries') {
                 row.removeWhere(
                   (key, _) => const {
+                    'added_at',
                     'example_target_text',
                     'example_native_text',
                     'hint_text',

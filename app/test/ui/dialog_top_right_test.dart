@@ -50,7 +50,12 @@ void main() {
     final dialogRect = tester.getRect(find.byType(Dialog));
 
     expect(titleRect.height, greaterThan(closeRect.height));
-    expect(closeRect.top, closeTo(titleRect.top, 0.01));
+    final titleWidget = tester.element(find.text(title));
+    final style = DefaultTextStyle.of(titleWidget).style;
+    final firstLine =
+        MediaQuery.textScalerOf(titleWidget).scale(style.fontSize!) *
+        (style.height ?? 1);
+    expect(closeRect.center.dy, closeTo(titleRect.top + firstLine / 2, 0.01));
     expect(closeRect.width, greaterThanOrEqualTo(44));
     expect(closeRect.height, greaterThanOrEqualTo(44));
     expect(closeRect.center.dx, greaterThan(dialogRect.center.dx));

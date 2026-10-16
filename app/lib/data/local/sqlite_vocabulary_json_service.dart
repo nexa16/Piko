@@ -1,3 +1,4 @@
+import 'sqlite_vocabulary_content.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
@@ -186,6 +187,9 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
       };
     }
 
+    final examples = await SqliteVocabularyContent(
+      database,
+    ).forCollection(collectionId);
     final exportedEntries = <Map<String, Object?>>[];
     for (final entry in entries) {
       final directional = itemsByEntry[entry.id];
@@ -197,8 +201,7 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         throw VocabularyJsonExportFailure.incompleteLearning;
       }
       final content = VocabularyContent.fromStored(
-        exampleTargetText: entry.exampleTargetText,
-        exampleNativeText: entry.exampleNativeText,
+        examples: examples[entry.id] ?? const [],
         hintText: entry.hintText,
         hintVisibility: entry.hintVisibility,
       );
@@ -206,12 +209,11 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         'id': entry.id,
         'targetText': entry.targetText,
         'nativeText': entry.nativeText,
-        'example': content.exampleTargetText == null
-            ? null
-            : {
-                'targetText': content.exampleTargetText,
-                'nativeText': content.exampleNativeText,
-              },
+        'examples': [
+          for (final pair in content.examples)
+            {'targetText': pair.targetText, 'nativeText': pair.nativeText},
+        ],
+        'addedAt': entry.addedAt,
         'hint': {
           'text': content.hintText,
           'visibility': content.hintVisibility.name,

@@ -1,5 +1,156 @@
 # Decision log
 
+## Design autonomy and no further round-4 alignment — accepted, 2026-10-16
+
+The owner considers the established design principles sufficient and delegates coherent implementation details to the agent, with design feedback on the working result. The currently selected round-4 specification package needs no further owner alignment or preliminary mockup pass. Resolve remaining routine presentation/implementation choices within the accepted outcomes and record them in their owning specifications; ask only about genuinely unclear intent, conflicts or material scope/data/learning consequences. Existing exclusions and separately unscheduled requests are not added by this delegation.
+
+The working Flutter app is the primary UI review surface. Mockups are optional tools for unresolved questions, rather than a second implementation to keep synchronized. The standing rule is [AGENTS.md](../AGENTS.md#design-autonomy-and-efficient-clarification); it supersedes the earlier mandatory mockup synchronization/prealignment workflow. Verification and the separate implementation/publication authorization boundaries remain in force. This decision changes the collaboration process, not product behavior or implementation status.
+
+## Independent vocabulary activity — requested behavior accepted, presentation open, 2026-10-16
+
+- **Decision:** Let the owner deactivate an existing vocabulary entry with an Active/Inactive boolean. Keep it visible in the vocabulary list, show its inactive state and add no activity filter. The owner subsequently confirmed exclusion from both normal Long-term and Speed learning in both translation directions, until reactivated, while preserving its learning history. No deliberate-practice override applies while inactive. Preserve its content and learning state. This is independent of deferred proficiency and automatic Mastered rules; earlier blanket inactive deferral is superseded for this request.
+- **Proposal, not yet accepted:** Put an Active switch in the existing editor and a small Inactive label on the saved card, retaining readable vocabulary text and using an existing subtle color role. Default existing/new entries to Active. Exact control/label treatment remains open under UX-VOCAB-ACTIVE-001 r1.
+- **Traceability and remaining details:** VOCAB-ACTIVE-001 r1 → r2 resolves the earlier suggestions-versus-all-practice question. Eligible learning counts exclude inactive entries; vocabulary totals retain them. Reactivation restores eligibility under existing learning rules without resetting progress. Current-card/queue transitions, retry lifecycle, readiness-label presentation, import/export compatibility and round assignment remain open. UX-VOCAB-ACTIVE-001 r1 retains proposed visuals; the eligibility answer does not accept those proposals.
+- **Evidence and boundary:** Source inspection at 639b336 found no activity field in the vocabulary record/table; no Android reproduction or verification was performed. This records a feature request and proposals, not app/mockup implementation authorization or acceptance of the proposed visuals.
+
+## Edit vocabulary within revealed learning cards — accepted, 2026-10-16
+
+- **Decision:** Add a small, unobtrusive edit icon on the current answer card after reveal. The owner explicitly includes both normal Long-term and Speed Learning. It opens the same vocabulary-list editor within the card, keeping the learning context and reusing its editable content, validation, autosave and Finish/Discard behavior.
+- **Outcome:** Finish or Discard returns to that same revealed answer. Content editing does not grade, advance the session or reset learning; grading resumes only after editing and pending writes are resolved. Keep a comfortable accessible target around the small icon and preserve the existing answer hierarchy.
+- **Traceability:** New learning-specific requirements VOCAB-EDIT-003 and UX-CARD-014, revision 1, Round Later, reference the existing editor contracts without replacing their historical evidence. Exact icon placement and editor-specific Exit/system-Back behavior still need specification. Previous-grade correction editing and deletion during learning are not included by inference.
+- **Evidence and boundary:** Source inspection at 639b336 confirms shared learning cards without an editor and an existing Collection inline editor. No runtime reproduction or installed-build verification was performed. The owner clarified that this belongs only in the general specifications for later, not round 4. The earlier round-4 assignment was an agent assumption and is corrected; no implementation round is assigned. App/mockup implementation and Android acceptance remain pending.
+
+## Round-4 scope additions, vocabulary entry and proficiency deferral — accepted, 2026-10-16
+
+- **Scope additions:** Include the reported header transition defect (UX-HEADER-001 r1, Fix 4), alphabetical category values (CAT-009 r5 / UX-CAT-001 r7), general vocabulary sorting (COLL-008 r2), multiple Example Pairs (VOCAB-005 r3 and associated card/interchange requirements), and CARD-002's global question-example preference. Answers retain all examples; Hint visibility remains separate.
+- **Grouping:** All groups in a newly opened grouped vocabulary view start collapsed. There is no configurable initial state. Collapse all and Expand all sit beside Filters and appear only while grouped; users may still expand individual groups. GROUP-001 r2 / UX-COLL-001 r2 supersede the open expansion-default question. CAT-006/007 editor ordering/expansion settings are not added.
+- **Sorting confirmation:** Offer target/native text A–Z or Z–A and added date newest/oldest; retain existing order until chosen, persist per Collection and apply within groups. This supersedes the earlier round-4 sorting exclusion. The owner subsequently chose to record actual dates for newly added words, leaving older missing dates unknown. Source inspection found insertion-order display without date-added metadata. Collation, ties, unknown-date placement, import/export timestamp semantics and return-to-original-order interaction remain open.
+- **Add-method confirmation:** + New and the genuine-empty add CTA open an extensible chooser; Manual entry opens the existing editor, Import opens the shared Collection-scoped Import/Export popup. Only the chosen method's details appear. Do not use a binary tab toggle for methods. The Collection ellipsis menu has Import/Export and opens that same popup directly; exporting requires no New/manual-entry action. ENTRY-012 r1, UX-COLL-003 r4 / 007 r5, UX-ENTRY-002 r3 and UX-IMPORT-JSON-001 r4 / 002 r3 own the change. This supersedes routing JSON access through manual entry and the old page-only presentation, retaining pending-write guards and return to Collection.
+- **Latest learning clarification:** The owner distinguishes readiness/due descriptions from proficiency: New / Retry pending / Due now / Next review do not grade knowledge. The owner then explicitly deferred proficiency levels entirely until later learning features. This supersedes the initially annotated round-4 inclusion, including definitions/thresholds; Mastered/inactive remains excluded. LEARN-005 / UX-LEARN-005 r2 remain unchanged in behavior. Manual Speed selection also stays deferred pending its reset concern.
+- **Limits:** Exact additional-example limits/order/JSON representation, popup input-loss behavior and menu initial operation remain explicit questions. No new algorithm, schema version, additional add method or release is inferred. Source inspection confirms current JSON access within manual entry, but is not runtime reproduction. Specifications and planning only; app/mockup implementation, device acceptance and publication await separate authorization.
+
+## Reviewed PR, phone acceptance and next-round handoff — accepted, 2026-10-16
+
+- **Decision:** Complete and verify the authorized implementation scope, then present the final changes, evidence and candidate APK for owner manual review. After approval and the required public-data review, push and create the focused PR into `develop`. Keep it unmerged until the owner confirms installation/update and the agreed phone happy path, including vocabulary learning and the relevant changed flow, for that candidate.
+- **Integration:** Manual review approval, the owner-confirmed phone check, passing required checks and resolved review discussions authorize squash-merging without another redundant permission request. Verify a merge already performed by the owner. Recheck affected scope after changes; app changes require an updated candidate and phone check. Phone happy-path evidence does not establish exhaustive acceptance or close unrelated findings.
+- **Cleanup and continuation:** Fetch and verify the merged result, preserve unique local work and useful private artifacts, then remove the obsolete local/remote branch and redundant idle worktrees. Create the next round's fresh `codex/round-<next>-implementation` branch from updated `develop`, preserving the previous candidate's provenance. New implementation still requires explicit authorization for the clarified next scope.
+- **Authority and boundary:** The standing procedure is [AGENTS.md](../AGENTS.md#implementation-round-handoff), which the Piko implementation skill already reads; CONTRIBUTING.md follows it. This establishes future development handoffs. It does not approve the current unfinished round, trigger a PR/merge now, or authorize a release, tag, promotion to `main` or store publication.
+
+## Round-4 grouping and Collection view package — accepted, 2026-10-16
+
+- **Decision:** The owner confirmed grouping by existing category groups such as Topic or Unit and added GROUP-001–003, COLL-004–006 and COLL-009–011 to round-4 planning. The package covers expandable grouping, repeated appearances for multiple assignments, redundant-tag omission, Compact/Detailed modes, language display order and per-Collection persistence. Existing requirement IDs and revision-1 meanings are retained; previously Undecided round assignments become Round 4.
+- **Boundary:** Display preferences do not change learning direction or reset learning; repeated group appearances do not create entries or extra review work. Sorting, editor category ordering, carry-over and manual Speed selection are not added. Open grouping/view details remain explicit in the canonical functional/UX specifications and the round-4 ledger. The owner is still gathering scope; implementation has not been requested.
+
+## Round-4 planning priorities and manual Speed deferral — accepted, 2026-10-16
+
+- **Planning selection:** The owner accepted shared popup corrections, approved book-launcher integration with remaining palette cleanup, and the simplified JSON import example/template as the first three priorities. Exact template contents still require clarification. The owner is gathering additional items before implementation; this is planning acceptance, not an instruction to implement.
+- **Deferred:** Manual vocabulary selection and Speed launch under SPEED-004 stay deferred because the owner is not yet satisfied with the learning-state reset consequence. Reconsider that outcome with the owner before scheduling the feature. No alternative preservation/reset rule is accepted, and SPEED-006 and current application behavior are unchanged.
+- **Traceability:** The [round-4 ledger](implementation-round-4.md#selected-planning-scope--2026-10-16) owns the selected scope and remaining decisions. Its planning selection supersedes older Later scheduling for the simplified template. Existing scrolling evidence and deferred phone acceptance are retained. No app/mockup implementation or publication is authorized by this decision.
+
+Reconciliation note, 2026-10-16: the recovered preparation decisions below retain their original status and scope at the time of writing. Subsequent round-3 implementation and resolved Hint/example/status/preference contracts are recorded in [implementation-round-3.md](implementation-round-3.md) and the canonical specifications. Historical “pending” or “unresolved” wording does not reverse that later evidence. The book launcher revision 3 remains an unintegrated asset handoff; the simplified import template was Later at that recovery checkpoint and is now selected for round-4 planning, with scope clarification still required. The older frame-1 launcher decision is superseded by the book choice, while its APK evidence remains historical. No new product decision or publication is made by this reconciliation.
+
+## Alphabetical category values now; custom order later — accepted, 2026-10-16
+
+- **Decision:** Default Category Values to alphabetical A–Z by displayed name, ignoring capitalization, in assignment/filter checklists, management lists and assigned-value tags/summaries within each group. Search and selected subsets keep the same order. Successful creation/rename/import refreshes display position while preserving UUIDs, selections, drafts and learning. Category-group and vocabulary order are unchanged.
+- **Supersession and deferral:** Replaces UX-CAT-001's creation-order default for values only. Manual moving into a custom value order is a later enhancement; no new sort control or reorder interaction is accepted for now. Special collation details for accents, non-Latin scripts and numeric labels remain open rather than assuming natural-number sorting.
+- **Traceability:** CAT-009 revision 5 and UX-CAT-001 revision 7 retain Round 2 and Updated 3. CAT-001 cross-references the ordering rule without changing its CRUD revision. The existing design/studio criteria and prototype ledger record pending implementation.
+- **Evidence and boundary:** Existing mockup assignment/management renderers retain synthetic stored order Zebra, apple, Banana on two isolated Node runs; source inspection shows the same dependency in Filters/tags. This does not establish the owner's Android behavior or build. Definition accepted; app/mockup implementation and runtime verification await a separate owner request. Earlier passing evidence remains attached to its original revisions.
+
+## One approved Piko palette across every preview round — accepted, 2026-10-16
+
+- **Decision:** Older previews do not need to preserve their historical color appearance. Use the nine approved Piko UI colors across all preview rounds and the studio, with the same canonical palette as the application target under UX-SYSTEM-001. Retain round-specific behavior and independent sample state.
+- **Migration target:** Consolidate the palette definitions and migrate consumers before removing Cobalt, legacy grading/secondary-review/warning overrides and the old green backdrop. Use semantic danger/cream and success/cream grading, tint/navy secondary review, the documented red-over-cream warning and navy backdrop at existing opacity. Keep Piko's shared red/green and legitimate role aliases; retain non-color round settings. Artwork and OS-owned interfaces keep their existing exceptions.
+- **Supersession:** Replaces historical-color preservation in the round-3 comparison decision and the Cobalt studio baseline/preset. Earlier pure-white action foregrounds were already superseded by the accepted cream foreground in UX-SYSTEM-001 revision 6; reconcile their stale grading/swipe wording without changing those flows. Explicit studio color experiments remain drafts.
+- **Traceability:** UX-SYSTEM-001 revision 7 (Round 1, Updated 3) and UX-LAB-001 revision 4 (Round 2, Updated 3). DESIGN.md and the existing F05/studio reference own the mapping and acceptance handoff. No functional requirement or release scope changes.
+- **Evidence and authorization:** Source inspection confirms active legacy consumers; it is not new browser or Android reproduction. The owner then explicitly limited this work to specification updates. Definition is accepted; shared code, generated adapters, mockup/application changes and visual/Android verification are pending a separate implementation request. Prior test results do not verify this migration.
+
+## Findings and feature requests begin with clarification — accepted, 2026-10-16
+
+- **Owner workflow:** Reporting a finding, bug, defect or new feature means first understand the intended outcome, clarify material details together, and then document the finding and agreed behavior in the functional and/or UX specifications. The report does not authorize implementation, including within an already authorized implementation round.
+- **Investigation:** A very small, focused investigation may help understanding. Attempt reproduction on the existing emulator/device or by another suitable available method. Record established preconditions, state/data, exact steps, expected/actual results, build/environment and repeatability. Separate owner reports, direct observations and hypotheses; document unsuccessful attempts, unavailable reproduction and unresolved details honestly. Keep private evidence outside the repository.
+- **Implementation boundary:** Preserve existing requirement IDs and revision rules, record concrete acceptance scenarios, and leave app/mockup implementation pending until the owner explicitly requests it for the clarified scope. Neither confirming the specification nor reproducing the issue is that request. The standing procedure is in [AGENTS.md](../AGENTS.md#owner-findings-and-feature-requests).
+
+## Plain-book app icon — accepted, 2026-10-16
+
+- **Owner selection:** Use concept A, a plain open book, as Piko's app/launcher icon. Cream pages, a navy outline and fold, and a blue cover sit on a light-blue background. The icon has no ears, face or star. This supersedes the source-frame-1 launcher choice below; the contextual mascot mappings remain unchanged.
+- **Asset:** A separate 32×32 pixel master has editable Book and Background layers and 0 FPS. The icon uses four existing illustration colors: `#FFF9F0`, `#34365B`, `#7FA6DF` and `#B7D1F4`. Keep the original six-frame 64×64 mascot master intact. Export the full square background with crisp integer scaling; platform masks are applied during integration.
+- **Initial export:** The first Piskel source was saved and reopened with one frame and two layers. Initial local PNG exports at 32, 256 and 1024 pixels have four colors, an opaque background and exact mirror symmetry; larger exports match nearest-neighbor scaling of that first master.
+- **Owner revision and Android package:** The owner refined the book to a one-pixel spine and a 23×18-pixel silhouette on the 32×32 canvas, then requested separate foreground/background files with exact centering. Preserve this revision as the Android source, including its empty third layer. Export each source pixel at 24×24 into a 1080×1080 adaptive canvas: 552×432 artwork, 264-pixel left/right margins and 324-pixel top/bottom margins. The whole foreground fits inside Android's 66 dp safe circle. Supply adaptive XML, legacy density PNGs and an optional monochrome outline/spine layer. Exact pixel/centering checks and Android resource compilation/linking pass. UX-BRAND-001 is revision 3; app integration and installed-device verification remain pending.
+
+## Style and copy acceptance — 2026-10-16
+
+After reviewing the interactive typography/style/language comparison, the owner accepted the new wording and text-style changes. Together with the earlier Nunito Sans and four-state acceptance, this finalizes the design handoff. The accepted contract is in DESIGN.md; the revised owning UX requirements retain their IDs; ux-findings.json records specified status. No finding is Fixed without later revision-specific Android evidence.
+
+Follow ux-implementation-plan.md for foundation-first integration and owning workflow packages. Synchronize canonical tokens/copy, adapters and mockup within implementation; the preparation package has not changed or installed the Android app. Existing newer JSON and conditional-Speed-warning behavior remains authoritative. No API, schema, future feature or release is added.
+
+## Four state designs accepted — 2026-10-16
+
+The owner accepted F04, F10, F11 and F13 after the concrete state comparison and the follow-up left-alignment/X-dismissal refinements. They are specified, not implemented or Android verified. Acceptance covers Collection Detail navigation/alignment, the genuine-empty CTA, confirmed filter count and direct toolbar clearing, and inline Speed completion feedback with explicit X dismissal. The subsequent style/copy acceptance above resolves the reviewed typography and wording; global navigation variants outside the reviewed states and new features are not added.
+
+Implement the accepted state contract through shared tokens/copy and the canonical mockup together in the foundation/owning packages; the local approved state illustrations remain the review evidence. Current application/catalog defaults are not claimed to have changed. Other ongoing accepted specifications, including the newer conditional Speed warning and JSON revisions, remain intact.
+
+## UX preparation and repeated reviews — accepted, 2026-10-16
+
+- Review typography, style and EN/DE wording before final prioritization; consider all F01–F15 and add independent new findings with stable IDs.
+- Owner selected Nunito Sans for further design development after comparison with Inter and the existing browser reference. This does not establish Android font integration or acceptance of every proposed size/copy/layout change.
+- Adopt the [quality workflow](ux-quality.md): requirements own intended behavior/presentation, shared design rules own reusable patterns, and the [finding register](ux-findings.json) owns lifecycle and verification. Fixed requires revision-specific Android evidence and relevant checks.
+- Use targeted per-change reviews, six round-end reference states and wider consumer checks for global changes. Keep raw evidence local, preserve user data and prioritize implementation emulator access.
+- Remaining concrete screen/text proposals are listed in [UX consolidation proposals](ux-consolidation-proposals.md); they are now resolved by the style/copy acceptance above; implementation remains pending.
+
+## Accepted UX handoff included in round 3 — 2026-10-16
+
+- Include all F01–F18 as specified, none Fixed, with source/evidence history preserved in ux-findings.json. Follow the six packages in implementation-round-3.md and ux-implementation-plan.md; retain separate spec ownership and tests.
+- Accept Nunito Sans with reviewed offline Korean fallback, the nine-color palette, shared geometry, all 27 reviewed EN/DE copy changes and the four state designs including left-aligned Speed text and completion X. Canonical runtime configuration, copy, mockup and Android remain unchanged in this planning pass.
+- Preserve the newest Detail-only direction preference, prefix-free single-direction learning status, conditional warning, separate JSON views, unseen-Speed-replacement rule and plain-book icon revision. F13 is a text-only notice, not new mascot artwork. IMPORT-JSON-003 remains deferred.
+- Shared visual refinements carry Updated 3 while original round tags/history remain. Required new-feature decisions are not bypassed. No implementation or publication authorization is inferred; existing publication approval remains pending.
+
+## Round-3 learning status and direction-preference boundary — accepted, 2026-10-16
+
+- **Scope:** The owner selected examples/notes, preferred learning direction and vocabulary learning-status display for round 3. Manual Speed selection and correction of the last Speed answer remain deferred. Detailed examples/notes and status mappings still need specification; this selection is not implementation authorization.
+- **Status:** Reuse LEARN-005 for the functional learning-status requirement and add UX-LEARN-005 for its Collection presentation. With one preferred direction, show status only, without language-direction prefixes; with both, distinguish directions. Do not infer the earlier unresolved mastery scale is now approved for implementation.
+- **Preference:** PREF-005 includes hiding unselected normal-review cards and Speed actions on Collection Detail. It does not filter the homepage quick-review count or direction picker; both available directions remain accessible there. Learning records remain unchanged. Mixed sessions and per-Collection overrides stay deferred; existing-user preference migration remains open.
+- **Evidence:** Specifications only, revisions 1; no app/mockup changes or passing implementation claim.
+
+## Speed must present unseen replacements before a number break — accepted, 2026-10-16
+
+- **Observation:** The owner reported a number game followed by a newly introduced, never-before-seen vocabulary near 35/39 completed. Exact reproduction and technical cause remain unverified.
+- **Correction:** A short pool and empty waiting queue are not enough to trigger a game. Every remaining pool word must already have an answered attempt in this round. If a replacement still awaits its first turn, skip the game at that boundary and run the next complete pass in rotation order. Do not interrupt a pass or bring replacements into the preceding pass. Reevaluate at the following boundary; completion still ends immediately without a final game.
+- **Traceability:** SPEED-007 and SPEED-010 advance to revision 3, with a 39-word regression scenario and replacement edge cases. This refines revision 2's unconditional short-pool boundary rule; streaks, learning reset semantics, one-game-per-pass and N=1 remain unchanged. Specifications only; app/mockup fix and verification pending.
+
+## Separate JSON import/export and clarify import steps — accepted, 2026-10-16
+
+- **Owner feedback:** JSON import/export worked in owner testing, but the combined action-heavy page was unclear. Separate Import and Export so only one operation's details are visible; leave the precise switch control for visual review.
+- **Import flow:** Example first, then file/paste with compact expandable input, content-group choices and Check, results and an explicit Import action. Content-group choices do not disable mandatory validation. Disable Import with loading feedback during apply, retain recoverable failures and show success only after a successful write.
+- **Navigation correction:** The owner's final clarification selects the owning Collection Detail, not the homepage or manual-entry page, as Back/post-success return destination.
+- **Traceability and boundary:** UX-IMPORT-JSON-001/002 advance to revision 2. JSON data semantics remain unchanged. IMPORT-JSON-003's simplified template is still Later, outside round 2. This review changes specifications only; shared copy, mockup and app implementation/verification are pending.
+
+## Speed reset warning only for existing progress — accepted, 2026-10-16
+
+- **Decision:** Hide the reset warning when all words in the actual Speed round are new in its direction. Show it only when an included word has existing normal-learning progress in that direction; mere initial scheduler records or progress in the opposite direction do not qualify. Shorten the message to the completion-after-error reset consequence.
+- **Traceability:** UX-SETUP-002 revision 5 replaces revision 4's unconditional warning. SPEED-005 eligibility and SPEED-006 learning effects remain unchanged, so normal round-2 new-word-only setup needs no warning. Manual selection remains Later. SETUP-008's reference to a completion-time warning is conditional on UX-SETUP-002, not an always-visible requirement.
+- **Status:** Owner-review specification change only; app, shared copy and mockup updates and verification are pending. No implementation or publication is claimed.
+
+## Minimal import template — accepted for Later, 2026-10-16
+
+- **Decision:** Simplify the copyable JSON import example: retain format and schemaVersion plus required import structure, omit learning state, timestamps and scheduler details, and demonstrate Topic → Food and Difficulty → Easy assigned to one example vocabulary (German: Thema → Essen; Schwierigkeit → Einfach).
+- **Boundary:** Full export still includes all stored vocabulary-associated data. Import matching, validation and learning preservation do not change.
+- **Traceability:** IMPORT-JSON-003 revision 1 is a deferred refinement of IMPORT-JSON-001, not a new round-2 requirement or an implemented fix. Preserve the round-2 baseline revisions and verification evidence. Specifications only; app and mockup remain unchanged.
+
+## 2026-10-16 — Round 3 prototype and reduced Design Lab
+
+- **Status:** Accepted for mockup work; not an application release.
+- **Decision:** Implement accepted round-3 UX packages in parallel, preserving earlier rounds for comparison. The Design Lab has two columns: preview and requirements/reference; Colors precedes collapsed i18n. Remove generators, button/dropdown workbenches and inline confirmed-rule lists; link consolidated UX criteria instead.
+- **Consequences:** The accepted Piko palette is the studio default. Round 3 demonstrates offline fonts, revised copy, separate Import/Export, entry actions, compact Collection actions, stable selection footers and learning presentation. Preferred direction restricts Detail only, not Overview. Detailed status mapping and examples/notes stay unresolved.
+- **Verification boundary:** Browser prototype checks do not mark Android findings fixed.
+## Collection Detail scrolling correction — 2026-10-16
+
+- **Authorization correction:** The original issue report did not request implementation. On 2026-10-16 the owner explicitly chose to keep the completed change on `codex/round-4-implementation`, deferring phone testing until more work is implemented. This retention is not broader round-4 implementation authorization or owner acceptance of the physical scrolling behavior. Evidence and pending acceptance are recorded in [the round-4 ledger](implementation-round-4.md).
+
+- **Owner feedback:** Android vocabulary scrolling feels uneven, sometimes stops advancing and travels too far after faster swipes.
+- **Behavior:** UX-COLL-009 revision 2 records continuous direct scrolling and controllable flicks while retaining inline drafts and explicit swipe-delete behavior. No vocabulary or learning behavior changes.
+- **Implementation choice:** Render nearby vocabulary cards lazily in one viewport and limit release velocity locally to Collection Detail. The numerical tuning value remains revisable following physical-phone testing; do not claim the reported intermittent stall is fully reproduced from rendering structure alone.
+- **Verification:** Before the fix, a 400-row host fixture mounted all rows and a fast synthetic flick traveled about 7436 logical pixels. The focused corrected cases pass; subsequent integrated and Android evidence belongs in the implementation ledger.
+
 ## Reading Piko inside the first available normal-review card — accepted, 2026-10-16
 
 - **Placement:** Put one reading Piko (approved source frame 3) inside the first visible positive normal-review card on Collection Detail. It follows the card's left-aligned direction/count text and precedes the trailing review icon. If only the reverse direction is available, that card is first and receives the mascot. Two directions still show one Piko; Speed-only and states without available normal review show none. Do not add a Speed mascot in round 2.
@@ -860,6 +1011,8 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 
 ## Round-2 popup confirmation audit — accepted, 2026-10-15
 
+The selection-action visibility below is superseded by the persistent selection-action decision of 2026-10-16; pending-selection and dismissal behavior is retained.
+
 - **Decision:** Category assignment and Filters use local pending selections and a right-aligned Apply/checkmark only while changed from their opening state. Reverting hides it. X, Escape and backdrop cancel pending popup edits, preserving the parent vocabulary draft and previously active filters. Apply passes confirmed assignments into the existing vocabulary autosave flow.
 - **Whole-form confirmation:** Dimension name and Single/Multiple mode confirm together below both fields, not beside the name alone. Keep the adjacent changed-only checkmark only for a single inline category-value field. Explicitly saved values remain independent of unconfirmed assignment changes.
 - **Shared family audit:** Include every round-2 popup and the reused summary. Collection/category deletion and entry-draft exit use the accepted explicit safe/action pair without X; forms/setup keep X and meaningful primary actions; direct-launch direction choices and summaries retain no extra footer. Content-width actions align right and stack affirmative above safe when needed, with matching DOM/tab order and safe initial focus. Destructive fills consume canonical danger/white; safe actions are neutral.
@@ -873,7 +1026,7 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 
 ## 2026-10-16 — Incremental round 3 and resolved content rules
 
-Owner approved the incremental APK checkpoint plan and a 20% account-allowance reserve. Latest verified APK remains available if later scope is deferred. See implementation-round-3.md for evidence, accepted migration/status/example/Hint contracts and outstanding work. Note and Hint are the same capability, named Hint. Existing-installation preferred direction defaults Native → Target; new installations Target → Native. No publication is authorized.
+Owner approved the incremental APK checkpoint plan. Latest verified APK remains available if later scope is deferred. See implementation-round-3.md for evidence, accepted migration/status/example/Hint contracts and outstanding work. Note and Hint are the same capability, named Hint. Existing-installation preferred direction defaults Native → Target; new installations Target → Native. No publication is authorized.
 
 ## Next decision template
 
@@ -884,3 +1037,31 @@ Owner approved the incremental APK checkpoint plan and a 20% account-allowance r
 - **Alternatives:** To be decided — what other options were considered?
 - **Reason:** To be decided — why was this option selected?
 - **Consequences:** To be decided — what changes, constraints, or follow-up work result?
+
+## Persistent selection actions and shared header alignment — accepted, 2026-10-16
+
+- **Decision:** The owner selected always-visible buttons with disabled states after reporting empty footer space and movement of Clear filters when Apply appears. In editable selection popups, keep Apply visible and disabled while unchanged/reverted; enable it only for a changed selection. Filters also keeps Clear filters visible and disables it when the pending selection is empty.
+- **Geometry:** State changes must not move either action, the title or selected row. Use a compact real footer without an extra blank reservation. Retain responsive content-width actions and stacking when labels require it; always-stacked actions were suggested but not selected.
+- **Header finding:** The owner reports a misaligned X across popups. Preserve the existing first-title-line alignment and full 48px target through the shared header; track this as Fix 3, not a new dismissal policy.
+- **Supersedes:** Hidden Apply on unchanged/reverted selection and revision 4’s empty reserved action area. Keep staging, set comparison, Apply/cancel effects, independent search clearing, outside-toolbar clear visibility, inline category saves and other popup-purpose action rules.
+- **Traceability:** UX-DIALOG-001 revision 5 with Updated 3/Fix 3, UX-CAT-001 revision 6, CAT-009 revision 4 and FILTER-002 revision 5; original round tags remain. F03 and the existing studio reference track the new target.
+- **Evidence and boundary:** The UX specification separates owner screenshots/reports from the bounded English browser observation, unresolved device/build details and pending acceptance scenarios. This acceptance updates definitions only; no mockup/app implementation, Android verification or publication is authorized by it.
+
+## Standard dialog layout baseline — accepted, 2026-10-16
+
+- **Decision:** Simplify the shared Piko popup component around standard framework layout, using AlertDialog where compatible and justified Dialog customization where needed. Preserve canonical styling, purpose-based X/dismissal rules, persistent visible/disabled actions, safe focus and pending-write behavior.
+- **Reason:** The earlier review preserved hidden Apply and reserved footer geometry. Source inspection found separate reservation/rendering measurements and conditional action membership; header tests check the close target rather than first-line glyph alignment. These explain plausible mechanisms, not a new installed-device reproduction.
+- **Verification target:** One real action layout without an extra blank reservation; existing buttons remain stationary through unchanged/changed/cleared/reverted states. Check actual X alignment, narrow/stacked layouts and relevant shared popup consumers before claiming completion.
+- **Traceability and boundary:** Implementation guidance for UX-DIALOG-001 revision 5 and the existing F03 finding; no new behavioral requirement or dismissal policy. The owner explicitly requested recording the accepted approach only. App/mockup implementation and verification remain pending a later explicit request under AGENTS.md.
+
+## Compact vocabulary editor — accepted for Later, 2026-10-16
+
+- **Decision:** Following live Android inspection, the owner accepted compact optional Examples/Hint sections: empty sections start collapsed and populated sections show summaries. Keep the two required language fields visible. Inside Hint replace the two visibility choices with one Show hint automatically switch; off means reveal on tap. Retain the separate explicit new-vocabulary-default choice within Hint.
+- **Preservation:** This is presentation, not a change to Hint data, global-default semantics, learning, autosave or Discard. Section collapse preserves content and unfinished edits; errors remain discoverable. Category/Delete redesign is outside the accepted change.
+- **Traceability:** UX-COLL-011 revision 2 retains original Round 1 and records Updated Later; UX-ENTRY-002 cross-references it without moving its existing round-4 scope. F19 is specified, not fixed. DESIGN.md and the existing criteria summary reference the same owner.
+- **Evidence and scope:** The live lower editor displayed empty optional fields and two radio rows expanded; exact installed source, whole-card measurements and repeatability were not established. The owner explicitly assigns this work to Later, outside round 4, with no implementation round scheduled. No app/mockup implementation or publication is authorized.
+
+
+## 2026-10-16: Round-4 implementation agreement
+
+The owner authorized the eight accepted round-4 packages with solo execution, private recovery checkpoints and one final owner-review APK. Shared presentation precedes the complete examples/storage/JSON package, Collection views, and evidence-led header investigation. The canonical functional/UX requirements now record the approved ordering, nullable local addition dates, schema-3 compatibility, per-presentation example preference and same-session Import/Export draft retention. The scrolling correction is retained. Active/Inactive vocabulary, answer-card editing, compact-editor redesign, proficiency/Mastered and manual Speed selection remain excluded. The [round-4 ledger](implementation-round-4.md) owns progress, tests and candidate provenance; existing manual-review/publication and phone-acceptance gates remain.

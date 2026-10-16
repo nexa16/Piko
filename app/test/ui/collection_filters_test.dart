@@ -100,7 +100,7 @@ void main() {
       });
       await h.mount(tester);
       await h.open(tester);
-      expect(apply(), findsNothing);
+      expect(tester.widget<PikoButton>(apply()).onPressed, isNull);
       final rowBefore = tester.getRect(value('travel'));
       await tester.tap(value('travel'));
       await tester.pumpAndSettle();
@@ -111,7 +111,7 @@ void main() {
       expect(tester.getRect(value('travel')), rowBefore);
       await tester.tap(value('travel'));
       await tester.pumpAndSettle();
-      expect(apply(), findsNothing);
+      expect(tester.widget<PikoButton>(apply()).onPressed, isNull);
       expect(tester.getRect(value('travel')), rowBefore);
       await tester.tap(find.byKey(const ValueKey('filters-clear-pending')));
       await tester.pumpAndSettle();
