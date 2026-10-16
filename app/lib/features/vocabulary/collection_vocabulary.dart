@@ -675,8 +675,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 if (!mounted ||
                     !identical(editor, current) ||
                     actionBusy ||
-                    ModalRoute.of(context)?.isCurrent != true)
+                    ModalRoute.of(context)?.isCurrent != true) {
                   return;
+                }
                 edits.setContent(
                   content,
                   makeHintVisibilityDefault: makeDefault,

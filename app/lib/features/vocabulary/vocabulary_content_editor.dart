@@ -59,8 +59,9 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
   void publish({HintVisibility? visibility, bool? makeDefault}) {
     if (!mounted ||
         !widget.enabled ||
-        ModalRoute.of(context)?.isCurrent != true)
+        ModalRoute.of(context)?.isCurrent != true) {
       return;
+    }
     widget.onChanged(
       VocabularyContent(
         exampleTargetText: target.text,
@@ -124,30 +125,33 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
           onChanged: (value) {
             if (value != null) publish(visibility: value);
           },
-          child: Column(
-            children: [
-              for (final value in HintVisibility.values)
-                RadioListTile<HintVisibility>(
-                  key: ValueKey('content-hint-visibility-${value.name}'),
-                  value: value,
-                  enabled: widget.enabled,
-                  contentPadding: EdgeInsets.zero,
-                  selected: widget.value.hintVisibility == value,
-                  selectedTileColor: pikoDesign.color('tint'),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      pikoDesign.dimension('components.buttons.radius'),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: [
+                for (final value in HintVisibility.values)
+                  RadioListTile<HintVisibility>(
+                    key: ValueKey('content-hint-visibility-${value.name}'),
+                    value: value,
+                    enabled: widget.enabled,
+                    contentPadding: EdgeInsets.zero,
+                    selected: widget.value.hintVisibility == value,
+                    selectedTileColor: pikoDesign.color('tint'),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        pikoDesign.dimension('components.buttons.radius'),
+                      ),
+                    ),
+                    title: Text(
+                      copy.text(
+                        value == HintVisibility.always
+                            ? 'vocab.hintAlways'
+                            : 'vocab.hintHidden',
+                      ),
                     ),
                   ),
-                  title: Text(
-                    copy.text(
-                      value == HintVisibility.always
-                          ? 'vocab.hintAlways'
-                          : 'vocab.hintHidden',
-                    ),
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         PikoCheckbox(

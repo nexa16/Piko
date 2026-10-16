@@ -4,11 +4,12 @@ import 'package:piko/data/vocabulary_content.dart';
 import 'package:piko/features/vocabulary/vocabulary_content_editor.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
+import 'package:piko/ui/components/piko_card.dart';
 
 void main() {
   for (final language in ['en', 'de']) {
     testWidgets(
-      '$language raw optional editor retains selection and reflows at320/200%',
+      '$language optional editor in PikoCard retains selection and reflows at320/200%',
       (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(320, 1200);
@@ -37,10 +38,17 @@ void main() {
                 data: MediaQuery.of(
                   context,
                 ).copyWith(textScaler: const TextScaler.linear(2)),
-                child: Scaffold(body: SingleChildScrollView(child: editor)),
+                child: Scaffold(
+                  body: SingleChildScrollView(child: PikoCard(child: editor)),
+                ),
               ),
             ),
           ),
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Radio tiles must paint inside the real decorated card',
         );
         final example = find.byKey(const ValueKey('content-example-target'));
         await tester.enterText(example, ' raw example ');

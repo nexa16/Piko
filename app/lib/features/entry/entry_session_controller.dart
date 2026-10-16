@@ -356,8 +356,9 @@ final class EntrySessionController extends ChangeNotifier {
           throw StateError('Saved edit returned a different entry identity.');
         }
         buffer.committed = saved;
-        if (snapshot.makeHintVisibilityDefault)
+        if (snapshot.makeHintVisibilityDefault) {
           _newHintVisibility = snapshot.content.hintVisibility;
+        }
         if (buffer.revision == revision) buffer.error = null;
         if (!_disposed) {
           final index = _confirmedEntries.indexWhere((entry) => entry.id == id);
@@ -858,8 +859,9 @@ final class EntrySessionController extends ChangeNotifier {
         );
         _ordinals[record.id] = _nextOrdinal++;
         _advancementRevision++;
-        if (snapshot.makeHintVisibilityDefault)
+        if (snapshot.makeHintVisibilityDefault) {
           _newHintVisibility = snapshot.content.hintVisibility;
+        }
         _draft = EntryDraft(
           content: VocabularyContent(hintVisibility: _newHintVisibility),
         );

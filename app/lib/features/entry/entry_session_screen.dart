@@ -1139,8 +1139,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                     session.isBusy ||
                                     exitDraining ||
                                     exitRequest != null ||
-                                    ModalRoute.of(context)?.isCurrent != true)
+                                    ModalRoute.of(context)?.isCurrent != true) {
                                   return;
+                                }
                                 if (draft) {
                                   session.setContent(
                                     content,
