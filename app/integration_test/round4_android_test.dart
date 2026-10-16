@@ -132,7 +132,7 @@ void main() {
         await settings.write('locale', 'en');
         await settings.write(
           PreferredDirection.settingKey,
-          PreferredDirection.targetToNative.name,
+          PreferredDirection.both.name,
         );
         final topic = await categories.createDimension(
           collectionId: collection.id,
