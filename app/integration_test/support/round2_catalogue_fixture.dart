@@ -7,7 +7,60 @@ import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:piko/platform/vocabulary_json_platform.dart';
 
-import '../review_correction_android_test.dart' show waitUntil;
+/// Screenshots intentionally hide the real keyboard; the native protocol owns
+/// keyboard-visible evidence. Let route autofocus/layout finish before asking
+/// Flutter to release focus, then give OS inset events real wall-clock time.
+Future<void> settleCatalogueCapture(
+  WidgetTester tester,
+  String id, {
+  Finder? at,
+}) async {
+  await tester.pumpAndSettle();
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
+  if (at != null) {
+    expect(at, findsOneWidget, reason: 'Missing screenshot anchor for $id');
+    await tester.ensureVisible(at);
+    await tester.pumpAndSettle();
+  }
+  final deadline = DateTime.now().add(const Duration(seconds: 15));
+  DateTime? hiddenSince;
+  double? lastInset;
+  while (DateTime.now().isBefore(deadline)) {
+    // tester.pump(Duration) alone advances Flutter frames, not Android IME
+    // animation wall time. Never substitute fake keyboard metrics here.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 50));
+    final scaffolds = find.byType(Scaffold);
+    lastInset = scaffolds.evaluate().isEmpty
+        ? null
+        : MediaQuery.viewInsetsOf(tester.element(scaffolds.last)).bottom;
+    final editing = find
+        .byType(EditableText)
+        .evaluate()
+        .any((element) => (element.widget as EditableText).focusNode.hasFocus);
+    if (lastInset == 0 && !editing) {
+      hiddenSince ??= DateTime.now();
+      if (DateTime.now().difference(hiddenSince) >=
+          const Duration(milliseconds: 200)) {
+        await tester.pumpAndSettle();
+        expect(
+          MediaQuery.viewInsetsOf(tester.element(scaffolds.last)).bottom,
+          0,
+          reason: 'Real IME must remain hidden before $id',
+        );
+        return;
+      }
+    } else {
+      hiddenSince = null;
+    }
+  }
+  throw StateError(
+    'Timed out waiting for settled keyboard-hidden capture $id '
+    '(last real inset: $lastInset; focus: '
+    '${FocusManager.instance.primaryFocus?.debugLabel})',
+  );
+}
 
 /// Each invocation is one locale/scale cell, never a mutation of installed data.
 /// Required defines: PIKO_CATALOGUE_RUN, PIKO_CATALOGUE_COMMIT.
@@ -312,23 +365,7 @@ final class CatalogueArtifacts {
     if (!cataloguePlan.containsKey(id) || captures.any((c) => c['id'] == id)) {
       throw StateError('Unknown or duplicate catalogue state: $id');
     }
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    if (at != null) {
-      expect(at, findsOneWidget, reason: 'Missing screenshot anchor for $id');
-      await tester.ensureVisible(at);
-    }
-    await waitUntil(
-      tester,
-      () {
-        final scaffolds = find.byType(Scaffold);
-        return scaffolds.evaluate().isNotEmpty &&
-            MediaQuery.viewInsetsOf(tester.element(scaffolds.last)).bottom == 0;
-      },
-      description:
-          'keyboard hidden before $id (native IME has a separate pass)',
-    );
-    await tester.pumpAndSettle();
+    await settleCatalogueCapture(tester, id, at: at);
     expect(tester.takeException(), isNull, reason: 'Before screenshot $id');
     final name =
         '${configuration.runId}-$id-${configuration.locale}-${configuration.scale}';

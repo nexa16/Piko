@@ -120,6 +120,15 @@ void main() {
         final forward =
             ids.indexOf(id) > ids.indexOf(session.activeEntryId ?? 'draft');
         var distance = viewport.center.dy - card.center.dy;
+        final position = tester
+            .widget<SingleChildScrollView>(_key('entry-stack'))
+            .controller!
+            .position;
+        if (position.maxScrollExtent - position.minScrollExtent <= .5) {
+          // Fitting stacks navigate by drag direction, not a midpoint that
+          // cannot be reached through scroll offset.
+          distance = forward ? -80 : 80;
+        }
         // A screenshot may already have programmatically centered an inactive
         // card. A real nonzero scroll is still required to activate that card.
         if (distance.abs() < 24) {

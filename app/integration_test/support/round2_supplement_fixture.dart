@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import '../review_correction_android_test.dart' show waitUntil;
-import 'round2_catalogue_fixture.dart' show CatalogueConfiguration;
+import 'round2_catalogue_fixture.dart'
+    show CatalogueConfiguration, settleCatalogueCapture;
 
 const supplementPlan = <String, String>{
   'empty-detail': 'Empty Collection Detail omits the entire learning area',
@@ -179,18 +179,7 @@ final class SupplementArtifacts {
         captures.any((capture) => capture['id'] == id)) {
       throw StateError('Unknown or duplicate supplement state: $id');
     }
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    if (at != null) {
-      expect(at, findsOneWidget, reason: 'Supplement anchor $id');
-      await tester.ensureVisible(at);
-    }
-    await waitUntil(tester, () {
-      final scaffolds = find.byType(Scaffold);
-      return scaffolds.evaluate().isNotEmpty &&
-          MediaQuery.viewInsetsOf(tester.element(scaffolds.last)).bottom == 0;
-    }, description: 'native IME hidden before supplement $id');
-    await tester.pumpAndSettle();
+    await settleCatalogueCapture(tester, 'supplement $id', at: at);
     expect(
       tester.takeException(),
       isNull,
