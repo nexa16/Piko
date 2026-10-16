@@ -81,6 +81,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   double? lastKeyboardInset;
   bool visibilityRequested = true, followEditor = true, alignDraftStart = true;
   bool userScrolling = false, scheduled = false, adjusting = false;
+  ScrollDirection userScrollDirection = ScrollDirection.idle;
+  ScrollDirection deferredScrollDirection = ScrollDirection.idle;
   bool centerRequested = true;
   bool releaseAnchor = false, jumping = false;
   bool settleSelection = false;
@@ -142,6 +144,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       followEditor = true;
       alignDraftStart = activeId == draftId;
       userScrolling = false;
+      userScrollDirection = ScrollDirection.idle;
+      deferredScrollDirection = ScrollDirection.idle;
       adjusting = false;
       releaseAnchor = false;
       settleSelection = false;
@@ -328,7 +332,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
           settleSelection = false;
           final wasScrolling = userScrolling;
           userScrolling = true;
+          userScrollDirection = deferredScrollDirection;
+          deferredScrollDirection = ScrollDirection.idle;
           nearest();
+          userScrollDirection = ScrollDirection.idle;
           userScrolling = wasScrolling;
         }
       }
@@ -433,6 +440,22 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
     final box = viewport.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
+    if (scroll.position.maxScrollExtent - scroll.position.minScrollExtent <=
+        0.5) {
+      // A short stack can fit completely, so geometry cannot distinguish a
+      // deliberate forward/backward gesture. Advance one card in that gesture's
+      // direction without adding artificial scroll space or selecting on reveal.
+      final step = switch (userScrollDirection) {
+        ScrollDirection.forward => -1,
+        ScrollDirection.reverse => 1,
+        ScrollDirection.idle => 0,
+      };
+      userScrollDirection = ScrollDirection.idle;
+      if (step != 0) {
+        select(ids[(ids.indexOf(activeId) + step).clamp(0, ids.length - 1)]);
+      }
+      return;
+    }
     if (scroll.offset <= scroll.position.minScrollExtent + 0.5) {
       select(ids.first);
       return;
@@ -455,6 +478,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (jumping) return false;
     if (event is UserScrollNotification) {
       if (event.direction != ScrollDirection.idle) {
+        userScrollDirection = event.direction;
         if (structuralGap != 0) {
           setState(() {
             structuralGap = 0;
@@ -488,10 +512,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (event is ScrollEndNotification) {
       if (adjusting) {
         settleSelection = true;
+        if (userScrolling) {
+          // Preserve only real user intent until expansion has measurable
+          // geometry; programmatic ScrollEnd events must not invent a direction.
+          deferredScrollDirection = userScrollDirection;
+        }
       } else {
         nearest();
       }
       userScrolling = false;
+      userScrollDirection = ScrollDirection.idle;
     }
     return false;
   }
@@ -1297,7 +1327,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                           physics:
                                               session.isBusy || exitDraining
                                               ? const NeverScrollableScrollPhysics()
-                                              : const ClampingScrollPhysics(),
+                                              : const AlwaysScrollableScrollPhysics(
+                                                  parent:
+                                                      ClampingScrollPhysics(),
+                                                ),
                                           padding: EdgeInsets.only(
                                             bottom: bottomPadding,
                                           ),

@@ -139,3 +139,9 @@ The per-spec table above retains the narrower owning-commit checkpoints; these i
 ### CAT-002 decision
 
 If an Undo snapshot contains multiple assignments but its dimension has since become Single, restoration fails atomically and keeps the original receipt until its original deadline. No assignment is silently dropped; switching the dimension back permits retry while the receipt is valid.
+
+### UX-ENTRY-001 short-stack recovery
+
+Android supplementary captures exposed a real navigation gap when the complete saved-card/new-draft stack fits without scroll extent. Keep the accepted scroll-driven interaction: a genuine vertical gesture moves one adjacent editor in its direction only in this zero-extent case. No tap activation or artificial leading space is added. Busy, nested-scroll, programmatic-reveal and retained-draft safeguards remain intact; an opposite gesture during expansion is consumed after the expansion settles.
+
+The new regression first reproduced failed editor activation on the original code at both Android-height and tall viewports. After the fix, three short-stack cases plus existing stack/keyboard/deletion/anchor tests passed **29/29**. This owning-spec recovery still requires the new Android supplementary run and the final broader regression gate.
