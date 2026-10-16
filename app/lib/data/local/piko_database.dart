@@ -327,7 +327,9 @@ class PikoDatabase extends _$PikoDatabase {
           await m.addColumn(learningItems, learningItems.speedCompleted);
         }
         if (from < 13) {
-          await _initializePreferredDirection(PreferredDirection.nativeToTarget);
+          await _initializePreferredDirection(
+            PreferredDirection.nativeToTarget,
+          );
         }
       });
     },

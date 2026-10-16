@@ -139,7 +139,10 @@ void main() {
         expect(await rows(db, 'scope_answer_ordinals'), hasLength(1));
         expect((await rows(db, 'scope_answer_ordinals')).single['ordinal'], 4);
         expect(await rows(db, 'app_settings'), [
-          {'key': PreferredDirection.settingKey, 'value': PreferredDirection.targetToNative.name},
+          {
+            'key': PreferredDirection.settingKey,
+            'value': PreferredDirection.targetToNative.name,
+          },
           {'key': 'locale', 'value': 'de'},
         ]);
         for (final item in await rows(db, 'learning_items')) {
