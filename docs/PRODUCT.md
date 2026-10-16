@@ -2,7 +2,7 @@
 
 **Execution update, 2026-10-16:** The owner authorized round-2 production implementation on 2026-10-15 under [the execution ledger](implementation-round-2.md), with accepted UX refinements integrated at batch boundaries. Older overall mockup-approval gates below are superseded. Reading-mascot placement is approved, integrated and host/device-verified in the recorded states. No publication is authorized.
 
-**Status: Round-2 functionality is ready for owner testing. The execution ledger records final host results, scoped Android evidence and remaining verification limitations. Not a published product release.**
+**Status: Round-3 checkpoints 1–4 are implemented and verified for owner testing. The [round-3 ledger](implementation-round-3.md) records the final APK, host regression repairs, scoped Android evidence and verification limits. Not a published product release.**
 
 The owner has authorized local-first Flutter implementation with Android verification. FOUNDATION-001 establishes the application host under `app/`; the requirement alone does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
 
