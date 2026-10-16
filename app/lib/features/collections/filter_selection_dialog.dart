@@ -136,10 +136,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       autofocus: true,
       child: PikoDialog(
         purpose: PikoDialogPurpose.selection,
-        selectionFooterLabels: [
-          copy.text('r2.clearFilters'),
-          copy.text('r2.apply'),
-        ],
         title: copy.text('action.filters'),
         onClose: widget.onClose,
         body: Column(
@@ -180,24 +176,22 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
           ],
         ),
         actions: [
-          if (_draft.isNotEmpty)
-            PikoDialogAction(
-              key: const ValueKey('filters-clear-pending'),
-              label: copy.text('r2.clearFilters'),
-              role: PikoDialogActionRole.safe,
-              onPressed: !_canEdit
-                  ? null
-                  : () => setState(() {
-                      _draft = {};
-                      _error = null;
-                    }),
-            ),
-          if (_changed)
-            PikoDialogAction(
-              label: copy.text('r2.apply'),
-              icon: const PikoIcon(PikoIconName.check),
-              onPressed: _canEdit ? _apply : null,
-            ),
+          PikoDialogAction(
+            key: const ValueKey('filters-clear-pending'),
+            label: copy.text('r2.clearFilters'),
+            role: PikoDialogActionRole.safe,
+            onPressed: !_canEdit || _draft.isEmpty
+                ? null
+                : () => setState(() {
+                    _draft = {};
+                    _error = null;
+                  }),
+          ),
+          PikoDialogAction(
+            label: copy.text('r2.apply'),
+            icon: const PikoIcon(PikoIconName.check),
+            onPressed: _canEdit && _changed ? _apply : null,
+          ),
         ],
       ),
     );

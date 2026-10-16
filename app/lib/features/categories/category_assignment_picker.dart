@@ -396,7 +396,6 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         ],
       ),
       purpose: PikoDialogPurpose.selection,
-      selectionFooterLabels: [copy.text('r2.apply')],
       dismissible: !pending,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -574,15 +573,15 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
           ],
         ],
       ),
-      actions: ready && changed
-          ? [
-              PikoDialogAction(
-                label: copy.text('r2.apply'),
-                icon: const PikoIcon(PikoIconName.check),
-                onPressed: pending ? null : () => track(apply()),
-              ),
-            ]
-          : const [],
+      actions: [
+        PikoDialogAction(
+          label: copy.text('r2.apply'),
+          icon: const PikoIcon(PikoIconName.check),
+          onPressed: !ready || !changed || pending
+              ? null
+              : () => track(apply()),
+        ),
+      ],
     );
   }
 

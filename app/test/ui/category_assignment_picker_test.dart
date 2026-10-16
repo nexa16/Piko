@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_button.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -127,7 +128,7 @@ bool checked(WidgetTester tester, CategoryValueRecord record) =>
 void main() {
   for (final language in ['en', 'de']) {
     testWidgets(
-      '$language changed-only Apply stages a set, reverting hides it, X cancels, Apply returns without assignment writes',
+      '$language changed-only Apply stages a set, reverting disables it, X cancels, Apply returns without assignment writes',
       (tester) async {
         final f = PickerFixture();
         try {
@@ -141,7 +142,14 @@ void main() {
             findsNothing,
           );
           expect(checked(tester, f.values.first), isTrue);
-          expect(find.text(copy.text('r2.apply')), findsNothing);
+          expect(
+            tester
+                .widget<PikoButton>(
+                  find.widgetWithText(PikoButton, copy.text('r2.apply')),
+                )
+                .onPressed,
+            isNull,
+          );
           final titleBefore = tester.getRect(find.text('Difficulty'));
           final rowBefore = tester.getRect(value(f.values.last));
           await tester.tap(value(f.values.last));
@@ -151,7 +159,14 @@ void main() {
           expect(tester.getRect(value(f.values.last)), rowBefore);
           await tester.tap(value(f.values.last));
           await tester.pumpAndSettle();
-          expect(find.text(copy.text('r2.apply')), findsNothing);
+          expect(
+            tester
+                .widget<PikoButton>(
+                  find.widgetWithText(PikoButton, copy.text('r2.apply')),
+                )
+                .onPressed,
+            isNull,
+          );
           expect(tester.getRect(find.text('Difficulty')), titleBefore);
           expect(tester.getRect(value(f.values.last)), rowBefore);
           await tester.tap(value(f.values.last));
@@ -248,7 +263,7 @@ void main() {
   );
 
   testWidgets(
-    'empty lists offer no search or Apply and preserve an unsaved parent selection draft',
+    'empty lists offer no search and disable Apply and preserve an unsaved parent selection draft',
     (tester) async {
       final f = PickerFixture();
       try {
@@ -263,7 +278,17 @@ void main() {
           find.byKey(const ValueKey('category-value-search')),
           findsNothing,
         );
-        expect(find.text(PikoCopy('de').text('r2.apply')), findsNothing);
+        expect(
+          tester
+              .widget<PikoButton>(
+                find.widgetWithText(
+                  PikoButton,
+                  PikoCopy('de').text('r2.apply'),
+                ),
+              )
+              .onPressed,
+          isNull,
+        );
         expect(f.raw.text, ' Retained vocabulary draft ');
       } finally {
         await f.cleanup(tester);
