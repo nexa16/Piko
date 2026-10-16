@@ -1,5 +1,12 @@
 # Decision log
 
+## Reviewed PR, phone acceptance and next-round handoff — accepted, 2026-10-16
+
+- **Decision:** Complete and verify the authorized implementation scope, then present the final changes, evidence and candidate APK for owner manual review. After approval and the required public-data review, push and create the focused PR into `develop`. Keep it unmerged until the owner confirms installation/update and the agreed phone happy path, including vocabulary learning and the relevant changed flow, for that candidate.
+- **Integration:** Manual review approval, the owner-confirmed phone check, passing required checks and resolved review discussions authorize squash-merging without another redundant permission request. Verify a merge already performed by the owner. Recheck affected scope after changes; app changes require an updated candidate and phone check. Phone happy-path evidence does not establish exhaustive acceptance or close unrelated findings.
+- **Cleanup and continuation:** Fetch and verify the merged result, preserve unique local work and useful private artifacts, then remove the obsolete local/remote branch and redundant idle worktrees. Create the next round's fresh `codex/round-<next>-implementation` branch from updated `develop`, preserving the previous candidate's provenance. New implementation still requires explicit authorization for the clarified next scope.
+- **Authority and boundary:** The standing procedure is [AGENTS.md](../AGENTS.md#implementation-round-handoff), which the Piko implementation skill already reads; CONTRIBUTING.md follows it. This establishes future development handoffs. It does not approve the current unfinished round, trigger a PR/merge now, or authorize a release, tag, promotion to `main` or store publication.
+
 ## Round-4 grouping and Collection view package — accepted, 2026-10-16
 
 - **Decision:** The owner confirmed grouping by existing category groups such as Topic or Unit and added GROUP-001–003, COLL-004–006 and COLL-009–011 to round-4 planning. The package covers expandable grouping, repeated appearances for multiple assignments, redundant-tag omission, Compact/Detailed modes, language display order and per-Collection persistence. Existing requirement IDs and revision-1 meanings are retained; previously Undecided round assignments become Round 4.

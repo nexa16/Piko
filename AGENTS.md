@@ -48,6 +48,17 @@
 - Only when the owner requests release preparation, create a `release/<version>` branch from accepted `develop`, verify it and promote it to `main` through a Pull Request. Do not create a release branch, tag or publication now. No version or schedule is implied.
 - Reserve owner emergency bypass for emergencies.
 
+## Implementation round handoff
+
+1. Finish the authorized scope, commit it in focused commits, and complete the applicable automated and Android verification. Prepare the owner's manual review with the final diff, covered spec IDs/revisions, test evidence, known limitations and the candidate APK's source commit and checksum. Keep the implementation ledger current; unfinished or deferred work stays explicit.
+2. Wait for the owner's manual review approval before pushing the completed round and creating its focused PR into `develop`. Include the public-data review above in the proposed publication review and satisfy its approval requirements. Once approved, proceed without asking for the same approval again. Reuse an existing PR for that branch; use an outcome-based title and retain spec/verification evidence in the description.
+3. Keep the PR unmerged until the owner confirms that the candidate APK installs or updates on their phone and the agreed happy path passes, including vocabulary learning and the relevant changed flow. Record which candidate and scenarios were checked and distinguish owner-reported evidence from agent verification. Do not infer broader acceptance from a happy-path check. Resolve any uncertainty about which candidate was tested before merging.
+4. After the manual review approval, owner-confirmed phone check, passing required checks and resolved review discussions, squash-merge the approved PR into `develop`. These gates are the standing authorization to complete the merge; do not ask for redundant permission. If the owner already merged it, verify the actual GitHub merge instead. Changes after approval require review and verification of the affected scope; an app change requires an updated candidate and phone check. Never bypass branch protection.
+5. Fetch and verify the merged result before deleting the completed branch locally and remotely. Squash merges require PR/head and content verification, not only an ancestry check. Preserve any uncommitted files, unique commits, APKs and useful evidence before cleanup; keep private material outside tracked history. Wait for chats using an affected checkout to be idle, then remove redundant worktrees and only the verified obsolete refs. Do not delete unrelated or active work.
+6. Update local `develop` from the fetched integration branch without discarding local work, then create the next round's fresh `codex/round-<next>-implementation` branch from the latest `develop`. Do not continue from the old pre-squash branch. Record the new branch/base and pending scope in the next ledger. Creating the branch permits preparation; new app/mockup implementation still requires the owner's explicit request for the clarified scope.
+
+This handoff is development integration. Release branches, promotion to `main`, tags and store publication retain their separate owner-requested process.
+
 ## Existing product planning
 
 - Read `docs/PRODUCT.md`, `docs/ROADMAP.md`, `docs/piko-functional.md`, and `docs/piko-ux.md` before product or mockup changes.
