@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/collection_query.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_item.dart';
+import '../../data/preferred_direction.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -28,6 +31,7 @@ import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
 import '../categories/category_management.dart';
+import '../settings/preferred_direction_controller.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
   const CollectionLoadFailure({required this.onRetry, super.key});
@@ -60,6 +64,7 @@ class CollectionDetail extends StatefulWidget {
     this.queryBinding,
     this.speedSessionFactory,
     this.categoriesRepository,
+    this.directionBinding,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -80,11 +85,20 @@ class CollectionDetail extends StatefulWidget {
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
   final CategoriesRepository? categoriesRepository;
+  final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
 
 class _CollectionDetailState extends State<CollectionDetail> {
+  bool get _directionReady =>
+      widget.directionBinding == null ||
+      widget.directionBinding!.value?.ready == true &&
+          widget.directionBinding!.value?.pending == false;
+  Set<LearningDirection> get _directions => !_directionReady
+      ? const {}
+      : (widget.directionBinding?.value?.value ?? PreferredDirection.both)
+            .directions;
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
   bool _openingReview = false;
@@ -833,6 +847,22 @@ class _CollectionDetailState extends State<CollectionDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final directionBinding = widget.directionBinding;
+    if (directionBinding != null) {
+      return ValueListenableBuilder(
+        valueListenable: directionBinding,
+        builder: (context, controller, _) => controller == null
+            ? _withProjection(context)
+            : ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) => _withProjection(context),
+              ),
+      );
+    }
+    return _withProjection(context);
+  }
+
+  Widget _withProjection(BuildContext context) {
     final binding = widget.queryBinding;
     if (binding == null) return _build(context);
     return ListenableBuilder(
@@ -1149,18 +1179,13 @@ class _CollectionDetailState extends State<CollectionDetail> {
                         final measure = TextPainter(
                           text: TextSpan(
                             text: filterLabel,
-                            style: TextStyle(
-                              fontSize: labelSize,
-                              fontWeight: pikoDesign.weight(
-                                'components.buttons.weight',
-                              ),
-                            ),
+                            style: Theme.of(context).textTheme.labelLarge,
                           ),
                           textDirection: Directionality.of(context),
                           textScaler: scaler,
                         )..layout();
                         final buttonWidth =
-                            measure.width +
+                            measure.width.ceilToDouble() +
                             pikoDesign.dimension('components.icons.size') +
                             gap +
                             2 *
@@ -1181,9 +1206,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 enabled: _queryControlsAvailable,
                               ),
                             ),
-                            SizedBox(
-                              width: buttonWidth,
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: constraints.maxWidth,
+                              ),
                               child: Align(
+                                widthFactor: 1,
                                 alignment: Alignment.centerLeft,
                                 child: PikoButton(
                                   key: const ValueKey('collection-filters'),
@@ -1236,6 +1264,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     collection: _lastReadyCollection!,
                     repository: widget.vocabularyRepository!,
                     queryBinding: widget.queryBinding,
+                    preferredDirections: _directions,
                     categoriesRepository: widget.categoriesRepository,
                     onPendingWrites: (work) {
                       // Capture this build's barrier/dependency callback so old
@@ -1287,23 +1316,27 @@ class _CollectionDetailState extends State<CollectionDetail> {
     }
     final counts = {
       for (final entry in snapshot.directions.entries)
-        entry.key: entry.value.dueCount,
+        if (_directions.contains(entry.key)) entry.key: entry.value.dueCount,
     };
     final total = counts.values.fold<int>(0, (a, b) => a + b);
     final Widget normal;
-    if (total == 0) {
-      final pending = snapshot.directions.values.any(
-        (direction) => direction.pendingRetryCount > 0,
+    if (total == 0 && !_openingReview) {
+      final pending = snapshot.directions.entries.any(
+        (direction) =>
+            _directions.contains(direction.key) &&
+            direction.value.pendingRetryCount > 0,
       );
-      normal = Text(
-        copy.text(
-          pending
-              ? 'r2.pending'
-              : binding.scope.restricted
-              ? 'collection.filteredNoReview'
-              : 'r2.caughtUp',
-        ),
-      );
+      normal = !_directionReady
+          ? const SizedBox.shrink()
+          : Text(
+              copy.text(
+                pending
+                    ? 'r2.pending'
+                    : binding.scope.restricted
+                    ? 'collection.filteredNoReview'
+                    : 'r2.caughtUp',
+              ),
+            );
     } else if (widget.reviewSessionFactory != null) {
       normal = ReviewLaunch(
         key: ValueKey(
@@ -1315,10 +1348,15 @@ class _CollectionDetailState extends State<CollectionDetail> {
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
-        enabled: enabled && !_openingSpeed && (binding.ready || _openingReview),
+        enabled:
+            enabled &&
+            _directionReady &&
+            !_openingSpeed &&
+            (binding.ready || _openingReview),
         presentation: ReviewLaunchPresentation.collectionCard,
         dueCount: total,
         directionCounts: counts,
+        allowedDirections: _directions,
         directionCountsLoader: () async {
           final fresh = await binding.service.query(
             collectionId: binding.collectionId,
@@ -1328,7 +1366,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
           );
           return {
             for (final entry in fresh.directions.entries)
-              entry.key: entry.value.dueCount,
+              if (_directions.contains(entry.key))
+                entry.key: entry.value.dueCount,
           };
         },
         onSessionClosed: binding.refresh,
@@ -1348,6 +1387,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                 'projected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
               ),
               snapshot: snapshot,
+              allowedDirections: _directions,
               scopeIdentity: (
                 binding,
                 binding.scope.search,
@@ -1364,6 +1404,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
               },
               enabled:
                   enabled &&
+                  _directionReady &&
                   !_openingReview &&
                   (binding.ready || _openingSpeed),
               snapshotLoader: () => binding.service.query(

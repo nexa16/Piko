@@ -9,10 +9,17 @@ import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 import 'app_language_controller.dart';
+import 'preferred_direction_controller.dart';
+import 'preferred_direction_control.dart';
 
 class SettingsRoute extends StatelessWidget {
-  const SettingsRoute({required this.binding, super.key});
+  const SettingsRoute({
+    required this.binding,
+    this.directionBinding,
+    super.key,
+  });
   final ValueListenable<AppLanguageController?> binding;
+  final ValueListenable<PreferredDirectionController?>? directionBinding;
 
   @override
   Widget build(BuildContext context) =>
@@ -114,6 +121,8 @@ class SettingsRoute extends StatelessWidget {
                       },
                     ),
                   ],
+                  if (directionBinding case final binding?)
+                    PreferredDirectionControl(binding: binding),
                 ],
               ),
             ),

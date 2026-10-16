@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collection_query_binding.dart';
@@ -122,6 +123,18 @@ void main() {
       expect(tester.widget<TextField>(search).controller, same(controller));
       expect(controller.text, 'New query');
       expect(controller.selection, selection);
+      final paragraph = tester.renderObject<RenderParagraph>(label);
+      final lines = paragraph.getBoxesForSelection(
+        TextSelection(
+          baseOffset: 0,
+          extentOffset: PikoCopy(language).text('action.filters').length,
+        ),
+      );
+      expect(
+        lines.map((box) => box.top).toSet(),
+        hasLength(1),
+        reason: 'Normal-size Filters label must stay on one line',
+      );
       tester.view.physicalSize = const Size(320, 1000);
       scale.value = 2;
       await tester.pumpAndSettle();

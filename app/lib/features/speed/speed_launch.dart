@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../data/collection_query.dart';
 import '../../data/learning_item.dart';
@@ -28,6 +29,10 @@ class SpeedLaunch extends StatefulWidget {
     this.onCompleted,
     this.enabled = true,
     this.scopeIdentity,
+    this.allowedDirections = const {
+      LearningDirection.targetToNative,
+      LearningDirection.nativeToTarget,
+    },
     super.key,
   });
 
@@ -41,6 +46,7 @@ class SpeedLaunch extends StatefulWidget {
   final VoidCallback? onSessionClosed;
   final ValueChanged<int>? onCompleted;
   final bool enabled;
+  final Set<LearningDirection> allowedDirections;
 
   /// Stable query intent, independent of passive result refreshes. A Detail
   /// owner can pass (binding, search, immutableFilters) even while holding its
@@ -81,7 +87,10 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         ? oldWidget.scopeIdentity != widget.scopeIdentity
         : !identical(oldWidget.snapshot, widget.snapshot);
     final pendingScopeChanged =
-        !_launched && (scopeChanged || (oldWidget.enabled && !widget.enabled));
+        !_launched &&
+        (scopeChanged ||
+            !setEquals(oldWidget.allowedDirections, widget.allowedDirections) ||
+            (oldWidget.enabled && !widget.enabled));
     if (ownerChanged || pendingScopeChanged) {
       _identity++;
       _closeSetup();
@@ -115,6 +124,7 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
   Future<void> _open(LearningDirection direction, {int? retryPoolSize}) async {
     final ownerRoute = ModalRoute.of(context);
     if (_opening ||
+        !widget.allowedDirections.contains(direction) ||
         !widget.enabled ||
         ownerRoute?.isCurrent != true ||
         (widget.snapshot.directions[direction]?.newSpeedItems.length ?? 0) ==
@@ -136,7 +146,10 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         widget.factory == factory &&
         identical(widget.vocabularyRepository, repository);
     bool canLaunch() =>
-        current() && widget.enabled && ownerRoute?.isCurrent == true;
+        current() &&
+        widget.enabled &&
+        widget.allowedDirections.contains(direction) &&
+        ownerRoute?.isCurrent == true;
     setState(() {
       _opening = true;
       _error = null;
@@ -263,9 +276,10 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
     final available = LearningDirection.values
         .where(
           (direction) =>
+              widget.allowedDirections.contains(direction) &&
               (widget.snapshot.directions[direction]?.newSpeedItems.length ??
-                  0) >
-              0,
+                      0) >
+                  0,
         )
         .toList();
     if (available.isEmpty) return const SizedBox.shrink();
