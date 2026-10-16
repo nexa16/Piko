@@ -4,7 +4,7 @@
 
 The local-first Flutter app includes round-2 JSON interchange, Speed learning, categories, filtering/search and usability changes. The implementation ledger distinguishes verified behavior, pending Android acceptance and the reading mascot's outstanding visual handoff. The HTML/CSS mockup remains the design reference; neither the mockup nor written code alone establishes application acceptance.
 
-This repository contains Piko's product planning and future implementation.
+This repository contains Piko's product planning, interactive mockups and local-first Flutter implementation.
 
 ## Planning
 
@@ -22,7 +22,7 @@ This repository contains Piko's product planning and future implementation.
 
 ## Development
 
-The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The initial Android scaffold now supports local collection creation; each feature requires its own tests and verification.
+The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The round-2 ledger records each implemented feature's specification revision, commit and verification evidence, including outstanding gates.
 
 Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly and Flutter consumes a generated adapter; the same approach applies to `shared/design-config.js`. The studio supports immediate draft previews and export. See the design foundations document for persistence and synchronization limits.
 

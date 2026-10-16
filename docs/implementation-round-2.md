@@ -2,6 +2,8 @@
 
 Status: implementation authorized on 2026-10-15. Development scope, not a published release.
 
+Current integrated checkpoint: production candidate `5160fd6` passes all **1,009 host tests**, static analysis, generated-adapter freshness and **22 generator tests**. JSON, Speed, categories, search and the accepted usability changes are implemented. Reading-mascot placement remains awaiting the approved UX handoff. Android evidence below is scoped explicitly; normal-APK restoration, final enlarged-text captures and the final catalogue are still being completed. Older per-spec “pending” entries describe their owning-commit checkpoint, not a newer failure or an unimplemented feature.
+
 ## Working agreement
 
 - Branch `codex/round-2-implementation`, based on merged develop `d36a285`; all implementation workers share one isolated checkout.
@@ -103,7 +105,7 @@ Dependencies identify prerequisite behavior or shared integration contracts, not
 | UX-COLL-004 | 2 | Collection | REVIEW-001 | Runtime host-verified | `2de494e` / `11467fa`. `collection_review_runtime_test.dart` verifies one word due both ways counts as two repetitions and unfiltered Overview; `collection_review_entry_points_test.dart` covers per-Collection actions, large text and five-digit counts. Android pending. |
 | UX-COLL-003 | 2 | Collection | baseline Collection/Entry; UX-SYSTEM-001 | Host-verified | `4f170b9` / `a3fcd20`. Shared ghost plus/New action with localized Add Entry semantics and keyboard access; joined route/query/Speed batch 32/32. Android pending. |
 | UX-LAB-001 | 2 | Coordinator | baseline | Snapshot | `f847ff9`; accepted specification/prototype input snapshot, not Android implementation evidence. |
-| UX-HEADER-001 | 1 | Coordinator | baseline live Collection count | Singular-count recovery host-verified | Supplementary Android visual review identified plural wording for one entry. The shared metadata builder now selects canonical English/German singular copy only for exactly one persisted entry; zero, unresolved and plural behavior remain unchanged. Metadata/Home/Detail batch 4/4. Corrected affected captures pending. |
+| UX-HEADER-001 | 1 | Coordinator | baseline live Collection count | Singular-count recovery host-verified | `5160fd6`. Supplementary Android visual review identified plural wording for one entry. The shared metadata builder now selects canonical English/German singular copy only for exactly one persisted entry; zero, unresolved and plural behavior remain unchanged. Metadata/Home/Detail batch 4/4; integrated host regression 1,009/1,009. Corrected affected captures pending. |
 
 ## Batch evidence
 
@@ -145,4 +147,8 @@ If an Undo snapshot contains multiple assignments but its dimension has since be
 
 Android supplementary captures exposed a real navigation gap when the complete saved-card/new-draft stack fits without scroll extent. Keep the accepted scroll-driven interaction: a genuine vertical gesture moves one adjacent editor in its direction only in this zero-extent case. No tap activation or artificial leading space is added. Busy, nested-scroll, programmatic-reveal and retained-draft safeguards remain intact; an opposite gesture during expansion is consumed after the expansion settles.
 
-The new regression first reproduced failed editor activation on the original code at both Android-height and tall viewports. After the fix, three short-stack cases plus existing stack/keyboard/deletion/anchor tests passed **29/29**. This owning-spec recovery still requires the new Android supplementary run and the final broader regression gate.
+The new regression first reproduced failed editor activation on the original code at both Android-height and tall viewports. After the fix `58e5cab`, three short-stack cases plus existing stack/keyboard/deletion/anchor tests passed **29/29**. The subsequent Android English and German supplementary runs each passed all 30 capture states; all 60 images were visually inspected. Only singular-count wording was identified, subsequently fixed under UX-HEADER-001. Integrated host regression at `5160fd6` passed **1,009/1,009**.
+
+### Real second-entry keyboard checkpoint
+
+Entry-only Android run `entry-20261016-e`, candidate `5160fd6`, passed at German 200% text on the baseline 1080×2400, 420-dpi emulator. The test confirmed the first new pair through the real Entry UI, checked the empty second draft and partially entered second draft above the docked keyboard, exercised the actual Android Next and Done keys, retained the unconfirmed partial draft, and reopened the isolated database to verify the first saved pair and unchanged prior data. All five device screenshots were inspected. Synthetic Korean text was injected through the test input API: this is not verification of physical Korean IME composition. The run did not access the clipboard or file pickers. Protected installed files remained unchanged.
