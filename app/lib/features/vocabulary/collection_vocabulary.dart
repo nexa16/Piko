@@ -6,6 +6,7 @@ import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_item.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -18,6 +19,7 @@ import 'collection_vocabulary_mutations.dart';
 import '../collections/collection_write_barrier.dart';
 import '../collections/collection_query_binding.dart';
 import '../categories/vocabulary_categories.dart';
+import 'vocabulary_learning_status.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -30,6 +32,10 @@ class CollectionVocabulary extends StatefulWidget {
     this.writeBarrier,
     this.queryBinding,
     this.categoriesRepository,
+    this.preferredDirections = const {
+      LearningDirection.targetToNative,
+      LearningDirection.nativeToTarget,
+    },
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
@@ -38,6 +44,7 @@ class CollectionVocabulary extends StatefulWidget {
   final CollectionWriteBarrier? writeBarrier;
   final CollectionQueryBinding? queryBinding;
   final CategoriesRepository? categoriesRepository;
+  final Set<LearningDirection> preferredDirections;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
@@ -751,6 +758,20 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         ],
       );
     }
+    content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        content,
+        VocabularyLearningStatusView(
+          collection: widget.collection,
+          entryId: record.id,
+          snapshot: widget.queryBinding?.ready == true
+              ? widget.queryBinding?.snapshot
+              : null,
+          directions: widget.preferredDirections,
+        ),
+      ],
+    );
     final card = Semantics(
       label: expanded
           ? null
