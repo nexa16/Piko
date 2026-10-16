@@ -155,13 +155,39 @@ void main() {
     Future<void> enter(Finder finder, String text) async {
       await tester.ensureVisible(finder);
       await tester.pumpAndSettle();
-      expect(
-        finder.hitTestable(),
-        findsOneWidget,
-        reason: 'Supplement input must receive focus at its settled position',
-      );
-      await tester.tap(finder);
+      if (finder.hitTestable().evaluate().isNotEmpty) {
+        await tester.tap(finder);
+      } else {
+        // On the narrow, enlarged-text device the real keyboard can leave
+        // only part of an Entry input inside the stack. hitTestable checks the
+        // field's geometric center, which can be clipped even when the input
+        // itself is reachable. Tap the visible part through the real UI.
+        final viewport = _key('entry-stack');
+        expect(viewport, findsOneWidget);
+        final fieldRect = tester.getRect(finder);
+        final visible = fieldRect.intersect(tester.getRect(viewport));
+        expect(
+          visible.width,
+          greaterThanOrEqualTo(24),
+          reason:
+              'Entry input must remain horizontally reachable: '
+              'field=$fieldRect visible=$visible',
+        );
+        expect(
+          visible.height,
+          greaterThanOrEqualTo(24),
+          reason:
+              'Entry input must remain reachable above the keyboard: '
+              'field=$fieldRect visible=$visible',
+        );
+        await tester.tapAt(visible.center);
+      }
       await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(finder).focusNode?.hasFocus,
+        isTrue,
+        reason: 'Supplement input must gain focus from the real tap',
+      );
       await tester.enterText(finder, text);
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(finder).controller!.text, text);
