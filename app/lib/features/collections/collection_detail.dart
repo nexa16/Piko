@@ -90,6 +90,9 @@ class _CollectionDetailState extends State<CollectionDetail> {
   bool _openingReview = false;
   bool _openingSpeed = false;
   int? _speedCompletedCount;
+  bool get _genuinelyEmpty =>
+      widget.queryBinding?.ready == true &&
+      widget.queryBinding!.snapshot!.allEntries.isEmpty;
   CollectionQuerySnapshot? _heldLearningSnapshot;
   bool get _learningBusy => _openingReview || _openingSpeed;
   bool _mutationWasBusy = false;
@@ -1087,9 +1090,15 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                   : _openEntry,
                               child: ExcludeSemantics(
                                 child: PikoButton(
-                                  label: copy.text('action.new'),
+                                  label: copy.text(
+                                    _genuinelyEmpty
+                                        ? 'collection.addFirstWord'
+                                        : 'action.new',
+                                  ),
                                   icon: const PikoIcon(PikoIconName.plus),
-                                  variant: PikoButtonVariant.ghost,
+                                  variant: _genuinelyEmpty
+                                      ? PikoButtonVariant.primary
+                                      : PikoButtonVariant.ghost,
                                   onPressed:
                                       _deleteRequest != null ||
                                           _renameRequest != null ||
@@ -1106,13 +1115,26 @@ class _CollectionDetailState extends State<CollectionDetail> {
                       },
                     ),
                   ),
-                if (ready && widget.queryBinding != null)
+                if (ready && widget.queryBinding != null && !_genuinelyEmpty)
                   Padding(
                     padding: EdgeInsets.only(
                       bottom: pikoDesign.dimension('spacing.3'),
                     ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
+                        final selectedCount = widget
+                            .queryBinding!
+                            .scope
+                            .filters
+                            .values
+                            .expand((ids) => ids)
+                            .toSet()
+                            .length;
+                        final filterLabel = selectedCount == 0
+                            ? copy.text('action.filters')
+                            : copy.text('collection.activeFilters', {
+                                'count': selectedCount,
+                              });
                         final gap = pikoDesign.dimension('spacing.2');
                         final labelSize = pikoDesign.dimension(
                           'typography.label',
@@ -1126,7 +1148,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             scaler.scale(labelSize) > labelSize;
                         final measure = TextPainter(
                           text: TextSpan(
-                            text: copy.text('action.filters'),
+                            text: filterLabel,
                             style: TextStyle(
                               fontSize: labelSize,
                               fontWeight: pikoDesign.weight(
@@ -1160,12 +1182,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
                               ),
                             ),
                             SizedBox(
-                              width: stack ? constraints.maxWidth : buttonWidth,
+                              width: buttonWidth,
                               child: Align(
-                                alignment: Alignment.centerRight,
+                                alignment: Alignment.centerLeft,
                                 child: PikoButton(
                                   key: const ValueKey('collection-filters'),
-                                  label: copy.text('action.filters'),
+                                  label: filterLabel,
                                   icon: const PikoIcon(PikoIconName.listFilter),
                                   variant: PikoButtonVariant.ghost,
                                   onPressed:
@@ -1176,32 +1198,33 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 ),
                               ),
                             ),
+                            if (selectedCount > 0)
+                              Align(
+                                widthFactor: 1,
+                                alignment: Alignment.centerLeft,
+                                child: PikoButton(
+                                  key: const ValueKey(
+                                    'collection-no-matches-clear-filters',
+                                  ),
+                                  label: copy.text('r2.clearFilters'),
+                                  variant: PikoButtonVariant.ghost,
+                                  onPressed: !_queryControlsAvailable
+                                      ? null
+                                      : () {
+                                          if (_queryControlsAvailable &&
+                                              ModalRoute.of(
+                                                    context,
+                                                  )?.isCurrent ==
+                                                  true) {
+                                            widget.queryBinding!.scope
+                                                .setFilters(const {});
+                                          }
+                                        },
+                                ),
+                              ),
                           ],
                         );
                       },
-                    ),
-                  ),
-                if (ready &&
-                    widget.queryBinding?.ready == true &&
-                    widget.queryBinding!.snapshot!.allEntries.isNotEmpty &&
-                    widget.queryBinding!.snapshot!.entries.isEmpty &&
-                    widget.queryBinding!.scope.filters.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: PikoButton(
-                      key: const ValueKey(
-                        'collection-no-matches-clear-filters',
-                      ),
-                      label: copy.text('r2.clearFilters'),
-                      variant: PikoButtonVariant.ghost,
-                      onPressed: !_queryControlsAvailable
-                          ? null
-                          : () {
-                              if (_queryControlsAvailable &&
-                                  ModalRoute.of(context)?.isCurrent == true) {
-                                widget.queryBinding!.scope.setFilters(const {});
-                              }
-                            },
                     ),
                   ),
                 if (_lastReadyCollection != null &&
@@ -1359,11 +1382,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final copy = PikoCopyScope.of(context);
     Widget heading(int? entryCount) => PikoHeading(
       title: record?.name ?? copy.text('collection.title'),
+      subtitleInset: 0,
       subtitle: record == null
           ? null
           : collectionEntryMetadata(context, record, entryCount),
-      leading: PikoButton(
-        label: copy.text('common.back'),
+      leading: PikoIconButton(
+        semanticLabel: copy.text('common.back'),
         icon: const PikoIcon(PikoIconName.arrowLeft),
         variant: PikoButtonVariant.ghost,
         onPressed: () => Navigator.of(context).maybePop(),

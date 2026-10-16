@@ -250,10 +250,8 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                   ),
                   'count': counts[direction]!,
                 }),
-                expandLabel: direction == available.first,
-                labelAlignment: direction == available.first
-                    ? TextAlign.start
-                    : TextAlign.center,
+                expandLabel: true,
+                labelAlignment: TextAlign.start,
                 trailingSpacing: pikoDesign.dimension(
                   'components.collectionReview.mascotGap',
                 ),
