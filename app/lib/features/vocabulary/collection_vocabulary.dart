@@ -539,10 +539,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             !switching &&
             !edits.isDiscarding &&
             widget.mutations?.deletingId != record.id,
-        style: TextStyle(
-          fontSize: pikoDesign.dimension('typography.body'),
-          fontWeight: pikoDesign.weight('components.fields.labelWeight'),
-        ),
+        style: Theme.of(context).textTheme.bodyMedium,
         error:
             error ==
                 (target
@@ -588,36 +585,63 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: pikoDesign.dimension('spacing.3'),
+            runSpacing: pikoDesign.dimension('spacing.2'),
             children: [
-              Expanded(
-                child: Text(
-                  copy.text('vocab.inlineEdit'),
-                  style: TextStyle(
-                    fontSize: pikoDesign.dimension('typography.body'),
-                    fontWeight: pikoDesign.weight('typography.titleWeight'),
-                  ),
+              Text(
+                copy.text('vocab.inlineEdit'),
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension('typography.body'),
+                  fontWeight: pikoDesign.weight('typography.titleWeight'),
                 ),
               ),
-              SizedBox(width: pikoDesign.dimension('spacing.3')),
-              PikoIconButton(
-                key: ValueKey('inline-complete-${record.id}'),
-                icon: PikoIcon(
-                  current.changed ? PikoIconName.check : PikoIconName.x,
+              Text(
+                copy.text(
+                  edits.isDiscarding
+                      ? 'vocab.inlineDiscarding'
+                      : edits.isSaving
+                      ? 'entry.saving'
+                      : error != null
+                      ? 'entry.unsaved'
+                      : 'vocab.inlineAutoSave',
                 ),
-                semanticLabel: copy.text(
-                  current.changed
-                      ? 'vocab.inlineFinish'
-                      : 'vocab.inlineCollapse',
-                ),
-                onPressed: actionBusy ? null : () => activateRow(null),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              if (current.changed) ...[
-                SizedBox(width: pikoDesign.dimension('spacing.3')),
+              if (!current.changed)
                 PikoIconButton(
+                  key: ValueKey('inline-complete-${record.id}'),
+                  icon: PikoIcon(
+                    current.changed ? PikoIconName.check : PikoIconName.x,
+                  ),
+                  semanticLabel: copy.text(
+                    current.changed
+                        ? 'vocab.inlineFinish'
+                        : 'vocab.inlineCollapse',
+                  ),
+                  onPressed: actionBusy ? null : () => activateRow(null),
+                ),
+              if (current.changed) ...[
+                PikoButton(
+                  key: ValueKey('inline-complete-${record.id}'),
+                  label: copy.text('vocab.inlineFinish'),
+                  icon: Tooltip(
+                    message: copy.text('vocab.inlineFinish'),
+                    excludeFromSemantics: true,
+                    child: const PikoIcon(PikoIconName.check),
+                  ),
+                  onPressed: actionBusy ? null : () => activateRow(null),
+                ),
+                PikoButton(
                   key: ValueKey('inline-discard-${record.id}'),
-                  icon: const PikoIcon(PikoIconName.x),
-                  semanticLabel: copy.text('vocab.inlineDiscard'),
+                  label: copy.text('vocab.inlineDiscard'),
+                  variant: PikoButtonVariant.neutral,
+                  icon: Tooltip(
+                    message: copy.text('vocab.inlineDiscard'),
+                    excludeFromSemantics: true,
+                    child: const PikoIcon(PikoIconName.x),
+                  ),
                   onPressed: actionBusy ? null : () => discardEditor(current),
                 ),
               ],
@@ -724,24 +748,6 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 style: TextStyle(color: pikoDesign.color('danger')),
               ),
             ),
-          SizedBox(height: pikoDesign.dimension('spacing.2')),
-          Text(
-            copy.text(
-              edits.isDiscarding
-                  ? 'vocab.inlineDiscarding'
-                  : edits.isSaving
-                  ? 'entry.saving'
-                  : error != null
-                  ? 'entry.unsaved'
-                  : 'vocab.inlineAutoSave',
-            ),
-            style: TextStyle(
-              fontSize: pikoDesign.dimension(
-                'components.inlineVocabulary.captionSize',
-              ),
-              color: pikoDesign.color('muted'),
-            ),
-          ),
         ],
       );
     }

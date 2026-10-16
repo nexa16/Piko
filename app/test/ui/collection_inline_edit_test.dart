@@ -15,7 +15,6 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_card.dart';
-import 'package:piko/ui/piko_theme.dart';
 import '../support/vocabulary_opening_snapshot.dart';
 
 const owner = CollectionRecord(
@@ -185,6 +184,7 @@ Finder field(String id, [bool target = true]) => find.descendant(
 );
 Finder collapse() => find.byWidgetPredicate(
   (w) =>
+      (w is PikoButton && (w.label == 'Finish editing' || w.label == 'Bearbeiten abschließen')) ||
       w is PikoIconButton &&
       (w.semanticLabel == 'Collapse vocabulary editor' ||
           w.semanticLabel == 'Vokabeleditor einklappen' ||
@@ -601,7 +601,7 @@ void main() {
       );
       expect(
         tester.widget<TextField>(field(one.id)).style!.fontWeight,
-        pikoDesign.weight('components.fields.labelWeight'),
+        FontWeight.w400,
       );
       tester.view.physicalSize = const Size(420, 1000);
       await tester.pumpAndSettle();
