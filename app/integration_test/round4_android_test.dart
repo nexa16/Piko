@@ -184,6 +184,22 @@ void main() {
         await tap(key('collection-${collection.id}'));
         await present(key('collection-view'));
         await capture('01-compact', at: key('collection-view'));
+        await tap(key('collection-filters'));
+        final apply = button(copy.text('r2.apply'));
+        final clear = key('filters-clear-pending');
+        final geometry = [tester.getRect(apply), tester.getRect(clear)];
+        await capture('01a-filters-unchanged');
+        await tap(key('filter-value-${food.id}'));
+        expect([tester.getRect(apply), tester.getRect(clear)], geometry);
+        await capture('01b-filters-changed');
+        await tap(clear);
+        expect([tester.getRect(apply), tester.getRect(clear)], geometry);
+        await capture('01c-filters-cleared');
+        await tap(key('filter-value-${food.id}'));
+        await tap(key('filter-value-${food.id}'));
+        expect([tester.getRect(apply), tester.getRect(clear)], geometry);
+        await capture('01d-filters-reverted');
+        await tap(find.byTooltip(copy.text('common.close')));
         await tap(key('collection-view'));
         await capture('02-view-dialog');
         await tap(key('view.mode'));
@@ -228,6 +244,21 @@ void main() {
                   .nativeText ==
               'Zweites Beispiel.',
         );
+        await tester.showKeyboard(key('content-example-native-1'));
+        await review.waitUntil(
+          tester,
+          () =>
+              MediaQuery.viewInsetsOf(
+                tester.element(find.byType(Scaffold).last),
+              ).bottom >
+              0,
+        );
+        final keyboardBytes = await binding.takeScreenshot(
+          '04a-editor-keyboard',
+        );
+        await File(
+          '${directory.path}/04a-editor-keyboard.png',
+        ).writeAsBytes(keyboardBytes, flush: true);
         await capture(
           '04-multiple-example-editor',
           at: key('content-example-target-1'),
@@ -258,6 +289,10 @@ void main() {
         await tap(button(copy.text('json.example')));
         final template = jsonDecode(platform.exported!) as Map;
         expect(template['schemaVersion'], 3);
+        await tester.enterText(key('json-input'), jsonEncode(template));
+        await tap(button(copy.text('json.analyze')));
+        await present(button(copy.text('json.apply')));
+        await capture('05a-json-preview', at: button(copy.text('json.apply')));
         await tap(key('json-export-tab'));
         await tap(button(copy.text('json.copy')));
         final document = jsonDecode(platform.exported!) as Map;
@@ -308,6 +343,7 @@ void main() {
         await present(find.byType(CollectionDetail));
         await tap(key('collection-speed-targetToNative'));
         await present(find.byType(SpeedSetupDialog));
+        await capture('07a-speed-setup');
         await tap(button(copy.text('learn.startSpeed')));
         await present(find.byType(SpeedSessionRoute));
         await present(key('review-prompt-text'));
