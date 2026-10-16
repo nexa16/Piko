@@ -4,6 +4,7 @@ import '../collection_query.dart';
 import '../collections_repository.dart';
 import '../learning_item.dart';
 import '../vocabulary_repository.dart';
+import '../vocabulary_learning_status.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
@@ -108,17 +109,50 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
       }
       final visible = entries
           .where(
-            (entry) => (searchKey.isEmpty ||
-                vocabularyComparisonKey(entry.targetText).contains(searchKey) ||
-                vocabularyComparisonKey(entry.nativeText).contains(searchKey)) && selected.entries.every(
-              (group) =>
-                  grouped[entry.id]?[group.key]?.any(group.value.contains) ??
-                  false,
-            ),
+            (entry) =>
+                (searchKey.isEmpty ||
+                    vocabularyComparisonKey(
+                      entry.targetText,
+                    ).contains(searchKey) ||
+                    vocabularyComparisonKey(
+                      entry.nativeText,
+                    ).contains(searchKey)) &&
+                selected.entries.every(
+                  (group) =>
+                      grouped[entry.id]?[group.key]?.any(
+                        group.value.contains,
+                      ) ??
+                      false,
+                ),
           )
           .toList(growable: false);
       final visibleIds = visible.map((entry) => entry.id).toSet();
       final learning = SqliteLearningRepository(database);
+      final reviewedItemIds =
+          (await database
+                  .customSelect(
+                    'SELECT DISTINCT r.item_id FROM regular_reviews r '
+                    'JOIN learning_items l ON l.id = r.item_id AND l.generation = r.generation '
+                    'JOIN vocabulary_entries v ON v.id = l.entry_id '
+                    'WHERE v.collection_id = ?',
+                    variables: [Variable(collectionId)],
+                  )
+                  .get())
+              .map((row) => row.read<int>('item_id'))
+              .toSet();
+      final retryExpiries = {
+        for (final row
+            in await database
+                .customSelect(
+                  'SELECT r.item_id, r.expires_at FROM retry_obligations r '
+                  'JOIN learning_items l ON l.id = r.item_id AND l.generation = r.generation '
+                  'JOIN vocabulary_entries v ON v.id = l.entry_id '
+                  'WHERE v.collection_id = ?',
+                  variables: [Variable(collectionId)],
+                )
+                .get())
+          row.read<int>('item_id'): row.read<String>('expires_at'),
+      };
       final directions = <LearningDirection, CollectionDirectionSnapshot>{};
       for (final direction in LearningDirection.values) {
         // Missing/corrupt learning never becomes a successful zero-work state,
@@ -140,9 +174,29 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
           direction: direction,
           entryIds: visibleIds,
         );
+        // This authoritative passive read validates scoped retry origins and
+        // timestamps, ignores expired rounds without deleting them, and owns
+        // the next invalidation boundary for retries and future regular due.
+        final membership = await scoped.dueMemberships(at: at);
+        final dueByItem = {for (final item in membership) item.itemId: item};
         directions[direction] = CollectionDirectionSnapshot(
-          review: await scoped.dueMemberships(at: at),
+          review: membership,
           newSpeedItems: await scoped.newSpeedItems(),
+          statuses: {
+            for (final item in allItems.where(
+              (item) => visibleIds.contains(item.entryId),
+            ))
+              item.entryId: VocabularyLearningStatus.project(
+                item: item,
+                hasCurrentNormalReview: reviewedItemIds.contains(item.id),
+                // Read actual retry presence rather than infer it from a
+                // regular-due flag: a retry takes priority even if both apply.
+                hasPendingRetry:
+                    retryExpiries.containsKey(item.id) &&
+                    at.isBefore(DateTime.parse(retryExpiries[item.id]!)),
+                isRegularDue: dueByItem[item.id]?.regularDue ?? false,
+              ),
+          },
         );
       }
       return CollectionQuerySnapshot(

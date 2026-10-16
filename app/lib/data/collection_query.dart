@@ -3,6 +3,7 @@ import 'collections_repository.dart';
 import 'learning_item.dart';
 import 'review_due_membership.dart';
 import 'vocabulary_repository.dart';
+import 'vocabulary_learning_status.dart';
 
 enum CollectionQueryFailure {
   collectionNotFound,
@@ -14,13 +15,20 @@ final class CollectionDirectionSnapshot {
   CollectionDirectionSnapshot({
     required this.review,
     required Iterable<LearningItemRecord> newSpeedItems,
-  }) : newSpeedItems = List.unmodifiable(newSpeedItems);
+    Map<String, VocabularyLearningStatus> statuses = const {},
+  }) : newSpeedItems = List.unmodifiable(newSpeedItems),
+       statuses = Map.unmodifiable(statuses);
   final ReviewDueMembershipSnapshot review;
   final List<LearningItemRecord> newSpeedItems;
+
+  /// One status per visible vocabulary entry; empty only for legacy fixtures.
+  final Map<String, VocabularyLearningStatus> statuses;
   int get dueCount =>
       review.where((item) => item.regularDue || item.eligibleRetry).length;
+
   /// Retry items waiting for their gap/deadline; eligible retries count as due.
-  int get pendingRetryCount => review.where((item) => !item.regularDue && !item.eligibleRetry).length;
+  int get pendingRetryCount =>
+      review.where((item) => !item.regularDue && !item.eligibleRetry).length;
 }
 
 final class CollectionQuerySnapshot {
