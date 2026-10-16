@@ -1,8 +1,8 @@
 # Piko
 
-**Status: Implementation round 2 is ready for owner testing, with bounded Android evidence and documented verification limitations. Not a published product release.**
+**Status: Round 4 retains the completed round-3 checkpoints and Collection Detail scrolling correction, with scoped verification and documented limitations. Owner phone testing is deferred. Not a published product release.**
 
-The local-first Flutter app includes round-2 JSON interchange, Speed learning, categories, filtering/search, usability changes and the approved reading mascot. The final candidate passed 1,022 host tests and static analysis; the implementation ledger records scoped Android results, preservation checks and remaining limitations. A local test APK and one English normal-size screenshot gallery are available privately. The HTML/CSS mockup remains the design reference; neither the mockup nor written code alone establishes application acceptance.
+The local-first Flutter app includes the accepted round-2 baseline and round-3 UI refinements, preferred-direction/status display, one optional Example Pair and Hint, and JSON schema version 2. The [round-3 ledger](docs/implementation-round-3.md) records checkpoint source revisions and verification limits; the [round-4 ledger](docs/implementation-round-4.md) records the retained scrolling correction, its APK and pending owner acceptance. Additional feature implementation requires explicit authorization. Accepted design criteria and the UX findings register are preserved separately; implementation evidence does not automatically close each finding.
 
 This repository contains Piko's product planning, interactive mockups and local-first Flutter implementation.
 
@@ -12,7 +12,10 @@ This repository contains Piko's product planning, interactive mockups and local-
 - [Roadmap](docs/ROADMAP.md)
 - [Implementation-round-1 implementation order and evidence](docs/implementation-round-1.md)
 - [Implementation-round-2 execution and evidence](docs/implementation-round-2.md)
+- [Implementation-round-3 checkpoints and evidence](docs/implementation-round-3.md)
 - [Implementation-round-4 retained work and pending owner acceptance](docs/implementation-round-4.md)
+- [UX quality workflow](docs/ux-quality.md), [accepted criteria](docs/ux-consolidation-proposals.md) and [findings](docs/ux-findings.json)
+- [Historical round-3 mockup evidence](docs/implementation-round-3-mockup.md)
 - [Decision log](docs/DECISIONS.md)
 - [Research plan](docs/RESEARCH.md)
 - [Functional requirements](docs/piko-functional.md) and [UX requirements](docs/piko-ux.md)
@@ -23,7 +26,7 @@ This repository contains Piko's product planning, interactive mockups and local-
 
 ## Development
 
-The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The round-2 ledger records each implemented feature's specification revision, commit and verification evidence, including outstanding gates.
+The Flutter application lives in [app/](app/README.md). See [foundation requirements](docs/implementation-foundation.md), [contribution guidelines](CONTRIBUTING.md) and [agent instructions](AGENTS.md). The implementation ledgers record specification revisions, source commits and verification evidence, including outstanding gates.
 
 Interface wording is maintained once in `shared/copy.js`. The mockup consumes it directly and Flutter consumes a generated adapter; the same approach applies to `shared/design-config.js`. The studio supports immediate draft previews and export. See the design foundations document for persistence and synchronization limits.
 
