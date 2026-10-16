@@ -685,6 +685,8 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
                         VocabularyJsonGroup.nativeText => 'r2.nativeText',
                         VocabularyJsonGroup.categoryAssignments =>
                           'r2.categoryAssignments',
+                        VocabularyJsonGroup.example => 'vocab.examplePair',
+                        VocabularyJsonGroup.hint => 'vocab.hint',
                       }),
                     ),
                     value: groups.contains(group),

@@ -73,7 +73,7 @@ void main() {
         'collections',
       });
       expect(result['format'], 'piko-vocabulary');
-      expect(result['schemaVersion'], 1);
+      expect(result['schemaVersion'], VocabularyJsonFormat.schemaVersion);
       expect(
         result['exportedAt'],
         instant.add(const Duration(days: 3)).toIso8601String(),
@@ -113,6 +113,8 @@ void main() {
         'id',
         'targetText',
         'nativeText',
+        'example',
+        'hint',
         'categoryAssignments',
         'learning',
       });
@@ -120,6 +122,8 @@ void main() {
       expect(entry['targetText'], f.entry.targetText);
       expect(entry['nativeText'], f.entry.nativeText);
       expect(entry['categoryAssignments'], isEmpty);
+      expect(entry['example'], isNull);
+      expect(entry['hint'], {'text': null, 'visibility': 'always'});
       final learning = entry['learning'] as Map<String, dynamic>;
       expect(learning.keys.toSet(), {'targetToNative', 'nativeToTarget'});
       final items = await (f.db.select(
@@ -339,7 +343,7 @@ void main() {
       final before = await completeSnapshot(f.db);
       final sample = document(service.sampleJson());
       expect(sample['format'], VocabularyJsonFormat.format);
-      expect(sample['schemaVersion'], VocabularyJsonFormat.schemaVersion);
+      expect(sample['schemaVersion'], 1);
       expect(sample['scheduler'], {
         'library': 'fsrs',
         'version': '2.0.1',

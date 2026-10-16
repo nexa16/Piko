@@ -19,9 +19,17 @@ abstract interface class VocabularyJsonService {
 enum VocabularyJsonGroup {
   targetText,
   nativeText,
-  categoryAssignments;
+  categoryAssignments,
+  example,
+  hint;
 
-  static const all = {targetText, nativeText, categoryAssignments};
+  static const all = {
+    targetText,
+    nativeText,
+    categoryAssignments,
+    example,
+    hint,
+  };
 }
 
 enum VocabularyJsonIssueCode {
@@ -96,7 +104,7 @@ enum VocabularyJsonExportFailure { collectionNotFound, incompleteLearning }
 
 abstract final class VocabularyJsonFormat {
   static const format = 'piko-vocabulary';
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
   static const schedulerLibrary = 'fsrs';
   static const schedulerVersion = '2.0.1';
   static const maxImportBytes = 1000000;

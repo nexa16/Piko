@@ -6,8 +6,10 @@ import '../learning_item.dart';
 import '../categories_repository.dart';
 import '../vocabulary_normalization.dart';
 import '../vocabulary_json.dart';
+import '../vocabulary_content.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
+import 'sqlite_settings_repository.dart';
 
 part 'sqlite_vocabulary_json_import.dart';
 
@@ -194,10 +196,26 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
           )) {
         throw VocabularyJsonExportFailure.incompleteLearning;
       }
+      final content = VocabularyContent.fromStored(
+        exampleTargetText: entry.exampleTargetText,
+        exampleNativeText: entry.exampleNativeText,
+        hintText: entry.hintText,
+        hintVisibility: entry.hintVisibility,
+      );
       exportedEntries.add({
         'id': entry.id,
         'targetText': entry.targetText,
         'nativeText': entry.nativeText,
+        'example': content.exampleTargetText == null
+            ? null
+            : {
+                'targetText': content.exampleTargetText,
+                'nativeText': content.exampleNativeText,
+              },
+        'hint': {
+          'text': content.hintText,
+          'visibility': content.hintVisibility.name,
+        },
         'categoryAssignments': [
           for (final group
               in (assignmentsByEntry[entry.id] ?? <String, List<String>>{})
