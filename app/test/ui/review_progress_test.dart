@@ -34,7 +34,7 @@ void main() {
         final counter = find.byKey(const ValueKey('review-counters')),
             progress = find.byKey(const ValueKey('review-progress'));
         expect(
-          tester.widget<Text>(counter).data,
+          tester.widget<Semantics>(counter).properties.label,
           copy.text('learn.progress', {
             'completed': 0,
             'total': 2,
@@ -46,7 +46,7 @@ void main() {
           final node = tester.getSemantics(progress);
           expect(node.getSemanticsData().role, SemanticsRole.progressBar);
           expect(node.label, contains(copy.text('learn.progressLabel')));
-          expect(node.label, contains(tester.widget<Text>(counter).data));
+          expect(node.label, contains(tester.widget<Semantics>(counter).properties.label));
           expect(node.value, '0');
           final bar = tester.getRect(progress),
               counters = tester.getRect(counter),
@@ -85,7 +85,7 @@ void main() {
           await h.finish(tester);
           await h.flush(tester);
           expect(
-            tester.widget<Text>(counter).data,
+            tester.widget<Semantics>(counter).properties.label,
             copy.text('learn.progress', {
               'completed': 1,
               'total': 2,
