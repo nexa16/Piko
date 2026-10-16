@@ -714,7 +714,9 @@ void main() {
       expect(session.current!.item.id, accepted.prior.id);
       expect(find.byKey(const ValueKey('review-answer-text')), findsOneWidget);
       expect(
-        find.textContaining(PikoCopy('en').text('learn.correcting')),
+        find.text(PikoCopy('en').text('learn.previousGrade', {
+          'grade': PikoCopy('en').text('action.correct'),
+        })),
         findsOneWidget,
       );
       expect(
@@ -780,7 +782,7 @@ void main() {
   );
 
   launch.testWidgets(
-    'previous-review control matches the binding arrow and danger-outline trial',
+    'previous-review control uses primary outline and undo icon',
     (tester) async {
       final h = await open(tester);
       await reveal(tester);
@@ -788,19 +790,19 @@ void main() {
       await h.finish(tester);
       final finder = find.byKey(const ValueKey('review-correct-previous'));
       final button = tester.widget<PikoButton>(finder);
-      expect(button.variant, PikoButtonVariant.dangerOutline);
+      expect(button.variant, PikoButtonVariant.primaryOutline);
       expect(button.icon, isA<PikoIcon>());
-      expect((button.icon! as PikoIcon).name, PikoIconName.arrowLeft);
+      expect((button.icon! as PikoIcon).name, PikoIconName.rotateCcw);
       final material = tester.widget<TextButton>(
         find.descendant(of: finder, matching: find.byType(TextButton)),
       );
       expect(
         material.style!.foregroundColor!.resolve(<WidgetState>{}),
-        pikoDesign.color('danger'),
+        pikoDesign.color('primary'),
       );
       expect(
         material.style!.side!.resolve(<WidgetState>{})!.color,
-        pikoDesign.color('danger'),
+        pikoDesign.color('primary'),
       );
       expect(tester.takeException(), isNull);
     },
