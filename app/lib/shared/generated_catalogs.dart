@@ -823,6 +823,10 @@ const copyCatalog = <String, Object?>{
 "de": "Bild oder PDF hochladen",
 "en": "Upload image or PDF",
 },
+"json.activityHelp": <String, Object?>{
+"de": "Der Aktivitätsstatus ersetzt die Einstellung Aktiv oder Inaktiv, wenn sie angegeben ist. Fehlt sie oder ist sie nicht ausgewählt, behalten vorhandene Vokabeln ihre Einstellung und neue sind aktiv. Für ältere Dateien gelten dieselben Standards.",
+"en": "Activity replaces a word’s Active or Inactive setting when supplied. If omitted or not selected, existing words keep their setting and new words are Active. Older files keep the same defaults.",
+},
 "json.analyze": <String, Object?>{
 "de": "JSON prüfen",
 "en": "Check JSON",

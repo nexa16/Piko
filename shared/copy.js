@@ -3,6 +3,7 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+    "json.activityHelp": {"en":"Activity replaces a word’s Active or Inactive setting when supplied. If omitted or not selected, existing words keep their setting and new words are Active. Older files keep the same defaults.","de":"Der Aktivitätsstatus ersetzt die Einstellung Aktiv oder Inaktiv, wenn sie angegeben ist. Fehlt sie oder ist sie nicht ausgewählt, behalten vorhandene Vokabeln ihre Einstellung und neue sind aktiv. Für ältere Dateien gelten dieselben Standards."},
     "vocab.hintDefaultOfferTitle": {"en":"Show hints for new words?","de":"Hinweise bei neuen Vokabeln anzeigen?"},
     "vocab.hintDefaultOfferBody": {"en":"Also show hints automatically for new vocabulary in this Collection? Existing words keep their own setting.","de":"Hinweise auch bei neuen Vokabeln in dieser Sammlung automatisch anzeigen? Vorhandene Vokabeln behalten ihre eigene Einstellung."},
     "vocab.hintDefaultKeep": {"en":"Keep current default","de":"Bisherigen Standard behalten"},

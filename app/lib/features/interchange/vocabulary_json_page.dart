@@ -712,6 +712,9 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
                 }),
               ),
               value: groups.contains(group),
+              subtitle: group == VocabularyJsonGroup.activity
+                  ? Text(copy.text('json.activityHelp'))
+                  : null,
               onChanged: transfer.busy || returning
                   ? null
                   : (selected) {

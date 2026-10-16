@@ -14,6 +14,7 @@ import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/data/vocabulary_content.dart';
+import 'package:piko/data/vocabulary_json.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
@@ -227,18 +228,18 @@ void main() {
         await tap(key('collection-${owner.id}'));
         await tap(key('vocabulary-${apple.id}'));
         await present(key('inline-${apple.id}-target'));
-        expect(key('content-example-target-0'), findsNothing);
+        expect(key('content-example-target'), findsNothing);
         expect(key('content-hint'), findsNothing);
         await capture(
           '01-compact-editor',
           at: key('inline-${apple.id}-target'),
         );
         await tap(key('content-examples-toggle'));
-        await tester.enterText(key('content-example-native-0'), '');
+        await tester.enterText(key('content-example-native'), '');
         await tester.pumpAndSettle();
         await tap(key('inline-complete-${apple.id}'));
         expect(key('inline-${apple.id}-target'), findsOneWidget);
-        await tester.enterText(key('content-example-native-0'), 'Ein Apfel.');
+        await tester.enterText(key('content-example-native'), 'Ein Apfel.');
         await tester.pumpAndSettle();
         await tap(key('content-hint-toggle'));
         await tap(key('content-hint-automatic'));
@@ -442,7 +443,7 @@ void main() {
         );
         expect(await db.select(db.scopeAnswerOrdinals).get(), ordinals);
         evidence['normalRetrySpeedActivity'] = true;
-        final exported = await SqliteVocabularyJsonService(
+        var exported = await SqliteVocabularyJsonService(
           db,
         ).exportCollection(owner.id);
         final document = jsonDecode(exported) as Map;
@@ -453,6 +454,32 @@ void main() {
           ),
           isTrue,
         );
+        final beforeImport = await completeSnapshot(db);
+        final importedEntries =
+            (document['collections'] as List).single['entries'] as List;
+        importedEntries.first['active'] = true;
+        final jsonService = SqliteVocabularyJsonService(db);
+        final preview = await jsonService.analyzeImport(
+          collectionId: owner.id,
+          json: jsonEncode(document),
+          groups: {VocabularyJsonGroup.activity},
+        );
+        expect(preview.canApply, isTrue);
+        expect(preview.updatedCount, 1);
+        expect(await completeSnapshot(db), beforeImport);
+        await jsonService.applyImport(preview);
+        final afterImport = await completeSnapshot(db);
+        for (final table in [
+          'learning_items',
+          'regular_reviews',
+          'retry_obligations',
+          'scope_answer_ordinals',
+          'collections',
+        ]) {
+          expect(afterImport[table], beforeImport[table]);
+        }
+        exported = await jsonService.exportCollection(owner.id);
+        evidence['activityOnlyJsonPreservesLearning'] = true;
         await tester.pumpWidget(const SizedBox());
         await tester.pump();
         await db.closed.future;
