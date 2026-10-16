@@ -24,6 +24,7 @@ import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_page.dart';
 import '../test/data/regular_reviews_test.dart' show Fixture, instant;
 import '../test/data/speed_eligibility_test.dart' show completeSnapshot;
+import '../test/ui/collection_view_dialog_test.dart' as accessible_view;
 import 'review_correction_android_test.dart' as review;
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 import 'support/round2_catalogue_fixture.dart';
@@ -272,6 +273,11 @@ void main() {
         );
         expect(keyboardInset, greaterThan(0), reason: 'Real docked IME inset');
         evidence['nativeKeyboardInset'] = keyboardInset;
+        debugPrint('PIKO_IME_READY:${config.runId}');
+        // Allow the external coordinator to capture the OS keyboard itself,
+        // which is deliberately absent from Flutter surface screenshots.
+        await Future<void>.delayed(const Duration(seconds: 2));
+        await tester.pump();
         await integrationChannel.invokeMethod<void>(
           'convertFlutterSurfaceToImage',
         );
@@ -312,6 +318,12 @@ void main() {
         await tap(button(copy.text('json.example')));
         final template = jsonDecode(platform.exported!) as Map;
         expect(template['schemaVersion'], 3);
+        // The template's pomme/Apfel pair already exists in this fixture.
+        // Use a new synthetic pair so this screenshot covers a valid preview.
+        final templateEntry =
+            (template['collections'] as List).single['entries'].single as Map;
+        templateEntry['targetText'] = 'poire';
+        templateEntry['nativeText'] = 'Birne';
         await tester.enterText(key('json-input'), jsonEncode(template));
         await tap(button(copy.text('json.analyze')));
         await present(button(copy.text('json.apply')));
@@ -437,4 +449,5 @@ void main() {
       }
     },
   );
+  accessible_view.main();
 }
