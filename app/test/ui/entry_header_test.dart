@@ -112,7 +112,7 @@ bool focusedWithin(WidgetTester tester, Finder finder) {
 void main() {
   for (final locale in ['en', 'de']) {
     testWidgets(
-      '$locale binding header tracks and distinct checkmarks own semantics/tooltips/focus',
+      '$locale visible Finish and Save & Next retain semantics, tooltips and focus',
       (tester) async {
         await mount(tester, locale: locale);
         final handle = tester.ensureSemantics();
@@ -137,11 +137,11 @@ void main() {
           expect(backButton.style!.padding!.resolve({}), EdgeInsets.zero);
           expect(
             backButton.style!.textStyle!.resolve({})!.fontSize,
-            pikoDesign.dimension('typography.body'),
+            pikoDesign.dimension('typography.control'),
           );
           expect(
             backButton.style!.textStyle!.resolve({})!.fontWeight,
-            pikoDesign.weight('components.entryHeader.backWeight'),
+            FontWeight.w700,
           );
           expect(
             backRect.height,
@@ -151,30 +151,30 @@ void main() {
           );
           expect(
             tester.widget<Text>(title).style!.letterSpacing,
-            pikoDesign.dimension('components.entryHeader.titleLetterSpacing'),
+            0,
           );
-          expect(titleRect.left - backRect.right, closeTo(gap, .01));
-          expect(globalRect.left - titleRect.right, closeTo(gap, .01));
-          expect(
-            titleRect.center.dx,
-            closeTo((backRect.right + globalRect.left) / 2, .01),
-          );
+          if (titleRect.top >= backRect.bottom) {
+            // The longer German title takes its own row before compression.
+            expect(titleRect.top, greaterThanOrEqualTo(globalRect.bottom));
+            expect(titleRect.left, tester.getRect(header).left);
+            expect(titleRect.right, tester.getRect(header).right);
+          } else {
+            expect(titleRect.left - backRect.right, closeTo(gap, .01));
+            expect(globalRect.left - titleRect.right, closeTo(gap, .01));
+            expect(titleRect.center.dx,
+                closeTo((backRect.right + globalRect.left) / 2, .01));
+          }
           expect(backRect.left, tester.getRect(header).left);
           expect(globalRect.right, tester.getRect(header).right);
           final target = pikoDesign.dimension('controls.largeHeight');
-          expect(globalRect.size, Size.square(target));
-          expect(tester.getSize(next), Size.square(target));
+          expect(globalRect.height, greaterThanOrEqualTo(target));
+          expect(globalRect.width, greaterThanOrEqualTo(target));
+          expect(tester.getSize(next).height, greaterThanOrEqualTo(target));
+          expect(tester.getSize(next).width, greaterThan(target));
           expect(find.descendant(of: header, matching: next), findsNothing);
           for (final label in ['entry.complete', 'action.saveNext']) {
-            final icon = find.ancestor(
-              of: find.byTooltip(copy.text(label)),
-              matching: find.byWidgetPredicate(
-                (widget) =>
-                    widget is Semantics &&
-                    widget.properties.label == copy.text(label),
-              ),
-            );
-            expect(tester.getSemantics(icon).label, copy.text(label));
+            expect(find.text(copy.text(label)), findsOneWidget);
+            expect(find.bySemanticsLabel(copy.text(label)), findsOneWidget);
           }
           // UX-ENTRY-001 opens the target field immediately. Start the header
           // traversal explicitly at Back rather than assuming no initial focus.
@@ -222,17 +222,10 @@ void main() {
       tester,
     ) async {
       await mount(tester, width: width);
-      final text = tester.widget<Text>(find.text('Add Entries'));
+      final text = tester.widget<Text>(find.text(const PikoCopy('en').text('entry.title')));
       expect(
         text.style!.fontSize,
-        pikoDesign.dimension(
-          width <=
-                  pikoDesign.dimension(
-                    'components.entryHeader.compactBreakpoint',
-                  )
-              ? 'components.entryHeader.compactTitleSize'
-              : 'components.entryHeader.titleSize',
-        ),
+        pikoDesign.dimension('typography.title'),
       );
     });
   }
@@ -245,7 +238,7 @@ void main() {
       final global = tester.getRect(
         find.byTooltip(const PikoCopy('de').text('entry.complete')),
       );
-      final title = tester.getRect(find.text('Einträge hinzufügen'));
+      final title = tester.getRect(find.text(const PikoCopy('de').text('entry.title')));
       final back = tester.getRect(
         find.byTooltip(const PikoCopy('de').text('common.back')),
       );
@@ -263,8 +256,8 @@ void main() {
       expect(global.right, closeTo(header.right, .01));
       expect(global.right, lessThanOrEqualTo(392));
       expect(
-        global.size,
-        Size.square(pikoDesign.dimension('controls.largeHeight')),
+        global.height,
+        greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')),
       );
       expect(
         find

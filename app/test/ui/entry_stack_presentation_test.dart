@@ -115,7 +115,7 @@ void main() {
         ),
       );
       final number = tester.widget<Text>(
-        find.descendant(of: card, matching: find.text('Entry 1')),
+        find.descendant(of: card, matching: find.text(const PikoCopy('en').text('entry.number', {'count': 1}))),
       );
       final status = tester.widget<Text>(
         find.descendant(of: card, matching: find.text('Saved')),
@@ -163,11 +163,10 @@ void main() {
       expect(widget.selected, isFalse);
       final confirm = find.descendant(
         of: find.byKey(const ValueKey('entry-card-draft')),
-        matching: find.byType(PikoIconButton),
+        matching: find.byWidgetPredicate((w) => w is PikoButton && w.label == const PikoCopy('en').text('action.saveNext')),
       );
-      final confirmWidget = tester.widget<PikoIconButton>(confirm);
+      final confirmWidget = tester.widget<PikoButton>(confirm);
       expect(confirmWidget.variant, PikoButtonVariant.primary);
-      expect(confirmWidget.large, isTrue);
       final button = find.descendant(
         of: confirm,
         matching: find.byType(TextButton),
@@ -195,7 +194,7 @@ void main() {
       expect(card.animationDuration, Duration.zero);
     }
     expect(find.text('Gespeichert'), findsOneWidget);
-    expect(find.text('Noch nicht bestätigt'), findsOneWidget);
+      expect(find.text(const PikoCopy('de').text('entry.draft')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

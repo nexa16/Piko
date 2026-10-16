@@ -8,6 +8,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
 import '../categories/vocabulary_categories.dart';
+import '../interchange/vocabulary_json_page.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -32,7 +33,7 @@ class EntrySessionScreen extends StatefulWidget {
   });
   final CollectionRecord collection;
   final EntrySessionController session;
-  final Future<void> Function()? onOpenInterchange;
+  final Future<VocabularyJsonReturn?> Function()? onOpenInterchange;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
   @override
@@ -713,12 +714,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (route?.isCurrent != true) return;
     setState(() => exitDraining = true);
     FocusScope.of(context).unfocus();
+    VocabularyJsonReturn? result;
     try {
       final draining = owner.awaitSavedEdits();
       widget.onPendingWrites?.call(draining);
       await draining;
       if (!mounted || session != owner || route?.isCurrent != true) return;
-      await open();
+      result = await open();
       if (!mounted || session != owner || route?.isCurrent != true) return;
       final refreshing = owner.refreshSavedEntries();
       widget.onPendingWrites?.call(refreshing);
@@ -733,6 +735,12 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       }
     } finally {
       if (mounted && session == owner) setState(() => exitDraining = false);
+    }
+    if (result == VocabularyJsonReturn.collection &&
+        mounted &&
+        session == owner &&
+        route?.isCurrent == true) {
+      await requestExit();
     }
   }
 
@@ -1165,14 +1173,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ),
                                   style: metaStyle,
                                 ),
-                                PikoIconButton(
-                                  icon: const PikoIcon(PikoIconName.check),
-                                  variant: PikoButtonVariant.primary,
-                                  large: true,
-                                  semanticLabel: copy.text('action.saveNext'),
-                                  onPressed: session.isBusy || exitDraining
-                                      ? null
-                                      : confirm,
+                                Tooltip(
+                                  message: copy.text('action.saveNext'),
+                                  excludeFromSemantics: true,
+                                  child: PikoButton(
+                                    label: copy.text('action.saveNext'),
+                                    variant: PikoButtonVariant.primary,
+                                    onPressed: session.isBusy || exitDraining
+                                        ? null
+                                        : confirm,
+                                  ),
                                 ),
                               ],
                             )
@@ -1249,6 +1259,34 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     scheduleLayout();
+    // When the IME reduces height, navigation shares the existing stack scroll.
+    // The input coordinator can reveal a complete label/value without shrinking
+    // type, nesting a second scrollable, or making Finish unreachable.
+    final scrollHeader = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final navigation = Column(
+      children: [
+        PikoEntryHeader(
+          title: copy.text('entry.title'),
+          backLabel: copy.text('common.back'),
+          completionLabel: copy.text('entry.complete'),
+          onBack: session.isBusy || exitDraining ? null : requestExit,
+          onComplete: session.isBusy || exitDraining || exitRequest != null
+              ? null
+              : complete,
+        ),
+        if (widget.onOpenInterchange != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: PikoButton(
+              label: copy.text('json.title'),
+              variant: PikoButtonVariant.ghost,
+              onPressed: session.isBusy || exitDraining || exitRequest != null
+                  ? null
+                  : openInterchange,
+            ),
+          ),
+      ],
+    );
     return PopScope(
       canPop: allowPop,
       onPopInvokedWithResult: (didPop, result) {
@@ -1279,34 +1317,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                     ),
                     child: Column(
                       children: [
-                        PikoEntryHeader(
-                          title: copy.text('entry.title'),
-                          backLabel: copy.text('common.back'),
-                          completionLabel: copy.text('entry.complete'),
-                          onBack: session.isBusy || exitDraining
-                              ? null
-                              : requestExit,
-                          onComplete:
-                              session.isBusy ||
-                                  exitDraining ||
-                                  exitRequest != null
-                              ? null
-                              : complete,
-                        ),
-                        if (widget.onOpenInterchange != null)
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: PikoButton(
-                              label: copy.text('json.title'),
-                              variant: PikoButtonVariant.ghost,
-                              onPressed:
-                                  session.isBusy ||
-                                      exitDraining ||
-                                      exitRequest != null
-                                  ? null
-                                  : openInterchange,
-                            ),
-                          ),
+                        if (!scrollHeader) navigation,
                         Expanded(
                           child: session.isCompleted
                               ? Center(
@@ -1336,6 +1347,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                           ),
                                           child: Column(
                                             children: [
+                                              if (scrollHeader) navigation,
                                               for (
                                                 var i = 0;
                                                 i < ids.length;
