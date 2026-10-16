@@ -158,14 +158,28 @@ void main() {
       if (finder.hitTestable().evaluate().isNotEmpty) {
         await tester.tap(finder);
       } else {
-        // On the narrow, enlarged-text device the real keyboard can leave
-        // only part of an Entry input inside the stack. hitTestable checks the
-        // field's geometric center, which can be clipped even when the input
-        // itself is reachable. Tap the visible part through the real UI.
+        // The focused first input follows programmatic scrolls. On a narrow
+        // keyboard viewport, a person instead drags the stack to reach the
+        // second input. Exercise that real gesture before tapping it.
         final viewport = _key('entry-stack');
         expect(viewport, findsOneWidget);
-        final fieldRect = tester.getRect(finder);
-        final visible = fieldRect.intersect(tester.getRect(viewport));
+        var fieldRect = tester.getRect(finder);
+        var area = tester.getRect(viewport);
+        var visible = fieldRect.intersect(area);
+        for (var attempt = 0; attempt < 4 && visible.height < 24; attempt++) {
+          final distance = fieldRect.bottom > area.bottom
+              ? area.bottom - fieldRect.bottom - 8
+              : area.top - fieldRect.top + 8;
+          final limit = area.height * .75;
+          await tester.dragFrom(
+            Offset(area.left + 4, area.center.dy),
+            Offset(0, distance.clamp(-limit, limit).toDouble()),
+          );
+          await tester.pumpAndSettle();
+          fieldRect = tester.getRect(finder);
+          area = tester.getRect(viewport);
+          visible = fieldRect.intersect(area);
+        }
         expect(
           visible.width,
           greaterThanOrEqualTo(24),
