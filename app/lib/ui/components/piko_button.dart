@@ -4,7 +4,9 @@ import 'piko_focus_highlight.dart';
 
 enum PikoButtonVariant {
   primary,
+  primaryOutline,
   tint,
+  speed,
   reviewPrimary,
   reviewSecondary,
   ghost,
@@ -64,7 +66,9 @@ class PikoButton extends StatelessWidget {
         variant == PikoButtonVariant.dangerOutline ||
         variant == PikoButtonVariant.dangerFilled ||
         variant == PikoButtonVariant.gradeIncorrect;
-    final color = variant == PikoButtonVariant.reviewPrimary
+    final color = variant == PikoButtonVariant.speed
+        ? d.color('ink')
+        : variant == PikoButtonVariant.reviewPrimary
         ? d.color('onPrimary')
         : variant == PikoButtonVariant.reviewSecondary
         ? d.color('onReviewSecondary')
@@ -79,7 +83,9 @@ class PikoButton extends StatelessWidget {
                 ? 'danger'
                 : 'primary',
           );
-    final background = variant == PikoButtonVariant.tint
+    final background = variant == PikoButtonVariant.speed
+        ? d.color('gold')
+        : variant == PikoButtonVariant.tint
         ? d.color('tint')
         : variant == PikoButtonVariant.reviewPrimary
         ? d.color('primary')
@@ -104,15 +110,29 @@ class PikoButton extends StatelessWidget {
         style: ButtonStyle(
           animationDuration: PikoTheme.motion(context),
           minimumSize: WidgetStatePropertyAll(
-            minimumSize ??
-                Size(
-                  d.dimension('components.buttons.height'),
-                  d.dimension(
-                    grade
-                        ? 'controls.largeHeight'
-                        : 'components.buttons.height',
+            minimumSize == null
+                ? Size(
+                    d.dimension('components.buttons.height'),
+                    d.dimension(
+                      grade
+                          ? 'controls.largeHeight'
+                          : 'components.buttons.height',
+                    ),
+                  )
+                : Size(
+                    minimumSize!.width
+                        .clamp(
+                          d.dimension('controls.largeHeight'),
+                          double.infinity,
+                        )
+                        .toDouble(),
+                    minimumSize!.height
+                        .clamp(
+                          d.dimension('controls.largeHeight'),
+                          double.infinity,
+                        )
+                        .toDouble(),
                   ),
-                ),
           ),
           padding: WidgetStatePropertyAll(
             padding ??
@@ -129,11 +149,26 @@ class PikoButton extends StatelessWidget {
             ),
           ),
           textStyle: WidgetStatePropertyAll(
-            TextStyle(
+            Theme.of(context).textTheme.labelLarge!.copyWith(
               fontSize: labelSize ?? d.dimension('typography.label'),
               fontWeight: labelWeight ?? d.weight('components.buttons.weight'),
             ),
           ),
+          // State layers are palette alpha blends; disabled actions have no
+          // interactive layer. Keyboard focus also retains its explicit border.
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return Colors.transparent;
+            }
+            final opacity = states.contains(WidgetState.pressed)
+                ? d.dimension('states.pressedOpacity')
+                : states.contains(WidgetState.focused)
+                ? d.dimension('states.focusOpacity')
+                : states.contains(WidgetState.hovered)
+                ? d.dimension('states.hoverOpacity')
+                : 0.0;
+            return color.withValues(alpha: opacity);
+          }),
           foregroundColor: WidgetStateProperty.resolveWith(
             (s) => s.contains(WidgetState.disabled)
                 ? color.withValues(alpha: d.dimension('states.disabledOpacity'))
@@ -151,6 +186,7 @@ class PikoButton extends StatelessWidget {
               color: showFocus && s.contains(WidgetState.focused)
                   ? d.color('primary')
                   : variant == PikoButtonVariant.dangerOutline ||
+                        variant == PikoButtonVariant.primaryOutline ||
                         (primary && primaryStyle == 'outline')
                   ? color
                   : Colors.transparent,

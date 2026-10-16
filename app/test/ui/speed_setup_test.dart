@@ -23,10 +23,12 @@ class SetupHarness {
     this.language = 'en',
     this.direction = LearningDirection.targetToNative,
     this.count = 3,
+    this.hasLearningProgress = false,
   });
   final String language;
   final LearningDirection direction;
   final int count;
+  final bool hasLearningProgress;
   final opener = FocusNode();
   int? result;
   bool closed = false;
@@ -55,6 +57,7 @@ class SetupHarness {
                     collection: collection,
                     direction: direction,
                     eligibleCount: count,
+                    hasLearningProgress: hasLearningProgress,
                   );
                   closed = true;
                 },
@@ -86,7 +89,11 @@ void main() {
           tester.view.physicalSize = const Size(320, 900);
           addTearDown(tester.view.resetDevicePixelRatio);
           addTearDown(tester.view.resetPhysicalSize);
-          final h = SetupHarness(language: language, direction: direction);
+          final h = SetupHarness(
+            language: language,
+            direction: direction,
+            hasLearningProgress: true,
+          );
           await h.mount(tester, scale: 2);
           final copy = PikoCopy(language);
           expect(
@@ -117,13 +124,23 @@ void main() {
             find.byKey(const ValueKey('speed-reset-warning')),
           );
           final decoration = warning.decoration! as BoxDecoration;
-          expect(decoration.color, pikoDesign.color('warningSurface'));
+          expect(decoration.color, PikoTheme.warningBackground);
           expect(
             (decoration.border! as Border).top.color,
-            pikoDesign.color('warningBorder'),
+            pikoDesign.color('danger'),
           );
           expect(find.text(copy.text('r2.speedResetWarning')), findsOneWidget);
-          expect(find.text(copy.text('r2.poolHint')), findsOneWidget);
+          expect(find.text(copy.text('r2.speedResetWarningTitle')), findsOneWidget);
+          final body = tester.widget<Text>(find.text(copy.text('r2.speedResetWarning')));
+          expect(body.style!.color, pikoDesign.color('ink'));
+          for (final key in [
+            'speed.rulesTitle',
+            'speed.rulesExplanation',
+            'speed.leavingTitle',
+            'speed.exitExplanation',
+          ]) {
+            expect(find.text(copy.text(key)), findsOneWidget);
+          }
           expect(
             tester.widget<PikoDialog>(find.byType(PikoDialog)).purpose,
             PikoDialogPurpose.form,
@@ -144,6 +161,18 @@ void main() {
       );
     }
   }
+
+  testWidgets('39 new words omit the warning and keep both explanations visible', (tester) async {
+    final h = SetupHarness(count: 39);
+    await h.mount(tester);
+    final copy = PikoCopy('en');
+    expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+    expect(find.text(copy.text('r2.speedResetWarningTitle')), findsNothing);
+    expect(find.text(copy.text('r2.speedResetWarning')), findsNothing);
+    expect(find.text(copy.text('speed.rulesExplanation')), findsOneWidget);
+    expect(find.text(copy.text('speed.exitExplanation')), findsOneWidget);
+    expect(find.byType(ExpansionTile), findsNothing);
+  });
 
   testWidgets(
     'pool accepts1 and safe maximum; invalid decimal, zero, exponent and overflow cannot start',

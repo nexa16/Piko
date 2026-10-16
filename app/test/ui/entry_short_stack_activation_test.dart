@@ -32,7 +32,7 @@ void main() {
               child: EntrySessionScreen(
                 collection: fixture.owner,
                 session: session,
-                onOpenInterchange: () async {},
+                onOpenInterchange: () async => null,
               ),
             ),
           ),
@@ -122,7 +122,7 @@ void main() {
         home: EntrySessionScreen(
           collection: fixture.owner,
           session: session,
-          onOpenInterchange: () async {},
+          onOpenInterchange: () async => null,
         ),
       ),
     );

@@ -37,7 +37,7 @@ void main() {
         );
         expect(text(card, tester), reverse ? ['Eins'] : ['One']);
         expect(
-          tester.widget<Text>(counter).data,
+          tester.widget<Semantics>(counter).properties.label,
           copy.text('learn.progress', {
             'completed': 0,
             'total': 1,
@@ -57,7 +57,7 @@ void main() {
         );
         expect(tester.widget<Text>(direction).data, fixed);
         expect(
-          tester.widget<Text>(counter).data,
+          tester.widget<Semantics>(counter).properties.label,
           copy.text('learn.progress', {
             'completed': 0,
             'total': 1,
@@ -76,7 +76,7 @@ void main() {
         expect(session.progress.completed, 1);
         expect(session.progress.firstTryCorrect, 0);
         expect(
-          tester.widget<Text>(counter).data,
+          tester.widget<Semantics>(counter).properties.label,
           copy.text('learn.progress', {
             'completed': 1,
             'total': 1,

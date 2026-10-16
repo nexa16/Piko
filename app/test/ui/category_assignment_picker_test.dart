@@ -142,12 +142,18 @@ void main() {
           );
           expect(checked(tester, f.values.first), isTrue);
           expect(find.text(copy.text('r2.apply')), findsNothing);
+          final titleBefore = tester.getRect(find.text('Difficulty'));
+          final rowBefore = tester.getRect(value(f.values.last));
           await tester.tap(value(f.values.last));
           await tester.pumpAndSettle();
           expect(find.text(copy.text('r2.apply')), findsOneWidget);
+          expect(tester.getRect(find.text('Difficulty')), titleBefore);
+          expect(tester.getRect(value(f.values.last)), rowBefore);
           await tester.tap(value(f.values.last));
           await tester.pumpAndSettle();
           expect(find.text(copy.text('r2.apply')), findsNothing);
+          expect(tester.getRect(find.text('Difficulty')), titleBefore);
+          expect(tester.getRect(value(f.values.last)), rowBefore);
           await tester.tap(value(f.values.last));
           await tester.pumpAndSettle();
           await tester.tap(find.byTooltip(copy.text('common.close')));

@@ -1,14 +1,18 @@
+import 'vocabulary_content.dart';
+
 final class VocabularyRecord {
   const VocabularyRecord({
     required this.id,
     required this.collectionId,
     required this.targetText,
     required this.nativeText,
+    this.content = const VocabularyContent(),
   });
   final String id;
   final String collectionId;
   final String targetText;
   final String nativeText;
+  final VocabularyContent content;
 }
 
 enum VocabularyValidation {
@@ -66,4 +70,26 @@ abstract interface class VocabularyRepository {
   });
   Stream<List<VocabularyRecord>> watchByCollection(String collectionId);
   Stream<VocabularyRecord?> watchById(String id);
+}
+
+/// Optional content capability; legacy text-only implementations stay valid.
+abstract interface class VocabularyContentRepository
+    implements CategorizedVocabularyRepository {
+  Future<HintVisibility> readHintVisibilityDefault();
+  Future<VocabularyRecord> createWithContent({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+  });
+  Future<VocabularyRecord> updateWithContent({
+    required String id,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+  });
 }

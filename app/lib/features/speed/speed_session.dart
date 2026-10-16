@@ -212,12 +212,19 @@ final class SpeedSession {
     }
     final nextTurn = turnIndex + 1;
     final endedPass = nextTurn == pass.length;
+    final nextProgress = {...itemProgress, entryId: progress};
     final needsBreak =
         endedPass &&
         nextPool.isNotEmpty &&
         poolSize > 1 &&
         nextPool.length < poolSize &&
-        nextWaiting.isEmpty;
+        nextWaiting.isEmpty &&
+        // Refilled slots join the next pass before any game. Either counter
+        // proves an answered attempt; Incorrect leaves the streak at zero.
+        nextPool.every((id) {
+          final item = nextProgress[id]!;
+          return item.errors > 0 || item.correctStreak > 0;
+        });
     final startsNextRotation = endedPass && nextPool.isNotEmpty && !needsBreak;
     return SpeedSession._(
       collectionId: collectionId,
@@ -230,7 +237,7 @@ final class SpeedSession {
       turnIndex: startsNextRotation ? 0 : nextTurn,
       rotation: rotation + (startsNextRotation ? 1 : 0),
       completedEntryIds: {...completedEntryIds, if (completed) entryId},
-      itemProgress: {...itemProgress, entryId: progress},
+      itemProgress: nextProgress,
       completion: completed
           ? SpeedCompletion(entryId: entryId, errors: progress.errors)
           : null,

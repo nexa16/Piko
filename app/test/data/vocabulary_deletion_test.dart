@@ -484,7 +484,12 @@ void main() {
           (await db.select(db.vocabularyOrderSequence).getSingle()).nextRowId,
           48,
         );
-        expect((await db.select(db.appSettings).getSingle()).value, 'de');
+        expect(
+          (await (db.select(
+            db.appSettings,
+          )..where((row) => row.key.equals('locale'))).getSingle()).value,
+          'de',
+        );
         expect(await db.select(db.learningItems).get(), hasLength(2));
         final service = SqliteVocabularyDeletionService(db);
         final receipt = await service.delete('original');

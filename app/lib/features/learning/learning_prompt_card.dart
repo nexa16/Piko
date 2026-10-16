@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../data/learning_item.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../data/vocabulary_content.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -43,6 +44,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
   late Stream<VocabularyRecord?> _entry;
   int _revision = 0;
   bool _revealed = false, _showFocus = false, _focused = false;
+  bool _hintRevealed = false;
   VocabularyRecord? _visibleEntry;
   void _watch() {
     _revision++;
@@ -66,6 +68,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
         oldWidget.collectionId != widget.collectionId ||
         oldWidget.direction != widget.direction) {
       _revealed = widget.initiallyRevealed;
+      _hintRevealed = false;
       _watch();
     }
   }
@@ -121,6 +124,31 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
         final answer = widget.direction == LearningDirection.targetToNative
             ? entry.nativeText
             : entry.targetText;
+        final content = entry.content;
+        final promptExample =
+            widget.direction == LearningDirection.targetToNative
+            ? content.exampleTargetText
+            : content.exampleNativeText;
+        final answerExample =
+            widget.direction == LearningDirection.targetToNative
+            ? content.exampleNativeText
+            : content.exampleTargetText;
+        final hint = content.hintText ?? '';
+        final hasHint = hint.isNotEmpty;
+        final showHint =
+            hasHint &&
+            (_revealed ||
+                _hintRevealed ||
+                content.hintVisibility == HintVisibility.always);
+        final hiddenHint = hasHint && !showHint;
+        final spoken = [
+          prompt,
+          if (_revealed) answer,
+          if (promptExample != null && promptExample.isNotEmpty) promptExample,
+          if (_revealed && answerExample != null && answerExample.isNotEmpty)
+            answerExample,
+          if (showHint) hint,
+        ].join('\n');
         _visibleEntry = entry;
         bool currentSnapshot() =>
             mounted &&
@@ -194,22 +222,18 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      prompt,
-                      key: const ValueKey('review-prompt-text'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: d.dimension(
-                          _revealed
-                              ? 'components.learningCard.answerPromptSize'
-                              : 'components.learningCard.promptSize',
-                        ),
-                        fontWeight: d.weight(
-                          _revealed
-                              ? 'components.learningCard.answerPromptWeight'
-                              : 'components.learningCard.promptWeight',
-                        ),
-                        color: d.color(_revealed ? 'muted' : 'ink'),
+                    ExcludeSemantics(
+                      child: Text(
+                        prompt,
+                        key: const ValueKey('review-prompt-text'),
+                        textAlign: TextAlign.center,
+                        style:
+                            (_revealed
+                                    ? Theme.of(context).textTheme.displaySmall!
+                                    : Theme.of(context).textTheme.displayLarge!)
+                                .copyWith(
+                                  color: d.color(_revealed ? 'muted' : 'ink'),
+                                ),
                       ),
                     ),
                     if (_revealed) ...[
@@ -244,15 +268,60 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                         answer,
                         key: const ValueKey('review-answer-text'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: d.dimension(
-                            'components.learningCard.answerSize',
-                          ),
-                          fontWeight: d.weight(
-                            'components.learningCard.answerWeight',
-                          ),
-                          color: d.color('ink'),
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
+                    ],
+                    if (promptExample != null && promptExample.isNotEmpty) ...[
+                      SizedBox(height: d.dimension('spacing.3')),
+                      ExcludeSemantics(
+                        child: Text(
+                          promptExample,
+                          key: const ValueKey('learning-prompt-example'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                      ),
+                    ],
+                    if (_revealed &&
+                        answerExample != null &&
+                        answerExample.isNotEmpty) ...[
+                      SizedBox(height: d.dimension('spacing.2')),
+                      ExcludeSemantics(
+                        child: Text(
+                          answerExample,
+                          key: const ValueKey('learning-answer-example'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                    if (showHint) ...[
+                      SizedBox(height: d.dimension('spacing.3')),
+                      ExcludeSemantics(
+                        child: Text(
+                          hint,
+                          key: const ValueKey('learning-hint'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                    if (hiddenHint) ...[
+                      SizedBox(height: d.dimension('spacing.3')),
+                      PikoButton(
+                        key: const ValueKey('learning-reveal-hint'),
+                        label: copy.text('vocab.revealHint'),
+                        variant: PikoButtonVariant.neutral,
+                        onPressed: !widget.canReveal()
+                            ? null
+                            : () {
+                                if (!currentSnapshot() ||
+                                    _revealed ||
+                                    _hintRevealed) {
+                                  return;
+                                }
+                                setState(() => _hintRevealed = true);
+                              },
                       ),
                     ],
                   ],
@@ -261,7 +330,8 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             );
             final card = Semantics(
               key: const ValueKey('review-reveal-target'),
-              label: _revealed ? '$prompt\n$answer' : prompt,
+              label: spoken,
+              explicitChildNodes: hiddenHint,
               hint: active ? copy.text('learn.revealCue') : null,
               button: active,
               focusable: active,
@@ -269,6 +339,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
               enabled: _revealed ? null : widget.canReveal(),
               onTap: active ? reveal : null,
               child: ExcludeSemantics(
+                excluding: !hiddenHint,
                 child: FocusableActionDetector(
                   enabled: active,
                   onFocusChange: (value) {
@@ -307,31 +378,35 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                             bottom: d.dimension(
                               'components.learningCard.cueBottom',
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                IconTheme(
-                                  data: IconThemeData(color: d.color('muted')),
-                                  child: PikoIcon(
-                                    PikoIconName.bookOpen,
-                                    size: d.dimension(
-                                      'components.learningCard.cueIconSize',
+                            child: ExcludeSemantics(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconTheme(
+                                    data: IconThemeData(
+                                      color: d.color('muted'),
+                                    ),
+                                    child: PikoIcon(
+                                      PikoIconName.bookOpen,
+                                      size: d.dimension(
+                                        'components.learningCard.cueIconSize',
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  width: d.dimension(
-                                    'components.learningCard.cueGap',
+                                  SizedBox(
+                                    width: d.dimension(
+                                      'components.learningCard.cueGap',
+                                    ),
                                   ),
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    copy.text('learn.revealCue'),
-                                    key: const ValueKey('review-reveal-cue'),
-                                    style: cueStyle,
+                                  Flexible(
+                                    child: Text(
+                                      copy.text('learn.revealCue'),
+                                      key: const ValueKey('review-reveal-cue'),
+                                      style: cueStyle,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         if (active && _showFocus)

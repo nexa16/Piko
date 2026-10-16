@@ -6,6 +6,8 @@ import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_item.dart';
+import '../../data/vocabulary_content.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -18,6 +20,8 @@ import 'collection_vocabulary_mutations.dart';
 import '../collections/collection_write_barrier.dart';
 import '../collections/collection_query_binding.dart';
 import '../categories/vocabulary_categories.dart';
+import 'vocabulary_learning_status.dart';
+import 'vocabulary_content_editor.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -30,6 +34,10 @@ class CollectionVocabulary extends StatefulWidget {
     this.writeBarrier,
     this.queryBinding,
     this.categoriesRepository,
+    this.preferredDirections = const {
+      LearningDirection.targetToNative,
+      LearningDirection.nativeToTarget,
+    },
   });
   final CollectionRecord collection;
   final VocabularyRepository repository;
@@ -38,6 +46,7 @@ class CollectionVocabulary extends StatefulWidget {
   final CollectionWriteBarrier? writeBarrier;
   final CollectionQueryBinding? queryBinding;
   final CategoriesRepository? categoriesRepository;
+  final Set<LearningDirection> preferredDirections;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
 }
@@ -419,14 +428,16 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     }
   }
 
-  String errorKey(Object error) => switch (error) {
-    VocabularyValidation.requiredTarget => 'entry.requiredTarget',
-    VocabularyValidation.requiredNative => 'entry.requiredNative',
-    VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
-    VocabularyValidation.entryNotFound => 'entry.notFound',
-    CategoryValidation() => 'category.selectionInvalid',
-    _ => 'entry.saveFailed',
-  };
+  String errorKey(Object error) =>
+      vocabularyContentErrorKey(error) ??
+      switch (error) {
+        VocabularyValidation.requiredTarget => 'entry.requiredTarget',
+        VocabularyValidation.requiredNative => 'entry.requiredNative',
+        VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
+        VocabularyValidation.entryNotFound => 'entry.notFound',
+        CategoryValidation() => 'category.selectionInvalid',
+        _ => 'entry.saveFailed',
+      };
 
   Future<void> discardEditor(_Editor current) async {
     if (actionBusy || !identical(editor, current)) return;
@@ -539,10 +550,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             !switching &&
             !edits.isDiscarding &&
             widget.mutations?.deletingId != record.id,
-        style: TextStyle(
-          fontSize: pikoDesign.dimension('typography.body'),
-          fontWeight: pikoDesign.weight('components.fields.labelWeight'),
-        ),
+        style: Theme.of(context).textTheme.bodyMedium,
         error:
             error ==
                 (target
@@ -588,36 +596,63 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: pikoDesign.dimension('spacing.3'),
+            runSpacing: pikoDesign.dimension('spacing.2'),
             children: [
-              Expanded(
-                child: Text(
-                  copy.text('vocab.inlineEdit'),
-                  style: TextStyle(
-                    fontSize: pikoDesign.dimension('typography.body'),
-                    fontWeight: pikoDesign.weight('typography.titleWeight'),
-                  ),
+              Text(
+                copy.text('vocab.inlineEdit'),
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension('typography.body'),
+                  fontWeight: pikoDesign.weight('typography.titleWeight'),
                 ),
               ),
-              SizedBox(width: pikoDesign.dimension('spacing.3')),
-              PikoIconButton(
-                key: ValueKey('inline-complete-${record.id}'),
-                icon: PikoIcon(
-                  current.changed ? PikoIconName.check : PikoIconName.x,
+              Text(
+                copy.text(
+                  edits.isDiscarding
+                      ? 'vocab.inlineDiscarding'
+                      : edits.isSaving
+                      ? 'entry.saving'
+                      : error != null
+                      ? 'entry.unsaved'
+                      : 'vocab.inlineAutoSave',
                 ),
-                semanticLabel: copy.text(
-                  current.changed
-                      ? 'vocab.inlineFinish'
-                      : 'vocab.inlineCollapse',
-                ),
-                onPressed: actionBusy ? null : () => activateRow(null),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              if (current.changed) ...[
-                SizedBox(width: pikoDesign.dimension('spacing.3')),
+              if (!current.changed)
                 PikoIconButton(
+                  key: ValueKey('inline-complete-${record.id}'),
+                  icon: PikoIcon(
+                    current.changed ? PikoIconName.check : PikoIconName.x,
+                  ),
+                  semanticLabel: copy.text(
+                    current.changed
+                        ? 'vocab.inlineFinish'
+                        : 'vocab.inlineCollapse',
+                  ),
+                  onPressed: actionBusy ? null : () => activateRow(null),
+                ),
+              if (current.changed) ...[
+                PikoButton(
+                  key: ValueKey('inline-complete-${record.id}'),
+                  label: copy.text('vocab.inlineFinish'),
+                  icon: Tooltip(
+                    message: copy.text('vocab.inlineFinish'),
+                    excludeFromSemantics: true,
+                    child: const PikoIcon(PikoIconName.check),
+                  ),
+                  onPressed: actionBusy ? null : () => activateRow(null),
+                ),
+                PikoButton(
                   key: ValueKey('inline-discard-${record.id}'),
-                  icon: const PikoIcon(PikoIconName.x),
-                  semanticLabel: copy.text('vocab.inlineDiscard'),
+                  label: copy.text('vocab.inlineDiscard'),
+                  variant: PikoButtonVariant.neutral,
+                  icon: Tooltip(
+                    message: copy.text('vocab.inlineDiscard'),
+                    excludeFromSemantics: true,
+                    child: const PikoIcon(PikoIconName.x),
+                  ),
                   onPressed: actionBusy ? null : () => discardEditor(current),
                 ),
               ],
@@ -625,6 +660,31 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
           SizedBox(height: pikoDesign.dimension('spacing.3')),
           fields,
+          if (edits.supportsContent)
+            VocabularyContentEditor(
+              value: edits.draft.content,
+              targetLanguage: copy.text(
+                widget.collection.targetLanguage.copyKey,
+              ),
+              nativeLanguage: copy.text(
+                widget.collection.nativeLanguage.copyKey,
+              ),
+              makeDefault: edits.draft.makeHintVisibilityDefault,
+              enabled: !actionBusy,
+              onChanged: (content, makeDefault) {
+                if (!mounted ||
+                    !identical(editor, current) ||
+                    actionBusy ||
+                    ModalRoute.of(context)?.isCurrent != true) {
+                  return;
+                }
+                edits.setContent(
+                  content,
+                  makeHintVisibilityDefault: makeDefault,
+                );
+                widget.onPendingWrites?.call(edits.awaitSavedEdits());
+              },
+            ),
           if (widget.categoriesRepository != null && edits.supportsCategories)
             VocabularyCategories(
               collectionId: widget.collection.id,
@@ -699,6 +759,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             )
           else if (error != null &&
               error is! VocabularyValidation &&
+              error is! VocabularyContentValidation &&
               error is! CategoryValidation)
             PikoButton(
               label: copy.text('action.retry'),
@@ -724,27 +785,23 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 style: TextStyle(color: pikoDesign.color('danger')),
               ),
             ),
-          SizedBox(height: pikoDesign.dimension('spacing.2')),
-          Text(
-            copy.text(
-              edits.isDiscarding
-                  ? 'vocab.inlineDiscarding'
-                  : edits.isSaving
-                  ? 'entry.saving'
-                  : error != null
-                  ? 'entry.unsaved'
-                  : 'vocab.inlineAutoSave',
-            ),
-            style: TextStyle(
-              fontSize: pikoDesign.dimension(
-                'components.inlineVocabulary.captionSize',
-              ),
-              color: pikoDesign.color('muted'),
-            ),
-          ),
         ],
       );
     }
+    content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        content,
+        VocabularyLearningStatusView(
+          collection: widget.collection,
+          entryId: record.id,
+          snapshot: widget.queryBinding?.ready == true
+              ? widget.queryBinding?.snapshot
+              : null,
+          directions: widget.preferredDirections,
+        ),
+      ],
+    );
     final card = Semantics(
       label: expanded
           ? null

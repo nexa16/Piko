@@ -198,14 +198,14 @@ void main() {
     (tester) async {
       final service = ProjectionService(projection(all: [], visible: []));
       final binding = await mount(tester, service);
-      expect(find.text("Great work! You're all caught up."), findsNothing);
+      expect(find.text("Nothing to review right now."), findsNothing);
       service.value = projection();
       binding.refresh();
       await tester.pumpAndSettle();
-      expect(find.text("Great work! You're all caught up."), findsOneWidget);
+      expect(find.text("Nothing to review right now."), findsOneWidget);
       binding.scope.setSearch('word');
       await tester.pumpAndSettle();
-      expect(find.text("Great work! You're all caught up."), findsNothing);
+      expect(find.text("Nothing to review right now."), findsNothing);
       expect(
         find.text('Nothing to review in this selection right now.'),
         findsOneWidget,
@@ -221,7 +221,7 @@ void main() {
       service.error = StateError('unavailable');
       binding.refresh();
       await tester.pumpAndSettle();
-      expect(find.text("Great work! You're all caught up."), findsNothing);
+      expect(find.text("Nothing to review right now."), findsNothing);
       expect(
         find.byKey(const ValueKey('collection-review-targetToNative')),
         findsNothing,

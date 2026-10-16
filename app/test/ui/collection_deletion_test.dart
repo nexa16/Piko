@@ -18,7 +18,9 @@ Finder field(String id, [bool target = true]) => find.descendant(
 Finder button(String label) =>
     find.byWidgetPredicate((w) => w is PikoButton && w.label == label);
 Finder finish(String label) => find.byWidgetPredicate(
-  (w) => w is PikoIconButton && w.semanticLabel == label,
+  (w) =>
+      (w is PikoIconButton && w.semanticLabel == label) ||
+      (w is PikoButton && w.label == label),
 );
 Future<void> flush(WidgetTester tester, CollectionDeletionFixture f) async {
   await tester.runAsync(() => f.db.customSelect('SELECT 1').get());
@@ -168,11 +170,13 @@ void main() {
       );
       await tester.enterText(field(id), ' ');
       await tester.pumpAndSettle();
+      await tester.ensureVisible(finish('Finish editing'));
       await tester.tap(finish('Finish editing'));
       await tester.pumpAndSettle();
       expect(field(id), findsOneWidget);
       await tester.enterText(field(id), 'Edited again');
       await flush(tester, f);
+      await tester.ensureVisible(finish('Finish editing'));
       await tester.tap(finish('Finish editing'));
       await flush(tester, f);
       expect(field(id), findsNothing);
@@ -223,6 +227,7 @@ void main() {
       expect(tester.getRect(card(active)).top, closeTo(before, 1));
       await tester.enterText(field(active), 'Valid again');
       await flush(tester, f);
+      await tester.ensureVisible(finish('Finish editing'));
       await tester.tap(finish('Finish editing'));
       await flush(tester, f);
       final scrollable = find

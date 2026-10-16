@@ -47,7 +47,7 @@ void main() {
   test('design adapter maps canonical numeric/color/weight values', () {
     const design = PikoDesign();
     expect(design.dimension('components.buttons.radius'), 24);
-    expect(design.color('primary'), const Color(0xff2956b8));
+    expect(design.color('primary'), const Color(0xff4d64ae));
     expect(design.weight('components.buttons.weight'), FontWeight.w700);
     expect(design.text('typography.family'), design.value('typography.family'));
     expect(() => design.value('missing.token'), throwsArgumentError);

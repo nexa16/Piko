@@ -50,6 +50,10 @@ class ReviewLaunch extends StatefulWidget {
     this.fixedDirection,
     this.directionCounts,
     this.directionCountsLoader,
+    this.allowedDirections = const {
+      LearningDirection.targetToNative,
+      LearningDirection.nativeToTarget,
+    },
   }) : assert(
          presentation == ReviewLaunchPresentation.plain || dueCount != null,
        );
@@ -66,6 +70,7 @@ class ReviewLaunch extends StatefulWidget {
   final LearningDirection? fixedDirection;
   final Map<LearningDirection, int>? directionCounts;
   final Future<Map<LearningDirection, int>> Function()? directionCountsLoader;
+  final Set<LearningDirection> allowedDirections;
   @override
   State<ReviewLaunch> createState() => _ReviewLaunchState();
 }
@@ -117,6 +122,11 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
   Future<void> _open([LearningDirection? chosenDirection]) async {
     final route = ModalRoute.of(context);
     if (_opening || !widget.enabled || route?.isCurrent != true) return;
+    final requestedDirection = chosenDirection ?? widget.fixedDirection;
+    if (requestedDirection != null &&
+        !widget.allowedDirections.contains(requestedDirection)) {
+      return;
+    }
     final identity = _identity;
     final collection = widget.collection;
     final factory = widget.factory;
@@ -153,6 +163,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
               explicit ??
               (available?.length == 1 ? available!.single.key : null);
           if (direction != null) {
+            if (!widget.allowedDirections.contains(direction)) return;
             session = await factory(collection.id, direction);
           } else if (available?.isEmpty == true) {
             // The launch was valid when offered. Let authoritative preparation
@@ -230,6 +241,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
         widget.presentation == ReviewLaunchPresentation.collectionCard) {
       final available = LearningDirection.values
           .where((direction) => (counts[direction] ?? 0) > 0)
+          .where(widget.allowedDirections.contains)
           .toList();
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -250,10 +262,8 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                   ),
                   'count': counts[direction]!,
                 }),
-                expandLabel: direction == available.first,
-                labelAlignment: direction == available.first
-                    ? TextAlign.start
-                    : TextAlign.center,
+                expandLabel: true,
+                labelAlignment: TextAlign.start,
                 trailingSpacing: pikoDesign.dimension(
                   'components.collectionReview.mascotGap',
                 ),

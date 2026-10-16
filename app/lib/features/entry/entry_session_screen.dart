@@ -7,7 +7,10 @@ import '../../data/collections_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
+import '../../data/vocabulary_content.dart';
 import '../categories/vocabulary_categories.dart';
+import '../vocabulary/vocabulary_content_editor.dart';
+import '../interchange/vocabulary_json_page.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -32,7 +35,7 @@ class EntrySessionScreen extends StatefulWidget {
   });
   final CollectionRecord collection;
   final EntrySessionController session;
-  final Future<void> Function()? onOpenInterchange;
+  final Future<VocabularyJsonReturn?> Function()? onOpenInterchange;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
   @override
@@ -115,6 +118,14 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     previousIds = ids;
     draftFocusRequested = activeId == draftId;
     session.addListener(changed);
+    loadContentDefault();
+  }
+
+  void loadContentDefault() {
+    if (!mounted) return;
+    final owner = session;
+    final work = owner.initializeContentDefault().catchError((Object _) {});
+    widget.onPendingWrites?.call(work);
   }
 
   @override
@@ -160,6 +171,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       centerRequested = true;
       draftFocusRequested = activeId == draftId;
       session.addListener(changed);
+      loadContentDefault();
     }
   }
 
@@ -713,12 +725,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     if (route?.isCurrent != true) return;
     setState(() => exitDraining = true);
     FocusScope.of(context).unfocus();
+    VocabularyJsonReturn? result;
     try {
       final draining = owner.awaitSavedEdits();
       widget.onPendingWrites?.call(draining);
       await draining;
       if (!mounted || session != owner || route?.isCurrent != true) return;
-      await open();
+      result = await open();
       if (!mounted || session != owner || route?.isCurrent != true) return;
       final refreshing = owner.refreshSavedEntries();
       widget.onPendingWrites?.call(refreshing);
@@ -733,6 +746,12 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       }
     } finally {
       if (mounted && session == owner) setState(() => exitDraining = false);
+    }
+    if (result == VocabularyJsonReturn.collection &&
+        mounted &&
+        session == owner &&
+        route?.isCurrent == true) {
+      await requestExit();
     }
   }
 
@@ -754,7 +773,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       if (!initiatingSession.isCompleted &&
           (draft.targetText.trim().isNotEmpty ||
               draft.nativeText.trim().isNotEmpty ||
-              draft.assignments.isNotEmpty)) {
+              draft.assignments.isNotEmpty ||
+              draft.hasOptionalText ||
+              draft.makeHintVisibilityDefault)) {
         final discard = await showPikoDialog<bool>(
           context,
           builder: (dialogContext) {
@@ -824,14 +845,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
   }
 
-  String errorKey(Object error) => switch (error) {
-    VocabularyValidation.requiredTarget => 'entry.requiredTarget',
-    VocabularyValidation.requiredNative => 'entry.requiredNative',
-    VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
-    VocabularyValidation.entryNotFound => 'entry.notFound',
-    CategoryValidation() => 'category.selectionInvalid',
-    _ => 'entry.saveFailed',
-  };
+  String errorKey(Object error) =>
+      vocabularyContentErrorKey(error) ??
+      switch (error) {
+        VocabularyValidation.requiredTarget => 'entry.requiredTarget',
+        VocabularyValidation.requiredNative => 'entry.requiredNative',
+        VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
+        VocabularyValidation.entryNotFound => 'entry.notFound',
+        CategoryValidation() => 'category.selectionInvalid',
+        _ => 'entry.saveFailed',
+      };
 
   Widget card(String id, int index, BuildContext context) {
     final copy = PikoCopyScope.of(context);
@@ -1087,6 +1110,55 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           field(true),
                           SizedBox(height: pikoDesign.dimension('spacing.4')),
                           field(false),
+                          if (session.supportsContent)
+                            VocabularyContentEditor(
+                              value: values.content,
+                              targetLanguage: copy.text(
+                                widget.collection.targetLanguage.copyKey,
+                              ),
+                              nativeLanguage: copy.text(
+                                widget.collection.nativeLanguage.copyKey,
+                              ),
+                              makeDefault: values.makeHintVisibilityDefault,
+                              onFocus: () {
+                                followEditor = false;
+                                visibilityRequested = false;
+                                anchorId = null;
+                                anchorCenter = null;
+                              },
+                              enabled:
+                                  active &&
+                                  !session.isBusy &&
+                                  !exitDraining &&
+                                  exitRequest == null &&
+                                  session.contentReady,
+                              onChanged: (content, makeDefault) {
+                                if (!mounted ||
+                                    !identical(session, owningSession) ||
+                                    !active ||
+                                    session.isBusy ||
+                                    exitDraining ||
+                                    exitRequest != null ||
+                                    ModalRoute.of(context)?.isCurrent != true) {
+                                  return;
+                                }
+                                if (draft) {
+                                  session.setContent(
+                                    content,
+                                    makeHintVisibilityDefault: makeDefault,
+                                  );
+                                } else {
+                                  session.editSavedEntry(
+                                    id,
+                                    content: content,
+                                    makeHintVisibilityDefault: makeDefault,
+                                  );
+                                  widget.onPendingWrites?.call(
+                                    session.awaitSavedEdits(),
+                                  );
+                                }
+                              },
+                            ),
                           if (widget.categoriesRepository != null &&
                               session.supportsCategories)
                             VocabularyCategories(
@@ -1165,14 +1237,19 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ),
                                   style: metaStyle,
                                 ),
-                                PikoIconButton(
-                                  icon: const PikoIcon(PikoIconName.check),
-                                  variant: PikoButtonVariant.primary,
-                                  large: true,
-                                  semanticLabel: copy.text('action.saveNext'),
-                                  onPressed: session.isBusy || exitDraining
-                                      ? null
-                                      : confirm,
+                                Tooltip(
+                                  message: copy.text('action.saveNext'),
+                                  excludeFromSemantics: true,
+                                  child: PikoButton(
+                                    label: copy.text('action.saveNext'),
+                                    variant: PikoButtonVariant.primary,
+                                    onPressed:
+                                        session.isBusy ||
+                                            exitDraining ||
+                                            !session.contentReady
+                                        ? null
+                                        : confirm,
+                                  ),
                                 ),
                               ],
                             )
@@ -1201,6 +1278,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                             ),
                           if (error != null &&
                               error is! VocabularyValidation &&
+                              error is! VocabularyContentValidation &&
                               error is! CategoryValidation)
                             PikoButton(
                               label: copy.text('action.retry'),
@@ -1249,6 +1327,38 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     scheduleLayout();
+    // When the IME reduces height, navigation shares the existing stack scroll.
+    // The input coordinator can reveal a complete label/value without shrinking
+    // type, nesting a second scrollable, or making Finish unreachable.
+    final scrollHeader = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final navigation = Column(
+      children: [
+        PikoEntryHeader(
+          title: copy.text('entry.title'),
+          backLabel: copy.text('common.back'),
+          completionLabel: copy.text('entry.complete'),
+          onBack: session.isBusy || exitDraining ? null : requestExit,
+          onComplete:
+              session.isBusy ||
+                  exitDraining ||
+                  exitRequest != null ||
+                  !session.contentReady
+              ? null
+              : complete,
+        ),
+        if (widget.onOpenInterchange != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: PikoButton(
+              label: copy.text('json.title'),
+              variant: PikoButtonVariant.ghost,
+              onPressed: session.isBusy || exitDraining || exitRequest != null
+                  ? null
+                  : openInterchange,
+            ),
+          ),
+      ],
+    );
     return PopScope(
       canPop: allowPop,
       onPopInvokedWithResult: (didPop, result) {
@@ -1279,34 +1389,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                     ),
                     child: Column(
                       children: [
-                        PikoEntryHeader(
-                          title: copy.text('entry.title'),
-                          backLabel: copy.text('common.back'),
-                          completionLabel: copy.text('entry.complete'),
-                          onBack: session.isBusy || exitDraining
-                              ? null
-                              : requestExit,
-                          onComplete:
-                              session.isBusy ||
-                                  exitDraining ||
-                                  exitRequest != null
-                              ? null
-                              : complete,
-                        ),
-                        if (widget.onOpenInterchange != null)
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: PikoButton(
-                              label: copy.text('json.title'),
-                              variant: PikoButtonVariant.ghost,
-                              onPressed:
-                                  session.isBusy ||
-                                      exitDraining ||
-                                      exitRequest != null
-                                  ? null
-                                  : openInterchange,
-                            ),
+                        if (session.contentDefaultError != null) ...[
+                          Text(copy.text('vocab.contentDefaultLoadFailed')),
+                          PikoButton(
+                            label: copy.text('action.retry'),
+                            onPressed: session.isBusy
+                                ? null
+                                : loadContentDefault,
                           ),
+                        ],
+                        if (!scrollHeader) navigation,
                         Expanded(
                           child: session.isCompleted
                               ? Center(
@@ -1336,6 +1428,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                           ),
                                           child: Column(
                                             children: [
+                                              if (scrollHeader) navigation,
                                               for (
                                                 var i = 0;
                                                 i < ids.length;

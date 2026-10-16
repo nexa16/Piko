@@ -7,6 +7,7 @@ import '../piko_theme.dart';
 
 /// Names of the pinned originals shared with the binding HTML mockup.
 enum PikoIconName {
+  alertTriangle('triangle-alert'),
   arrowLeft('arrow-left'),
   bookOpen('book-open'),
   chartNoAxesColumn('chart-no-axes-column'),

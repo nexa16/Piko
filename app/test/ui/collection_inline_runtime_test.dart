@@ -136,13 +136,21 @@ void main() {
       await tester.tap(find.byKey(ValueKey('vocabulary-${entry.id}')));
       await tester.pumpAndSettle();
       expect(calls, 0);
-      expect(find.byType(TextField), findsNWidgets(2));
+      for (final side in ['target', 'native']) {
+        expect(
+          find.descendant(
+            of: find.byKey(ValueKey('inline-${entry.id}-$side')),
+            matching: find.byType(TextField),
+          ),
+          findsOneWidget,
+        );
+      }
       expect(find.byType(EntrySessionScreen), findsNothing);
-      await tester.tap(
-        find.byWidgetPredicate(
-          (w) => w is PikoButton && w.label == 'New',
-        ),
+      final addEntry = find.byWidgetPredicate(
+        (w) => w is PikoButton && w.label == 'New',
       );
+      await tester.ensureVisible(addEntry);
+      await tester.tap(addEntry);
       await tester.pumpAndSettle();
       expect(calls, 1);
       expect(find.byType(EntrySessionScreen), findsOneWidget);

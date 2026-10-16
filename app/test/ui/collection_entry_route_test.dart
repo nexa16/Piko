@@ -160,7 +160,7 @@ void main() {
           .onPressed!;
       await tester.tap(add);
       activate();
-      await tester.pumpAndSettle();
+      await f.flush(tester);
       expect(f.sessions, hasLength(1));
       final screen = tester.widget<EntrySessionScreen>(
         find.byType(EntrySessionScreen),
@@ -170,13 +170,26 @@ void main() {
       expect(screen.collection.nativeLanguage, VocabularyLanguage.german);
       await tester.enterText(field(true), ' pomme ');
       await tester.enterText(field(false), ' Apfel ');
+      // Let the Collection-created snackbar finish before tapping a lower form action.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      // A real scroll gesture releases the focused-field following policy.
+      await tester.drag(
+        find.byKey(const ValueKey('entry-stack')),
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Save & Next'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Save & Next'));
       await f.flush(tester);
       expect(f.sessions.single.draft.targetText, isEmpty);
       expect(f.sessions.single.confirmedEntries, hasLength(1));
       await tester.enterText(field(true), 'poire');
       await tester.enterText(field(false), 'Birne');
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.ensureVisible(find.byTooltip('Finish'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Finish'));
       await f.flush(tester);
       expect(find.byType(EntrySessionScreen), findsNothing);
       expect(f.services.single.disposed, isTrue);

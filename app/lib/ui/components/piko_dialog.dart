@@ -19,11 +19,13 @@ final class PikoDialogAction {
     required this.onPressed,
     this.role = PikoDialogActionRole.primary,
     this.icon,
+    this.key,
   });
   final String label;
   final VoidCallback? onPressed;
   final PikoDialogActionRole role;
   final Widget? icon;
+  final Key? key;
 }
 
 /// Null means safe dismissal; only an explicit action returns a result.
@@ -99,6 +101,7 @@ class PikoDialog extends StatelessWidget {
     this.purpose = PikoDialogPurpose.form,
     this.dismissible = true,
     this.onClose,
+    this.selectionFooterLabels = const [],
     super.key,
   });
   final String title;
@@ -110,6 +113,9 @@ class PikoDialog extends StatelessWidget {
   final PikoDialogPurpose purpose;
   final bool dismissible;
   final VoidCallback? onClose;
+
+  /// Geometry only: absent actions have no widget, semantics or focus target.
+  final List<String> selectionFooterLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -133,69 +139,172 @@ class PikoDialog extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: d.dimension('components.dialogs.maxWidth'),
           ),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(d.dimension('spacing.6')),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: _DialogContents(
+            purpose: purpose,
+            body: body,
+            actions: actions,
+            selectionFooterLabels: selectionFooterLabels,
+            header: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Semantics(
-                        namesRoute: true,
-                        header: true,
-                        label: title,
-                        excludeSemantics: true,
-                        child: DefaultTextStyle(
-                          style: Theme.of(context).textTheme.titleMedium!
-                              .copyWith(
-                                fontSize: d.dimension(
-                                  'components.dialogs.titleSize',
-                                ),
-                                fontWeight: d.weight('typography.titleWeight'),
-                              ),
-                          child: titleContent ?? Text(title),
-                        ),
-                      ),
+                Expanded(
+                  child: Semantics(
+                    namesRoute: true,
+                    header: true,
+                    label: title,
+                    excludeSemantics: true,
+                    child: DefaultTextStyle(
+                      style: Theme.of(context).textTheme.titleMedium!,
+                      child: titleContent ?? Text(title),
                     ),
-                    if (purpose != PikoDialogPurpose.confirmation) ...[
-                      SizedBox(width: d.dimension('spacing.3')),
-                      SizedBox.square(
-                        dimension: d.dimension('controls.largeHeight'),
-                        child: PikoIconButton(
-                          icon: const PikoIcon(PikoIconName.x),
-                          semanticLabel: PikoCopyScope.of(
-                            context,
-                          ).text('common.close'),
-                          onPressed: !dismissible
-                              ? null
-                              : onClose ??
-                                    () {
-                                      if (ModalRoute.of(context)?.isCurrent ==
-                                          true) {
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-                SizedBox(height: d.dimension('spacing.3')),
-                body,
-                if (actions.isNotEmpty) ...[
-                  SizedBox(height: d.dimension('spacing.4')),
-                  _DialogFooter(
-                    actions: actions,
-                    focusSafe: purpose == PikoDialogPurpose.confirmation,
+                if (purpose != PikoDialogPurpose.confirmation) ...[
+                  SizedBox(width: d.dimension('spacing.3')),
+                  SizedBox.square(
+                    dimension: d.dimension('controls.largeHeight'),
+                    child: PikoIconButton(
+                      icon: const PikoIcon(PikoIconName.x),
+                      semanticLabel: PikoCopyScope.of(
+                        context,
+                      ).text('common.close'),
+                      onPressed: !dismissible
+                          ? null
+                          : onClose ??
+                                () {
+                                  if (ModalRoute.of(context)?.isCurrent ==
+                                      true) {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                    ),
                   ),
                 ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DialogContents extends StatelessWidget {
+  const _DialogContents({
+    required this.header,
+    required this.body,
+    required this.actions,
+    required this.purpose,
+    required this.selectionFooterLabels,
+  });
+  final Widget header, body;
+  final List<PikoDialogAction> actions;
+  final PikoDialogPurpose purpose;
+  final List<String> selectionFooterLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = pikoDesign;
+    final padding = d.dimension('spacing.6');
+    final gap = d.dimension('spacing.4');
+    if (purpose != PikoDialogPurpose.selection ||
+        selectionFooterLabels.isEmpty) {
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            header,
+            SizedBox(height: d.dimension('spacing.3')),
+            body,
+            if (actions.isNotEmpty) ...[
+              SizedBox(height: gap),
+              _DialogFooter(
+                actions: actions,
+                focusSafe: purpose == PikoDialogPurpose.confirmation,
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.all(padding),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final style = Theme.of(context).textTheme.labelLarge!;
+          final widths = <double>[];
+          for (final label in selectionFooterLabels) {
+            final painter = TextPainter(
+              text: TextSpan(text: label, style: style),
+              textDirection: Directionality.of(context),
+              textScaler: MediaQuery.textScalerOf(context),
+            )..layout();
+            widths.add(
+              painter.width +
+                  d.dimension('components.buttons.padding') * 2 +
+                  d.dimension('components.icons.size') +
+                  d.dimension('spacing.2'),
+            );
+            painter.dispose();
+          }
+          final stacked =
+              widths.fold<double>(0, (a, b) => a + b) +
+                  d.dimension('spacing.2') * (widths.length - 1) >
+              constraints.maxWidth;
+          var reservedHeight = 0.0;
+          for (final label in selectionFooterLabels) {
+            final painter =
+                TextPainter(
+                  text: TextSpan(text: label, style: style),
+                  textDirection: Directionality.of(context),
+                  textScaler: MediaQuery.textScalerOf(context),
+                )..layout(
+                  maxWidth:
+                      (constraints.maxWidth -
+                              d.dimension('components.buttons.padding') * 2 -
+                              d.dimension('components.icons.size') -
+                              d.dimension('spacing.2'))
+                          .clamp(1, double.infinity),
+                );
+            final naturalHeight = painter.height + d.dimension('spacing.2') * 2;
+            final height = naturalHeight < d.dimension('controls.largeHeight')
+                ? d.dimension('controls.largeHeight')
+                : naturalHeight;
+            reservedHeight = stacked
+                ? reservedHeight + height
+                : (reservedHeight > height ? reservedHeight : height);
+            painter.dispose();
+          }
+          if (stacked) {
+            reservedHeight += d.dimension('spacing.2') * (widths.length - 1);
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              header,
+              SizedBox(height: d.dimension('spacing.3')),
+              Flexible(
+                child: SingleChildScrollView(
+                  key: const ValueKey('selection-dialog-body'),
+                  child: body,
+                ),
+              ),
+              SizedBox(height: gap),
+              SizedBox(
+                height: reservedHeight,
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: actions.isEmpty
+                      ? null
+                      : _DialogFooter(actions: actions, focusSafe: false),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -211,11 +320,7 @@ class _DialogFooter extends StatelessWidget {
     final d = pikoDesign;
     final gap = d.dimension('spacing.2');
     final touch = d.dimension('controls.largeHeight');
-    final labelStyle = TextStyle(
-      fontSize: d.dimension('typography.label'),
-      fontWeight: d.weight('components.buttons.weight'),
-      fontFamily: Theme.of(context).textTheme.labelLarge?.fontFamily,
-    );
+    final labelStyle = Theme.of(context).textTheme.labelLarge!;
     double naturalWidth(PikoDialogAction action) {
       final painter = TextPainter(
         text: TextSpan(text: action.label, style: labelStyle),
@@ -251,6 +356,7 @@ class _DialogFooter extends StatelessWidget {
                       ? double.infinity
                       : naturalWidth(ordered[index]),
                   child: PikoButton(
+                    key: ordered[index].key,
                     label: ordered[index].label,
                     icon: ordered[index].icon,
                     onPressed: ordered[index].onPressed,

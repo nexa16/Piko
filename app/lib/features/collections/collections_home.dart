@@ -22,6 +22,8 @@ import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_entry_count.dart';
 import 'collection_query_binding.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import 'package:flutter/foundation.dart';
+import '../settings/preferred_direction_controller.dart';
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -39,6 +41,7 @@ class CollectionsHome extends StatefulWidget {
     this.speedSessionFactory,
     this.categoriesRepository,
     this.onOpenSettings,
+    this.directionBinding,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -56,6 +59,7 @@ class CollectionsHome extends StatefulWidget {
   final SpeedSessionFactory? speedSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
+  final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -108,6 +112,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
           categoriesRepository: widget.categoriesRepository,
+          directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,
           reviewCountPolicy: widget.reviewCountPolicy,
           reviewCountClock: widget.reviewCountClock,

@@ -2,17 +2,17 @@
 globalThis.PIKO_DESIGN = {
   schemaVersion: 1,
   previews: {round2: {gradingIncorrect:'#EF4444',gradingCorrect:'#22C55E',gradingText:'#111827',inputFocusWidth:1,keyboardFocusWidth:2,gameColumns:5,entrySettleMs:160,learningGap:8,learningPadding:16,learningSectionGap:16,categoryListHeight:264,reviewSecondaryBackground:'#E9EEF6',reviewSecondaryText:'#42516B',warningBackground:'#FFF7ED',warningBorder:'#FB923C',warningText:'#9A3412'}},
-  colors: {name:'Cobalt',primary:'#2956B8',tint:'#E7EEFC',bg:'#F5F7FB',surface:'#FFFFFF',ink:'#1E293B',muted:'#526177',onPrimary:'#FFFFFF',danger:'#B42318',onDanger:'#FFFFFF',success:'#166534',onSuccess:'#FFFFFF',warningSurface:'#FFF7ED',warningBorder:'#FB923C',onWarning:'#9A3412',reviewSecondary:'#E9EEF6',onReviewSecondary:'#42516B'},
+  colors: {name:'Piko',primary:'#4D64AE',tint:'#E8EFFA',bg:'#F6F7FB',surface:'#FFFDF8',ink:'#34365B',muted:'#62657D',onPrimary:'#FFFDF8',danger:'#B42318',onDanger:'#FFFDF8',success:'#166534',onSuccess:'#FFFDF8',gold:'#FFE08A',warningSurface:'#FFFDF8',warningBorder:'#B42318',onWarning:'#34365B',reviewSecondary:'#E8EFFA',onReviewSecondary:'#62657D'},
   spacing: {'1':4,'2':8,'3':12,'4':16,'5':20,'6':24,'8':32},
-  typography: {family:'system-ui,-apple-system,sans-serif',body:16,small:13,label:14,title:29,titleWeight:700},
+  typography: {family:'Piko Nunito Sans',fallback:'Piko Noto Sans KR',body:16,bodyWeight:400,bodyLineHeight:1.5,small:14,label:14,title:26,titleWeight:700,titleLineHeight:1.2,dialogTitle:20,dialogTitleWeight:700,dialogLineHeight:1.3,section:18,sectionWeight:700,sectionLineHeight:1.35,control:14,controlWeight:700,controlLineHeight:1.4,helper:14,helperLineHeight:1.45,answer:37,answerWeight:600,answerLineHeight:1.3,answerPrompt:22,answerPromptWeight:400,answerPromptLineHeight:1.4},
   radii: {card:16,dialog:20},
   controls: {largeHeight:48,contentWidth:760,motionFastMs:180},
   layout: {pagePadding:24,mobilePadding:18,pageTop:20,mobileBreakpoint:680},
-  states: {borderWidth:1,borderInkOpacity:0.14,disabledOpacity:0.5,focusWidth:3,focusOffset:3},
+  states: {borderWidth:1,borderInkOpacity:0.14,disabledOpacity:0.5,focusWidth:3,focusOffset:3,pressedOpacity:0.12,hoverOpacity:0.08,focusOpacity:0.12,selectionOpacity:0.24,warningOpacity:0.12},
   components: {
     categoryPicker: {listHeight:264},
     speedGame: {columns:5},
-    dialogs: {maxWidth:430,titleSize:20,backdropColor:'#15251c',backdropOpacity:0.5333333333333333},
+    dialogs: {maxWidth:430,titleSize:20,backdropColor:'#34365B',backdropOpacity:0.5333333333333333},
     icons: {size:20},
     checkboxes: {size:24,paddingY:10},
     collectionCard: {titleSize:15,titleWeight:700,metadataSize:12,metadataLineHeight:1.5},
@@ -29,12 +29,12 @@ globalThis.PIKO_DESIGN = {
     learningCard: {minHeight:290,promptSize:37,promptWeight:750,bottomPadding:58,answerPromptSize:22,answerPromptWeight:500,answerSize:37,answerWeight:650,answerGap:18,dividerWidthFactor:0.64,dividerInkOpacity:0.15,cueSize:12,cueWeight:400,cueIconSize:16,cueGap:7,cueRight:18,cueBottom:16},
     languageBadge: {size:42,radius:12,fontSize:15,weight:800,letterSpacingEm:0.03},
     entryStack: {previewGap:5,previewTop:14,numberSize:12,statusSize:11,compactMinHeight:100,metaLineHeight:1.5,stateMotionMs:200},
-    entryHeader: {gap:10,titleSize:22,compactTitleSize:18,actionPadding:10,compactBreakpoint:400,maxTitleLines:2,backWeight:750,titleLetterSpacing:-1},
+    entryHeader: {gap:10,titleSize:26,compactTitleSize:26,actionPadding:10,compactBreakpoint:400,maxTitleLines:2,backWeight:700,titleLetterSpacing:0},
     swipe: {revealDistance:60,axisDominance:1.5},
     inlineVocabulary: {compactBreakpoint:420,captionSize:11},
     cards: {padding:19},
-    fields: {padding:13,radius:12,labelSize:12,labelWeight:750,focusWidth:1},
-    buttons: {variant:'soft',radius:24,height:44,weight:700,padding:14},
-    dropdowns: {gap:8,height:44,radius:11,padding:12,weight:400}
+    fields: {padding:13,radius:12,labelSize:14,labelWeight:600,focusWidth:1},
+    buttons: {variant:'soft',radius:24,height:48,weight:700,padding:14},
+    dropdowns: {gap:8,height:48,radius:11,padding:12,weight:400}
   }
 };

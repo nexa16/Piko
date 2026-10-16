@@ -154,7 +154,7 @@ void main() {
       await tester.pumpAndSettle();
       final action = tester.widget<TextButton>(
         find.descendant(
-          of: find.byTooltip('Save last entry & end session'),
+          of: find.byTooltip(const PikoCopy('en').text('entry.complete')),
           matching: find.byType(TextButton),
         ),
       );
@@ -184,7 +184,7 @@ void main() {
       );
       expect(f.session.isCompleted, isFalse);
       f.repository.createGate = null;
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await f.db.customSelect('SELECT 1').get();
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsNothing);
@@ -199,7 +199,7 @@ void main() {
       f.session.setTargetText(' 학교 ');
       f.session.setNativeText(' Schule ');
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await f.db.customSelect('SELECT 1').get();
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsNothing);
@@ -220,7 +220,7 @@ void main() {
     await f.mount(tester);
     f.session.setTargetText(' \n');
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Save last entry & end session'));
+    await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
     await tester.pumpAndSettle();
     expect(find.byType(EntrySessionScreen), findsNothing);
     expect(await f.db.select(f.db.vocabularyEntries).get(), isEmpty);
@@ -236,13 +236,13 @@ void main() {
       await f.session.confirmAndNext();
       f.session.setTargetText('학교');
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsOneWidget);
       expect(find.text('Enter the translation.'), findsOneWidget);
       f.session.setNativeText('SCHULE');
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await f.db.customSelect('SELECT 1').get();
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsOneWidget);
@@ -269,7 +269,7 @@ void main() {
       f.session.setTargetText('물');
       f.session.setNativeText('Wasser');
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await tester.pumpAndSettle();
       f.repository.updateGate!.completeError(StateError('Disk failed'));
       await f.session.awaitSavedEdits();
@@ -282,7 +282,7 @@ void main() {
       await tester.tap(find.text('Try again'));
       await f.session.awaitSavedEdits();
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await f.db.customSelect('SELECT 1').get();
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsNothing);
@@ -301,7 +301,7 @@ void main() {
       f.session.setNativeText('Schule');
       f.repository.createGate = Completer<void>();
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await tester.pumpAndSettle();
       final navigator = Navigator.of(
         tester.element(find.byType(EntrySessionScreen)),
@@ -321,7 +321,7 @@ void main() {
       navigator.pop();
       await tester.pumpAndSettle();
       expect(find.text('Entry session ended'), findsOneWidget);
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await tester.pumpAndSettle();
       expect(find.byType(EntrySessionScreen), findsNothing);
       expect(await f.db.select(f.db.vocabularyEntries).get(), hasLength(1));
@@ -333,7 +333,7 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       f.repository.createGate = Completer<void>();
-      await tester.tap(find.byTooltip('Save last entry & end session'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('entry.complete')));
       await tester.pumpAndSettle();
       final replacement = f.newSession()..setTargetText('new');
       f.current.value = replacement;

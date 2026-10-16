@@ -441,8 +441,16 @@ void main() {
         ) {
           await h.flush(tester);
         }
-        expect(find.byType(TextField), findsNWidgets(2));
-        final field = find.byType(TextField).first;
+        final field = find.descendant(
+          of: find.byKey(ValueKey('inline-${h.f.entry.id}-target')),
+          matching: find.byType(TextField),
+        );
+        final native = find.descendant(
+          of: find.byKey(ValueKey('inline-${h.f.entry.id}-native')),
+          matching: find.byType(TextField),
+        );
+        expect(field, findsOneWidget);
+        expect(native, findsOneWidget);
         await tester.enterText(field, ' ');
         await tester.pumpAndSettle();
         final input = tester.widget<TextField>(field).controller!;
@@ -459,10 +467,7 @@ void main() {
         await h.drain(tester, language);
         await tester.tap(button('common.back', 'de'));
         await tester.pumpAndSettle();
-        expect(
-          tester.widget<TextField>(find.byType(TextField).first).controller,
-          same(input),
-        );
+        expect(tester.widget<TextField>(field).controller, same(input));
         expect(input.text, ' ');
         expect(
           input.selection,

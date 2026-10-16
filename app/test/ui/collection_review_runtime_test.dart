@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/learning_item.dart';
+import 'package:piko/data/local/sqlite_settings_repository.dart';
+import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/features/collections/collection_review_count.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/main.dart';
@@ -152,11 +154,15 @@ void main() {
   });
 
   testWidgets(
-    'production runtime counts one vocabulary due in both directions as two repetitions',
+    'production runtime counts one vocabulary due in both directions as two repetitions with both enabled in Detail',
     (tester) async {
       final db = RuntimeDatabase(MutablePikoClock(instant));
       final f = Fixture(database: db);
       await tester.runAsync(f.initialize);
+      await tester.runAsync(() => SqliteSettingsRepository(db).write(
+        PreferredDirection.settingKey,
+        PreferredDirection.both.name,
+      ));
       final before = await tester.runAsync(() => snapshot(f));
       try {
         await pumpRuntime(tester, db, f);

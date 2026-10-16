@@ -285,7 +285,7 @@ void main() {
       await tester.pump();
       expect(f.repository.restores, 0);
       expect(tester.widget<TextField>(field(f.one.id)).enabled, isFalse);
-      expect(tester.widget<PikoIconButton>(finish(f.one.id)).onPressed, isNull);
+      expect(tester.widget<PikoButton>(finish(f.one.id)).onPressed, isNull);
       await tester.tap(card(f.two.id));
       await tester.pump();
       expect(field(f.two.id), findsNothing);

@@ -20,30 +20,16 @@ class PikoEntryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      // CSS responds to the viewport, not the narrower padded content track.
       final d = pikoDesign;
-      final compact =
-          MediaQuery.sizeOf(context).width <=
-          d.dimension('components.entryHeader.compactBreakpoint');
-      final titleStyle = Theme.of(context).textTheme.titleLarge!.copyWith(
-        letterSpacing: d.dimension('components.entryHeader.titleLetterSpacing'),
-        fontSize: d.dimension(
-          compact
-              ? 'components.entryHeader.compactTitleSize'
-              : 'components.entryHeader.titleSize',
-        ),
-      );
-      final backSize = compact
-          ? d.dimension('typography.small')
-          : d.dimension('typography.body');
+      final titleStyle = Theme.of(context).textTheme.titleLarge!;
+      final controlStyle = Theme.of(context).textTheme.labelLarge!;
       final backPainter = TextPainter(
-        text: TextSpan(
-          text: backLabel,
-          style: TextStyle(
-            fontSize: backSize,
-            fontWeight: d.weight('components.entryHeader.backWeight'),
-          ),
-        ),
+        text: TextSpan(text: backLabel, style: controlStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      final completionPainter = TextPainter(
+        text: TextSpan(text: completionLabel, style: controlStyle),
         textDirection: Directionality.of(context),
         textScaler: MediaQuery.textScalerOf(context),
       )..layout();
@@ -52,17 +38,17 @@ class PikoEntryHeader extends StatelessWidget {
           backPainter.width -
           d.dimension('components.icons.size') -
           d.dimension('spacing.2') -
-          d.dimension('controls.largeHeight') -
+          completionPainter.width -
+          d.dimension('components.buttons.padding') * 2 -
           2 * d.dimension('components.entryHeader.gap');
       backPainter.dispose();
+      completionPainter.dispose();
       final titlePainter = TextPainter(
         text: TextSpan(text: title, style: titleStyle),
         textDirection: Directionality.of(context),
         textScaler: MediaQuery.textScalerOf(context),
-      )..layout(maxWidth: available > 0 ? available : 1);
-      final stacked =
-          titlePainter.computeLineMetrics().length >
-          d.dimension('components.entryHeader.maxTitleLines');
+      )..layout();
+      final stacked = titlePainter.width > available;
       titlePainter.dispose();
       final back = Tooltip(
         message: backLabel,
@@ -70,8 +56,6 @@ class PikoEntryHeader extends StatelessWidget {
         child: PikoButton(
           label: backLabel,
           icon: const PikoIcon(PikoIconName.arrowLeft),
-          labelSize: backSize,
-          labelWeight: d.weight('components.entryHeader.backWeight'),
           padding: EdgeInsets.zero,
           variant: PikoButtonVariant.ghost,
           onPressed: onBack,
@@ -87,21 +71,33 @@ class PikoEntryHeader extends StatelessWidget {
           child: Text(title, textAlign: TextAlign.center, style: titleStyle),
         ),
       );
-      final completion = PikoIconButton(
-        icon: const PikoIcon(PikoIconName.check),
-        semanticLabel: completionLabel,
-        variant: PikoButtonVariant.primary,
-        large: true,
-        padding: EdgeInsets.all(
-          d.dimension('components.entryHeader.actionPadding'),
+      final completion = Tooltip(
+        message: completionLabel,
+        excludeFromSemantics: true,
+        child: PikoButton(
+          label: completionLabel,
+          variant: PikoButtonVariant.primary,
+          onPressed: onComplete,
         ),
-        onPressed: onComplete,
       );
       if (stacked) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(children: [back, const Spacer(), completion]),
+            Row(
+              children: [
+                Flexible(
+                  child: Align(alignment: Alignment.centerLeft, child: back),
+                ),
+                SizedBox(width: d.dimension('spacing.2')),
+                Flexible(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: completion,
+                  ),
+                ),
+              ],
+            ),
             heading,
           ],
         );

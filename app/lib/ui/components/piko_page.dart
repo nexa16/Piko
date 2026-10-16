@@ -45,6 +45,7 @@ class PikoHeading extends StatelessWidget {
     this.actions = const [],
     this.titleContent,
     this.titleMargin,
+    this.subtitleInset,
   });
   final String title;
 
@@ -57,6 +58,7 @@ class PikoHeading extends StatelessWidget {
   /// Optional inline title controls; callers retain the title's heading semantics.
   final Widget? titleContent;
   final double? titleMargin;
+  final double? subtitleInset;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,7 +110,9 @@ class PikoHeading extends StatelessWidget {
       ),
       if (subtitle != null)
         Padding(
-          padding: EdgeInsets.only(left: pikoDesign.dimension('spacing.2')),
+          padding: EdgeInsets.only(
+            left: subtitleInset ?? pikoDesign.dimension('spacing.2'),
+          ),
           child: Text(
             subtitle!,
             style: TextStyle(

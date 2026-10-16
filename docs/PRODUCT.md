@@ -2,7 +2,7 @@
 
 **Execution update, 2026-10-16:** The owner authorized round-2 production implementation on 2026-10-15 under [the execution ledger](implementation-round-2.md), with accepted UX refinements integrated at batch boundaries. Older overall mockup-approval gates below are superseded. Reading-mascot placement is approved, integrated and host/device-verified in the recorded states. No publication is authorized.
 
-**Status: Round-2 functionality is ready for owner testing. The execution ledger records final host results, scoped Android evidence and remaining verification limitations. Not a published product release.**
+**Status: Round-3 checkpoints 1–4 are implemented and verified for owner testing. The [round-3 ledger](implementation-round-3.md) records the final APK, host regression repairs, scoped Android evidence and verification limits. Not a published product release.**
 
 The owner has authorized local-first Flutter implementation with Android verification. FOUNDATION-001 establishes the application host under `app/`; the requirement alone does not claim any product behavior is complete. See [implementation foundations](implementation-foundation.md). Earlier discovery descriptions below retain planning context and are superseded by newer accepted decisions where applicable.
 
@@ -23,6 +23,8 @@ The owner has authorized local-first Flutter implementation with Android verific
 Accepted choices belong in [DECISIONS.md](DECISIONS.md). Planning sequence belongs in [ROADMAP.md](ROADMAP.md). Research evidence belongs in [RESEARCH.md](RESEARCH.md) only after anonymization.
 
 ## Specifications and current phase
+
+Current execution is the owner-approved [round-3 incremental implementation](implementation-round-3.md), building on accepted round 2. Local APK checkpoints, precise verification evidence and explicitly deferred work determine delivery; an implementation round is not a published version. The following round-1 scope remains historical context.
 
 The owner has authorized implementation round 1: collections, focused manual entry, inline vocabulary editing, deletion with Undo, single-direction self-assessment with FSRS and reinforcement retries, previous-grade correction, a summary popup, and English/German language settings. The [implementation ledger](implementation-round-1.md) records dependency order and verification evidence. Earlier discovery questions and incomplete planning tags do not override that accepted scope. The prototype itself remains illustrative and does not establish production persistence or scheduling.
 

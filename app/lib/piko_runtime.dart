@@ -25,6 +25,7 @@ import 'features/entry/entry_session_controller.dart';
 import 'features/entry/entry_session_route.dart';
 import 'features/vocabulary/collection_vocabulary_mutations.dart';
 import 'features/settings/app_language_controller.dart';
+import 'features/settings/preferred_direction_controller.dart';
 import 'features/settings/settings_route.dart';
 import 'shared/interface_locale.dart';
 import 'shared/copy_scope.dart';
@@ -74,6 +75,12 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       SqliteSettingsRepository(database);
   AppLanguageController? _language;
   final _languageBinding = ValueNotifier<AppLanguageController?>(null);
+  late final _direction = PreferredDirectionController(
+    repository: settings,
+    registerPending: trackWrites,
+  );
+  final _directionBinding = ValueNotifier<PreferredDirectionController?>(null);
+  bool _directionStarted = false;
   Future<void> _languageDependencies = Future<void>.value();
   bool _bootstrapped = false;
   final _collectionScopes = CollectionViewScopes();
@@ -95,6 +102,14 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_directionStarted) {
+      _directionStarted = true;
+      scheduleMicrotask(() {
+        if (!mounted) return;
+        _directionBinding.value = _direction;
+        _direction.load();
+      });
+    }
     final locale = InterfaceLocaleScope.of(context);
     if (_language?.locale == locale) return;
     final previous = _language;
@@ -134,7 +149,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SettingsRoute(binding: _languageBinding),
+        builder: (_) => SettingsRoute(
+          binding: _languageBinding,
+          directionBinding: _directionBinding,
+        ),
       ),
     );
   }
@@ -256,6 +274,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     _language?.removeListener(_languageChanged);
     _language?.dispose();
     _languageBinding.dispose();
+    if (_directionStarted) _direction.dispose();
+    _directionBinding.dispose();
     unawaited(closeDatabase());
     super.dispose();
   }
@@ -319,6 +339,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,
             reviewCountClock: database.clock,
             onOpenSettings: _openSettings,
+            directionBinding: _directionBinding,
           ),
         ),
       ],

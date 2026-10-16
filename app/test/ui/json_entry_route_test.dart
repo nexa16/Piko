@@ -7,6 +7,7 @@ import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/collections/collections_home.dart';
+import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/features/interchange/vocabulary_json_page.dart';
 import 'package:piko/main.dart';
@@ -125,6 +126,9 @@ void main() {
           await flush(tester, db);
           await pressJson(tester, 'common.back', language: language);
           await flush(tester, db);
+          expect(find.text(PikoCopy(language).text('entry.exitTitle')), findsOneWidget);
+          await pressJson(tester, 'entry.continue', language: language);
+          await flush(tester, db);
           final returned = tester
               .widget<EntrySessionScreen>(find.byType(EntrySessionScreen))
               .session;
@@ -161,6 +165,17 @@ void main() {
           ))!.map((row) => row.data).toList();
           expect(after.take(4).toList(), learning);
           expect(after, hasLength(6));
+          // Returning to Collection is explicit and still protects the raw draft.
+          await tester.ensureVisible(open);
+          await tester.tap(open);
+          await flush(tester, db);
+          await pressJson(tester, 'common.back', language: language);
+          await flush(tester, db);
+          await pressJson(tester, 'entry.discard', language: language);
+          await flush(tester, db);
+          expect(find.byType(VocabularyJsonPage), findsNothing);
+          expect(find.byType(EntrySessionScreen), findsNothing);
+          expect(find.byType(CollectionDetail), findsOneWidget);
           expect(tester.takeException(), isNull);
         } finally {
           await tester.pumpWidget(const SizedBox());

@@ -84,6 +84,7 @@ class SpeedHarness {
   bool failCommit = false;
   int commitCalls = 0;
   int gameBuilds = 0;
+  SpeedSessionResult? result;
 
   Future<void> mount(WidgetTester tester, {double scale = 1}) async {
     tester.view.devicePixelRatio = 1;
@@ -99,21 +100,23 @@ class SpeedHarness {
           body: Builder(
             builder: (context) => PikoButton(
               label: 'Collection',
-              onPressed: () => Navigator.of(context).push<void>(
-                MaterialPageRoute(
-                  builder: (_) => SpeedSessionRoute(
-                    collection: owner,
-                    session: session,
-                    vocabularyRepository: repository,
-                    gameBuilder: !injectGame
-                        ? null
-                        : (context, session) {
-                            gameBuilds++;
-                            return const Text('Injected numbers game');
-                          },
+              onPressed: () async {
+                result = await Navigator.of(context).push<SpeedSessionResult>(
+                  MaterialPageRoute<SpeedSessionResult>(
+                    builder: (_) => SpeedSessionRoute(
+                      collection: owner,
+                      session: session,
+                      vocabularyRepository: repository,
+                      gameBuilder: !injectGame
+                          ? null
+                          : (context, session) {
+                              gameBuilds++;
+                              return const Text('Injected numbers game');
+                            },
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -229,6 +232,7 @@ void main() {
           expect(h.durable.map((value) => value.entryId), ['a', 'b']);
           expect(h.session.isStopped, isTrue);
           expect(h.session.state, isNull);
+          expect(h.result!.completedCount, 2);
           expect(find.byType(SpeedSessionRoute), findsNothing);
           expect(find.byType(ReviewSummaryDialog), findsNothing);
           expect(find.text('Collection'), findsOneWidget);
@@ -238,6 +242,24 @@ void main() {
       );
     }
   }
+
+  testWidgets('leaving during the final write retains its result without completion feedback', (tester) async {
+    final h = SpeedHarness();
+    await h.mount(tester);
+    await h.reveal(tester);
+    await h.grade(tester, SpeedAnswer.correct);
+    h.commitGate = Completer<void>();
+    await h.reveal(tester);
+    await h.grade(tester, SpeedAnswer.correct);
+    await h.exit(tester);
+    expect(find.byType(SpeedSessionRoute), findsOneWidget);
+    expect(h.result, isNull);
+    h.commitGate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(SpeedSessionRoute), findsNothing);
+    expect(h.durable, hasLength(2));
+    expect(h.result, isNull);
+  });
 
   testWidgets(
     'pending completion disables grades; failure retains revealed card and exact retry',
@@ -275,6 +297,7 @@ void main() {
       await h.grade(tester, SpeedAnswer.correct);
       expect(h.commitCalls, 2);
       expect(h.durable, hasLength(1));
+      expect(h.result, isNull);
       expect(h.session.current!.entryId, 'b');
       await h.exit(tester);
       expect(h.session.state, isNull);
@@ -344,9 +367,41 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(SpeedSessionRoute), findsNothing);
       expect(h.durable.single.entryId, 'a');
+      expect(h.result, isNull);
       expect(find.byType(ReviewSummaryDialog), findsNothing);
     },
   );
+
+  for (final failFinalCommit in [false, true]) {
+    testWidgets('final commit must succeed before a completion result: failure=$failFinalCommit', (tester) async {
+      final h = SpeedHarness();
+      await h.mount(tester);
+      await h.reveal(tester);
+      await h.grade(tester, SpeedAnswer.correct);
+      h.commitGate = Completer<void>();
+      h.failCommit = failFinalCommit;
+      await h.reveal(tester);
+      await h.grade(tester, SpeedAnswer.correct);
+      expect(h.session.isSubmitting, isTrue);
+      expect(h.durable, hasLength(1));
+      expect(h.result, isNull);
+      expect(find.byType(SpeedSessionRoute), findsOneWidget);
+      h.commitGate!.complete();
+      await tester.pumpAndSettle();
+      if (failFinalCommit) {
+        expect(h.session.error, isNotNull);
+        expect(find.byType(SpeedSessionRoute), findsOneWidget);
+        expect(h.result, isNull);
+        await h.exit(tester);
+        expect(h.result, isNull);
+        expect(h.durable, hasLength(1));
+      } else {
+        expect(find.byType(SpeedSessionRoute), findsNothing);
+        expect(h.result!.completedCount, 2);
+        expect(h.durable, hasLength(2));
+      }
+    });
+  }
 
   testWidgets(
     'only a complete short-pool pass invokes supplied game presentation',

@@ -16,9 +16,6 @@ class ReviewProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = pikoDesign, copy = PikoCopyScope.of(context);
-    final compact =
-        MediaQuery.sizeOf(context).width <=
-        d.dimension('components.reviewContext.compactBreakpoint');
     final description = copy.text('learn.progress', {
       'completed': progress.completed,
       'total': progress.total,
@@ -31,33 +28,36 @@ class ReviewProgress extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          Column(
             key: const ValueKey('review-context'),
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Flexible(
-                child: Text(
-                  direction,
-                  key: const ValueKey('review-fixed-direction'),
-                ),
-              ),
-              SizedBox(
-                width: compact
-                    ? d.dimension('spacing.2')
-                    : d.dimension('components.reviewContext.gap'),
-              ),
-              Expanded(
-                child: Text(
-                  description,
-                  key: const ValueKey('review-counters'),
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: d.color('muted'),
-                    fontSize: compact
-                        ? d.dimension('components.reviewContext.compactSize')
-                        : d.dimension('typography.small'),
-                    height: d.dimension('components.reviewContext.lineHeight'),
+              Text(direction, key: const ValueKey('review-fixed-direction')),
+              SizedBox(height: d.dimension('spacing.2')),
+              Semantics(
+                key: const ValueKey('review-counters'),
+                label: description,
+                excludeSemantics: true,
+                child: DefaultTextStyle(
+                  style: Theme.of(context).textTheme.bodySmall!,
+                  child: Wrap(
+                    spacing: d.dimension('spacing.4'),
+                    runSpacing: d.dimension('spacing.2'),
+                    children: [
+                      Text(
+                        copy.text('learn.completedGroup', {
+                          'completed': progress.completed,
+                          'total': progress.total,
+                        }),
+                        key: const ValueKey('review-completed-group'),
+                      ),
+                      Text(
+                        copy.text('learn.firstTryGroup', {
+                          'correct': progress.firstTryCorrect,
+                        }),
+                        key: const ValueKey('review-first-try-group'),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -220,8 +220,8 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
         child: PikoButton(
           key: const ValueKey('review-correct-previous'),
           label: copy.text('learn.correctPrevious'),
-          icon: const PikoIcon(PikoIconName.arrowLeft),
-          variant: PikoButtonVariant.dangerOutline,
+          icon: const PikoIcon(PikoIconName.rotateCcw),
+          variant: PikoButtonVariant.primaryOutline,
           onPressed: !_exiting && canUse()
               ? () {
                   if (mounted &&
@@ -380,7 +380,9 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                         child: Semantics(
                           liveRegion: true,
                           child: Text(
-                            '${copy.text('learn.correcting')} ${_ratingLabel(context, rating)}',
+                            copy.text('learn.previousGrade', {
+                              'grade': _ratingLabel(context, rating),
+                            }),
                             key: const ValueKey('review-correcting-context'),
                           ),
                         ),

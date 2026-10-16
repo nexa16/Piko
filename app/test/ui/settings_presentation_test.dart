@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/settings/settings_route.dart';
+import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_card.dart';
 import 'package:piko/ui/components/piko_button.dart';
@@ -19,11 +20,18 @@ void main() {
       try {
         await h.mount(tester);
         await h.open(tester);
+        await h.flush(tester);
         final title = tester.getRect(
           find.text(const PikoCopy('en').text('nav.settings')),
         );
-        final card = tester.getRect(find.byType(PikoCard));
-        final field = tester.getRect(find.byType(PikoField));
+        final languageCard = find.ancestor(
+          of: settings.dropdown,
+          matching: find.byType(PikoCard),
+        );
+        final card = tester.getRect(languageCard);
+        final field = tester.getRect(
+          find.descendant(of: languageCard, matching: find.byType(PikoField)),
+        );
         // Binding h1 bottom margin collapses with section margin to 23px;
         // card border/padding 1+19 and field's 17px outer margins give 37px.
         expect(
@@ -59,10 +67,13 @@ void main() {
             await h.mount(tester);
             final home = tester.state(find.byType(CollectionsHome));
             final controller = await h.open(tester);
+            await h.flush(tester);
             final copy = PikoCopy(language);
             expect(find.byType(PikoHeading), findsOneWidget);
-            expect(find.byType(PikoCard), findsOneWidget);
+            expect(find.byType(PikoCard), findsNWidgets(2));
             expect(settings.dropdown, findsOneWidget);
+            final direction = find.byType(DropdownButton<PreferredDirection>);
+            expect(direction, findsOneWidget);
             expect(find.byType(PikoButton), findsOneWidget);
             final title = find.text(copy.text('nav.settings'));
             expect(title, findsOneWidget);
@@ -71,6 +82,10 @@ void main() {
               1,
             );
             expect(find.text(copy.text('settings.language')), findsOneWidget);
+            expect(
+              find.text(copy.text('settings.preferredDirection')),
+              findsOneWidget,
+            );
             for (final excluded in [
               'settings.learning',
               'settings.direction',
@@ -86,6 +101,10 @@ void main() {
             final allowed = {
               copy.text('nav.settings'),
               copy.text('settings.language'),
+              copy.text('settings.preferredDirection'),
+              copy.text('settings.directionTargetToNative'),
+              copy.text('settings.directionNativeToTarget'),
+              copy.text('settings.directionBoth'),
               copy.text('common.back'),
               'English',
               'Deutsch',
@@ -95,17 +114,19 @@ void main() {
             }
             final back = settings.button('common.back', language);
             final native = find.byType(DropdownButton<Locale>);
-            for (final target in [back, native]) {
+            for (final target in [back, native, direction]) {
               await tester.ensureVisible(target);
               await tester.pumpAndSettle();
               final rect = tester.getRect(target);
-              expect(rect.height, greaterThanOrEqualTo(44));
-              expect(rect.width, greaterThanOrEqualTo(44));
+              expect(rect.height, greaterThanOrEqualTo(48));
+              expect(rect.width, greaterThanOrEqualTo(48));
               expect(rect.left, greaterThanOrEqualTo(0));
               expect(rect.right, lessThanOrEqualTo(width));
               expect(rect.top, greaterThanOrEqualTo(0));
               expect(rect.bottom, lessThanOrEqualTo(900));
             }
+            await tester.ensureVisible(back);
+            await tester.pumpAndSettle();
             expect(
               tester.getSemantics(back),
               matchesSemantics(
@@ -142,7 +163,7 @@ void main() {
                   )
                   .first;
               final rect = tester.getRect(item);
-              expect(rect.height, greaterThanOrEqualTo(44));
+              expect(rect.height, greaterThanOrEqualTo(48));
               expect(rect.left, greaterThanOrEqualTo(0));
               expect(rect.right, lessThanOrEqualTo(width));
               expect(find.bySemanticsLabel(RegExp(option)), findsWidgets);

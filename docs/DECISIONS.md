@@ -871,6 +871,10 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 - **Implementation:** Deliver a curated English normal-size gallery, reusing reviewed captures with honest per-image provenance. Stop further variant capture runs. Preserve existing private evidence without publishing it.
 - **Boundary:** This narrows screenshot delivery, not product accessibility requirements. Record uncompleted enlarged-text verification and known cosmetic limitations explicitly; do not infer they passed.
 
+## 2026-10-16 — Incremental round 3 and resolved content rules
+
+Owner approved the incremental APK checkpoint plan and a 20% account-allowance reserve. Latest verified APK remains available if later scope is deferred. See implementation-round-3.md for evidence, accepted migration/status/example/Hint contracts and outstanding work. Note and Hint are the same capability, named Hint. Existing-installation preferred direction defaults Native → Target; new installations Target → Native. No publication is authorized.
+
 ## Next decision template
 
 - **Date:** To be decided — when was this choice accepted?

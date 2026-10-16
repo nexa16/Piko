@@ -2,9 +2,11 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import '../vocabulary_repository.dart';
+import '../vocabulary_content.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
+import 'sqlite_settings_repository.dart';
 
 final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
   const _OpeningSnapshot(this.entry, this.issuer, this.assignments);
@@ -15,11 +17,106 @@ final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
   final Map<String, Set<String>> assignments;
 }
 
-final class SqliteVocabularyRepository
-    implements CategorizedVocabularyRepository {
+final class SqliteVocabularyRepository implements VocabularyContentRepository {
   SqliteVocabularyRepository(this.database);
   final PikoDatabase database;
   final _issuer = Object();
+
+  @override
+  Future<HintVisibility> readHintVisibilityDefault() async =>
+      HintVisibility.fromStored(
+        await SqliteSettingsRepository(
+          database,
+        ).read(HintVisibility.settingKey),
+      );
+
+  Future<void> _writeContent(
+    String id,
+    VocabularyContent content,
+    bool makeDefault,
+  ) async {
+    final count =
+        await (database.update(
+          database.vocabularyEntries,
+        )..where((row) => row.id.equals(id))).write(
+          VocabularyEntriesCompanion(
+            exampleTargetText: Value(content.exampleTargetText),
+            exampleNativeText: Value(content.exampleNativeText),
+            hintText: Value(content.hintText),
+            hintVisibility: Value(content.hintVisibility.name),
+          ),
+        );
+    if (count != 1) throw VocabularyValidation.entryNotFound;
+    if (makeDefault) {
+      await SqliteSettingsRepository(
+        database,
+      ).write(HintVisibility.settingKey, content.hintVisibility.name);
+    }
+  }
+
+  @override
+  Future<VocabularyRecord> createWithContent({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+  }) {
+    final normalized = content.normalized();
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final saved = await createCategorized(
+        collectionId: collectionId,
+        targetText: targetText,
+        nativeText: nativeText,
+        assignments: requested,
+      );
+      await _writeContent(saved.id, normalized, makeHintVisibilityDefault);
+      return VocabularyRecord(
+        id: saved.id,
+        collectionId: saved.collectionId,
+        targetText: saved.targetText,
+        nativeText: saved.nativeText,
+        content: normalized,
+      );
+    });
+  }
+
+  @override
+  Future<VocabularyRecord> updateWithContent({
+    required String id,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+  }) {
+    final normalized = content.normalized();
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final saved = await updateCategorized(
+        id: id,
+        targetText: targetText,
+        nativeText: nativeText,
+        assignments: requested,
+      );
+      await _writeContent(id, normalized, makeHintVisibilityDefault);
+      return VocabularyRecord(
+        id: saved.id,
+        collectionId: saved.collectionId,
+        targetText: saved.targetText,
+        nativeText: saved.nativeText,
+        content: normalized,
+      );
+    });
+  }
 
   @override
   Future<VocabularyOpeningSnapshot> captureOpeningSnapshot({
@@ -143,6 +240,10 @@ final class SqliteVocabularyRepository
                   nativeKey: Value(
                     vocabularyComparisonKey(original.nativeText),
                   ),
+                  exampleTargetText: Value(original.content.exampleTargetText),
+                  exampleNativeText: Value(original.content.exampleNativeText),
+                  hintText: Value(original.content.hintText),
+                  hintVisibility: Value(original.content.hintVisibility.name),
                 ),
               );
       if (count != 1) throw VocabularyValidation.entryNotFound;
@@ -201,6 +302,12 @@ final class SqliteVocabularyRepository
     collectionId: row.collectionId,
     targetText: row.targetText,
     nativeText: row.nativeText,
+    content: VocabularyContent.fromStored(
+      exampleTargetText: row.exampleTargetText,
+      exampleNativeText: row.exampleNativeText,
+      hintText: row.hintText,
+      hintVisibility: row.hintVisibility,
+    ),
   );
 
   @override
@@ -236,8 +343,9 @@ final class SqliteVocabularyRepository
       if (collection == null) throw VocabularyValidation.collectionNotFound;
       final id = const Uuid().v4();
       final rowId = await database.allocateVocabularyRowId();
+      final visibility = await readHintVisibilityDefault();
       await database.customInsert(
-        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         variables: [
           Variable(rowId),
           Variable(id),
@@ -246,6 +354,7 @@ final class SqliteVocabularyRepository
           Variable(native),
           Variable(vocabularyComparisonKey(target)),
           Variable(vocabularyComparisonKey(native)),
+          Variable(visibility.name),
         ],
         updates: {database.vocabularyEntries},
       );
@@ -255,6 +364,7 @@ final class SqliteVocabularyRepository
         collectionId: collectionId,
         targetText: target,
         nativeText: native,
+        content: VocabularyContent(hintVisibility: visibility),
       );
     });
   }
@@ -286,6 +396,7 @@ final class SqliteVocabularyRepository
         collectionId: existing.collectionId,
         targetText: target,
         nativeText: native,
+        content: _record(existing).content,
       );
     });
   }

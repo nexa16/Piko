@@ -32,6 +32,29 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Piko Nunito Sans
+      fonts:
+        - asset: assets/fonts/NunitoSans.ttf
+          weight: 400
+        - asset: assets/fonts/NunitoSans.ttf
+          weight: 600
+        - asset: assets/fonts/NunitoSans.ttf
+          weight: 700
+        - asset: assets/fonts/NunitoSans.ttf
+          weight: 800
+    - family: Piko Noto Sans KR
+      fonts:
+        - asset: assets/fonts/NotoSansKR.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansKR.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSansKR.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSansKR.ttf
+          weight: 800
   assets:
+    - assets/fonts/NunitoSans-OFL.txt
+    - assets/fonts/NotoSansKR-OFL.txt
     - assets/generated/lucide/
     - assets/brand/piko-reading.png

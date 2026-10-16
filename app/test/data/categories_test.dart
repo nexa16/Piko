@@ -404,6 +404,16 @@ void main() {
               );
               // The v10 fixture predates the additive successful-Speed marker.
               if (table.key == 'learning_items') row.remove('speed_completed');
+              if (table.key == 'vocabulary_entries') {
+                row.removeWhere(
+                  (key, _) => const {
+                    'example_target_text',
+                    'example_native_text',
+                    'hint_text',
+                    'hint_visibility',
+                  }.contains(key),
+                );
+              }
               final columns = row.keys
                   .map((key) => key == 'stored_rowid' ? 'rowid' : key)
                   .join(',');

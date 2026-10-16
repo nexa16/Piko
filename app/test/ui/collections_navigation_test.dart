@@ -189,7 +189,7 @@ void main() {
       node.owner!.performAction(node.id, SemanticsAction.tap);
       await tester.pumpAndSettle();
       expect(repository.detailIds, ['first']);
-      await tester.tap(find.text('Back'));
+      await tester.tap(find.byTooltip(const PikoCopy('en').text('common.back')));
       await tester.pumpAndSettle();
       var reachedCard = false;
       for (var i = 0; i < 8; i++) {

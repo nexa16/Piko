@@ -12,6 +12,7 @@ import 'package:piko/features/collections/collection_view_scope.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
+import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'category_assignment_picker_test.dart' show PickerFixture;
 import 'category_management_test.dart' show HeldUpdate, field;
@@ -174,7 +175,10 @@ void main() {
           'Confirmed category',
         );
         await tester.pumpAndSettle();
-        final save = find.widgetWithText(PikoButton, 'Save dimension');
+        final save = find.widgetWithText(
+          PikoButton,
+          const PikoCopy('en').text('category.saveDimension'),
+        );
         await tester.ensureVisible(save);
         await tester.tap(save);
         await tester.pumpAndSettle();

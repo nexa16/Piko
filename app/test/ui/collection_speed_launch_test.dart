@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/collection_query.dart';
 import 'package:piko/data/learning_item.dart';
+import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collection_query_binding.dart';
 import 'package:piko/features/collections/collection_view_scope.dart';
@@ -39,7 +40,12 @@ CollectionQuerySnapshot speedProjection({bool eligible = true}) {
                     id: 1,
                     entryId: one.id,
                     direction: entry.key,
-                    cardJson: '{}',
+                    cardJson: LearningCardCodec.encode(
+                      LearningScheduler().initialCard(
+                        itemId: 1,
+                        at: DateTime.utc(2026),
+                      ),
+                    ),
                     formatVersion: 1,
                   ),
                 ]

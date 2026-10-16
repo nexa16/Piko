@@ -393,9 +393,9 @@ test('entry header adapters consume canonical geometry and responsive breakpoint
     document: {documentElement: {style: {setProperty: (name, value) => properties.set(name, value)}, dataset: {}}}});
   vm.runInContext(fs.readFileSync(new URL('../../shared/design-runtime.js', import.meta.url), 'utf8'), context);
   assert.equal(properties.get('--entry-header-gap'), '11px');
-  assert.equal(properties.get('--entry-header-title-size'), '22px');
-  assert.equal(properties.get('--entry-header-back-weight'), '750');
-  assert.equal(properties.get('--entry-header-title-letter-spacing'), '-1px');
+  assert.equal(properties.get('--entry-header-title-size'), '26px');
+  assert.equal(properties.get('--entry-header-back-weight'), '700');
+  assert.equal(properties.get('--entry-header-title-letter-spacing'), '0px');
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'piko-header-'));
   const file = path.join(directory, 'components.css');
   try {

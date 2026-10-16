@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/collection_query.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_item.dart';
+import '../../data/preferred_direction.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -28,6 +31,7 @@ import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
 import '../categories/category_management.dart';
+import '../settings/preferred_direction_controller.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
   const CollectionLoadFailure({required this.onRetry, super.key});
@@ -60,6 +64,7 @@ class CollectionDetail extends StatefulWidget {
     this.queryBinding,
     this.speedSessionFactory,
     this.categoriesRepository,
+    this.directionBinding,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -80,15 +85,28 @@ class CollectionDetail extends StatefulWidget {
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
   final CategoriesRepository? categoriesRepository;
+  final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
 
 class _CollectionDetailState extends State<CollectionDetail> {
+  bool get _directionReady =>
+      widget.directionBinding == null ||
+      widget.directionBinding!.value?.ready == true &&
+          widget.directionBinding!.value?.pending == false;
+  Set<LearningDirection> get _directions => !_directionReady
+      ? const {}
+      : (widget.directionBinding?.value?.value ?? PreferredDirection.both)
+            .directions;
   late Stream<CollectionRecord?> _collection;
   bool _openingEntry = false;
   bool _openingReview = false;
   bool _openingSpeed = false;
+  int? _speedCompletedCount;
+  bool get _genuinelyEmpty =>
+      widget.queryBinding?.ready == true &&
+      widget.queryBinding!.snapshot!.allEntries.isEmpty;
   CollectionQuerySnapshot? _heldLearningSnapshot;
   bool get _learningBusy => _openingReview || _openingSpeed;
   bool _mutationWasBusy = false;
@@ -772,6 +790,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         oldWidget.vocabularyMutationsFactory !=
             widget.vocabularyMutationsFactory) {
       _identity++;
+      _speedCompletedCount = null;
       _openingReview = false;
       _openingSpeed = false;
       _heldLearningSnapshot = null;
@@ -828,6 +847,22 @@ class _CollectionDetailState extends State<CollectionDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final directionBinding = widget.directionBinding;
+    if (directionBinding != null) {
+      return ValueListenableBuilder(
+        valueListenable: directionBinding,
+        builder: (context, controller, _) => controller == null
+            ? _withProjection(context)
+            : ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) => _withProjection(context),
+              ),
+      );
+    }
+    return _withProjection(context);
+  }
+
+  Widget _withProjection(BuildContext context) {
     final binding = widget.queryBinding;
     if (binding == null) return _build(context);
     return ListenableBuilder(
@@ -867,6 +902,30 @@ class _CollectionDetailState extends State<CollectionDetail> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _detailHeading(record, ready),
+                if (_speedCompletedCount != null && ready)
+                  Semantics(
+                    liveRegion: true,
+                    child: Row(
+                      key: const ValueKey('speed-completion-notice'),
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _speedCompletedCount == 1
+                                ? copy.text('speed.completionNoticeOne')
+                                : copy.text('speed.completionNotice', {
+                                    'count': _speedCompletedCount!,
+                                  }),
+                          ),
+                        ),
+                        PikoIconButton(
+                          semanticLabel: copy.text('speed.dismissCompletion'),
+                          icon: const PikoIcon(PikoIconName.x),
+                          onPressed: () =>
+                              setState(() => _speedCompletedCount = null),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (_deleting) Text(copy.text('collection.deleting')),
                 if (_deleteError != null)
                   Semantics(
@@ -909,6 +968,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             reviewIdentityForBuild == _reviewIdentity) {
                           setState(() {
                             if (busy) {
+                              _speedCompletedCount = null;
                               _heldLearningSnapshot ??=
                                   widget.queryBinding!.snapshot;
                             }
@@ -1060,9 +1120,15 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                   : _openEntry,
                               child: ExcludeSemantics(
                                 child: PikoButton(
-                                  label: copy.text('action.new'),
+                                  label: copy.text(
+                                    _genuinelyEmpty
+                                        ? 'collection.addFirstWord'
+                                        : 'action.new',
+                                  ),
                                   icon: const PikoIcon(PikoIconName.plus),
-                                  variant: PikoButtonVariant.ghost,
+                                  variant: _genuinelyEmpty
+                                      ? PikoButtonVariant.primary
+                                      : PikoButtonVariant.ghost,
                                   onPressed:
                                       _deleteRequest != null ||
                                           _renameRequest != null ||
@@ -1079,13 +1145,26 @@ class _CollectionDetailState extends State<CollectionDetail> {
                       },
                     ),
                   ),
-                if (ready && widget.queryBinding != null)
+                if (ready && widget.queryBinding != null && !_genuinelyEmpty)
                   Padding(
                     padding: EdgeInsets.only(
                       bottom: pikoDesign.dimension('spacing.3'),
                     ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
+                        final selectedCount = widget
+                            .queryBinding!
+                            .scope
+                            .filters
+                            .values
+                            .expand((ids) => ids)
+                            .toSet()
+                            .length;
+                        final filterLabel = selectedCount == 0
+                            ? copy.text('action.filters')
+                            : copy.text('collection.activeFilters', {
+                                'count': selectedCount,
+                              });
                         final gap = pikoDesign.dimension('spacing.2');
                         final labelSize = pikoDesign.dimension(
                           'typography.label',
@@ -1099,19 +1178,14 @@ class _CollectionDetailState extends State<CollectionDetail> {
                             scaler.scale(labelSize) > labelSize;
                         final measure = TextPainter(
                           text: TextSpan(
-                            text: copy.text('action.filters'),
-                            style: TextStyle(
-                              fontSize: labelSize,
-                              fontWeight: pikoDesign.weight(
-                                'components.buttons.weight',
-                              ),
-                            ),
+                            text: filterLabel,
+                            style: Theme.of(context).textTheme.labelLarge,
                           ),
                           textDirection: Directionality.of(context),
                           textScaler: scaler,
                         )..layout();
                         final buttonWidth =
-                            measure.width +
+                            measure.width.ceilToDouble() +
                             pikoDesign.dimension('components.icons.size') +
                             gap +
                             2 *
@@ -1132,13 +1206,16 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 enabled: _queryControlsAvailable,
                               ),
                             ),
-                            SizedBox(
-                              width: stack ? constraints.maxWidth : buttonWidth,
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: constraints.maxWidth,
+                              ),
                               child: Align(
-                                alignment: Alignment.centerRight,
+                                widthFactor: 1,
+                                alignment: Alignment.centerLeft,
                                 child: PikoButton(
                                   key: const ValueKey('collection-filters'),
-                                  label: copy.text('action.filters'),
+                                  label: filterLabel,
                                   icon: const PikoIcon(PikoIconName.listFilter),
                                   variant: PikoButtonVariant.ghost,
                                   onPressed:
@@ -1149,32 +1226,33 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 ),
                               ),
                             ),
+                            if (selectedCount > 0)
+                              Align(
+                                widthFactor: 1,
+                                alignment: Alignment.centerLeft,
+                                child: PikoButton(
+                                  key: const ValueKey(
+                                    'collection-no-matches-clear-filters',
+                                  ),
+                                  label: copy.text('r2.clearFilters'),
+                                  variant: PikoButtonVariant.ghost,
+                                  onPressed: !_queryControlsAvailable
+                                      ? null
+                                      : () {
+                                          if (_queryControlsAvailable &&
+                                              ModalRoute.of(
+                                                    context,
+                                                  )?.isCurrent ==
+                                                  true) {
+                                            widget.queryBinding!.scope
+                                                .setFilters(const {});
+                                          }
+                                        },
+                                ),
+                              ),
                           ],
                         );
                       },
-                    ),
-                  ),
-                if (ready &&
-                    widget.queryBinding?.ready == true &&
-                    widget.queryBinding!.snapshot!.allEntries.isNotEmpty &&
-                    widget.queryBinding!.snapshot!.entries.isEmpty &&
-                    widget.queryBinding!.scope.filters.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: PikoButton(
-                      key: const ValueKey(
-                        'collection-no-matches-clear-filters',
-                      ),
-                      label: copy.text('r2.clearFilters'),
-                      variant: PikoButtonVariant.ghost,
-                      onPressed: !_queryControlsAvailable
-                          ? null
-                          : () {
-                              if (_queryControlsAvailable &&
-                                  ModalRoute.of(context)?.isCurrent == true) {
-                                widget.queryBinding!.scope.setFilters(const {});
-                              }
-                            },
                     ),
                   ),
                 if (_lastReadyCollection != null &&
@@ -1186,6 +1264,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                     collection: _lastReadyCollection!,
                     repository: widget.vocabularyRepository!,
                     queryBinding: widget.queryBinding,
+                    preferredDirections: _directions,
                     categoriesRepository: widget.categoriesRepository,
                     onPendingWrites: (work) {
                       // Capture this build's barrier/dependency callback so old
@@ -1237,23 +1316,27 @@ class _CollectionDetailState extends State<CollectionDetail> {
     }
     final counts = {
       for (final entry in snapshot.directions.entries)
-        entry.key: entry.value.dueCount,
+        if (_directions.contains(entry.key)) entry.key: entry.value.dueCount,
     };
     final total = counts.values.fold<int>(0, (a, b) => a + b);
     final Widget normal;
-    if (total == 0) {
-      final pending = snapshot.directions.values.any(
-        (direction) => direction.pendingRetryCount > 0,
+    if (total == 0 && !_openingReview) {
+      final pending = snapshot.directions.entries.any(
+        (direction) =>
+            _directions.contains(direction.key) &&
+            direction.value.pendingRetryCount > 0,
       );
-      normal = Text(
-        copy.text(
-          pending
-              ? 'r2.pending'
-              : binding.scope.restricted
-              ? 'collection.filteredNoReview'
-              : 'r2.caughtUp',
-        ),
-      );
+      normal = !_directionReady
+          ? const SizedBox.shrink()
+          : Text(
+              copy.text(
+                pending
+                    ? 'r2.pending'
+                    : binding.scope.restricted
+                    ? 'collection.filteredNoReview'
+                    : 'r2.caughtUp',
+              ),
+            );
     } else if (widget.reviewSessionFactory != null) {
       normal = ReviewLaunch(
         key: ValueKey(
@@ -1265,10 +1348,15 @@ class _CollectionDetailState extends State<CollectionDetail> {
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
-        enabled: enabled && !_openingSpeed && (binding.ready || _openingReview),
+        enabled:
+            enabled &&
+            _directionReady &&
+            !_openingSpeed &&
+            (binding.ready || _openingReview),
         presentation: ReviewLaunchPresentation.collectionCard,
         dueCount: total,
         directionCounts: counts,
+        allowedDirections: _directions,
         directionCountsLoader: () async {
           final fresh = await binding.service.query(
             collectionId: binding.collectionId,
@@ -1278,7 +1366,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
           );
           return {
             for (final entry in fresh.directions.entries)
-              entry.key: entry.value.dueCount,
+              if (_directions.contains(entry.key))
+                entry.key: entry.value.dueCount,
           };
         },
         onSessionClosed: binding.refresh,
@@ -1298,6 +1387,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
                 'projected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
               ),
               snapshot: snapshot,
+              allowedDirections: _directions,
               scopeIdentity: (
                 binding,
                 binding.scope.search,
@@ -1309,8 +1399,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
               onBusyChanged: (busy) => onBusyChanged(true, busy),
               onPendingWrites: widget.onPendingVocabularyWrites,
               onSessionClosed: binding.refresh,
+              onCompleted: (count) {
+                if (mounted) setState(() => _speedCompletedCount = count);
+              },
               enabled:
                   enabled &&
+                  _directionReady &&
                   !_openingReview &&
                   (binding.ready || _openingSpeed),
               snapshotLoader: () => binding.service.query(
@@ -1329,11 +1423,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final copy = PikoCopyScope.of(context);
     Widget heading(int? entryCount) => PikoHeading(
       title: record?.name ?? copy.text('collection.title'),
+      subtitleInset: 0,
       subtitle: record == null
           ? null
           : collectionEntryMetadata(context, record, entryCount),
-      leading: PikoButton(
-        label: copy.text('common.back'),
+      leading: PikoIconButton(
+        semanticLabel: copy.text('common.back'),
         icon: const PikoIcon(PikoIconName.arrowLeft),
         variant: PikoButtonVariant.ghost,
         onPressed: () => Navigator.of(context).maybePop(),

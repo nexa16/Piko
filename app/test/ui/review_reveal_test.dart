@@ -469,13 +469,15 @@ void main() {
         expect(prompt.style!.color, pikoDesign.color('muted'));
         expect(
           prompt.style!.fontWeight,
-          pikoDesign.weight('components.learningCard.answerPromptWeight'),
+          FontWeight.w400,
         );
         expect(translation.style!.fontSize, 37);
         expect(
           translation.style!.fontWeight,
-          pikoDesign.weight('components.learningCard.answerWeight'),
+          FontWeight.w600,
         );
+        expect(prompt.style!.height, 1.4);
+        expect(translation.style!.height, 1.3);
         expect(text(card, tester), ['One', 'Eins']);
         expect(cue, findsNothing);
         expect(tester.getRect(card).right, lessThanOrEqualTo(320));
