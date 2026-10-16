@@ -46,11 +46,11 @@ Map<String, int> _specRevisions(String id) => switch (id) {
   'home-populated' => {'UX-HOME-001': 1, 'UX-HEADER-002': 1},
   'detail-both-normal-speed' || 'detail-reverse-only' => {
     'MASCOT-001': 1,
-    'UX-MASCOT-001': 1,
+    'UX-MASCOT-001': 2,
     'UX-COLL-008': 3,
     'UX-HEADER-002': 1,
   },
-  'detail-zero' => {'MASCOT-001': 1, 'UX-MASCOT-001': 1, 'UX-COLL-008': 3},
+  'detail-zero' => {'MASCOT-001': 1, 'UX-MASCOT-001': 2, 'UX-COLL-008': 3},
   'speed-game' => {'UX-REVIEW-001': 4, 'SPEED-007': 2, 'SPEED-012': 2},
   _ => {'UX-REVIEW-001': 4},
 };
