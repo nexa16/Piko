@@ -594,6 +594,7 @@ void main() {
       );
       expect(tester.getSize(find.text(long)).height, greaterThan(44));
       await tester.ensureVisible(rename);
+      await tester.pumpAndSettle();
       await tester.tap(rename);
       await tester.pumpAndSettle();
       for (final control in [name, save, cancel]) {

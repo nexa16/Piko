@@ -27,6 +27,7 @@ import 'collection_review_count.dart';
 import 'collection_review_entry_point.dart';
 import 'collection_query_binding.dart';
 import 'collection_search_field.dart';
+import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
 import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
@@ -879,257 +880,252 @@ class _CollectionDetailState extends State<CollectionDetail> {
     final reviewIdentityForBuild = _reviewIdentity;
     final mutationsForBuild = _mutations;
     return Scaffold(
-      body: PikoPage(
-        child: StreamBuilder<CollectionRecord?>(
-          stream: _collection,
-          builder: (context, snapshot) {
-            final record = snapshot.data;
-            final ready =
-                !snapshot.hasError &&
-                snapshot.connectionState != ConnectionState.waiting &&
-                snapshot.connectionState != ConnectionState.none &&
-                record != null;
-            _currentCollection = ready ? record : null;
-            if (ready) {
-              _lastReadyCollection = record;
-            } else if (!snapshot.hasError &&
-                snapshot.connectionState != ConnectionState.waiting &&
-                snapshot.connectionState != ConnectionState.none &&
-                record == null) {
-              _lastReadyCollection = null;
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _detailHeading(record, ready),
-                if (_speedCompletedCount != null && ready)
-                  Semantics(
-                    liveRegion: true,
-                    child: Row(
-                      key: const ValueKey('speed-completion-notice'),
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _speedCompletedCount == 1
-                                ? copy.text('speed.completionNoticeOne')
-                                : copy.text('speed.completionNotice', {
-                                    'count': _speedCompletedCount!,
-                                  }),
+      body: StreamBuilder<CollectionRecord?>(
+        stream: _collection,
+        builder: (context, snapshot) {
+          final record = snapshot.data;
+          final ready =
+              !snapshot.hasError &&
+              snapshot.connectionState != ConnectionState.waiting &&
+              snapshot.connectionState != ConnectionState.none &&
+              record != null;
+          _currentCollection = ready ? record : null;
+          if (ready) {
+            _lastReadyCollection = record;
+          } else if (!snapshot.hasError &&
+              snapshot.connectionState != ConnectionState.waiting &&
+              snapshot.connectionState != ConnectionState.none &&
+              record == null) {
+            _lastReadyCollection = null;
+          }
+          return PikoPage.slivers(
+            physics: const CollectionScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _detailHeading(record, ready),
+                    if (_speedCompletedCount != null && ready)
+                      Semantics(
+                        liveRegion: true,
+                        child: Row(
+                          key: const ValueKey('speed-completion-notice'),
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _speedCompletedCount == 1
+                                    ? copy.text('speed.completionNoticeOne')
+                                    : copy.text('speed.completionNotice', {
+                                        'count': _speedCompletedCount!,
+                                      }),
+                              ),
+                            ),
+                            PikoIconButton(
+                              semanticLabel: copy.text(
+                                'speed.dismissCompletion',
+                              ),
+                              icon: const PikoIcon(PikoIconName.x),
+                              onPressed: () =>
+                                  setState(() => _speedCompletedCount = null),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_deleting) Text(copy.text('collection.deleting')),
+                    if (_deleteError != null)
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          copy.text('collection.deleteFailed'),
+                          style: TextStyle(color: pikoDesign.color('danger')),
+                        ),
+                      ),
+                    if (snapshot.hasError)
+                      CollectionLoadFailure(onRetry: () => setState(_watch))
+                    else if (snapshot.connectionState ==
+                        ConnectionState.waiting)
+                      Text(copy.text('collection.loading'))
+                    else if (record == null)
+                      Text(copy.text('collection.notFound')),
+                    if (_lastReadyCollection != null &&
+                        widget.queryBinding != null &&
+                        (widget.reviewSessionFactory != null ||
+                            widget.speedSessionFactory != null) &&
+                        widget.vocabularyRepository != null)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: pikoDesign.dimension('spacing.2'),
+                        ),
+                        child: _projectedLearning(
+                          enabled:
+                              ready &&
+                              _deleteRequest == null &&
+                              _renameRequest == null &&
+                              !_openingEntry &&
+                              (_mutations?.isBusy != true || _learningBusy),
+                          beforeLaunch: () async {
+                            barrierForBuild.freeze();
+                            await barrierForBuild.drain();
+                            await mutationsForBuild?.awaitPending();
+                          },
+                          onBusyChanged: (speed, busy) {
+                            if (mounted &&
+                                identityForBuild == _identity &&
+                                reviewIdentityForBuild == _reviewIdentity) {
+                              setState(() {
+                                if (busy) {
+                                  _speedCompletedCount = null;
+                                  _heldLearningSnapshot ??=
+                                      widget.queryBinding!.snapshot;
+                                }
+                                if (speed) {
+                                  _openingSpeed = busy;
+                                } else {
+                                  _openingReview = busy;
+                                }
+                                if (!_learningBusy) {
+                                  _heldLearningSnapshot = null;
+                                }
+                              });
+                              if (!_learningBusy) barrierForBuild.release();
+                            }
+                          },
+                        ),
+                      ),
+                    if (_lastReadyCollection != null &&
+                        widget.queryBinding == null &&
+                        widget.reviewSessionFactory != null &&
+                        widget.vocabularyRepository != null)
+                      Padding(
+                        key: ValueKey(
+                          'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
+                        ),
+                        padding: EdgeInsets.only(
+                          top: pikoDesign.dimension(
+                            widget.reviewMembershipLoader == null
+                                ? 'spacing.3'
+                                : 'spacing.5',
                           ),
                         ),
-                        PikoIconButton(
-                          semanticLabel: copy.text('speed.dismissCompletion'),
-                          icon: const PikoIcon(PikoIconName.x),
-                          onPressed: () =>
-                              setState(() => _speedCompletedCount = null),
+                        child: widget.reviewMembershipLoader == null
+                            ? ReviewLaunch(
+                                key: ValueKey(
+                                  'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                                ),
+                                collection: _lastReadyCollection!,
+                                factory: widget.reviewSessionFactory!,
+                                vocabularyRepository:
+                                    widget.vocabularyRepository!,
+                                enabled:
+                                    ready &&
+                                    _deleteRequest == null &&
+                                    _renameRequest == null &&
+                                    !_openingEntry &&
+                                    _mutations?.isBusy != true,
+                                beforeLaunch: () async {
+                                  barrierForBuild.freeze();
+                                  await barrierForBuild.drain();
+                                  await mutationsForBuild?.awaitPending();
+                                },
+                                onPendingWrites: registerForBuild,
+                                onBusyChanged: (busy) {
+                                  if (mounted &&
+                                      identityForBuild == _identity &&
+                                      reviewIdentityForBuild ==
+                                          _reviewIdentity) {
+                                    if (!busy) barrierForBuild.release();
+                                    setState(() => _openingReview = busy);
+                                  }
+                                },
+                              )
+                            : CollectionReviewEntryPoint(
+                                key: ValueKey(
+                                  'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                                ),
+                                collection: _lastReadyCollection!,
+                                loader: widget.reviewMembershipLoader!,
+                                policy: widget.reviewCountPolicy!,
+                                clock: widget.reviewCountClock,
+                                factory: widget.reviewSessionFactory!,
+                                vocabularyRepository:
+                                    widget.vocabularyRepository!,
+                                enabled:
+                                    ready &&
+                                    _deleteRequest == null &&
+                                    _renameRequest == null &&
+                                    !_openingEntry &&
+                                    _mutations?.isBusy != true,
+                                beforeLaunch: () async {
+                                  barrierForBuild.freeze();
+                                  await barrierForBuild.drain();
+                                  await mutationsForBuild?.awaitPending();
+                                },
+                                onPendingWrites: registerForBuild,
+                                onBusyChanged: (busy) {
+                                  if (mounted &&
+                                      identityForBuild == _identity &&
+                                      reviewIdentityForBuild ==
+                                          _reviewIdentity) {
+                                    if (!busy) barrierForBuild.release();
+                                    setState(() => _openingReview = busy);
+                                  }
+                                },
+                                presentation:
+                                    ReviewLaunchPresentation.collectionCard,
+                              ),
+                      ),
+                    if (ready &&
+                        (widget.entrySessionFactory != null ||
+                            widget.vocabularyRepository != null))
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: pikoDesign.dimension(
+                            'components.sectionHeading.topMargin',
+                          ),
+                          bottom: pikoDesign.dimension(
+                            'components.sectionHeading.bottomMargin',
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                if (_deleting) Text(copy.text('collection.deleting')),
-                if (_deleteError != null)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      copy.text('collection.deleteFailed'),
-                      style: TextStyle(color: pikoDesign.color('danger')),
-                    ),
-                  ),
-                if (snapshot.hasError)
-                  CollectionLoadFailure(onRetry: () => setState(_watch))
-                else if (snapshot.connectionState == ConnectionState.waiting)
-                  Text(copy.text('collection.loading'))
-                else if (record == null)
-                  Text(copy.text('collection.notFound')),
-                if (_lastReadyCollection != null &&
-                    widget.queryBinding != null &&
-                    (widget.reviewSessionFactory != null ||
-                        widget.speedSessionFactory != null) &&
-                    widget.vocabularyRepository != null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.2'),
-                    ),
-                    child: _projectedLearning(
-                      enabled:
-                          ready &&
-                          _deleteRequest == null &&
-                          _renameRequest == null &&
-                          !_openingEntry &&
-                          (_mutations?.isBusy != true || _learningBusy),
-                      beforeLaunch: () async {
-                        barrierForBuild.freeze();
-                        await barrierForBuild.drain();
-                        await mutationsForBuild?.awaitPending();
-                      },
-                      onBusyChanged: (speed, busy) {
-                        if (mounted &&
-                            identityForBuild == _identity &&
-                            reviewIdentityForBuild == _reviewIdentity) {
-                          setState(() {
-                            if (busy) {
-                              _speedCompletedCount = null;
-                              _heldLearningSnapshot ??=
-                                  widget.queryBinding!.snapshot;
-                            }
-                            if (speed) {
-                              _openingSpeed = busy;
-                            } else {
-                              _openingReview = busy;
-                            }
-                            if (!_learningBusy) _heldLearningSnapshot = null;
-                          });
-                          if (!_learningBusy) barrierForBuild.release();
-                        }
-                      },
-                    ),
-                  ),
-                if (_lastReadyCollection != null &&
-                    widget.queryBinding == null &&
-                    widget.reviewSessionFactory != null &&
-                    widget.vocabularyRepository != null)
-                  Padding(
-                    key: ValueKey(
-                      'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
-                    ),
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension(
-                        widget.reviewMembershipLoader == null
-                            ? 'spacing.3'
-                            : 'spacing.5',
-                      ),
-                    ),
-                    child: widget.reviewMembershipLoader == null
-                        ? ReviewLaunch(
-                            key: ValueKey(
-                              'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
-                            ),
-                            collection: _lastReadyCollection!,
-                            factory: widget.reviewSessionFactory!,
-                            vocabularyRepository: widget.vocabularyRepository!,
-                            enabled:
-                                ready &&
-                                _deleteRequest == null &&
-                                _renameRequest == null &&
-                                !_openingEntry &&
-                                _mutations?.isBusy != true,
-                            beforeLaunch: () async {
-                              barrierForBuild.freeze();
-                              await barrierForBuild.drain();
-                              await mutationsForBuild?.awaitPending();
-                            },
-                            onPendingWrites: registerForBuild,
-                            onBusyChanged: (busy) {
-                              if (mounted &&
-                                  identityForBuild == _identity &&
-                                  reviewIdentityForBuild == _reviewIdentity) {
-                                if (!busy) barrierForBuild.release();
-                                setState(() => _openingReview = busy);
-                              }
-                            },
-                          )
-                        : CollectionReviewEntryPoint(
-                            key: ValueKey(
-                              'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
-                            ),
-                            collection: _lastReadyCollection!,
-                            loader: widget.reviewMembershipLoader!,
-                            policy: widget.reviewCountPolicy!,
-                            clock: widget.reviewCountClock,
-                            factory: widget.reviewSessionFactory!,
-                            vocabularyRepository: widget.vocabularyRepository!,
-                            enabled:
-                                ready &&
-                                _deleteRequest == null &&
-                                _renameRequest == null &&
-                                !_openingEntry &&
-                                _mutations?.isBusy != true,
-                            beforeLaunch: () async {
-                              barrierForBuild.freeze();
-                              await barrierForBuild.drain();
-                              await mutationsForBuild?.awaitPending();
-                            },
-                            onPendingWrites: registerForBuild,
-                            onBusyChanged: (busy) {
-                              if (mounted &&
-                                  identityForBuild == _identity &&
-                                  reviewIdentityForBuild == _reviewIdentity) {
-                                if (!busy) barrierForBuild.release();
-                                setState(() => _openingReview = busy);
-                              }
-                            },
-                            presentation:
-                                ReviewLaunchPresentation.collectionCard,
-                          ),
-                  ),
-                if (ready &&
-                    (widget.entrySessionFactory != null ||
-                        widget.vocabularyRepository != null))
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension(
-                        'components.sectionHeading.topMargin',
-                      ),
-                      bottom: pikoDesign.dimension(
-                        'components.sectionHeading.bottomMargin',
-                      ),
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final heading = Semantics(
-                          header: true,
-                          headingLevel: 2,
-                          child: Text(
-                            copy.text('collection.vocabulary'),
-                            style: TextStyle(
-                              fontSize: pikoDesign.dimension(
-                                'components.sectionHeading.size',
-                              ),
-                              fontWeight: pikoDesign.weight(
-                                'components.sectionHeading.weight',
-                              ),
-                              color: pikoDesign.color('ink'),
-                            ),
-                          ),
-                        );
-                        if (widget.entrySessionFactory == null) return heading;
-                        return PikoHeadingAction(
-                          heading: heading,
-                          gap: pikoDesign.dimension(
-                            'components.sectionHeading.gap',
-                          ),
-                          action: Tooltip(
-                            message: copy.text('action.addEntry'),
-                            excludeFromSemantics: true,
-                            child: Semantics(
-                              label: copy.text('action.addEntry'),
-                              button: true,
-                              enabled:
-                                  _deleteRequest == null &&
-                                  _renameRequest == null &&
-                                  !_openingEntry &&
-                                  !_learningBusy &&
-                                  _mutations?.isBusy != true,
-                              onTap:
-                                  _deleteRequest != null ||
-                                      _renameRequest != null ||
-                                      _openingEntry ||
-                                      _learningBusy ||
-                                      _mutations?.isBusy == true
-                                  ? null
-                                  : _openEntry,
-                              child: ExcludeSemantics(
-                                child: PikoButton(
-                                  label: copy.text(
-                                    _genuinelyEmpty
-                                        ? 'collection.addFirstWord'
-                                        : 'action.new',
+                        child: Builder(
+                          builder: (context) {
+                            final heading = Semantics(
+                              header: true,
+                              headingLevel: 2,
+                              child: Text(
+                                copy.text('collection.vocabulary'),
+                                style: TextStyle(
+                                  fontSize: pikoDesign.dimension(
+                                    'components.sectionHeading.size',
                                   ),
-                                  icon: const PikoIcon(PikoIconName.plus),
-                                  variant: _genuinelyEmpty
-                                      ? PikoButtonVariant.primary
-                                      : PikoButtonVariant.ghost,
-                                  onPressed:
+                                  fontWeight: pikoDesign.weight(
+                                    'components.sectionHeading.weight',
+                                  ),
+                                  color: pikoDesign.color('ink'),
+                                ),
+                              ),
+                            );
+                            if (widget.entrySessionFactory == null) {
+                              return heading;
+                            }
+                            return PikoHeadingAction(
+                              heading: heading,
+                              gap: pikoDesign.dimension(
+                                'components.sectionHeading.gap',
+                              ),
+                              action: Tooltip(
+                                message: copy.text('action.addEntry'),
+                                excludeFromSemantics: true,
+                                child: Semantics(
+                                  label: copy.text('action.addEntry'),
+                                  button: true,
+                                  enabled:
+                                      _deleteRequest == null &&
+                                      _renameRequest == null &&
+                                      !_openingEntry &&
+                                      !_learningBusy &&
+                                      _mutations?.isBusy != true,
+                                  onTap:
                                       _deleteRequest != null ||
                                           _renameRequest != null ||
                                           _openingEntry ||
@@ -1137,148 +1133,174 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                           _mutations?.isBusy == true
                                       ? null
                                       : _openEntry,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                if (ready && widget.queryBinding != null && !_genuinelyEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: pikoDesign.dimension('spacing.3'),
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final selectedCount = widget
-                            .queryBinding!
-                            .scope
-                            .filters
-                            .values
-                            .expand((ids) => ids)
-                            .toSet()
-                            .length;
-                        final filterLabel = selectedCount == 0
-                            ? copy.text('action.filters')
-                            : copy.text('collection.activeFilters', {
-                                'count': selectedCount,
-                              });
-                        final gap = pikoDesign.dimension('spacing.2');
-                        final labelSize = pikoDesign.dimension(
-                          'typography.label',
-                        );
-                        final scaler = MediaQuery.textScalerOf(context);
-                        final stack =
-                            constraints.maxWidth <
-                                pikoDesign.dimension(
-                                  'layout.mobileBreakpoint',
-                                ) ||
-                            scaler.scale(labelSize) > labelSize;
-                        final measure = TextPainter(
-                          text: TextSpan(
-                            text: filterLabel,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          textDirection: Directionality.of(context),
-                          textScaler: scaler,
-                        )..layout();
-                        final buttonWidth =
-                            measure.width.ceilToDouble() +
-                            pikoDesign.dimension('components.icons.size') +
-                            gap +
-                            2 *
-                                pikoDesign.dimension(
-                                  'components.buttons.padding',
-                                );
-                        measure.dispose();
-                        return Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          children: [
-                            SizedBox(
-                              width: stack
-                                  ? constraints.maxWidth
-                                  : constraints.maxWidth - buttonWidth - gap,
-                              child: CollectionSearchField(
-                                scope: widget.queryBinding!.scope,
-                                enabled: _queryControlsAvailable,
-                              ),
-                            ),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: constraints.maxWidth,
-                              ),
-                              child: Align(
-                                widthFactor: 1,
-                                alignment: Alignment.centerLeft,
-                                child: PikoButton(
-                                  key: const ValueKey('collection-filters'),
-                                  label: filterLabel,
-                                  icon: const PikoIcon(PikoIconName.listFilter),
-                                  variant: PikoButtonVariant.ghost,
-                                  onPressed:
-                                      _queryControlsAvailable &&
-                                          widget.queryBinding!.ready
-                                      ? _openFilters
-                                      : null,
-                                ),
-                              ),
-                            ),
-                            if (selectedCount > 0)
-                              Align(
-                                widthFactor: 1,
-                                alignment: Alignment.centerLeft,
-                                child: PikoButton(
-                                  key: const ValueKey(
-                                    'collection-no-matches-clear-filters',
+                                  child: ExcludeSemantics(
+                                    child: PikoButton(
+                                      label: copy.text(
+                                        _genuinelyEmpty
+                                            ? 'collection.addFirstWord'
+                                            : 'action.new',
+                                      ),
+                                      icon: const PikoIcon(PikoIconName.plus),
+                                      variant: _genuinelyEmpty
+                                          ? PikoButtonVariant.primary
+                                          : PikoButtonVariant.ghost,
+                                      onPressed:
+                                          _deleteRequest != null ||
+                                              _renameRequest != null ||
+                                              _openingEntry ||
+                                              _learningBusy ||
+                                              _mutations?.isBusy == true
+                                          ? null
+                                          : _openEntry,
+                                    ),
                                   ),
-                                  label: copy.text('r2.clearFilters'),
-                                  variant: PikoButtonVariant.ghost,
-                                  onPressed: !_queryControlsAvailable
-                                      ? null
-                                      : () {
-                                          if (_queryControlsAvailable &&
-                                              ModalRoute.of(
-                                                    context,
-                                                  )?.isCurrent ==
-                                                  true) {
-                                            widget.queryBinding!.scope
-                                                .setFilters(const {});
-                                          }
-                                        },
                                 ),
                               ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                if (_lastReadyCollection != null &&
-                    widget.vocabularyRepository != null)
-                  CollectionVocabulary(
-                    key: ValueKey(
-                      'collection-vocabulary-${widget.collectionId}',
-                    ),
-                    collection: _lastReadyCollection!,
-                    repository: widget.vocabularyRepository!,
-                    queryBinding: widget.queryBinding,
-                    preferredDirections: _directions,
-                    categoriesRepository: widget.categoriesRepository,
-                    onPendingWrites: (work) {
-                      // Capture this build's barrier/dependency callback so old
-                      // child work is registered with its original storage owner.
-                      barrierForBuild.track(work);
-                      registerForBuild?.call(work);
-                    },
-                    writeBarrier: barrierForBuild,
-                    mutations: _mutations,
-                  ),
-              ],
-            );
-          },
-        ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (ready &&
+                        widget.queryBinding != null &&
+                        !_genuinelyEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: pikoDesign.dimension('spacing.3'),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final selectedCount = widget
+                                .queryBinding!
+                                .scope
+                                .filters
+                                .values
+                                .expand((ids) => ids)
+                                .toSet()
+                                .length;
+                            final filterLabel = selectedCount == 0
+                                ? copy.text('action.filters')
+                                : copy.text('collection.activeFilters', {
+                                    'count': selectedCount,
+                                  });
+                            final gap = pikoDesign.dimension('spacing.2');
+                            final labelSize = pikoDesign.dimension(
+                              'typography.label',
+                            );
+                            final scaler = MediaQuery.textScalerOf(context);
+                            final stack =
+                                constraints.maxWidth <
+                                    pikoDesign.dimension(
+                                      'layout.mobileBreakpoint',
+                                    ) ||
+                                scaler.scale(labelSize) > labelSize;
+                            final measure = TextPainter(
+                              text: TextSpan(
+                                text: filterLabel,
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              textDirection: Directionality.of(context),
+                              textScaler: scaler,
+                            )..layout();
+                            final buttonWidth =
+                                measure.width.ceilToDouble() +
+                                pikoDesign.dimension('components.icons.size') +
+                                gap +
+                                2 *
+                                    pikoDesign.dimension(
+                                      'components.buttons.padding',
+                                    );
+                            measure.dispose();
+                            return Wrap(
+                              spacing: gap,
+                              runSpacing: gap,
+                              children: [
+                                SizedBox(
+                                  width: stack
+                                      ? constraints.maxWidth
+                                      : constraints.maxWidth -
+                                            buttonWidth -
+                                            gap,
+                                  child: CollectionSearchField(
+                                    scope: widget.queryBinding!.scope,
+                                    enabled: _queryControlsAvailable,
+                                  ),
+                                ),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: constraints.maxWidth,
+                                  ),
+                                  child: Align(
+                                    widthFactor: 1,
+                                    alignment: Alignment.centerLeft,
+                                    child: PikoButton(
+                                      key: const ValueKey('collection-filters'),
+                                      label: filterLabel,
+                                      icon: const PikoIcon(
+                                        PikoIconName.listFilter,
+                                      ),
+                                      variant: PikoButtonVariant.ghost,
+                                      onPressed:
+                                          _queryControlsAvailable &&
+                                              widget.queryBinding!.ready
+                                          ? _openFilters
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                                if (selectedCount > 0)
+                                  Align(
+                                    widthFactor: 1,
+                                    alignment: Alignment.centerLeft,
+                                    child: PikoButton(
+                                      key: const ValueKey(
+                                        'collection-no-matches-clear-filters',
+                                      ),
+                                      label: copy.text('r2.clearFilters'),
+                                      variant: PikoButtonVariant.ghost,
+                                      onPressed: !_queryControlsAvailable
+                                          ? null
+                                          : () {
+                                              if (_queryControlsAvailable &&
+                                                  ModalRoute.of(
+                                                        context,
+                                                      )?.isCurrent ==
+                                                      true) {
+                                                widget.queryBinding!.scope
+                                                    .setFilters(const {});
+                                              }
+                                            },
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (_lastReadyCollection != null &&
+                  widget.vocabularyRepository != null)
+                CollectionVocabulary(
+                  sliver: true,
+                  key: ValueKey('collection-vocabulary-${widget.collectionId}'),
+                  collection: _lastReadyCollection!,
+                  repository: widget.vocabularyRepository!,
+                  queryBinding: widget.queryBinding,
+                  preferredDirections: _directions,
+                  categoriesRepository: widget.categoriesRepository,
+                  onPendingWrites: (work) {
+                    // Capture this build's barrier/dependency callback so old
+                    // child work is registered with its original storage owner.
+                    barrierForBuild.track(work);
+                    registerForBuild?.call(work);
+                  },
+                  writeBarrier: barrierForBuild,
+                  mutations: _mutations,
+                ),
+            ],
+          );
+        },
       ),
     );
   }

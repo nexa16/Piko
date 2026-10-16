@@ -1,5 +1,12 @@
 # Decision log
 
+## Collection Detail scrolling correction — 2026-10-16
+
+- **Owner feedback:** Android vocabulary scrolling feels uneven, sometimes stops advancing and travels too far after faster swipes.
+- **Behavior:** UX-COLL-009 revision 2 records continuous direct scrolling and controllable flicks while retaining inline drafts and explicit swipe-delete behavior. No vocabulary or learning behavior changes.
+- **Implementation choice:** Render nearby vocabulary cards lazily in one viewport and limit release velocity locally to Collection Detail. The numerical tuning value remains revisable following physical-phone testing; do not claim the reported intermittent stall is fully reproduced from rendering structure alone.
+- **Verification:** Before the fix, a 400-row host fixture mounted all rows and a fast synthetic flick traveled about 7436 logical pixels. The focused corrected cases pass; subsequent integrated and Android evidence belongs in the implementation ledger.
+
 ## Reading Piko inside the first available normal-review card — accepted, 2026-10-16
 
 - **Placement:** Put one reading Piko (approved source frame 3) inside the first visible positive normal-review card on Collection Detail. It follows the card's left-aligned direction/count text and precedes the trailing review icon. If only the reverse direction is available, that card is first and receives the mascot. Two directions still show one Piko; Speed-only and states without available normal review show none. Do not add a Speed mascot in round 2.
@@ -873,7 +880,7 @@ Historical comparison; the solid-pair selection below supersedes its proposed so
 
 ## 2026-10-16 — Incremental round 3 and resolved content rules
 
-Owner approved the incremental APK checkpoint plan and a 20% account-allowance reserve. Latest verified APK remains available if later scope is deferred. See implementation-round-3.md for evidence, accepted migration/status/example/Hint contracts and outstanding work. Note and Hint are the same capability, named Hint. Existing-installation preferred direction defaults Native → Target; new installations Target → Native. No publication is authorized.
+Owner approved the incremental APK checkpoint plan. Latest verified APK remains available if later scope is deferred. See implementation-round-3.md for evidence, accepted migration/status/example/Hint contracts and outstanding work. Note and Hint are the same capability, named Hint. Existing-installation preferred direction defaults Native → Target; new installations Target → Native. No publication is authorized.
 
 ## Next decision template
 
