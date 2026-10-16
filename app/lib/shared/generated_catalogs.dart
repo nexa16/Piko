@@ -1604,6 +1604,26 @@ const copyCatalog = <String, Object?>{
 "de": "Bevorzugte Richtung",
 "en": "Preferred direction",
 },
+"settings.directionBoth": <String, Object?>{
+"de": "Beide Richtungen getrennt",
+"en": "Both directions separately",
+},
+"settings.directionLoadFailed": <String, Object?>{
+"de": "Die Lernrichtung konnte nicht geladen werden.",
+"en": "Learning direction could not be loaded.",
+},
+"settings.directionNativeToTarget": <String, Object?>{
+"de": "Muttersprache → Zielsprache",
+"en": "Native → Target",
+},
+"settings.directionSaveFailed": <String, Object?>{
+"de": "Die Lernrichtung konnte nicht gespeichert werden. Die vorherige Auswahl wurde wiederhergestellt.",
+"en": "Learning direction could not be saved. The previous choice was restored.",
+},
+"settings.directionTargetToNative": <String, Object?>{
+"de": "Zielsprache → Muttersprache",
+"en": "Target → Native",
+},
 "settings.eyebrow": <String, Object?>{
 "de": "Präferenzen",
 "en": "Preferences",
@@ -1635,6 +1655,10 @@ const copyCatalog = <String, Object?>{
 "settings.loading": <String, Object?>{
 "de": "App-Sprache wird geladen…",
 "en": "Loading app language…",
+},
+"settings.preferredDirection": <String, Object?>{
+"de": "Lernrichtung",
+"en": "Learning direction",
 },
 "settings.saveFailed": <String, Object?>{
 "de": "Die App-Sprache konnte nicht gespeichert werden. Die vorherige Sprache wurde wiederhergestellt. Bitte erneut versuchen.",
@@ -1779,6 +1803,26 @@ const copyCatalog = <String, Object?>{
 "vocab.loading": <String, Object?>{
 "de": "Vokabeln werden geladen…",
 "en": "Loading vocabulary…",
+},
+"vocab.statusDue": <String, Object?>{
+"de": "Jetzt fällig",
+"en": "Due now",
+},
+"vocab.statusNew": <String, Object?>{
+"de": "Neu",
+"en": "New",
+},
+"vocab.statusNext": <String, Object?>{
+"de": "Nächste Wiederholung: {date} {time}",
+"en": "Next review: {date} {time}",
+},
+"vocab.statusRetryPending": <String, Object?>{
+"de": "Wiederholung ausstehend",
+"en": "Retry pending",
+},
+"vocab.statusSpeedCompleted": <String, Object?>{
+"de": "Intensivlernen abgeschlossen",
+"en": "Speed completed",
 },
 "vocab.undo": <String, Object?>{
 "de": "Rückgängig",

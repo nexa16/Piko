@@ -1481,6 +1481,17 @@ globalThis.PIKO_COPY = {
       "en": "Dismiss completion message",
       "de": "Abschlussmeldung schließen"
     },
+    "settings.preferredDirection": { "en": "Learning direction", "de": "Lernrichtung" },
+    "settings.directionTargetToNative": { "en": "Target → Native", "de": "Zielsprache → Muttersprache" },
+    "settings.directionNativeToTarget": { "en": "Native → Target", "de": "Muttersprache → Zielsprache" },
+    "settings.directionBoth": { "en": "Both directions separately", "de": "Beide Richtungen getrennt" },
+    "settings.directionLoadFailed": { "en": "Learning direction could not be loaded.", "de": "Die Lernrichtung konnte nicht geladen werden." },
+    "settings.directionSaveFailed": { "en": "Learning direction could not be saved. The previous choice was restored.", "de": "Die Lernrichtung konnte nicht gespeichert werden. Die vorherige Auswahl wurde wiederhergestellt." },
+    "vocab.statusRetryPending": { "en": "Retry pending", "de": "Wiederholung ausstehend" },
+    "vocab.statusNew": { "en": "New", "de": "Neu" },
+    "vocab.statusDue": { "en": "Due now", "de": "Jetzt fällig" },
+    "vocab.statusNext": { "en": "Next review: {date} {time}", "de": "Nächste Wiederholung: {date} {time}" },
+    "vocab.statusSpeedCompleted": { "en": "Speed completed", "de": "Intensivlernen abgeschlossen" },
     "speed.rulesTitle": {
       "en": "Rules",
       "de": "Regeln"
