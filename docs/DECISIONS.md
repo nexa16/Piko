@@ -2,6 +2,8 @@
 
 ## Collection Detail scrolling correction — 2026-10-16
 
+- **Authorization correction:** The original issue report did not request implementation. On 2026-10-16 the owner explicitly chose to keep the completed change on `codex/round-4-implementation`, deferring phone testing until more work is implemented. This retention is not broader round-4 implementation authorization or owner acceptance of the physical scrolling behavior. Evidence and pending acceptance are recorded in [the round-4 ledger](implementation-round-4.md).
+
 - **Owner feedback:** Android vocabulary scrolling feels uneven, sometimes stops advancing and travels too far after faster swipes.
 - **Behavior:** UX-COLL-009 revision 2 records continuous direct scrolling and controllable flicks while retaining inline drafts and explicit swipe-delete behavior. No vocabulary or learning behavior changes.
 - **Implementation choice:** Render nearby vocabulary cards lazily in one viewport and limit release velocity locally to Collection Detail. The numerical tuning value remains revisable following physical-phone testing; do not claim the reported intermittent stall is fully reproduced from rendering structure alone.

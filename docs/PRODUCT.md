@@ -1,5 +1,7 @@
 # Product brief
 
+**Round-4 initialization, 2026-10-16:** The owner requested retention of the already completed Collection Detail scrolling change on a round-4 branch. Owner phone testing is deferred until more work has been implemented. No additional round-4 feature implementation is authorized by this request; see [the round-4 ledger](implementation-round-4.md).
+
 **Execution update, 2026-10-16:** The owner authorized round-2 production implementation on 2026-10-15 under [the execution ledger](implementation-round-2.md), with accepted UX refinements integrated at batch boundaries. Older overall mockup-approval gates below are superseded. Reading-mascot placement is approved, integrated and host/device-verified in the recorded states. No publication is authorized.
 
 **Status: Round-3 checkpoints 1–4 are implemented and verified for owner testing. The [round-3 ledger](implementation-round-3.md) records the final APK, host regression repairs, scoped Android evidence and verification limits. Not a published product release.**

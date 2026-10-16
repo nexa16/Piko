@@ -1,6 +1,8 @@
 # Roadmap
 
-**Current execution, 2026-10-16:** Round 3 is authorized from accepted round-2 `develop` baseline 17677e3. Follow [the incremental checkpoint ledger](implementation-round-3.md): learning/foundation, interchange/daily-use UX, preferred direction/status, then one example pair and Hint as a complete storage/editor/learning/JSON package if capacity permits. Preserve local verified APKs and a 20% allowance reserve. No publication, merge or release is authorized. Earlier sequences below are historical.
+**Round-4 initialization, 2026-10-16:** Keep the completed scrolling correction on `codex/round-4-implementation`, preserving its commits and verification evidence. Owner phone testing is deferred until more work has been implemented. Additional scope requires clarification/specification and explicit implementation authorization; see [the round-4 ledger](implementation-round-4.md).
+
+**Round-3 execution, 2026-10-16:** Round 3 is authorized from accepted round-2 `develop` baseline 17677e3. Follow [the incremental checkpoint ledger](implementation-round-3.md): learning/foundation, interchange/daily-use UX, preferred direction/status, then one example pair and Hint as a complete storage/editor/learning/JSON package if capacity permits. Preserve local verified APKs and a 20% allowance reserve. No publication, merge or release is authorized. Earlier sequences below are historical.
 
 **Execution update, 2026-10-15:** PR #2 is merged into develop at d36a285. The historical feature-extraction proposal below is superseded; do not split merged history. Follow [implementation-round-2.md](implementation-round-2.md): one implementation branch, one spec per implementation commit and targeted batched verification. No release or publication is authorized.
 

@@ -14,6 +14,15 @@
 - Do not claim work is complete merely because code was written; verify the intended outcome.
 - Add GitHub Project integration or heavier lifecycle automation only when the project's delivery volume justifies it.
 
+## Owner findings and feature requests
+
+- A reported finding, bug, defect or new feature starts clarification and specification work. It never implicitly authorizes implementation, even during an authorized implementation round. Begin implementation only when the owner explicitly requests it for the clarified scope.
+- First establish what the owner means: the affected flow, observed behavior and intended outcome. Ask focused questions where details materially affect understanding; do not silently turn an ambiguous report into an accepted requirement.
+- A very small, focused investigation is appropriate to help understand the issue. Attempt reproduction on the existing Android emulator/device when relevant, or use the available mockup, existing tests or source inspection. Keep the investigation proportional to the report; do not expand it into a broad audit or change app/mockup behavior as a fix.
+- Record the exact preconditions, data/state, action sequence, expected versus actual result, relevant build/environment and repeatability that can be established. Distinguish the owner's report, directly observed evidence and hypotheses. Source inspection alone is not runtime reproduction; if reproduction is unavailable or unsuccessful, state the limitation and remaining questions.
+- Then document the understood finding and agreed behavior in the owning functional and/or UX specifications, preserving requirement IDs and revision rules. Include reproduction evidence and concrete acceptance scenarios; keep unresolved details explicit and raw recordings or identifying data outside the public repository.
+- Specification acceptance and successful reproduction do not authorize app or mockup implementation. Keep implementation and verification pending until separately requested and performed.
+
 ## Authentication
 
 - If the command-line GitHub session is unauthenticated, start `gh auth login -h github.com --git-protocol https --web` yourself. Present its one-time device code in an easy-to-copy code block and open the verification URL in a visible Codex browser tab; use the user's default browser only when the Codex browser is unavailable.
