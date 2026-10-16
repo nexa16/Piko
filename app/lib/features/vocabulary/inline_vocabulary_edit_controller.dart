@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../data/vocabulary_normalization.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../data/categories_repository.dart';
+import '../../data/vocabulary_content.dart';
 
 @immutable
 final class InlineVocabularyDraft {
@@ -10,9 +11,13 @@ final class InlineVocabularyDraft {
     required this.targetText,
     required this.nativeText,
     Map<String, Set<String>> assignments = const {},
+    this.content = const VocabularyContent(),
+    this.makeHintVisibilityDefault = false,
   }) : assignments = _freezeAssignments(assignments);
   final String targetText, nativeText;
   final Map<String, Set<String>> assignments;
+  final VocabularyContent content;
+  final bool makeHintVisibilityDefault;
 }
 
 Map<String, Set<String>> _freezeAssignments(Map<String, Set<String>> values) =>
@@ -41,6 +46,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
        _draft = InlineVocabularyDraft(
          targetText: entry.targetText,
          nativeText: entry.nativeText,
+         content: entry.content,
          assignments: opening is CategorizedVocabularyOpeningSnapshot
              ? opening.assignments
              : const {},
@@ -88,6 +94,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   VocabularyOpeningSnapshot? _opening;
   Map<String, Set<String>> _committedAssignments, _openingAssignments;
   bool get supportsCategories => _repository is CategorizedVocabularyRepository;
+  bool get supportsContent => _repository is VocabularyContentRepository;
+  bool _committedMakeHintDefault = false;
   Future<VocabularyRecord>? _discarding;
   Object? _discardError;
   Object? get discardError => _discardError;
@@ -105,6 +113,9 @@ final class InlineVocabularyEditController extends ChangeNotifier {
         _draft.nativeText != opening.nativeText ||
         _committed!.targetText != opening.targetText ||
         _committed!.nativeText != opening.nativeText ||
+        _draft.content != opening.content ||
+        _committed!.content != opening.content ||
+        _draft.makeHintVisibilityDefault ||
         !_sameAssignments(_draft.assignments, _openingAssignments) ||
         !_sameAssignments(_committedAssignments, _openingAssignments);
   }
@@ -139,11 +150,31 @@ final class InlineVocabularyEditController extends ChangeNotifier {
             normalizeVocabularyText(_committed!.targetText) ||
         normalizeVocabularyText(_draft.nativeText) !=
             normalizeVocabularyText(_committed!.nativeText) ||
+        !_sameNormalizedContent(_draft.content, _committed!.content) ||
+        _draft.makeHintVisibilityDefault != _committedMakeHintDefault ||
         !_sameAssignments(_draft.assignments, _committedAssignments);
   }
 
   void setTargetText(String value) => edit(targetText: value);
   void setNativeText(String value) => edit(nativeText: value);
+  void setContent(
+    VocabularyContent content, {
+    bool? makeHintVisibilityDefault,
+  }) => edit(
+    content: content,
+    makeHintVisibilityDefault: makeHintVisibilityDefault,
+  );
+
+  bool _sameNormalizedContent(
+    VocabularyContent first,
+    VocabularyContent second,
+  ) {
+    try {
+      return first.normalized() == second;
+    } on VocabularyContentValidation {
+      return false;
+    }
+  }
 
   void setCategoryValues(String dimensionId, Set<String> valueIds) {
     if (!supportsCategories) {
@@ -203,6 +234,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
             targetText: _draft.targetText,
             nativeText: _draft.nativeText,
             assignments: next,
+            content: _draft.content,
+            makeHintVisibilityDefault: _draft.makeHintVisibilityDefault,
           );
           _committedAssignments = committed;
           _openingAssignments = opening;
@@ -214,6 +247,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
                 targetText: pending.$2.targetText,
                 nativeText: pending.$2.nativeText,
                 assignments: prune(pending.$2.assignments),
+                content: pending.$2.content,
+                makeHintVisibilityDefault: pending.$2.makeHintVisibilityDefault,
               ),
             );
           }
@@ -243,6 +278,8 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     String? targetText,
     String? nativeText,
     Map<String, Set<String>>? assignments,
+    VocabularyContent? content,
+    bool? makeHintVisibilityDefault,
   }) {
     _ensureActive();
     if (assignments != null && !supportsCategories) {
@@ -254,9 +291,14 @@ final class InlineVocabularyEditController extends ChangeNotifier {
       targetText: targetText ?? _draft.targetText,
       nativeText: nativeText ?? _draft.nativeText,
       assignments: assignments ?? _draft.assignments,
+      content: content ?? _draft.content,
+      makeHintVisibilityDefault:
+          makeHintVisibilityDefault ?? _draft.makeHintVisibilityDefault,
     );
     if (next.targetText == _draft.targetText &&
         next.nativeText == _draft.nativeText &&
+        next.content == _draft.content &&
+        next.makeHintVisibilityDefault == _draft.makeHintVisibilityDefault &&
         _sameAssignments(next.assignments, _draft.assignments)) {
       return;
     }
@@ -270,14 +312,19 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     notifyListeners();
   }
 
-  VocabularyValidation? _requiredError(InlineVocabularyDraft value) {
+  Object? _requiredError(InlineVocabularyDraft value) {
     if (normalizeVocabularyText(value.targetText).isEmpty) {
       return VocabularyValidation.requiredTarget;
     }
     if (normalizeVocabularyText(value.nativeText).isEmpty) {
       return VocabularyValidation.requiredNative;
     }
-    return null;
+    try {
+      value.content.normalized();
+      return null;
+    } on VocabularyContentValidation catch (error) {
+      return error;
+    }
   }
 
   /// Explicit retry is single-flight and never writes an invalid raw pair.
@@ -307,7 +354,16 @@ final class InlineVocabularyEditController extends ChangeNotifier {
       _pending = null;
       try {
         final repository = _repository;
-        final saved = repository is CategorizedVocabularyRepository
+        final saved = repository is VocabularyContentRepository
+            ? await repository.updateWithContent(
+                id: entryId,
+                targetText: snapshot.targetText,
+                nativeText: snapshot.nativeText,
+                assignments: snapshot.assignments,
+                content: snapshot.content,
+                makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
+              )
+            : repository is CategorizedVocabularyRepository
             ? await repository.updateCategorized(
                 id: entryId,
                 targetText: snapshot.targetText,
@@ -324,6 +380,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
         }
         if (!_disposed) {
           _committed = saved;
+          _committedMakeHintDefault = snapshot.makeHintVisibilityDefault;
           _committedAssignments = revision < _lastPruneRevision
               ? _freezeAssignments({
                   for (final group in snapshot.assignments.entries)
@@ -396,8 +453,10 @@ final class InlineVocabularyEditController extends ChangeNotifier {
           targetText: restored.targetText,
           nativeText: restored.nativeText,
           assignments: restoredAssignments,
+          content: restored.content,
         );
         _committedAssignments = restoredAssignments;
+        _committedMakeHintDefault = false;
         _openingAssignments = restoredAssignments;
         _error = null;
         _revision++;

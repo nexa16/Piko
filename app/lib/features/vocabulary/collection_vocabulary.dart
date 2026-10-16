@@ -7,6 +7,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
 import '../../data/learning_item.dart';
+import '../../data/vocabulary_content.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
@@ -20,6 +21,7 @@ import '../collections/collection_write_barrier.dart';
 import '../collections/collection_query_binding.dart';
 import '../categories/vocabulary_categories.dart';
 import 'vocabulary_learning_status.dart';
+import 'vocabulary_content_editor.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -426,14 +428,16 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     }
   }
 
-  String errorKey(Object error) => switch (error) {
-    VocabularyValidation.requiredTarget => 'entry.requiredTarget',
-    VocabularyValidation.requiredNative => 'entry.requiredNative',
-    VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
-    VocabularyValidation.entryNotFound => 'entry.notFound',
-    CategoryValidation() => 'category.selectionInvalid',
-    _ => 'entry.saveFailed',
-  };
+  String errorKey(Object error) =>
+      vocabularyContentErrorKey(error) ??
+      switch (error) {
+        VocabularyValidation.requiredTarget => 'entry.requiredTarget',
+        VocabularyValidation.requiredNative => 'entry.requiredNative',
+        VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
+        VocabularyValidation.entryNotFound => 'entry.notFound',
+        CategoryValidation() => 'category.selectionInvalid',
+        _ => 'entry.saveFailed',
+      };
 
   Future<void> discardEditor(_Editor current) async {
     if (actionBusy || !identical(editor, current)) return;
@@ -656,6 +660,30 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
           SizedBox(height: pikoDesign.dimension('spacing.3')),
           fields,
+          if (edits.supportsContent)
+            VocabularyContentEditor(
+              value: edits.draft.content,
+              targetLanguage: copy.text(
+                widget.collection.targetLanguage.copyKey,
+              ),
+              nativeLanguage: copy.text(
+                widget.collection.nativeLanguage.copyKey,
+              ),
+              makeDefault: edits.draft.makeHintVisibilityDefault,
+              enabled: !actionBusy,
+              onChanged: (content, makeDefault) {
+                if (!mounted ||
+                    !identical(editor, current) ||
+                    actionBusy ||
+                    ModalRoute.of(context)?.isCurrent != true)
+                  return;
+                edits.setContent(
+                  content,
+                  makeHintVisibilityDefault: makeDefault,
+                );
+                widget.onPendingWrites?.call(edits.awaitSavedEdits());
+              },
+            ),
           if (widget.categoriesRepository != null && edits.supportsCategories)
             VocabularyCategories(
               collectionId: widget.collection.id,
@@ -730,6 +758,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             )
           else if (error != null &&
               error is! VocabularyValidation &&
+              error is! VocabularyContentValidation &&
               error is! CategoryValidation)
             PikoButton(
               label: copy.text('action.retry'),
