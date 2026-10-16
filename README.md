@@ -1,6 +1,6 @@
 # Piko
 
-**Status: Round 4 is implemented and locally verified for owner review. Publication and phone acceptance remain pending. Not a published product release.**
+**Status: Round 4 is implemented and locally verified for owner review. Owner manual review and phone acceptance are complete; development integration is in progress. Not a published product release.**
 
 The local-first Flutter app includes ordered multiple Example Pairs and Hint, JSON schema version 3 export with versions 1–3 accepted on import, shared Import/Export navigation, Collection grouping/view/sort preferences, and the round-4 dialog, book-launcher and palette refinements. The retained scrolling correction and unreproduced header report are documented in the [round-4 ledger](docs/implementation-round-4.md), together with candidate provenance, scoped verification and remaining acceptance gaps. The [round-3 ledger](docs/implementation-round-3.md) retains historical evidence. New feature implementation requires separate authorization; implementation evidence does not automatically close each UX finding.
 

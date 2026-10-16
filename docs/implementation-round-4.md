@@ -1,6 +1,6 @@
 # Round 4 implementation ledger
 
-**Status, 2026-10-16: owner explicitly authorized the complete round-4 plan. Selected app scope implemented and verified locally; final owner-review APK ready. Header report remains unreproduced. No publication or phone acceptance is claimed.**
+**Status, 2026-10-16: selected app scope implemented and verified locally. Owner manual/publication review and candidate phone acceptance are complete. [PR #5](https://github.com/nexa16/Piko/pull/5) is published and ready for squash integration. Header report remains unreproduced; no broader phone coverage is inferred.**
 
 ## Execution agreement — 2026-10-16
 
@@ -168,3 +168,10 @@ The owner authorized a documentation-only rewrite of the 24 unpublished round-4 
 | Retained scrolling fallback | `626baa56a57af764b04b4cdbb710a4bc7019a640` | `c5e8e57f214cae7e33c45403fc8cb6a0f8aff1cc` |
 
 Earlier evidence references identify the actual source used at capture/build time. Use the equivalent rewritten commit to inspect the same application source in the current branch. The final candidate SHA-256 above is unchanged. Public README/product/roadmap summaries now match the verified scope while preserving excluded work, unreproduced cases and owner acceptance gates. No push or publication occurred during this cleanup.
+
+
+### Owner acceptance and development integration — 2026-10-16
+
+The owner approved the reviewed publication and explicitly requested merging [PR #5](https://github.com/nexa16/Piko/pull/5). The delivered `piko-round4-561e269.apk` is accepted on the owner's phone. This is owner-reported acceptance; it does not expand the agent's scoped Android evidence or establish broader device/scenario coverage. The candidate checksum and original/equivalent source mapping above are unchanged.
+
+The reviewed Round 4 history was pushed separately from the ongoing, uncommitted Round 5 preparation. GitHub reports the PR mergeable, with no review discussions, required status checks or Actions workflows configured on develop at this inspection. Final merge uses the verified PR head without bypassing protection. Fetch/content verification and safe branch handoff follow the standing repository process; no release, tag, store publication or promotion to main is authorized.
