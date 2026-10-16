@@ -121,8 +121,9 @@ void main() {
       final config = CatalogueConfiguration();
       final support = await getApplicationSupportDirectory();
       final directory = Directory('${support.path}/round5-${config.runId}');
-      if (await directory.exists())
+      if (await directory.exists()) {
         throw StateError('Refusing to overwrite fixture');
+      }
       await directory.create();
       final clock = review.ReviewFixtureClock(instant);
       final file = File('${directory.path}/fixture.sqlite');

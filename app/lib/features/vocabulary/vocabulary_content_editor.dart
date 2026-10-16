@@ -146,9 +146,12 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
                   )
                   .isEmpty
               ? copy.text('vocab.addExamples')
-              : copy.text('vocab.examplesCount', {
-                  'count': widget.value.examples.length,
-                }),
+              : copy.text(
+                  widget.value.examples.length == 1
+                      ? 'vocab.oneExample'
+                      : 'vocab.examplesCount',
+                  {'count': widget.value.examples.length},
+                ),
           error:
               widget.error == VocabularyContentValidation.examplePairRequired ||
               widget.error == VocabularyContentValidation.exampleTooLong,

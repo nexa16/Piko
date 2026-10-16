@@ -2023,6 +2023,10 @@ const copyCatalog = <String, Object?>{
 "de": "Diese Sichtbarkeit für neue Vokabeln verwenden",
 "en": "Use this visibility for new vocabulary",
 },
+"vocab.oneExample": <String, Object?>{
+"de": "1 Beispielsatzpaar",
+"en": "1 example pair",
+},
 "vocab.removeExample": <String, Object?>{
 "de": "Beispiel {number} entfernen",
 "en": "Remove example {number}",
