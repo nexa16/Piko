@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../data/collection_query.dart';
 import '../../shared/copy_scope.dart';
-import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
@@ -137,6 +136,10 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       autofocus: true,
       child: PikoDialog(
         purpose: PikoDialogPurpose.selection,
+        selectionFooterLabels: [
+          copy.text('r2.clearFilters'),
+          copy.text('r2.apply'),
+        ],
         title: copy.text('action.filters'),
         onClose: widget.onClose,
         body: Column(
@@ -166,21 +169,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
                 ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
             ],
-            if (_draft.isNotEmpty)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: PikoButton(
-                  key: const ValueKey('filters-clear-pending'),
-                  label: copy.text('r2.clearFilters'),
-                  variant: PikoButtonVariant.ghost,
-                  onPressed: !_canEdit
-                      ? null
-                      : () => setState(() {
-                          _draft = {};
-                          _error = null;
-                        }),
-                ),
-              ),
             if (_error != null)
               Semantics(
                 liveRegion: true,
@@ -192,6 +180,18 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
           ],
         ),
         actions: [
+          if (_draft.isNotEmpty)
+            PikoDialogAction(
+              key: const ValueKey('filters-clear-pending'),
+              label: copy.text('r2.clearFilters'),
+              role: PikoDialogActionRole.safe,
+              onPressed: !_canEdit
+                  ? null
+                  : () => setState(() {
+                      _draft = {};
+                      _error = null;
+                    }),
+            ),
           if (_changed)
             PikoDialogAction(
               label: copy.text('r2.apply'),

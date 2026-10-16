@@ -101,21 +101,25 @@ void main() {
       await h.mount(tester);
       await h.open(tester);
       expect(apply(), findsNothing);
+      final rowBefore = tester.getRect(value('travel'));
       await tester.tap(value('travel'));
       await tester.pumpAndSettle();
       expect(h.scope.filters, {
         'topic': {'food'},
       });
       expect(apply(), findsOneWidget);
+      expect(tester.getRect(value('travel')), rowBefore);
       await tester.tap(value('travel'));
       await tester.pumpAndSettle();
       expect(apply(), findsNothing);
+      expect(tester.getRect(value('travel')), rowBefore);
       await tester.tap(find.byKey(const ValueKey('filters-clear-pending')));
       await tester.pumpAndSettle();
       expect(h.scope.filters, {
         'topic': {'food'},
       });
       expect(apply(), findsOneWidget);
+      expect(tester.getRect(value('travel')), rowBefore);
       await tester.tap(apply());
       await tester.pumpAndSettle();
       expect(h.scope.filters, isEmpty);

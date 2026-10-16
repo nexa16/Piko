@@ -327,7 +327,7 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
       textScaler: media.textScaler,
       text: TextSpan(
         text: copy.text('r2.apply'),
-        style: TextStyle(fontSize: design.dimension('typography.label')),
+        style: Theme.of(context).textTheme.labelLarge,
       ),
     )..layout(maxWidth: contentWidth);
     final chrome =
@@ -396,6 +396,7 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         ],
       ),
       purpose: PikoDialogPurpose.selection,
+      selectionFooterLabels: [copy.text('r2.apply')],
       dismissible: !pending,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
