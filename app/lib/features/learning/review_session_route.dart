@@ -1,3 +1,5 @@
+import 'learning_editor_guard.dart';
+import '../../data/categories_repository.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
@@ -25,17 +27,35 @@ class ReviewSessionRoute extends StatefulWidget {
     required this.collection,
     required this.session,
     required this.vocabularyRepository,
+    this.categoriesRepository,
+    this.onPendingWrites,
   });
   final CollectionRecord collection;
   final DueLearningSession session;
   final VocabularyRepository vocabularyRepository;
+  final CategoriesRepository? categoriesRepository;
+  final ValueChanged<Future<void>>? onPendingWrites;
   @override
   State<ReviewSessionRoute> createState() => _ReviewSessionRouteState();
 }
 
 class _ReviewSessionRouteState extends State<ReviewSessionRoute>
     with WidgetsBindingObserver {
+  final _editorGuard = LearningEditorGuard();
   bool _foreground = true;
+
+  Future<void> _back() async {
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      return;
+    }
+    if (_editorGuard.isEditing) {
+      await _editorGuard.close();
+      return;
+    }
+    await _exit(widget.session);
+  }
+
   bool _activityScheduled = false;
   @override
   void initState() {
@@ -250,6 +270,13 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
     if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
+    if (_editorGuard.isEditing && !await _editorGuard.close()) return;
+    if (!mounted ||
+        _exiting ||
+        !identical(session, widget.session) ||
+        route?.isCurrent != true) {
+      return;
+    }
     setState(() => _exiting = true);
     await session.stop();
     if (mounted && identical(session, widget.session)) {
@@ -260,6 +287,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
 
   bool _summaryReady(DueLearningSession session) =>
       session.hasInitialWork &&
+      !session.endedByExclusion &&
       !session.isStopped &&
       !session.isSubmitting &&
       !session.isCorrecting &&
@@ -334,7 +362,7 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
         return PopScope(
           canPop: !_exiting && widget.session.isStopped,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) unawaited(_exit(sessionForBuild));
+            if (!didPop) unawaited(_back());
           },
           child: Scaffold(
             body: PikoPage(
@@ -393,6 +421,14 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                       child: ReviewPromptCard(
                         key: ObjectKey(handle),
                         handle: handle,
+                        collection: widget.collection,
+                        categoriesRepository: widget.categoriesRepository,
+                        editorGuard: _editorGuard,
+                        onPendingWrites: widget.onPendingWrites,
+                        allowEditing: !sessionForBuild.isCorrecting,
+                        onInactive: sessionForBuild.isCorrecting
+                            ? null
+                            : sessionForBuild.revalidateActivity,
                         repository: widget.vocabularyRepository,
                         collectionId: sessionForBuild.collectionId,
                         direction: sessionForBuild.direction,
@@ -422,7 +458,8 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                     ),
                   // Initial empty membership is not regular exhaustion after grades.
                   // Retry integration must also check pending reinforcement first.
-                  if (!widget.session.hasInitialWork)
+                  if (!widget.session.hasInitialWork ||
+                      widget.session.endedByExclusion)
                     Padding(
                       padding: EdgeInsets.only(
                         top: pikoDesign.dimension('spacing.5'),

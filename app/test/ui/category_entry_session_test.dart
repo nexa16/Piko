@@ -42,6 +42,20 @@ Future<void> mount(
 }
 
 Future<void> pressCardAction(WidgetTester tester, Finder action) async {
+  if (action.evaluate().isEmpty) {
+    final section = find
+        .byWidgetPredicate(
+          (w) =>
+              w.key is ValueKey<String> &&
+              (w.key as ValueKey<String>).value.startsWith(
+                'categories-toggle-',
+              ),
+        )
+        .last;
+    await scrollActionIntoView(tester, section);
+    await tester.tap(section);
+    await tester.pumpAndSettle();
+  }
   await scrollActionIntoView(tester, action);
   await tester.tap(action);
   await tester.pumpAndSettle();
@@ -49,8 +63,13 @@ Future<void> pressCardAction(WidgetTester tester, Finder action) async {
 
 Finder picker(EntryCategoryFixture f, String id) =>
     find.byKey(ValueKey('category-picker-$id-${f.dimension.id}'));
-Finder chip(EntryCategoryFixture f, String id, String valueId) =>
-    find.byKey(ValueKey('category-label-$id-$valueId'));
+Finder chip(EntryCategoryFixture f, String id, String valueId) {
+  final section = find.byKey(ValueKey('categories-toggle-$id'));
+  final name = valueId == f.first.id ? f.first.name : f.second.name;
+  return section.evaluate().isNotEmpty
+      ? find.descendant(of: section, matching: find.textContaining(name))
+      : find.byKey(ValueKey('category-label-$id-$valueId'));
+}
 
 void main() {
   for (final language in ['en', 'de']) {

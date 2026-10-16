@@ -708,6 +708,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
                     'r2.categoryAssignments',
                   VocabularyJsonGroup.example => 'vocab.examples',
                   VocabularyJsonGroup.hint => 'vocab.hint',
+                  VocabularyJsonGroup.activity => 'vocab.activity',
                 }),
               ),
               value: groups.contains(group),

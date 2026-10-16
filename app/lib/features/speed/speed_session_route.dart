@@ -1,3 +1,5 @@
+import '../learning/learning_editor_guard.dart';
+import '../../data/categories_repository.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -33,6 +35,8 @@ class SpeedSessionRoute extends StatefulWidget {
     required this.collection,
     required this.session,
     required this.vocabularyRepository,
+    this.categoriesRepository,
+    this.onPendingWrites,
     this.gameBuilder,
     super.key,
   });
@@ -40,6 +44,8 @@ class SpeedSessionRoute extends StatefulWidget {
   final CollectionRecord collection;
   final SpeedLearningSession session;
   final VocabularyRepository vocabularyRepository;
+  final CategoriesRepository? categoriesRepository;
+  final ValueChanged<Future<void>>? onPendingWrites;
   final SpeedGameBuilder? gameBuilder;
 
   @override
@@ -48,7 +54,21 @@ class SpeedSessionRoute extends StatefulWidget {
 
 class _SpeedSessionRouteState extends State<SpeedSessionRoute>
     with WidgetsBindingObserver {
+  final _editorGuard = LearningEditorGuard();
   bool _foreground = true;
+
+  Future<void> _back() async {
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      return;
+    }
+    if (_editorGuard.isEditing) {
+      await _editorGuard.close();
+      return;
+    }
+    await _exit(widget.session);
+  }
+
   bool _exiting = false;
   bool _activityScheduled = false;
   bool _transitionScheduled = false;
@@ -116,7 +136,7 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
         return;
       }
       if (session.isComplete) {
-        unawaited(_exit(session, completed: true));
+        unawaited(_exit(session, completed: !session.endedByExclusion));
       } else if (session.needsBreak && session.state?.numberGame == null) {
         session.beginBreak();
       }
@@ -130,6 +150,13 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
     if (!mounted || _exiting || !identical(session, widget.session)) return;
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
+    if (_editorGuard.isEditing && !await _editorGuard.close()) return;
+    if (!mounted ||
+        _exiting ||
+        !identical(session, widget.session) ||
+        route?.isCurrent != true) {
+      return;
+    }
     final state = session.state;
     final result =
         completed &&
@@ -268,7 +295,7 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
         return PopScope<SpeedSessionResult>(
           canPop: !_exiting && session.isStopped,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) unawaited(_exit(session));
+            if (!didPop) unawaited(_back());
           },
           child: Scaffold(
             body: PikoPage(
@@ -328,6 +355,11 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                       LearningPromptCard(
                         key: ObjectKey(handle),
                         presentation: handle,
+                        collection: widget.collection,
+                        categoriesRepository: widget.categoriesRepository,
+                        editorGuard: _editorGuard,
+                        onPendingWrites: widget.onPendingWrites,
+                        onInactive: session.revalidateActivity,
                         entryId: handle.entryId,
                         collectionId: state.collectionId,
                         direction: state.direction,

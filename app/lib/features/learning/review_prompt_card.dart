@@ -1,3 +1,6 @@
+import '../../data/collections_repository.dart';
+import '../../data/categories_repository.dart';
+import 'learning_editor_guard.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/learning_item.dart';
@@ -15,10 +18,22 @@ class ReviewPromptCard extends StatelessWidget {
     required this.direction,
     required this.canReveal,
     this.initiallyRevealed = false,
+    this.collection,
+    this.categoriesRepository,
+    this.editorGuard,
+    this.onPendingWrites,
+    this.onInactive,
+    this.allowEditing = true,
     this.questionActions,
     this.revealedActions,
   });
 
+  final CollectionRecord? collection;
+  final CategoriesRepository? categoriesRepository;
+  final LearningEditorGuard? editorGuard;
+  final ValueChanged<Future<void>>? onPendingWrites;
+  final Future<void> Function()? onInactive;
+  final bool allowEditing;
   final GradingCardHandle handle;
   final VocabularyRepository repository;
   final String collectionId;
@@ -31,6 +46,12 @@ class ReviewPromptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LearningPromptCard(
     presentation: handle,
+    collection: collection,
+    categoriesRepository: categoriesRepository,
+    editorGuard: editorGuard,
+    onPendingWrites: onPendingWrites,
+    onInactive: onInactive,
+    allowEditing: allowEditing,
     entryId: handle.item.entryId,
     repository: repository,
     collectionId: collectionId,

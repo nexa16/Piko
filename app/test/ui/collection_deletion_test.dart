@@ -140,7 +140,7 @@ void main() {
     },
   );
   testWidgets(
-    'opening raw changes retain check after autosave; invalid finish stays open and compact field gaps stay canonical',
+    'autosave retains collapse chevron; invalid collapse stays open and compact field gaps stay canonical',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -151,16 +151,16 @@ void main() {
       expect(finish('Collapse vocabulary editor'), findsOneWidget);
       await tester.enterText(field(id), 'Edited');
       await flush(tester, f);
-      expect(finish('Finish editing'), findsOneWidget);
+      expect(finish('Collapse vocabulary editor'), findsOneWidget);
       final icon = tester.widget<PikoIcon>(
         find.descendant(
-          of: finish('Finish editing'),
+          of: finish('Collapse vocabulary editor'),
           matching: find.byType(PikoIcon),
         ),
       );
-      expect(icon.name, PikoIconName.check);
+      expect(icon.name, PikoIconName.chevronRight);
       expect(
-        tester.getRect(finish('Finish editing')).height,
+        tester.getRect(finish('Collapse vocabulary editor')).height,
         greaterThanOrEqualTo(44),
       );
       final nativeLabel = find.text('German');
@@ -170,14 +170,14 @@ void main() {
       );
       await tester.enterText(field(id), ' ');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(finish('Finish editing'));
-      await tester.tap(finish('Finish editing'));
+      await tester.ensureVisible(finish('Collapse vocabulary editor'));
+      await tester.tap(finish('Collapse vocabulary editor'));
       await tester.pumpAndSettle();
       expect(field(id), findsOneWidget);
       await tester.enterText(field(id), 'Edited again');
       await flush(tester, f);
-      await tester.ensureVisible(finish('Finish editing'));
-      await tester.tap(finish('Finish editing'));
+      await tester.ensureVisible(finish('Collapse vocabulary editor'));
+      await tester.tap(finish('Collapse vocabulary editor'));
       await flush(tester, f);
       expect(field(id), findsNothing);
     },
@@ -227,8 +227,8 @@ void main() {
       expect(tester.getRect(card(active)).top, closeTo(before, 1));
       await tester.enterText(field(active), 'Valid again');
       await flush(tester, f);
-      await tester.ensureVisible(finish('Finish editing'));
-      await tester.tap(finish('Finish editing'));
+      await tester.ensureVisible(finish('Collapse vocabulary editor'));
+      await tester.tap(finish('Collapse vocabulary editor'));
       await flush(tester, f);
       final scrollable = find
           .descendant(
@@ -261,7 +261,9 @@ void main() {
       f.repository.updateGates[id] = gate;
       await tester.enterText(field(id), 'Accepted A');
       await tester.enterText(field(id), 'Accepted B');
-      await tester.tap(button('Delete vocabulary'));
+      await tester.tap(find.byKey(ValueKey('inline-menu-$id')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete vocabulary'));
       await tester.pump();
       expect(f.deletion.deletes, 0);
       expect(tester.widget<TextField>(field(id)).enabled, isFalse);

@@ -130,6 +130,10 @@ void main() {
       expect(find.text('Delete vocabulary'), findsNothing);
       f.session.selectSavedEntry(b.id);
       await tester.pumpAndSettle();
+      final menu = find.byKey(ValueKey('entry-menu-${b.id}'));
+      await tester.ensureVisible(menu);
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
       expect(find.text('Delete vocabulary'), findsOneWidget);
       await tester.ensureVisible(find.text('Delete vocabulary'));
       f.deletion.failDelete = true;
@@ -141,6 +145,8 @@ void main() {
       );
       expect(f.session.confirmedEntries, hasLength(3));
       f.deletion.failDelete = false;
+      await tester.tap(find.byKey(ValueKey('entry-menu-${b.id}')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Delete vocabulary'));
       await flush(tester, f);
       expect(f.session.activeEntryId, c.id);
@@ -289,6 +295,9 @@ void main() {
       f.session.selectSavedEntry(a.id);
       final current = await mount(tester, f);
       f.deletion.deleteGate = Completer<void>();
+      await tester.ensureVisible(find.byKey(ValueKey('entry-menu-${a.id}')));
+      await tester.tap(find.byKey(ValueKey('entry-menu-${a.id}')));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Delete vocabulary'));
       await tester.tap(find.text('Delete vocabulary'));
       await tester.pumpAndSettle();
@@ -308,6 +317,10 @@ void main() {
       await tester.pumpAndSettle();
       f.deletion.deleteGate = Completer<void>();
       f.deletion.failDelete = true;
+      final menu = find.byKey(ValueKey('entry-menu-${b.id}'));
+      await tester.ensureVisible(menu);
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Delete vocabulary'));
       await tester.tap(find.text('Delete vocabulary'));
       await tester.pumpAndSettle();

@@ -168,7 +168,11 @@ void main() {
         }
         await tester.pumpAndSettle();
         expect(deletion(), findsNothing, reason: '$mode safely dismisses menu');
-        expect(control.focusNode!.hasFocus, isTrue, reason: '$mode restores opener focus');
+        expect(
+          control.focusNode!.hasFocus,
+          isTrue,
+          reason: '$mode restores opener focus',
+        );
         expect(repository.deletes, 0);
       }
     },
@@ -205,7 +209,7 @@ void main() {
     expect(find.byType(PikoDialog), findsOneWidget);
     expect(deletion(), findsOneWidget);
   });
-  testWidgets('accepted Discard drains before confirmed Collection cascade', (
+  testWidgets('accepted autosave drains before confirmed Collection cascade', (
     tester,
   ) async {
     final f = CollectionDeletionFixture();
@@ -216,11 +220,9 @@ void main() {
     final id = f.entries[0].id;
     await tester.tap(find.byKey(ValueKey('vocabulary-$id')));
     await flush(tester, f);
-    await tester.enterText(field(id), 'Changed');
-    await flush(tester, f);
     final gate = Completer<void>();
-    vocabulary.restoreGate = gate;
-    await tester.tap(find.byKey(ValueKey('inline-discard-$id')));
+    vocabulary.updateGates[id] = gate;
+    await tester.enterText(field(id), 'Changed');
     await tester.pump();
     await openConfirmation(tester);
     await tester.tap(confirm());

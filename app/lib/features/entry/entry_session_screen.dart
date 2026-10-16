@@ -1,3 +1,4 @@
+import '../../ui/components/piko_switch.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -421,7 +422,53 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     }
   }
 
-  void select(String id, {bool centerCard = false}) {
+  String? collapsedEntryId;
+  bool selectingEntry = false;
+  Future<void> collapseSaved(String id) async {
+    if (selectingEntry || session.isBusy || exitDraining || id != activeId) {
+      return;
+    }
+    selectingEntry = true;
+    final owner = session;
+    try {
+      await owner.awaitSavedEdits();
+      if (!mounted ||
+          session != owner ||
+          id != activeId ||
+          owner.savedEntryState(id).error != null) {
+        return;
+      }
+      FocusManager.instance.primaryFocus?.unfocus();
+      setState(() => collapsedEntryId = id);
+    } finally {
+      selectingEntry = false;
+    }
+  }
+
+  Future<void> select(String id, {bool centerCard = false}) async {
+    if (collapsedEntryId == id) {
+      setState(() => collapsedEntryId = null);
+      scheduleLayout();
+      return;
+    }
+    if (selectingEntry) return;
+    final owner = session;
+    final old = activeId;
+    if (old != draftId && old != id) {
+      selectingEntry = true;
+      try {
+        await owner.awaitSavedEdits();
+        if (!mounted ||
+            session != owner ||
+            activeId != old ||
+            owner.savedEntryState(old).error != null) {
+          return;
+        }
+      } finally {
+        selectingEntry = false;
+      }
+    }
+    collapsedEntryId = null;
     if (session.isBusy || exitDraining || id == activeId) return;
     anchorId = id;
     // At the top boundary expansion grows down from the content edge. Keeping
@@ -871,7 +918,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         scheduleLayout();
       }),
     )..sync(values);
-    final active = id == activeId;
+    final active = id == activeId && collapsedEntryId != id;
     final error = draft ? session.draftError : saved!.error;
     final metaStyle = TextStyle(
       color: pikoDesign.color('muted'),
@@ -1015,6 +1062,40 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         ),
                       ),
                     ),
+                    if (active && !draft)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PikoIconButton(
+                            key: ValueKey('entry-collapse-$id'),
+                            icon: const RotatedBox(
+                              quarterTurns: 3,
+                              child: PikoIcon(PikoIconName.chevronRight),
+                            ),
+                            semanticLabel: copy.text('vocab.inlineCollapse'),
+                            onPressed: session.isBusy || exitDraining
+                                ? null
+                                : () => collapseSaved(id),
+                          ),
+                          if (session.supportsDeletion)
+                            PopupMenuButton<String>(
+                              key: ValueKey('entry-menu-$id'),
+                              tooltip: copy.text('vocab.editorMenu'),
+                              enabled:
+                                  !session.isBusy &&
+                                  !exitDraining &&
+                                  exitRequest == null,
+                              icon: const PikoIcon(PikoIconName.ellipsis),
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(copy.text('vocab.delete')),
+                                ),
+                              ],
+                              onSelected: (_) => deleteEntry(id),
+                            ),
+                        ],
+                      ),
                   ],
                 ),
                 if (!active)
@@ -1113,6 +1194,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           if (session.supportsContent)
                             VocabularyContentEditor(
                               value: values.content,
+                              collectionId: widget.collection.id,
+                              preferences: session.hintPreferences,
+                              error: error,
+                              onPendingWrites: (operation) {
+                                final drain = session.trackPreferenceWrite(
+                                  draft ? null : id,
+                                  operation,
+                                );
+                                widget.onPendingWrites?.call(drain);
+                              },
                               targetLanguage: copy.text(
                                 widget.collection.targetLanguage.copyKey,
                               ),
@@ -1222,6 +1313,43 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 );
                               },
                             ),
+                          if (session.supportsContent)
+                            PikoSwitch(
+                              key: ValueKey('entry-active-$id'),
+
+                              title: Text(copy.text('vocab.active')),
+                              value: values.active,
+                              subtitle: Text(
+                                copy.text(
+                                  values.active
+                                      ? 'vocab.activeHelp'
+                                      : 'vocab.inactiveHelp',
+                                ),
+                              ),
+                              onChanged:
+                                  !active ||
+                                      session.isBusy ||
+                                      exitDraining ||
+                                      exitRequest != null
+                                  ? null
+                                  : (value) {
+                                      if (ModalRoute.of(context)?.isCurrent !=
+                                          true) {
+                                        return;
+                                      }
+                                      if (draft) {
+                                        session.setActive(value);
+                                      } else {
+                                        session.editSavedEntry(
+                                          id,
+                                          active: value,
+                                        );
+                                        widget.onPendingWrites?.call(
+                                          session.awaitSavedEdits(),
+                                        );
+                                      }
+                                    },
+                            ),
                           SizedBox(height: pikoDesign.dimension('spacing.3')),
                           if (draft)
                             Wrap(
@@ -1287,18 +1415,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   : draft
                                   ? confirm
                                   : () => session.retrySavedEntry(id),
-                            ),
-                          if (!draft && session.supportsDeletion)
-                            PikoButton(
-                              label: copy.text('vocab.delete'),
-                              icon: const PikoIcon(PikoIconName.trash),
-                              variant: PikoButtonVariant.dangerGhost,
-                              onPressed:
-                                  session.isBusy ||
-                                      exitDraining ||
-                                      exitRequest != null
-                                  ? null
-                                  : () => deleteEntry(id),
                             ),
                           if (deletionErrorId == id && deletionError != null)
                             Semantics(

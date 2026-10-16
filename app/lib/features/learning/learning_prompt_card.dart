@@ -1,3 +1,9 @@
+import 'dart:async';
+import '../../data/categories_repository.dart';
+import '../../data/collections_repository.dart';
+import '../vocabulary/inline_vocabulary_edit_controller.dart';
+import '../vocabulary/saved_vocabulary_editor.dart';
+import 'learning_editor_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../data/learning_item.dart';
@@ -24,7 +30,19 @@ class LearningPromptCard extends StatefulWidget {
     this.revealedActions,
     this.scopeMatches = true,
     this.onReveal,
+    this.collection,
+    this.categoriesRepository,
+    this.editorGuard,
+    this.onPendingWrites,
+    this.onInactive,
+    this.allowEditing = true,
   });
+  final CollectionRecord? collection;
+  final CategoriesRepository? categoriesRepository;
+  final LearningEditorGuard? editorGuard;
+  final ValueChanged<Future<void>>? onPendingWrites;
+  final Future<void> Function()? onInactive;
+  final bool allowEditing;
   final Object presentation;
   final String entryId;
   final VocabularyRepository repository;
@@ -41,6 +59,126 @@ class LearningPromptCard extends StatefulWidget {
 }
 
 class _LearningPromptCardState extends State<LearningPromptCard> {
+  InlineVocabularyEditController? _edits;
+  final _target = TextEditingController(), _native = TextEditingController();
+  final _targetFocus = FocusNode(), _nativeFocus = FocusNode();
+  bool _opening = false, _closing = false, _inactiveScheduled = false;
+  Object? _editError;
+  final Set<Future<void>> _extraWrites = {};
+
+  void _register(Future<void> work) {
+    final drained = work.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    _extraWrites.add(drained);
+    unawaited(drained.whenComplete(() => _extraWrites.remove(drained)));
+    widget.onPendingWrites?.call(drained);
+  }
+
+  void _editChanged() {
+    if (!mounted) return;
+    setState(() {});
+    final edits = _edits;
+    if (edits != null &&
+        !edits.isSaving &&
+        !edits.hasUncommittedChanges &&
+        !edits.committed.active) {
+      _scheduleInactive();
+    }
+  }
+
+  Future<void> _openEditor() async {
+    if (_opening ||
+        _edits != null ||
+        !widget.allowEditing ||
+        !widget.canReveal()) {
+      return;
+    }
+    final presentation = widget.presentation;
+    setState(() {
+      _opening = true;
+      _editError = null;
+    });
+    widget.editorGuard?.attach(this, () async => false);
+    try {
+      final edits = await InlineVocabularyEditController.open(
+        entryId: widget.entryId,
+        collectionId: widget.collectionId,
+        repository: widget.repository,
+      );
+      if (!mounted || !identical(widget.presentation, presentation)) {
+        edits.dispose();
+        return;
+      }
+      _edits = edits;
+      _target.text = edits.draft.targetText;
+      _native.text = edits.draft.nativeText;
+      edits.addListener(_editChanged);
+      widget.editorGuard?.attach(this, _closeEditor);
+    } catch (error) {
+      if (mounted) _editError = error;
+      widget.editorGuard?.detach(this);
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  Future<bool> _closeEditor() async {
+    if (_opening || _closing) return false;
+    final edits = _edits;
+    if (edits == null) return true;
+    setState(() => _closing = true);
+    try {
+      await edits.awaitSavedEdits();
+      while (_extraWrites.isNotEmpty) {
+        await Future.wait(_extraWrites.toList());
+      }
+      if (!mounted ||
+          !identical(_edits, edits) ||
+          edits.error != null ||
+          edits.hasUncommittedChanges) {
+        return false;
+      }
+      _targetFocus.unfocus();
+      _nativeFocus.unfocus();
+      edits.removeListener(_editChanged);
+      edits.dispose();
+      _edits = null;
+      _watch();
+      widget.editorGuard?.detach(this);
+      return true;
+    } finally {
+      if (mounted) setState(() => _closing = false);
+    }
+  }
+
+  void _scheduleInactive() {
+    if (_inactiveScheduled || widget.onInactive == null) return;
+    _inactiveScheduled = true;
+    final presentation = widget.presentation;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        if (!mounted || !identical(widget.presentation, presentation)) return;
+        if (await _closeEditor()) await widget.onInactive?.call();
+      } finally {
+        _inactiveScheduled = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.editorGuard?.detach(this);
+    _edits?.removeListener(_editChanged);
+    _edits?.dispose();
+    _target.dispose();
+    _native.dispose();
+    _targetFocus.dispose();
+    _nativeFocus.dispose();
+    super.dispose();
+  }
+
   late Stream<VocabularyRecord?> _entry;
   int _revision = 0;
   bool _revealed = false, _showFocus = false, _focused = false;
@@ -94,6 +232,25 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final edits = _edits;
+    if (edits != null && widget.collection != null) {
+      return PikoCard(
+        key: const ValueKey('learning-answer-editor'),
+        child: SavedVocabularyEditor(
+          collection: widget.collection!,
+          repository: widget.repository,
+          edits: edits,
+          target: _target,
+          native: _native,
+          targetFocus: _targetFocus,
+          nativeFocus: _nativeFocus,
+          categories: widget.categoriesRepository,
+          busy: _closing,
+          onPendingWrites: _register,
+          onCollapse: () => unawaited(_closeEditor()),
+        ),
+      );
+    }
     return StreamBuilder<VocabularyRecord?>(
       key: ValueKey(_revision),
       stream: _entry,
@@ -136,6 +293,11 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             ],
           );
         }
+        if (!entry.active && widget.onInactive != null) {
+          _visibleEntry = null;
+          _scheduleInactive();
+          return Text(copy.text('vocab.inactive'));
+        }
         final prompt = widget.direction == LearningDirection.targetToNative
             ? entry.targetText
             : entry.nativeText;
@@ -172,6 +334,9 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             identical(widget.presentation, handle) &&
             identical(widget.repository, repository) &&
             identical(_visibleEntry, entry) &&
+            !_opening &&
+            _edits == null &&
+            entry.active &&
             widget.canReveal() &&
             ModalRoute.of(context)?.isCurrent == true;
         void reveal() {
@@ -457,7 +622,30 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                card,
+                if (_revealed &&
+                    widget.allowEditing &&
+                    widget.collection != null &&
+                    widget.repository is VocabularyContentRepository)
+                  Stack(
+                    children: [
+                      card,
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: PikoIconButton(
+                          key: const ValueKey('learning-edit-answer'),
+                          icon: const PikoIcon(PikoIconName.pencil),
+                          semanticLabel: copy.text('vocab.inlineEdit'),
+                          onPressed: _opening || !currentSnapshot()
+                              ? null
+                              : () => _register(_openEditor()),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  card,
+                if (_editError != null) Text(copy.text('entry.saveFailed')),
                 if (!_revealed && widget.questionActions != null)
                   widget.questionActions!(
                     context,

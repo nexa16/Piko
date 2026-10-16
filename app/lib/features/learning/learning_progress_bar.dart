@@ -21,6 +21,9 @@ class LearningProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (total == 0) {
+      return Semantics(label: label, child: const SizedBox.shrink());
+    }
     final d = pikoDesign;
     return Semantics(
       role: SemanticsRole.progressBar,

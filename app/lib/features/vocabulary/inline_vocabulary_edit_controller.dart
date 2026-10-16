@@ -13,11 +13,12 @@ final class InlineVocabularyDraft {
     Map<String, Set<String>> assignments = const {},
     this.content = const VocabularyContent(),
     this.makeHintVisibilityDefault = false,
+    this.active = true,
   }) : assignments = _freezeAssignments(assignments);
   final String targetText, nativeText;
   final Map<String, Set<String>> assignments;
   final VocabularyContent content;
-  final bool makeHintVisibilityDefault;
+  final bool makeHintVisibilityDefault, active;
 }
 
 Map<String, Set<String>> _freezeAssignments(Map<String, Set<String>> values) =>
@@ -47,6 +48,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
          targetText: entry.targetText,
          nativeText: entry.nativeText,
          content: entry.content,
+         active: entry.active,
          assignments: opening is CategorizedVocabularyOpeningSnapshot
              ? opening.assignments
              : const {},
@@ -138,7 +140,28 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     return _committed!;
   }
 
-  Object? get error => _error;
+  Object? _preferenceError;
+  final Set<Future<void>> _preferenceWrites = {};
+  Object? get error => _error ?? _preferenceError;
+
+  Future<void> trackPreferenceWrite(Future<void> operation) {
+    final done = Completer<void>();
+    _preferenceWrites.add(done.future);
+    unawaited(() async {
+      try {
+        await operation;
+        _preferenceError = null;
+      } catch (failure) {
+        _preferenceError = failure;
+      } finally {
+        _preferenceWrites.remove(done.future);
+        done.complete();
+        if (!_disposed) notifyListeners();
+      }
+    }());
+    return done.future;
+  }
+
   int get revision => _revision;
   bool get isSaving => !_disposed && _worker != null;
 
@@ -152,6 +175,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
             normalizeVocabularyText(_committed!.nativeText) ||
         !_sameNormalizedContent(_draft.content, _committed!.content) ||
         _draft.makeHintVisibilityDefault != _committedMakeHintDefault ||
+        _draft.active != _committed!.active ||
         !_sameAssignments(_draft.assignments, _committedAssignments);
   }
 
@@ -235,6 +259,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
             nativeText: _draft.nativeText,
             assignments: next,
             content: _draft.content,
+            active: _draft.active,
             makeHintVisibilityDefault: _draft.makeHintVisibilityDefault,
           );
           _committedAssignments = committed;
@@ -248,6 +273,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
                 nativeText: pending.$2.nativeText,
                 assignments: prune(pending.$2.assignments),
                 content: pending.$2.content,
+                active: pending.$2.active,
                 makeHintVisibilityDefault: pending.$2.makeHintVisibilityDefault,
               ),
             );
@@ -279,6 +305,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
     String? nativeText,
     Map<String, Set<String>>? assignments,
     VocabularyContent? content,
+    bool? active,
     bool? makeHintVisibilityDefault,
   }) {
     _ensureActive();
@@ -292,12 +319,14 @@ final class InlineVocabularyEditController extends ChangeNotifier {
       nativeText: nativeText ?? _draft.nativeText,
       assignments: assignments ?? _draft.assignments,
       content: content ?? _draft.content,
+      active: active ?? _draft.active,
       makeHintVisibilityDefault:
           makeHintVisibilityDefault ?? _draft.makeHintVisibilityDefault,
     );
     if (next.targetText == _draft.targetText &&
         next.nativeText == _draft.nativeText &&
         next.content == _draft.content &&
+        next.active == _draft.active &&
         next.makeHintVisibilityDefault == _draft.makeHintVisibilityDefault &&
         _sameAssignments(next.assignments, _draft.assignments)) {
       return;
@@ -361,6 +390,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
                 nativeText: snapshot.nativeText,
                 assignments: snapshot.assignments,
                 content: snapshot.content,
+                active: snapshot.active,
                 makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
               )
             : repository is CategorizedVocabularyRepository
@@ -405,7 +435,13 @@ final class InlineVocabularyEditController extends ChangeNotifier {
   /// Drains accepted/coalesced writes, including additions while waiting. May
   /// be awaited after disposal before the caller closes its repository.
   Future<void> awaitSavedEdits() async {
-    while (_worker != null || _discarding != null || _metadataWorker != null) {
+    while (_worker != null ||
+        _discarding != null ||
+        _metadataWorker != null ||
+        _preferenceWrites.isNotEmpty) {
+      if (_preferenceWrites.isNotEmpty) {
+        await Future.wait(_preferenceWrites.toList());
+      }
       if (_worker != null) await _worker;
       if (_metadataWorker != null) await _metadataWorker;
       final discard = _discarding;
@@ -454,6 +490,7 @@ final class InlineVocabularyEditController extends ChangeNotifier {
           nativeText: restored.nativeText,
           assignments: restoredAssignments,
           content: restored.content,
+          active: restored.active,
         );
         _committedAssignments = restoredAssignments;
         _committedMakeHintDefault = false;

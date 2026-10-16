@@ -336,6 +336,7 @@ void main() {
           VocabularyJsonGroup.categoryAssignments,
           VocabularyJsonGroup.example,
           VocabularyJsonGroup.hint,
+          VocabularyJsonGroup.activity,
         });
         final staleApply = tester
             .widget<PikoButton>(

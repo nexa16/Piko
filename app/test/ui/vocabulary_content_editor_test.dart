@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/vocabulary_content.dart';
 import 'package:piko/features/vocabulary/vocabulary_content_editor.dart';
 import 'package:piko/main.dart';
-import 'package:piko/ui/components/piko_checkbox.dart';
+
 import 'package:piko/ui/components/piko_card.dart';
 
 void main() {
@@ -48,8 +48,14 @@ void main() {
         expect(
           tester.takeException(),
           isNull,
-          reason: 'Radio tiles must paint inside the real decorated card',
+          reason: 'Disclosures must paint inside the real decorated card',
         );
+        expect(
+          find.byKey(const ValueKey('content-example-target')),
+          findsNothing,
+        );
+        await tester.tap(find.byKey(const ValueKey('content-examples-toggle')));
+        await tester.pumpAndSettle();
         final example = find.byKey(const ValueKey('content-example-target'));
         await tester.enterText(example, ' raw example ');
         await tester.pump();
@@ -61,18 +67,22 @@ void main() {
         expect(value.exampleTargetText, ' raw example ');
         expect(value.exampleNativeText, '');
         expect(value.hintVisibility, HintVisibility.hidden);
-        final checkbox = find.byType(PikoCheckbox);
-        await tester.ensureVisible(checkbox);
-        await tester.tap(checkbox);
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('content-examples-toggle')),
+        );
+        await tester.tap(find.byKey(const ValueKey('content-examples-toggle')));
         await tester.pumpAndSettle();
-        expect(makeDefault, isTrue);
         expect(
-          controller.selection,
-          const TextSelection(baseOffset: 2, extentOffset: 5),
+          find.byKey(const ValueKey('content-example-target')),
+          findsNothing,
         );
-        final visibility = find.byKey(
-          const ValueKey('content-hint-visibility-always'),
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('content-hint-toggle')),
         );
+        await tester.tap(find.byKey(const ValueKey('content-hint-toggle')));
+        await tester.pumpAndSettle();
+        expect(makeDefault, isFalse);
+        final visibility = find.byKey(const ValueKey('content-hint-automatic'));
         await tester.ensureVisible(visibility);
         await tester.tap(visibility);
         await tester.pumpAndSettle();

@@ -1,4 +1,5 @@
 import 'collection_view_controls.dart';
+import 'collection_hint_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -463,6 +464,29 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                   });
                                 }
                               },
+                      ),
+                    if (widget.vocabularyRepository
+                            is VocabularyContentRepository &&
+                        widget.vocabularyRepository
+                            is CollectionHintPreferences)
+                      ExpansionTile(
+                        key: const ValueKey('collection-menu-settings'),
+                        leading: const PikoIcon(PikoIconName.settings),
+                        title: Text(copy.text('nav.settings')),
+                        enabled: !writing,
+                        maintainState: true,
+                        children: [
+                          CollectionHintSettings(
+                            collectionId: record.id,
+                            repository:
+                                widget.vocabularyRepository!
+                                    as VocabularyContentRepository,
+                            onPendingWrites: register,
+                            onBusyChanged: (busy) {
+                              if (current()) pending.value = busy;
+                            },
+                          ),
+                        ],
                       ),
                     if (categoryBuilder != null || categories != null)
                       ExpansionTile(
@@ -1092,6 +1116,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 factory: widget.reviewSessionFactory!,
                                 vocabularyRepository:
                                     widget.vocabularyRepository!,
+                                categoriesRepository:
+                                    widget.categoriesRepository,
                                 enabled:
                                     ready &&
                                     _deleteRequest == null &&
@@ -1123,6 +1149,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                 policy: widget.reviewCountPolicy!,
                                 clock: widget.reviewCountClock,
                                 factory: widget.reviewSessionFactory!,
+                                categoriesRepository:
+                                    widget.categoriesRepository,
                                 vocabularyRepository:
                                     widget.vocabularyRepository!,
                                 enabled:
@@ -1446,6 +1474,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
         collection: snapshot.collection,
         factory: widget.reviewSessionFactory!,
         vocabularyRepository: widget.vocabularyRepository!,
+        categoriesRepository: widget.categoriesRepository,
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
@@ -1496,6 +1525,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
               ),
               factory: widget.speedSessionFactory!,
               vocabularyRepository: widget.vocabularyRepository!,
+              categoriesRepository: widget.categoriesRepository,
               beforeLaunch: beforeLaunch,
               onBusyChanged: (busy) => onBusyChanged(true, busy),
               onPendingWrites: widget.onPendingVocabularyWrites,
