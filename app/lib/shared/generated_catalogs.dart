@@ -547,6 +547,10 @@ const copyCatalog = <String, Object?>{
 "de": "{count} Einträge",
 "en": "{count} entries",
 },
+"common.entry": <String, Object?>{
+"de": "{count} Eintrag",
+"en": "{count} entry",
+},
 "dialog.ai": <String, Object?>{
 "de": "Einstellungen zur KI-Unterstützung",
 "en": "AI Assistance Settings",

@@ -103,6 +103,7 @@ Dependencies identify prerequisite behavior or shared integration contracts, not
 | UX-COLL-004 | 2 | Collection | REVIEW-001 | Runtime host-verified | `2de494e` / `11467fa`. `collection_review_runtime_test.dart` verifies one word due both ways counts as two repetitions and unfiltered Overview; `collection_review_entry_points_test.dart` covers per-Collection actions, large text and five-digit counts. Android pending. |
 | UX-COLL-003 | 2 | Collection | baseline Collection/Entry; UX-SYSTEM-001 | Host-verified | `4f170b9` / `a3fcd20`. Shared ghost plus/New action with localized Add Entry semantics and keyboard access; joined route/query/Speed batch 32/32. Android pending. |
 | UX-LAB-001 | 2 | Coordinator | baseline | Snapshot | `f847ff9`; accepted specification/prototype input snapshot, not Android implementation evidence. |
+| UX-HEADER-001 | 1 | Coordinator | baseline live Collection count | Singular-count recovery host-verified | Supplementary Android visual review identified plural wording for one entry. The shared metadata builder now selects canonical English/German singular copy only for exactly one persisted entry; zero, unresolved and plural behavior remain unchanged. Metadata/Home/Detail batch 4/4. Corrected affected captures pending. |
 
 ## Batch evidence
 

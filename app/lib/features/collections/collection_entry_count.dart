@@ -80,8 +80,9 @@ String collectionEntryMetadata(
 ) {
   final pair = collectionLanguagePair(context, collection);
   if (entryCount == null) return pair;
-  final entries = PikoCopyScope.of(
-    context,
-  ).text('common.entries', {'count': entryCount});
+  final entries = PikoCopyScope.of(context).text(
+    entryCount == 1 ? 'common.entry' : 'common.entries',
+    {'count': entryCount},
+  );
   return '$pair · $entries';
 }

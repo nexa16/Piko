@@ -232,6 +232,10 @@ globalThis.PIKO_COPY = {
       "en": "{count} entries",
       "de": "{count} Einträge"
     },
+    "common.entry": {
+      "en": "{count} entry",
+      "de": "{count} Eintrag"
+    },
     "collection.title": {
       "en": "Collection",
       "de": "Sammlung"

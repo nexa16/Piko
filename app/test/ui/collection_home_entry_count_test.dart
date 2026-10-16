@@ -74,7 +74,7 @@ void main() {
         ),
       );
       await flush(tester, database);
-      expect(find.text('French · German · 1 entries'), findsOneWidget);
+      expect(find.text('French · German · 1 entry'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(milliseconds: 1));
@@ -93,7 +93,7 @@ void main() {
         ),
       );
       await flush(tester, database);
-      expect(find.text('French · German · 1 entries'), findsOneWidget);
+      expect(find.text('French · German · 1 entry'), findsOneWidget);
     },
   );
 }
