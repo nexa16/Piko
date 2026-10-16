@@ -63,8 +63,8 @@ void main() {
           );
           expect(
             tester
-                .widget<Text>(find.byKey(const ValueKey('review-counters')))
-                .data,
+                .widget<Semantics>(find.byKey(const ValueKey('review-counters')))
+                .properties.label,
             copy.text('learn.progress', {
               'completed': 0,
               'total': 1,

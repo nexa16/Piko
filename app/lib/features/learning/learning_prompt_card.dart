@@ -198,19 +198,13 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                       prompt,
                       key: const ValueKey('review-prompt-text'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: d.dimension(
-                          _revealed
-                              ? 'components.learningCard.answerPromptSize'
-                              : 'components.learningCard.promptSize',
-                        ),
-                        fontWeight: d.weight(
-                          _revealed
-                              ? 'components.learningCard.answerPromptWeight'
-                              : 'components.learningCard.promptWeight',
-                        ),
-                        color: d.color(_revealed ? 'muted' : 'ink'),
-                      ),
+                      style:
+                          (_revealed
+                                  ? Theme.of(context).textTheme.displaySmall!
+                                  : Theme.of(context).textTheme.displayLarge!)
+                              .copyWith(
+                                color: d.color(_revealed ? 'muted' : 'ink'),
+                              ),
                     ),
                     if (_revealed) ...[
                       SizedBox(
@@ -244,15 +238,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
                         answer,
                         key: const ValueKey('review-answer-text'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: d.dimension(
-                            'components.learningCard.answerSize',
-                          ),
-                          fontWeight: d.weight(
-                            'components.learningCard.answerWeight',
-                          ),
-                          color: d.color('ink'),
-                        ),
+                        style: Theme.of(context).textTheme.displayLarge,
                       ),
                     ],
                   ],

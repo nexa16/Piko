@@ -488,8 +488,10 @@ void main() {
         );
         expect(
           prompt.style!.fontWeight,
-          pikoDesign.weight('components.learningCard.promptWeight'),
+          FontWeight.w600,
         );
+        expect(prompt.style!.height, 1.3);
+        expect(prompt.style!.fontFamily, 'Piko Nunito Sans');
         await tester.ensureVisible(
           launch.button(PikoCopy(language).text('learn.exit')),
         );
