@@ -26,7 +26,10 @@ const allowedColumns = <String, Set<String>>{
     'example_native_text',
     'hint_text',
     'hint_visibility',
+    'added_at',
   },
+  // Ordered user-authored examples; no extra learning history.
+  'vocabulary_examples': {'entry_id', 'position', 'target_text', 'native_text'},
   'learning_items': {
     'id',
     'entry_id',

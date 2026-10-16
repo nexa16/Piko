@@ -70,7 +70,7 @@ void main() {
             await h.flush(tester);
             final copy = PikoCopy(language);
             expect(find.byType(PikoHeading), findsOneWidget);
-            expect(find.byType(PikoCard), findsNWidgets(2));
+            expect(find.byType(PikoCard), findsNWidgets(3));
             expect(settings.dropdown, findsOneWidget);
             final direction = find.byType(DropdownButton<PreferredDirection>);
             expect(direction, findsOneWidget);
@@ -96,11 +96,12 @@ void main() {
               expect(find.text(copy.text(excluded)), findsNothing);
             }
             expect(find.byType(TextField), findsNothing);
-            expect(find.byType(Checkbox), findsNothing);
+            expect(find.byType(Checkbox), findsOneWidget);
             expect(find.byType(Switch), findsNothing);
             final allowed = {
               copy.text('nav.settings'),
               copy.text('settings.language'),
+              copy.text('settings.questionExamples'),
               copy.text('settings.preferredDirection'),
               copy.text('settings.directionTargetToNative'),
               copy.text('settings.directionNativeToTarget'),

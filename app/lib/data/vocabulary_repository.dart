@@ -7,12 +7,14 @@ final class VocabularyRecord {
     required this.targetText,
     required this.nativeText,
     this.content = const VocabularyContent(),
+    this.addedAt,
   });
   final String id;
   final String collectionId;
   final String targetText;
   final String nativeText;
   final VocabularyContent content;
+  final DateTime? addedAt;
 }
 
 enum VocabularyValidation {
@@ -92,4 +94,9 @@ abstract interface class VocabularyContentRepository
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
   });
+}
+
+/// Optional read capability; captured once per learning-card presentation.
+abstract interface class QuestionExamplesRepository {
+  Future<bool> readQuestionExamples();
 }

@@ -17,7 +17,16 @@ import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'json_transfer_test.dart'
-    show JsonTestService, JsonTestPlatform, owner, input, inputText, pressJson, mountJson, mountJsonRoute, settleJson;
+    show
+        JsonTestService,
+        JsonTestPlatform,
+        owner,
+        input,
+        inputText,
+        pressJson,
+        mountJson,
+        mountJsonRoute,
+        settleJson;
 
 class TestPreview implements VocabularyJsonPreview {
   TestPreview({
@@ -83,7 +92,7 @@ class ImportService extends JsonTestService {
 
 Future<void> confirmJson(WidgetTester tester, String language) async {
   final button = find.descendant(
-    of: find.byType(PikoDialog),
+    of: find.byType(PikoDialog).last,
     matching: find.text(PikoCopy(language).text('json.apply')),
   );
   await tester.ensureVisible(button);
@@ -93,54 +102,99 @@ Future<void> confirmJson(WidgetTester tester, String language) async {
 }
 
 void main() {
-  testWidgets('successful import stays explicit until Return sends the owning-Collection intent', (tester) async {
-    final service = ImportService();
-    final returns = <VocabularyJsonReturn?>[];
-    await mountJsonRoute(tester, service, JsonTestPlatform(), returned: returns.add);
-    await tester.enterText(input, 'source JSON');
-    await pressJson(tester, 'json.analyze');
-    final check = tester.widget<PikoButton>(find.widgetWithText(PikoButton, PikoCopy('en').text('json.analyze')));
-    expect(check.variant, PikoButtonVariant.primary);
-    await pressJson(tester, 'json.apply');
-    await confirmJson(tester, 'en');
-    expect(find.byType(VocabularyJsonPage), findsOneWidget);
-    expect(returns, isEmpty);
-    expect(find.text(PikoCopy('en').text('json.importApplied', {'added': 1, 'updated': 2, 'unchanged': 3})), findsOneWidget);
-    await pressJson(tester, 'json.returnToCollection');
-    expect(returns, [VocabularyJsonReturn.collection]);
-    expect(service.applies, 1);
-    expect(find.byType(VocabularyJsonPage), findsNothing);
-  });
+  testWidgets(
+    'successful import stays explicit until Return sends the owning-Collection intent',
+    (tester) async {
+      final service = ImportService();
+      final returns = <VocabularyJsonReturn?>[];
+      await mountJsonRoute(
+        tester,
+        service,
+        JsonTestPlatform(),
+        returned: returns.add,
+      );
+      await tester.enterText(input, 'source JSON');
+      await pressJson(tester, 'json.analyze');
+      final check = tester.widget<PikoButton>(
+        find.widgetWithText(PikoButton, PikoCopy('en').text('json.analyze')),
+      );
+      expect(check.variant, PikoButtonVariant.primary);
+      await pressJson(tester, 'json.apply');
+      await confirmJson(tester, 'en');
+      expect(find.byType(VocabularyJsonPage), findsOneWidget);
+      expect(returns, isEmpty);
+      expect(
+        find.text(
+          PikoCopy('en').text('json.importApplied', {
+            'added': 1,
+            'updated': 2,
+            'unchanged': 3,
+          }),
+        ),
+        findsOneWidget,
+      );
+      await pressJson(tester, 'json.returnToCollection');
+      expect(returns, [VocabularyJsonReturn.collection]);
+      expect(service.applies, 1);
+      expect(find.byType(VocabularyJsonPage), findsNothing);
+    },
+  );
 
-  testWidgets('pending apply blocks switching and Back; failure preserves source and no success return', (tester) async {
-    final service = ImportService()..applyGate = Completer<VocabularyJsonApplyResult>();
-    final returns = <VocabularyJsonReturn?>[];
-    await mountJsonRoute(tester, service, JsonTestPlatform(), returned: returns.add);
-    await tester.enterText(input, 'recoverable JSON');
-    await pressJson(tester, 'json.analyze');
-    final switchView = tester.widget<PikoButton>(find.byKey(const ValueKey('json-export-tab'))).onPressed!;
-    final staleBack = tester.widget<PikoButton>(find.widgetWithText(PikoButton, PikoCopy('en').text('common.back'))).onPressed!;
-    await pressJson(tester, 'json.apply');
-    await confirmJson(tester, 'en');
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(tester.widget<PikoButton>(find.byKey(const ValueKey('json-export-tab'))).onPressed, isNull);
-    expect(tester.widget<TextField>(input).enabled, isFalse);
-    switchView();
-    staleBack();
-    await tester.binding.handlePopRoute();
-    await tester.pump();
-    expect(returns, isEmpty);
-    expect(find.byType(VocabularyJsonPage), findsOneWidget);
-    expect(find.text(PikoCopy('en').text('json.copy')), findsNothing);
-    service.applyGate!.completeError(StateError('write failed'));
-    await tester.pumpAndSettle();
-    expect(inputText(tester), 'recoverable JSON');
-    expect(tester.widget<TextField>(input).enabled, isTrue);
-    expect(find.text(PikoCopy('en').text('json.applyFailed')), findsOneWidget);
-    expect(find.text(PikoCopy('en').text('json.returnToCollection')), findsNothing);
-    expect(returns, isEmpty);
-    expect(service.applies, 1);
-  });
+  testWidgets(
+    'pending apply blocks switching and Back; failure preserves source and no success return',
+    (tester) async {
+      final service = ImportService()
+        ..applyGate = Completer<VocabularyJsonApplyResult>();
+      final returns = <VocabularyJsonReturn?>[];
+      await mountJsonRoute(
+        tester,
+        service,
+        JsonTestPlatform(),
+        returned: returns.add,
+      );
+      await tester.enterText(input, 'recoverable JSON');
+      await pressJson(tester, 'json.analyze');
+      final switchView = tester
+          .widget<PikoButton>(find.byKey(const ValueKey('json-export-tab')))
+          .onPressed!;
+      final staleBack = tester
+          .widget<PikoButton>(
+            find.widgetWithText(PikoButton, PikoCopy('en').text('common.back')),
+          )
+          .onPressed!;
+      await pressJson(tester, 'json.apply');
+      await confirmJson(tester, 'en');
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+        tester
+            .widget<PikoButton>(find.byKey(const ValueKey('json-export-tab')))
+            .onPressed,
+        isNull,
+      );
+      expect(tester.widget<TextField>(input).enabled, isFalse);
+      switchView();
+      staleBack();
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(returns, isEmpty);
+      expect(find.byType(VocabularyJsonPage), findsOneWidget);
+      expect(find.text(PikoCopy('en').text('json.copy')), findsNothing);
+      service.applyGate!.completeError(StateError('write failed'));
+      await tester.pumpAndSettle();
+      expect(inputText(tester), 'recoverable JSON');
+      expect(tester.widget<TextField>(input).enabled, isTrue);
+      expect(
+        find.text(PikoCopy('en').text('json.applyFailed')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(PikoCopy('en').text('json.returnToCollection')),
+        findsNothing,
+      );
+      expect(returns, isEmpty);
+      expect(service.applies, 1);
+    },
+  );
 
   testWidgets(
     '320px German at 200% keeps grouped review, confirmation and export fallback reachable',

@@ -15,84 +15,108 @@ enum VocabularyContentValidation {
   hintTooLong,
 }
 
-/// May hold raw editing values; only [normalized] is accepted for persistence.
+final class ExamplePair {
+  const ExamplePair({required this.targetText, required this.nativeText});
+  final String targetText, nativeText;
+  @override
+  bool operator ==(Object other) =>
+      other is ExamplePair &&
+      targetText == other.targetText &&
+      nativeText == other.nativeText;
+  @override
+  int get hashCode => Object.hash(targetText, nativeText);
+}
+
+/// Raw editing values; only normalized content crosses the storage boundary.
 final class VocabularyContent {
   const VocabularyContent({
-    this.exampleTargetText,
-    this.exampleNativeText,
+    this._examples,
+    String? exampleTargetText,
+    String? exampleNativeText,
     this.hintText,
     this.hintVisibility = HintVisibility.always,
-  });
-
+  }) : _legacyTarget = exampleTargetText,
+       _legacyNative = exampleNativeText;
   static const maxExampleLength = 1000;
   static const maxHintLength = 2000;
-  final String? exampleTargetText, exampleNativeText, hintText;
+  final List<ExamplePair>? _examples;
+  final String? _legacyTarget, _legacyNative, hintText;
   final HintVisibility hintVisibility;
-
+  List<ExamplePair> get examples => _examples != null
+      ? List.unmodifiable(_examples)
+      : _legacyTarget == null && _legacyNative == null
+      ? const []
+      : [
+          ExamplePair(
+            targetText: _legacyTarget ?? '',
+            nativeText: _legacyNative ?? '',
+          ),
+        ];
+  // Source compatibility for older callers; production presentation uses examples.
+  String? get exampleTargetText => examples.firstOrNull?.targetText;
+  String? get exampleNativeText => examples.firstOrNull?.nativeText;
   VocabularyContent normalized() {
-    String? optional(String? value) {
-      final normalized = normalizeVocabularyText(value ?? '');
-      return normalized.isEmpty ? null : normalized;
+    final pairs = <ExamplePair>[];
+    for (final pair in examples) {
+      final target = normalizeVocabularyText(pair.targetText),
+          native = normalizeVocabularyText(pair.nativeText);
+      if (target.isEmpty && native.isEmpty) continue;
+      if (target.isEmpty || native.isEmpty) {
+        throw VocabularyContentValidation.examplePairRequired;
+      }
+      if (target.runes.length > maxExampleLength ||
+          native.runes.length > maxExampleLength) {
+        throw VocabularyContentValidation.exampleTooLong;
+      }
+      pairs.add(ExamplePair(targetText: target, nativeText: native));
     }
-
-    final target = optional(exampleTargetText),
-        native = optional(exampleNativeText);
-    if ((target == null) != (native == null)) {
-      throw VocabularyContentValidation.examplePairRequired;
-    }
-    if ((target?.runes.length ?? 0) > maxExampleLength ||
-        (native?.runes.length ?? 0) > maxExampleLength) {
-      throw VocabularyContentValidation.exampleTooLong;
-    }
-    final hint = optional(hintText);
-    if ((hint?.runes.length ?? 0) > maxHintLength) {
+    final hint = normalizeVocabularyText(hintText ?? '');
+    if (hint.runes.length > maxHintLength) {
       throw VocabularyContentValidation.hintTooLong;
     }
     return VocabularyContent(
-      exampleTargetText: target,
-      exampleNativeText: native,
-      hintText: hint,
+      examples: List.unmodifiable(pairs),
+      hintText: hint.isEmpty ? null : hint,
       hintVisibility: hintVisibility,
     );
   }
 
   factory VocabularyContent.fromStored({
-    required String? exampleTargetText,
-    required String? exampleNativeText,
+    List<ExamplePair>? examples,
+    String? exampleTargetText,
+    String? exampleNativeText,
     required String? hintText,
     required String hintVisibility,
   }) {
-    if (!HintVisibility.values.any((value) => value.name == hintVisibility)) {
+    if (!HintVisibility.values.any((v) => v.name == hintVisibility)) {
       throw const FormatException('Invalid stored Hint visibility');
     }
-    final content = VocabularyContent(
+    final value = VocabularyContent(
+      examples: examples,
       exampleTargetText: exampleTargetText,
       exampleNativeText: exampleNativeText,
       hintText: hintText,
       hintVisibility: HintVisibility.values.byName(hintVisibility),
     );
     try {
-      if (content.normalized() != content) {
+      if (value.normalized() != value) {
         throw const FormatException('Noncanonical stored vocabulary content');
       }
     } on VocabularyContentValidation {
       throw const FormatException('Invalid stored vocabulary content');
     }
-    return content;
+    return value;
   }
-
   @override
   bool operator ==(Object other) =>
       other is VocabularyContent &&
-      exampleTargetText == other.exampleTargetText &&
-      exampleNativeText == other.exampleNativeText &&
       hintText == other.hintText &&
-      hintVisibility == other.hintVisibility;
+      hintVisibility == other.hintVisibility &&
+      examples.length == other.examples.length &&
+      Iterable<int>.generate(
+        examples.length,
+      ).every((i) => examples[i] == other.examples[i]);
   @override
-  int get hashCode => Object.hash(
-    exampleTargetText,
-    exampleNativeText,
-    hintText,
-    hintVisibility,
-  );
+  int get hashCode =>
+      Object.hash(Object.hashAll(examples), hintText, hintVisibility);
 }

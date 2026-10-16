@@ -1,11 +1,10 @@
+import 'sqlite_vocabulary_content.dart';
 import 'package:drift/drift.dart';
 import '../categories_repository.dart';
 import '../collection_query.dart';
 import '../collections_repository.dart';
 import '../learning_item.dart';
-import '../vocabulary_repository.dart';
 import '../vocabulary_learning_status.dart';
-import '../vocabulary_content.dart';
 import '../vocabulary_normalization.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
@@ -35,6 +34,8 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
         database.collections,
       )..where((row) => row.id.equals(collectionId))).getSingleOrNull();
       if (owner == null) throw CollectionQueryFailure.collectionNotFound;
+      final exampleStore = SqliteVocabularyContent(database);
+      final examples = await exampleStore.forCollection(collectionId);
       final entries =
           (await (database.select(database.vocabularyEntries)
                     ..where((row) => row.collectionId.equals(collectionId))
@@ -45,18 +46,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
                     ]))
                   .get())
               .map(
-                (row) => VocabularyRecord(
-                  id: row.id,
-                  collectionId: row.collectionId,
-                  targetText: row.targetText,
-                  nativeText: row.nativeText,
-                  content: VocabularyContent.fromStored(
-                    exampleTargetText: row.exampleTargetText,
-                    exampleNativeText: row.exampleNativeText,
-                    hintText: row.hintText,
-                    hintVisibility: row.hintVisibility,
-                  ),
-                ),
+                (row) => exampleStore.record(row, examples[row.id] ?? const []),
               )
               .toList(growable: false);
       final categories = SqliteCategoriesRepository(database);

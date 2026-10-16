@@ -29,8 +29,11 @@ final class EntryDraft {
   final VocabularyContent content;
   final bool makeHintVisibilityDefault;
   bool get hasOptionalText =>
-      (content.exampleTargetText?.trim().isNotEmpty ?? false) ||
-      (content.exampleNativeText?.trim().isNotEmpty ?? false) ||
+      content.examples.any(
+        (pair) =>
+            pair.targetText.trim().isNotEmpty ||
+            pair.nativeText.trim().isNotEmpty,
+      ) ||
       (content.hintText?.trim().isNotEmpty ?? false);
 }
 
@@ -159,8 +162,7 @@ final class EntrySessionController extends ChangeNotifier {
               nativeText: _draft.nativeText,
               assignments: _draft.assignments,
               content: VocabularyContent(
-                exampleTargetText: _draft.content.exampleTargetText,
-                exampleNativeText: _draft.content.exampleNativeText,
+                examples: _draft.content.examples,
                 hintText: _draft.content.hintText,
                 hintVisibility: visibility,
               ),

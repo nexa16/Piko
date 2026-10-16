@@ -113,7 +113,8 @@ void main() {
         'id',
         'targetText',
         'nativeText',
-        'example',
+        'examples',
+        'addedAt',
         'hint',
         'categoryAssignments',
         'learning',
@@ -122,7 +123,8 @@ void main() {
       expect(entry['targetText'], f.entry.targetText);
       expect(entry['nativeText'], f.entry.nativeText);
       expect(entry['categoryAssignments'], isEmpty);
-      expect(entry['example'], isNull);
+      expect(entry['examples'], isEmpty);
+      expect(entry['addedAt'], instant.toUtc().toIso8601String());
       expect(entry['hint'], {'text': null, 'visibility': 'always'});
       final learning = entry['learning'] as Map<String, dynamic>;
       expect(learning.keys.toSet(), {'targetToNative', 'nativeToTarget'});

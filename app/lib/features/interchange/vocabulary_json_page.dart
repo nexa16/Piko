@@ -11,6 +11,12 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/piko_theme.dart';
 
+class VocabularyJsonDraft {
+  TextEditingValue input = TextEditingValue.empty;
+  Set<VocabularyJsonGroup> groups = Set.unmodifiable(VocabularyJsonGroup.all);
+  bool expanded = false;
+}
+
 enum VocabularyJsonReturn { collection }
 
 enum _JsonView { importJson, exportJson }
@@ -63,7 +69,11 @@ class VocabularyJsonPage extends StatefulWidget {
     required this.platform,
     this.onPendingWrites,
     this.onImported,
+    this.asDialog = false,
+    this.draft,
   });
+  final bool asDialog;
+  final VocabularyJsonDraft? draft;
   final CollectionRecord collection;
   final VocabularyJsonService service;
   final VocabularyJsonPlatform platform;
@@ -85,6 +95,17 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   _JsonView view = _JsonView.importJson;
   _TransferSection transferSection = _TransferSection.input;
   ModalRoute<dynamic>? confirmationRoute;
+
+  @override
+  void initState() {
+    super.initState();
+    final draft = widget.draft;
+    if (draft != null) {
+      input.value = draft.input;
+      groups = draft.groups;
+      expandedInput = draft.expanded;
+    }
+  }
 
   @override
   void didUpdateWidget(VocabularyJsonPage oldWidget) {
@@ -378,7 +399,15 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
     String? text;
     try {
       if (example) {
-        text = widget.service.sampleJson();
+        final copy = PikoCopyScope.of(context);
+        text = VocabularyJsonFormat.minimalSample(
+          targetLanguage: widget.collection.targetLanguage.code,
+          nativeLanguage: widget.collection.nativeLanguage.code,
+          topic: copy.text('template.topic'),
+          food: copy.text('template.food'),
+          difficulty: copy.text('template.difficulty'),
+          easy: copy.text('template.easy'),
+        );
       } else {
         text = await widget.service.exportCollection(widget.collection.id);
       }
@@ -578,190 +607,191 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
         ),
       ),
     );
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!widget.asDialog)
+          PikoHeading(
+            title: copy.text('json.title'),
+            subtitle: widget.collection.name,
+            leading: PikoButton(
+              label: copy.text('common.back'),
+              variant: PikoButtonVariant.ghost,
+              onPressed: transfer.busy || returning ? null : returnToCollection,
+            ),
+          ),
+        SizedBox(height: gap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            tab(_JsonView.importJson),
+            SizedBox(width: d.dimension('spacing.2')),
+            tab(_JsonView.exportJson),
+          ],
+        ),
+        SizedBox(height: gap),
+        if (view == _JsonView.exportJson) ...[
+          Text(copy.text('json.collectionNotice')),
+          SizedBox(height: gap),
+          Wrap(
+            spacing: d.dimension('spacing.2'),
+            runSpacing: d.dimension('spacing.2'),
+            children: [
+              action(
+                'json.copy',
+                () => launch(() => export()),
+                variant: PikoButtonVariant.primary,
+              ),
+              action(
+                'json.download',
+                () => launch(() => export(download: true)),
+                variant: PikoButtonVariant.primary,
+              ),
+            ],
+          ),
+          feedback(context, _TransferSection.exportJson),
+        ] else ...[
+          Text(copy.text('json.exampleNotice')),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: action(
+              'json.example',
+              () => launch(() => export(example: true)),
+            ),
+          ),
+          feedback(context, _TransferSection.example),
+          SizedBox(height: gap),
+          Wrap(
+            spacing: d.dimension('spacing.2'),
+            runSpacing: d.dimension('spacing.2'),
+            children: [
+              action('json.file', () => launch(() => read(file: true))),
+              action('json.paste', () => launch(() => read(file: false))),
+            ],
+          ),
+          SizedBox(height: d.dimension('spacing.2')),
+          PikoField(
+            label: copy.text('json.input'),
+            child: TextField(
+              key: const ValueKey('json-input'),
+              controller: input,
+              enabled: !confirming && !applying && !returning,
+              minLines: expandedInput ? 6 : 2,
+              maxLines: expandedInput ? 12 : 4,
+              decoration: pikoInputDecoration(),
+              onChanged: (_) => setState(invalidateInput),
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: action(
+              expandedInput ? 'json.collapseInput' : 'json.expandInput',
+              () => setState(() => expandedInput = !expandedInput),
+            ),
+          ),
+          feedback(context, _TransferSection.input),
+          SizedBox(height: gap),
+          Text(copy.text('r2.jsonNotice')),
+          SizedBox(height: d.dimension('spacing.2')),
+          Text(copy.text('r2.jsonMetadata')),
+          SizedBox(height: gap),
+          Text(copy.text('r2.jsonGroups')),
+          for (final group in VocabularyJsonGroup.values)
+            CheckboxListTile(
+              key: ValueKey('json-group-${group.name}'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                copy.text(switch (group) {
+                  VocabularyJsonGroup.targetText => 'r2.targetText',
+                  VocabularyJsonGroup.nativeText => 'r2.nativeText',
+                  VocabularyJsonGroup.categoryAssignments =>
+                    'r2.categoryAssignments',
+                  VocabularyJsonGroup.example => 'vocab.examples',
+                  VocabularyJsonGroup.hint => 'vocab.hint',
+                }),
+              ),
+              value: groups.contains(group),
+              onChanged: transfer.busy || returning
+                  ? null
+                  : (selected) {
+                      setState(() {
+                        final next = {...groups};
+                        if (selected == true) {
+                          next.add(group);
+                        } else {
+                          next.remove(group);
+                        }
+                        groups = Set.unmodifiable(next);
+                        invalidateInput();
+                      });
+                    },
+            ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: action(
+              'json.analyze',
+              () => launch(analyze),
+              variant: PikoButtonVariant.primary,
+            ),
+          ),
+          if (review case final result?) ...[
+            SizedBox(height: gap),
+            Text(copy.text('r2.jsonSummary', result.counts)),
+            for (final issue in result.issues) ...[
+              SizedBox(height: d.dimension('spacing.2')),
+              Text(
+                copy.text(
+                  issue.row == null ? 'json.issuePath' : 'json.issueLocation',
+                  {
+                    'path': issue.path,
+                    if (issue.row != null) 'row': issue.row!,
+                  },
+                ),
+              ),
+              Text(
+                copy.text(issueKey(issue.code)),
+                style: TextStyle(color: d.color('danger')),
+              ),
+            ],
+            if (result.canApply)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: action(
+                  'json.apply',
+                  () => launch(() => confirmImport(result)),
+                  variant: PikoButtonVariant.primary,
+                ),
+              ),
+          ],
+          feedback(context, _TransferSection.review),
+          if (transferSection == _TransferSection.review &&
+              transfer.messageKey == 'json.importApplied') ...[
+            SizedBox(height: d.dimension('spacing.2')),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: action(
+                'json.returnToCollection',
+                returnToCollection,
+                variant: PikoButtonVariant.primary,
+              ),
+            ),
+          ],
+        ],
+      ],
+    );
     return PopScope<VocabularyJsonReturn>(
       canPop: returning && !transfer.busy,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(returnToCollection());
       },
-      child: Scaffold(
-        body: PikoPage(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PikoHeading(
-                title: copy.text('json.title'),
-                subtitle: widget.collection.name,
-                leading: PikoButton(
-                  label: copy.text('common.back'),
-                  variant: PikoButtonVariant.ghost,
-                  onPressed: transfer.busy || returning
-                      ? null
-                      : returnToCollection,
-                ),
-              ),
-              SizedBox(height: gap),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  tab(_JsonView.importJson),
-                  SizedBox(width: d.dimension('spacing.2')),
-                  tab(_JsonView.exportJson),
-                ],
-              ),
-              SizedBox(height: gap),
-              if (view == _JsonView.exportJson) ...[
-                Text(copy.text('json.collectionNotice')),
-                SizedBox(height: gap),
-                Wrap(
-                  spacing: d.dimension('spacing.2'),
-                  runSpacing: d.dimension('spacing.2'),
-                  children: [
-                    action(
-                      'json.copy',
-                      () => launch(() => export()),
-                      variant: PikoButtonVariant.primary,
-                    ),
-                    action(
-                      'json.download',
-                      () => launch(() => export(download: true)),
-                      variant: PikoButtonVariant.primary,
-                    ),
-                  ],
-                ),
-                feedback(context, _TransferSection.exportJson),
-              ] else ...[
-                Text(copy.text('json.exampleNotice')),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: action(
-                    'json.example',
-                    () => launch(() => export(example: true)),
-                  ),
-                ),
-                feedback(context, _TransferSection.example),
-                SizedBox(height: gap),
-                Wrap(
-                  spacing: d.dimension('spacing.2'),
-                  runSpacing: d.dimension('spacing.2'),
-                  children: [
-                    action('json.file', () => launch(() => read(file: true))),
-                    action('json.paste', () => launch(() => read(file: false))),
-                  ],
-                ),
-                SizedBox(height: d.dimension('spacing.2')),
-                PikoField(
-                  label: copy.text('json.input'),
-                  child: TextField(
-                    key: const ValueKey('json-input'),
-                    controller: input,
-                    enabled: !confirming && !applying && !returning,
-                    minLines: expandedInput ? 6 : 2,
-                    maxLines: expandedInput ? 12 : 4,
-                    decoration: pikoInputDecoration(),
-                    onChanged: (_) => setState(invalidateInput),
-                  ),
-                ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: action(
-                    expandedInput ? 'json.collapseInput' : 'json.expandInput',
-                    () => setState(() => expandedInput = !expandedInput),
-                  ),
-                ),
-                feedback(context, _TransferSection.input),
-                SizedBox(height: gap),
-                Text(copy.text('r2.jsonNotice')),
-                SizedBox(height: d.dimension('spacing.2')),
-                Text(copy.text('r2.jsonMetadata')),
-                SizedBox(height: gap),
-                Text(copy.text('r2.jsonGroups')),
-                for (final group in VocabularyJsonGroup.values)
-                  CheckboxListTile(
-                    key: ValueKey('json-group-${group.name}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      copy.text(switch (group) {
-                        VocabularyJsonGroup.targetText => 'r2.targetText',
-                        VocabularyJsonGroup.nativeText => 'r2.nativeText',
-                        VocabularyJsonGroup.categoryAssignments =>
-                          'r2.categoryAssignments',
-                        VocabularyJsonGroup.example => 'vocab.examplePair',
-                        VocabularyJsonGroup.hint => 'vocab.hint',
-                      }),
-                    ),
-                    value: groups.contains(group),
-                    onChanged: transfer.busy || returning
-                        ? null
-                        : (selected) {
-                            setState(() {
-                              final next = {...groups};
-                              if (selected == true) {
-                                next.add(group);
-                              } else {
-                                next.remove(group);
-                              }
-                              groups = Set.unmodifiable(next);
-                              invalidateInput();
-                            });
-                          },
-                  ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: action(
-                    'json.analyze',
-                    () => launch(analyze),
-                    variant: PikoButtonVariant.primary,
-                  ),
-                ),
-                if (review case final result?) ...[
-                  SizedBox(height: gap),
-                  Text(copy.text('r2.jsonSummary', result.counts)),
-                  for (final issue in result.issues) ...[
-                    SizedBox(height: d.dimension('spacing.2')),
-                    Text(
-                      copy.text(
-                        issue.row == null
-                            ? 'json.issuePath'
-                            : 'json.issueLocation',
-                        {
-                          'path': issue.path,
-                          if (issue.row != null) 'row': issue.row!,
-                        },
-                      ),
-                    ),
-                    Text(
-                      copy.text(issueKey(issue.code)),
-                      style: TextStyle(color: d.color('danger')),
-                    ),
-                  ],
-                  if (result.canApply)
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: action(
-                        'json.apply',
-                        () => launch(() => confirmImport(result)),
-                        variant: PikoButtonVariant.primary,
-                      ),
-                    ),
-                ],
-                feedback(context, _TransferSection.review),
-                if (transferSection == _TransferSection.review &&
-                    transfer.messageKey == 'json.importApplied') ...[
-                  SizedBox(height: d.dimension('spacing.2')),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: action(
-                      'json.returnToCollection',
-                      returnToCollection,
-                      variant: PikoButtonVariant.primary,
-                    ),
-                  ),
-                ],
-              ],
-            ],
-          ),
-        ),
-      ),
+      child: widget.asDialog
+          ? PikoDialog(
+              title: copy.text('json.title'),
+              dismissible: !transfer.busy && !confirming && !applying,
+              onClose: returnToCollection,
+              body: content,
+            )
+          : Scaffold(body: PikoPage(child: content)),
     );
   }
 
@@ -769,6 +799,12 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   void dispose() {
     request = null;
     dismissConfirmation();
+    final draft = widget.draft;
+    if (draft != null) {
+      draft.input = input.value;
+      draft.groups = Set.unmodifiable(groups);
+      draft.expanded = expandedInput;
+    }
     input.dispose();
     fallback.dispose();
     super.dispose();

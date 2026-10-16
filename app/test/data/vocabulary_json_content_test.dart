@@ -39,7 +39,7 @@ void main() {
   }
 
   test(
-    'v2 export and round-trip retain visibility even with absent Hint text and preserve learning',
+    'v3 export and round-trip retain visibility even with absent Hint text and preserve learning',
     () async {
       final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
       const emptyHint = VocabularyContent(
@@ -57,14 +57,13 @@ void main() {
       final before = await completeSnapshot(f.db);
       final encoded = await service.exportCollection(f.owner.id);
       final document = jsonDecode(encoded) as Map;
-      expect(document['schemaVersion'], 2);
+      expect(document['schemaVersion'], 3);
       final row =
           ((document['collections'] as List).single['entries'] as List).single
               as Map;
-      expect(row['example'], {
-        'targetText': 'Une pomme.',
-        'nativeText': 'Ein Apfel.',
-      });
+      expect(row['examples'], [
+        {'targetText': 'Une pomme.', 'nativeText': 'Ein Apfel.'},
+      ]);
       expect(row['hint'], {'text': null, 'visibility': 'hidden'});
       expect(encoded, isNot(contains(HintVisibility.settingKey)));
       expect(await completeSnapshot(f.db), before);

@@ -639,6 +639,17 @@ class $VocabularyEntriesTable extends VocabularyEntries
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<String> addedAt = GeneratedColumn<String>(
+    'added_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _hintTextMeta = const VerificationMeta(
     'hintText',
   );
@@ -677,6 +688,7 @@ class $VocabularyEntriesTable extends VocabularyEntries
     nativeKey,
     exampleTargetText,
     exampleNativeText,
+    addedAt,
     hintText,
     hintVisibility,
   ];
@@ -758,6 +770,12 @@ class $VocabularyEntriesTable extends VocabularyEntries
         ),
       );
     }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    }
     if (data.containsKey('hint_text')) {
       context.handle(
         _hintTextMeta,
@@ -814,6 +832,10 @@ class $VocabularyEntriesTable extends VocabularyEntries
         DriftSqlType.string,
         data['${effectivePrefix}example_native_text'],
       ),
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}added_at'],
+      ),
       hintText: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}hint_text'],
@@ -840,6 +862,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
   final String nativeKey;
   final String? exampleTargetText;
   final String? exampleNativeText;
+  final String? addedAt;
   final String? hintText;
   final String hintVisibility;
   const VocabularyEntry({
@@ -851,6 +874,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     required this.nativeKey,
     this.exampleTargetText,
     this.exampleNativeText,
+    this.addedAt,
     this.hintText,
     required this.hintVisibility,
   });
@@ -868,6 +892,9 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     }
     if (!nullToAbsent || exampleNativeText != null) {
       map['example_native_text'] = Variable<String>(exampleNativeText);
+    }
+    if (!nullToAbsent || addedAt != null) {
+      map['added_at'] = Variable<String>(addedAt);
     }
     if (!nullToAbsent || hintText != null) {
       map['hint_text'] = Variable<String>(hintText);
@@ -890,6 +917,9 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       exampleNativeText: exampleNativeText == null && nullToAbsent
           ? const Value.absent()
           : Value(exampleNativeText),
+      addedAt: addedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addedAt),
       hintText: hintText == null && nullToAbsent
           ? const Value.absent()
           : Value(hintText),
@@ -915,6 +945,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       exampleNativeText: serializer.fromJson<String?>(
         json['exampleNativeText'],
       ),
+      addedAt: serializer.fromJson<String?>(json['addedAt']),
       hintText: serializer.fromJson<String?>(json['hintText']),
       hintVisibility: serializer.fromJson<String>(json['hintVisibility']),
     );
@@ -931,6 +962,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       'nativeKey': serializer.toJson<String>(nativeKey),
       'exampleTargetText': serializer.toJson<String?>(exampleTargetText),
       'exampleNativeText': serializer.toJson<String?>(exampleNativeText),
+      'addedAt': serializer.toJson<String?>(addedAt),
       'hintText': serializer.toJson<String?>(hintText),
       'hintVisibility': serializer.toJson<String>(hintVisibility),
     };
@@ -945,6 +977,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     String? nativeKey,
     Value<String?> exampleTargetText = const Value.absent(),
     Value<String?> exampleNativeText = const Value.absent(),
+    Value<String?> addedAt = const Value.absent(),
     Value<String?> hintText = const Value.absent(),
     String? hintVisibility,
   }) => VocabularyEntry(
@@ -960,6 +993,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     exampleNativeText: exampleNativeText.present
         ? exampleNativeText.value
         : this.exampleNativeText,
+    addedAt: addedAt.present ? addedAt.value : this.addedAt,
     hintText: hintText.present ? hintText.value : this.hintText,
     hintVisibility: hintVisibility ?? this.hintVisibility,
   );
@@ -983,6 +1017,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       exampleNativeText: data.exampleNativeText.present
           ? data.exampleNativeText.value
           : this.exampleNativeText,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
       hintText: data.hintText.present ? data.hintText.value : this.hintText,
       hintVisibility: data.hintVisibility.present
           ? data.hintVisibility.value
@@ -1001,6 +1036,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           ..write('nativeKey: $nativeKey, ')
           ..write('exampleTargetText: $exampleTargetText, ')
           ..write('exampleNativeText: $exampleNativeText, ')
+          ..write('addedAt: $addedAt, ')
           ..write('hintText: $hintText, ')
           ..write('hintVisibility: $hintVisibility')
           ..write(')'))
@@ -1017,6 +1053,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     nativeKey,
     exampleTargetText,
     exampleNativeText,
+    addedAt,
     hintText,
     hintVisibility,
   );
@@ -1032,6 +1069,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           other.nativeKey == this.nativeKey &&
           other.exampleTargetText == this.exampleTargetText &&
           other.exampleNativeText == this.exampleNativeText &&
+          other.addedAt == this.addedAt &&
           other.hintText == this.hintText &&
           other.hintVisibility == this.hintVisibility);
 }
@@ -1045,6 +1083,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
   final Value<String> nativeKey;
   final Value<String?> exampleTargetText;
   final Value<String?> exampleNativeText;
+  final Value<String?> addedAt;
   final Value<String?> hintText;
   final Value<String> hintVisibility;
   final Value<int> rowid;
@@ -1057,6 +1096,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     this.nativeKey = const Value.absent(),
     this.exampleTargetText = const Value.absent(),
     this.exampleNativeText = const Value.absent(),
+    this.addedAt = const Value.absent(),
     this.hintText = const Value.absent(),
     this.hintVisibility = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1070,6 +1110,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     required String nativeKey,
     this.exampleTargetText = const Value.absent(),
     this.exampleNativeText = const Value.absent(),
+    this.addedAt = const Value.absent(),
     this.hintText = const Value.absent(),
     this.hintVisibility = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1088,6 +1129,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     Expression<String>? nativeKey,
     Expression<String>? exampleTargetText,
     Expression<String>? exampleNativeText,
+    Expression<String>? addedAt,
     Expression<String>? hintText,
     Expression<String>? hintVisibility,
     Expression<int>? rowid,
@@ -1101,6 +1143,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       if (nativeKey != null) 'native_key': nativeKey,
       if (exampleTargetText != null) 'example_target_text': exampleTargetText,
       if (exampleNativeText != null) 'example_native_text': exampleNativeText,
+      if (addedAt != null) 'added_at': addedAt,
       if (hintText != null) 'hint_text': hintText,
       if (hintVisibility != null) 'hint_visibility': hintVisibility,
       if (rowid != null) 'rowid': rowid,
@@ -1116,6 +1159,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     Value<String>? nativeKey,
     Value<String?>? exampleTargetText,
     Value<String?>? exampleNativeText,
+    Value<String?>? addedAt,
     Value<String?>? hintText,
     Value<String>? hintVisibility,
     Value<int>? rowid,
@@ -1129,6 +1173,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       nativeKey: nativeKey ?? this.nativeKey,
       exampleTargetText: exampleTargetText ?? this.exampleTargetText,
       exampleNativeText: exampleNativeText ?? this.exampleNativeText,
+      addedAt: addedAt ?? this.addedAt,
       hintText: hintText ?? this.hintText,
       hintVisibility: hintVisibility ?? this.hintVisibility,
       rowid: rowid ?? this.rowid,
@@ -1162,6 +1207,9 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     if (exampleNativeText.present) {
       map['example_native_text'] = Variable<String>(exampleNativeText.value);
     }
+    if (addedAt.present) {
+      map['added_at'] = Variable<String>(addedAt.value);
+    }
     if (hintText.present) {
       map['hint_text'] = Variable<String>(hintText.value);
     }
@@ -1185,8 +1233,342 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
           ..write('nativeKey: $nativeKey, ')
           ..write('exampleTargetText: $exampleTargetText, ')
           ..write('exampleNativeText: $exampleNativeText, ')
+          ..write('addedAt: $addedAt, ')
           ..write('hintText: $hintText, ')
           ..write('hintVisibility: $hintVisibility, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VocabularyExamplesTable extends VocabularyExamples
+    with TableInfo<$VocabularyExamplesTable, VocabularyExample> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VocabularyExamplesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vocabulary_entries (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('position >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetTextMeta = const VerificationMeta(
+    'targetText',
+  );
+  @override
+  late final GeneratedColumn<String> targetText = GeneratedColumn<String>(
+    'target_text',
+    aliasedName,
+    false,
+    check: () =>
+        const CustomExpression<bool>('length(target_text) BETWEEN 1 AND 1000'),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nativeTextMeta = const VerificationMeta(
+    'nativeText',
+  );
+  @override
+  late final GeneratedColumn<String> nativeText = GeneratedColumn<String>(
+    'native_text',
+    aliasedName,
+    false,
+    check: () =>
+        const CustomExpression<bool>('length(native_text) BETWEEN 1 AND 1000'),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    entryId,
+    position,
+    targetText,
+    nativeText,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vocabulary_examples';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VocabularyExample> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('target_text')) {
+      context.handle(
+        _targetTextMeta,
+        targetText.isAcceptableOrUnknown(data['target_text']!, _targetTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetTextMeta);
+    }
+    if (data.containsKey('native_text')) {
+      context.handle(
+        _nativeTextMeta,
+        nativeText.isAcceptableOrUnknown(data['native_text']!, _nativeTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nativeTextMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entryId, position};
+  @override
+  VocabularyExample map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VocabularyExample(
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      targetText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_text'],
+      )!,
+      nativeText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}native_text'],
+      )!,
+    );
+  }
+
+  @override
+  $VocabularyExamplesTable createAlias(String alias) {
+    return $VocabularyExamplesTable(attachedDatabase, alias);
+  }
+}
+
+class VocabularyExample extends DataClass
+    implements Insertable<VocabularyExample> {
+  final String entryId;
+  final int position;
+  final String targetText;
+  final String nativeText;
+  const VocabularyExample({
+    required this.entryId,
+    required this.position,
+    required this.targetText,
+    required this.nativeText,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entry_id'] = Variable<String>(entryId);
+    map['position'] = Variable<int>(position);
+    map['target_text'] = Variable<String>(targetText);
+    map['native_text'] = Variable<String>(nativeText);
+    return map;
+  }
+
+  VocabularyExamplesCompanion toCompanion(bool nullToAbsent) {
+    return VocabularyExamplesCompanion(
+      entryId: Value(entryId),
+      position: Value(position),
+      targetText: Value(targetText),
+      nativeText: Value(nativeText),
+    );
+  }
+
+  factory VocabularyExample.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VocabularyExample(
+      entryId: serializer.fromJson<String>(json['entryId']),
+      position: serializer.fromJson<int>(json['position']),
+      targetText: serializer.fromJson<String>(json['targetText']),
+      nativeText: serializer.fromJson<String>(json['nativeText']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entryId': serializer.toJson<String>(entryId),
+      'position': serializer.toJson<int>(position),
+      'targetText': serializer.toJson<String>(targetText),
+      'nativeText': serializer.toJson<String>(nativeText),
+    };
+  }
+
+  VocabularyExample copyWith({
+    String? entryId,
+    int? position,
+    String? targetText,
+    String? nativeText,
+  }) => VocabularyExample(
+    entryId: entryId ?? this.entryId,
+    position: position ?? this.position,
+    targetText: targetText ?? this.targetText,
+    nativeText: nativeText ?? this.nativeText,
+  );
+  VocabularyExample copyWithCompanion(VocabularyExamplesCompanion data) {
+    return VocabularyExample(
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      position: data.position.present ? data.position.value : this.position,
+      targetText: data.targetText.present
+          ? data.targetText.value
+          : this.targetText,
+      nativeText: data.nativeText.present
+          ? data.nativeText.value
+          : this.nativeText,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyExample(')
+          ..write('entryId: $entryId, ')
+          ..write('position: $position, ')
+          ..write('targetText: $targetText, ')
+          ..write('nativeText: $nativeText')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(entryId, position, targetText, nativeText);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VocabularyExample &&
+          other.entryId == this.entryId &&
+          other.position == this.position &&
+          other.targetText == this.targetText &&
+          other.nativeText == this.nativeText);
+}
+
+class VocabularyExamplesCompanion extends UpdateCompanion<VocabularyExample> {
+  final Value<String> entryId;
+  final Value<int> position;
+  final Value<String> targetText;
+  final Value<String> nativeText;
+  final Value<int> rowid;
+  const VocabularyExamplesCompanion({
+    this.entryId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.targetText = const Value.absent(),
+    this.nativeText = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VocabularyExamplesCompanion.insert({
+    required String entryId,
+    required int position,
+    required String targetText,
+    required String nativeText,
+    this.rowid = const Value.absent(),
+  }) : entryId = Value(entryId),
+       position = Value(position),
+       targetText = Value(targetText),
+       nativeText = Value(nativeText);
+  static Insertable<VocabularyExample> custom({
+    Expression<String>? entryId,
+    Expression<int>? position,
+    Expression<String>? targetText,
+    Expression<String>? nativeText,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entryId != null) 'entry_id': entryId,
+      if (position != null) 'position': position,
+      if (targetText != null) 'target_text': targetText,
+      if (nativeText != null) 'native_text': nativeText,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VocabularyExamplesCompanion copyWith({
+    Value<String>? entryId,
+    Value<int>? position,
+    Value<String>? targetText,
+    Value<String>? nativeText,
+    Value<int>? rowid,
+  }) {
+    return VocabularyExamplesCompanion(
+      entryId: entryId ?? this.entryId,
+      position: position ?? this.position,
+      targetText: targetText ?? this.targetText,
+      nativeText: nativeText ?? this.nativeText,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (targetText.present) {
+      map['target_text'] = Variable<String>(targetText.value);
+    }
+    if (nativeText.present) {
+      map['native_text'] = Variable<String>(nativeText.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyExamplesCompanion(')
+          ..write('entryId: $entryId, ')
+          ..write('position: $position, ')
+          ..write('targetText: $targetText, ')
+          ..write('nativeText: $nativeText, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4603,6 +4985,8 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $CollectionsTable collections = $CollectionsTable(this);
   late final $VocabularyEntriesTable vocabularyEntries =
       $VocabularyEntriesTable(this);
+  late final $VocabularyExamplesTable vocabularyExamples =
+      $VocabularyExamplesTable(this);
   late final $LearningItemsTable learningItems = $LearningItemsTable(this);
   late final $RegularReviewsTable regularReviews = $RegularReviewsTable(this);
   late final $RetryObligationsTable retryObligations = $RetryObligationsTable(
@@ -4631,6 +5015,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     appSettings,
     collections,
     vocabularyEntries,
+    vocabularyExamples,
     learningItems,
     regularReviews,
     retryObligations,
@@ -4650,6 +5035,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('vocabulary_entries', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'vocabulary_entries',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('vocabulary_examples', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -5362,6 +5754,7 @@ typedef $$VocabularyEntriesTableCreateCompanionBuilder =
       required String nativeKey,
       Value<String?> exampleTargetText,
       Value<String?> exampleNativeText,
+      Value<String?> addedAt,
       Value<String?> hintText,
       Value<String> hintVisibility,
       Value<int> rowid,
@@ -5376,6 +5769,7 @@ typedef $$VocabularyEntriesTableUpdateCompanionBuilder =
       Value<String> nativeKey,
       Value<String?> exampleTargetText,
       Value<String?> exampleNativeText,
+      Value<String?> addedAt,
       Value<String?> hintText,
       Value<String> hintVisibility,
       Value<int> rowid,
@@ -5409,6 +5803,27 @@ final class $$VocabularyEntriesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$VocabularyExamplesTable, List<VocabularyExample>>
+  _vocabularyExamplesRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.vocabularyExamples,
+        aliasName: 'vocabulary_entries__id__vocabulary_examples__entry_id',
+      );
+
+  $$VocabularyExamplesTableProcessedTableManager get vocabularyExamplesRefs {
+    final manager = $$VocabularyExamplesTableTableManager(
+      $_db,
+      $_db.vocabularyExamples,
+    ).filter((f) => f.entryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _vocabularyExamplesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -5475,6 +5890,11 @@ class $$VocabularyEntriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get hintText => $composableBuilder(
     column: $table.hintText,
     builder: (column) => ColumnFilters(column),
@@ -5506,6 +5926,31 @@ class $$VocabularyEntriesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> vocabularyExamplesRefs(
+    Expression<bool> Function($$VocabularyExamplesTableFilterComposer f) f,
+  ) {
+    final $$VocabularyExamplesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.vocabularyExamples,
+      getReferencedColumn: (t) => t.entryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyExamplesTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyExamples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> learningItemsRefs(
@@ -5575,6 +6020,11 @@ class $$VocabularyEntriesTableOrderingComposer
 
   ColumnOrderings<String> get exampleNativeText => $composableBuilder(
     column: $table.exampleNativeText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addedAt => $composableBuilder(
+    column: $table.addedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5650,6 +6100,9 @@ class $$VocabularyEntriesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
   GeneratedColumn<String> get hintText =>
       $composableBuilder(column: $table.hintText, builder: (column) => column);
 
@@ -5679,6 +6132,32 @@ class $$VocabularyEntriesTableAnnotationComposer
           ),
     );
     return composer;
+  }
+
+  Expression<T> vocabularyExamplesRefs<T extends Object>(
+    Expression<T> Function($$VocabularyExamplesTableAnnotationComposer a) f,
+  ) {
+    final $$VocabularyExamplesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.vocabularyExamples,
+          getReferencedColumn: (t) => t.entryId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$VocabularyExamplesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.vocabularyExamples,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
   }
 
   Expression<T> learningItemsRefs<T extends Object>(
@@ -5720,7 +6199,11 @@ class $$VocabularyEntriesTableTableManager
           $$VocabularyEntriesTableUpdateCompanionBuilder,
           (VocabularyEntry, $$VocabularyEntriesTableReferences),
           VocabularyEntry,
-          PrefetchHooks Function({bool collectionId, bool learningItemsRefs})
+          PrefetchHooks Function({
+            bool collectionId,
+            bool vocabularyExamplesRefs,
+            bool learningItemsRefs,
+          })
         > {
   $$VocabularyEntriesTableTableManager(
     _$PikoDatabase db,
@@ -5748,6 +6231,7 @@ class $$VocabularyEntriesTableTableManager
                 Value<String> nativeKey = const Value.absent(),
                 Value<String?> exampleTargetText = const Value.absent(),
                 Value<String?> exampleNativeText = const Value.absent(),
+                Value<String?> addedAt = const Value.absent(),
                 Value<String?> hintText = const Value.absent(),
                 Value<String> hintVisibility = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5760,6 +6244,7 @@ class $$VocabularyEntriesTableTableManager
                 nativeKey: nativeKey,
                 exampleTargetText: exampleTargetText,
                 exampleNativeText: exampleNativeText,
+                addedAt: addedAt,
                 hintText: hintText,
                 hintVisibility: hintVisibility,
                 rowid: rowid,
@@ -5774,6 +6259,7 @@ class $$VocabularyEntriesTableTableManager
                 required String nativeKey,
                 Value<String?> exampleTargetText = const Value.absent(),
                 Value<String?> exampleNativeText = const Value.absent(),
+                Value<String?> addedAt = const Value.absent(),
                 Value<String?> hintText = const Value.absent(),
                 Value<String> hintVisibility = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5786,6 +6272,7 @@ class $$VocabularyEntriesTableTableManager
                 nativeKey: nativeKey,
                 exampleTargetText: exampleTargetText,
                 exampleNativeText: exampleNativeText,
+                addedAt: addedAt,
                 hintText: hintText,
                 hintVisibility: hintVisibility,
                 rowid: rowid,
@@ -5799,10 +6286,15 @@ class $$VocabularyEntriesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({collectionId = false, learningItemsRefs = false}) {
+              ({
+                collectionId = false,
+                vocabularyExamplesRefs = false,
+                learningItemsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (vocabularyExamplesRefs) db.vocabularyExamples,
                     if (learningItemsRefs) db.learningItems,
                   ],
                   addJoins:
@@ -5841,6 +6333,27 @@ class $$VocabularyEntriesTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (vocabularyExamplesRefs)
+                        await $_getPrefetchedData<
+                          VocabularyEntry,
+                          $VocabularyEntriesTable,
+                          VocabularyExample
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VocabularyEntriesTableReferences
+                              ._vocabularyExamplesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VocabularyEntriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).vocabularyExamplesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.entryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (learningItemsRefs)
                         await $_getPrefetchedData<
                           VocabularyEntry,
@@ -5882,7 +6395,333 @@ typedef $$VocabularyEntriesTableProcessedTableManager =
       $$VocabularyEntriesTableUpdateCompanionBuilder,
       (VocabularyEntry, $$VocabularyEntriesTableReferences),
       VocabularyEntry,
-      PrefetchHooks Function({bool collectionId, bool learningItemsRefs})
+      PrefetchHooks Function({
+        bool collectionId,
+        bool vocabularyExamplesRefs,
+        bool learningItemsRefs,
+      })
+    >;
+typedef $$VocabularyExamplesTableCreateCompanionBuilder =
+    VocabularyExamplesCompanion Function({
+      required String entryId,
+      required int position,
+      required String targetText,
+      required String nativeText,
+      Value<int> rowid,
+    });
+typedef $$VocabularyExamplesTableUpdateCompanionBuilder =
+    VocabularyExamplesCompanion Function({
+      Value<String> entryId,
+      Value<int> position,
+      Value<String> targetText,
+      Value<String> nativeText,
+      Value<int> rowid,
+    });
+
+final class $$VocabularyExamplesTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $VocabularyExamplesTable,
+          VocabularyExample
+        > {
+  $$VocabularyExamplesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $VocabularyEntriesTable _entryIdTable(_$PikoDatabase db) => db
+      .vocabularyEntries
+      .createAlias('vocabulary_examples__entry_id__vocabulary_entries__id');
+
+  $$VocabularyEntriesTableProcessedTableManager get entryId {
+    final $_column = $_itemColumn<String>('entry_id')!;
+
+    final manager = $$VocabularyEntriesTableTableManager(
+      $_db,
+      $_db.vocabularyEntries,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_entryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$VocabularyExamplesTableFilterComposer
+    extends Composer<_$PikoDatabase, $VocabularyExamplesTable> {
+  $$VocabularyExamplesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VocabularyEntriesTableFilterComposer get entryId {
+    final $$VocabularyEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.entryId,
+      referencedTable: $db.vocabularyEntries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyExamplesTableOrderingComposer
+    extends Composer<_$PikoDatabase, $VocabularyExamplesTable> {
+  $$VocabularyExamplesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VocabularyEntriesTableOrderingComposer get entryId {
+    final $$VocabularyEntriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.entryId,
+      referencedTable: $db.vocabularyEntries,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyEntriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyExamplesTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $VocabularyExamplesTable> {
+  $$VocabularyExamplesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get targetText => $composableBuilder(
+    column: $table.targetText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nativeText => $composableBuilder(
+    column: $table.nativeText,
+    builder: (column) => column,
+  );
+
+  $$VocabularyEntriesTableAnnotationComposer get entryId {
+    final $$VocabularyEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.entryId,
+          referencedTable: $db.vocabularyEntries,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$VocabularyEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.vocabularyEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$VocabularyExamplesTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $VocabularyExamplesTable,
+          VocabularyExample,
+          $$VocabularyExamplesTableFilterComposer,
+          $$VocabularyExamplesTableOrderingComposer,
+          $$VocabularyExamplesTableAnnotationComposer,
+          $$VocabularyExamplesTableCreateCompanionBuilder,
+          $$VocabularyExamplesTableUpdateCompanionBuilder,
+          (VocabularyExample, $$VocabularyExamplesTableReferences),
+          VocabularyExample,
+          PrefetchHooks Function({bool entryId})
+        > {
+  $$VocabularyExamplesTableTableManager(
+    _$PikoDatabase db,
+    $VocabularyExamplesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VocabularyExamplesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VocabularyExamplesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VocabularyExamplesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> entryId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> targetText = const Value.absent(),
+                Value<String> nativeText = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyExamplesCompanion(
+                entryId: entryId,
+                position: position,
+                targetText: targetText,
+                nativeText: nativeText,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entryId,
+                required int position,
+                required String targetText,
+                required String nativeText,
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyExamplesCompanion.insert(
+                entryId: entryId,
+                position: position,
+                targetText: targetText,
+                nativeText: nativeText,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VocabularyExamplesTable, VocabularyExample>(
+                    table,
+                  ),
+                  $$VocabularyExamplesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({entryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (entryId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.entryId,
+                                referencedTable:
+                                    $$VocabularyExamplesTableReferences
+                                        ._entryIdTable(db),
+                                referencedColumn:
+                                    $$VocabularyExamplesTableReferences
+                                        ._entryIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$VocabularyExamplesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyExamplesTable,
+      VocabularyExample,
+      $$VocabularyExamplesTableFilterComposer,
+      $$VocabularyExamplesTableOrderingComposer,
+      $$VocabularyExamplesTableAnnotationComposer,
+      $$VocabularyExamplesTableCreateCompanionBuilder,
+      $$VocabularyExamplesTableUpdateCompanionBuilder,
+      (VocabularyExample, $$VocabularyExamplesTableReferences),
+      VocabularyExample,
+      PrefetchHooks Function({bool entryId})
     >;
 typedef $$LearningItemsTableCreateCompanionBuilder =
     LearningItemsCompanion Function({
@@ -9084,6 +9923,8 @@ class $PikoDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$VocabularyEntriesTableTableManager get vocabularyEntries =>
       $$VocabularyEntriesTableTableManager(_db, _db.vocabularyEntries);
+  $$VocabularyExamplesTableTableManager get vocabularyExamples =>
+      $$VocabularyExamplesTableTableManager(_db, _db.vocabularyExamples);
   $$LearningItemsTableTableManager get learningItems =>
       $$LearningItemsTableTableManager(_db, _db.learningItems);
   $$RegularReviewsTableTableManager get regularReviews =>

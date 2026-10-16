@@ -47,6 +47,7 @@ class VocabularyEntries extends Table {
       'AND length(example_native_text) BETWEEN 1 AND 1000)',
     ),
   )();
+  TextColumn get addedAt => text().nullable()();
   TextColumn get hintText => text().nullable().check(
     const CustomExpression<bool>(
       'hint_text IS NULL OR length(hint_text) BETWEEN 1 AND 2000',
@@ -67,6 +68,21 @@ class VocabularyEntries extends Table {
     'CHECK(length(trim(native_text)) > 0)',
     'UNIQUE(collection_id, target_key, native_key)',
   ];
+}
+
+class VocabularyExamples extends Table {
+  TextColumn get entryId =>
+      text().references(VocabularyEntries, #id, onDelete: KeyAction.cascade)();
+  IntColumn get position =>
+      integer().check(const CustomExpression<bool>('position >= 0'))();
+  TextColumn get targetText => text().check(
+    const CustomExpression<bool>('length(target_text) BETWEEN 1 AND 1000'),
+  )();
+  TextColumn get nativeText => text().check(
+    const CustomExpression<bool>('length(native_text) BETWEEN 1 AND 1000'),
+  )();
+  @override
+  Set<Column<Object>> get primaryKey => {entryId, position};
 }
 
 @DataClassName('StoredCategoryDimension')
@@ -254,6 +270,7 @@ class VocabularyOrderSequence extends Table {
     AppSettings,
     Collections,
     VocabularyEntries,
+    VocabularyExamples,
     LearningItems,
     RegularReviews,
     RetryObligations,
@@ -271,7 +288,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -365,6 +382,15 @@ class PikoDatabase extends _$PikoDatabase {
           await m.addColumn(
             vocabularyEntries,
             vocabularyEntries.hintVisibility,
+          );
+        }
+        if (from < 15) {
+          if (from >= 4) {
+            await m.addColumn(vocabularyEntries, vocabularyEntries.addedAt);
+          }
+          await m.createTable(vocabularyExamples);
+          await customStatement(
+            'INSERT INTO vocabulary_examples(entry_id, position, target_text, native_text) SELECT id, 0, example_target_text, example_native_text FROM vocabulary_entries WHERE example_target_text IS NOT NULL',
           );
         }
       });

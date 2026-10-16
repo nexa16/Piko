@@ -100,6 +100,10 @@ void main() {
             await settings.write(PreferredDirection.settingKey, saved.name);
           }
           final before = await completeSnapshot(f.db);
+          // Recreate the historical schema, where addition dates were unknown.
+          for (final row in before['vocabulary_entries'] as List) {
+            (row as Map)['added_at'] = null;
+          }
           final legacy = sqlite.sqlite3.open(file.path);
           try {
             final schema =
@@ -119,6 +123,7 @@ void main() {
                 );
                 if (table.key == 'vocabulary_entries') {
                   for (final column in [
+                    'added_at',
                     'example_target_text',
                     'example_native_text',
                     'hint_text',

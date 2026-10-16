@@ -1,3 +1,4 @@
+import 'sqlite_vocabulary_content.dart';
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
@@ -18,7 +19,9 @@ final class _Snapshot {
     this.reviews,
     this.retries,
     this.assignments,
+    this.content,
   );
+  final VocabularyContent content;
   final int rowId;
   final VocabularyEntry entry;
   final List<LearningItem> learning;
@@ -172,6 +175,7 @@ final class SqliteVocabularyDeletionService
           throw const FormatException('Invalid retry snapshot origin');
         }
       }
+      final content = await SqliteVocabularyContent(database).read(entry);
       await (database.delete(
         database.vocabularyEntries,
       )..where((item) => item.id.equals(id))).go();
@@ -200,6 +204,7 @@ final class SqliteVocabularyDeletionService
           ),
         ),
         List.unmodifiable(assignments),
+        content,
       );
       return _Receipt(
         issuer: _issuer,
@@ -208,12 +213,10 @@ final class SqliteVocabularyDeletionService
           collectionId: entry.collectionId,
           targetText: entry.targetText,
           nativeText: entry.nativeText,
-          content: VocabularyContent.fromStored(
-            exampleTargetText: entry.exampleTargetText,
-            exampleNativeText: entry.exampleNativeText,
-            hintText: entry.hintText,
-            hintVisibility: entry.hintVisibility,
-          ),
+          content: content,
+          addedAt: entry.addedAt == null
+              ? null
+              : DateTime.parse(entry.addedAt!).toUtc(),
         ),
         expiresAt: deleteAt.add(undoDuration),
         snapshot: snapshot,
@@ -298,7 +301,7 @@ final class SqliteVocabularyDeletionService
           throw VocabularyUndoFailure.identityConflict;
         }
         await database.customInsert(
-          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, example_target_text, example_native_text, hint_text, hint_visibility) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, example_target_text, example_native_text, hint_text, hint_visibility, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           variables: [
             Variable(snapshot.rowId),
             Variable(entry.id),
@@ -311,9 +314,13 @@ final class SqliteVocabularyDeletionService
             Variable(entry.exampleNativeText),
             Variable(entry.hintText),
             Variable(entry.hintVisibility),
+            Variable<String>(entry.addedAt),
           ],
           updates: {database.vocabularyEntries},
         );
+        await SqliteVocabularyContent(
+          database,
+        ).replace(entry.id, snapshot.content);
         for (final item in snapshot.learning) {
           await database.into(database.learningItems).insert(item);
         }
