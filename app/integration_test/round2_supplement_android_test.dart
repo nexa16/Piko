@@ -108,25 +108,29 @@ void main() {
       expect(
         visible.width,
         greaterThanOrEqualTo(24),
-        reason: 'Entry control must be horizontally reachable: '
+        reason:
+            'Entry control must be horizontally reachable: '
             'target=$target visible=$visible',
       );
       expect(
         visible.height,
         greaterThanOrEqualTo(24),
-        reason: 'Entry control must remain reachable above the keyboard: '
+        reason:
+            'Entry control must remain reachable above the keyboard: '
             'target=$target visible=$visible',
       );
       if (requireCenter) {
         expect(
           finder.hitTestable(),
           findsOneWidget,
-          reason: 'Entry action center must receive its tap after a real drag: '
+          reason:
+              'Entry action center must receive its tap after a real drag: '
               'target=$target visible=$visible',
         );
       }
       return visible;
     }
+
     Future<void> tap(Finder finder) async {
       await present(finder, 'supplement action present');
       await tester.ensureVisible(finder);
@@ -229,7 +233,12 @@ void main() {
       }
       await tester.pumpAndSettle();
       expect(
-        tester.widget<TextField>(finder).focusNode?.hasFocus,
+        tester
+            .widget<EditableText>(
+              find.descendant(of: finder, matching: find.byType(EditableText)),
+            )
+            .focusNode
+            .hasFocus,
         isTrue,
         reason: 'Supplement input must gain focus from the real tap',
       );
