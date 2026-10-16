@@ -75,15 +75,75 @@ void main() {
     ) => review.waitUntil(tester, condition, description: description);
     Future<void> present(Finder finder, String description) =>
         wait(() => finder.evaluate().isNotEmpty, description);
+    Future<Rect> revealEntryWithGesture(
+      Finder finder, {
+      required bool requireCenter,
+    }) async {
+      final viewport = _key('entry-stack');
+      expect(viewport, findsOneWidget);
+      var target = tester.getRect(finder);
+      var area = tester.getRect(viewport);
+      var visible = target.intersect(area);
+      bool reachable() =>
+          visible.width >= 24 &&
+          visible.height >= 24 &&
+          (!requireCenter || finder.hitTestable().evaluate().isNotEmpty);
+      for (var attempt = 0; attempt < 3 && !reachable(); attempt++) {
+        final distance = target.bottom > area.bottom
+            ? area.bottom - target.bottom - 8
+            : target.top < area.top
+            ? area.top - target.top + 8
+            : 0.0;
+        if (distance.abs() < 1) break;
+        final limit = area.height * .75;
+        await tester.dragFrom(
+          Offset(area.left + 4, area.center.dy),
+          Offset(0, distance.clamp(-limit, limit).toDouble()),
+        );
+        await tester.pumpAndSettle();
+        target = tester.getRect(finder);
+        area = tester.getRect(viewport);
+        visible = target.intersect(area);
+      }
+      expect(
+        visible.width,
+        greaterThanOrEqualTo(24),
+        reason: 'Entry control must be horizontally reachable: '
+            'target=$target visible=$visible',
+      );
+      expect(
+        visible.height,
+        greaterThanOrEqualTo(24),
+        reason: 'Entry control must remain reachable above the keyboard: '
+            'target=$target visible=$visible',
+      );
+      if (requireCenter) {
+        expect(
+          finder.hitTestable(),
+          findsOneWidget,
+          reason: 'Entry action center must receive its tap after a real drag: '
+              'target=$target visible=$visible',
+        );
+      }
+      return visible;
+    }
     Future<void> tap(Finder finder) async {
       await present(finder, 'supplement action present');
       await tester.ensureVisible(finder);
       await tester.pumpAndSettle();
-      expect(
-        finder.hitTestable(),
-        findsOneWidget,
-        reason: 'Supplement action must receive its tap after layout settles',
-      );
+      if (finder.hitTestable().evaluate().isEmpty &&
+          find
+              .ancestor(of: finder, matching: _key('entry-stack'))
+              .evaluate()
+              .isNotEmpty) {
+        await revealEntryWithGesture(finder, requireCenter: true);
+      } else {
+        expect(
+          finder.hitTestable(),
+          findsOneWidget,
+          reason: 'Supplement action must receive its tap after layout settles',
+        );
+      }
       await tester.tap(finder);
       await tester.pumpAndSettle();
     }
@@ -161,38 +221,9 @@ void main() {
         // The focused first input follows programmatic scrolls. On a narrow
         // keyboard viewport, a person instead drags the stack to reach the
         // second input. Exercise that real gesture before tapping it.
-        final viewport = _key('entry-stack');
-        expect(viewport, findsOneWidget);
-        var fieldRect = tester.getRect(finder);
-        var area = tester.getRect(viewport);
-        var visible = fieldRect.intersect(area);
-        for (var attempt = 0; attempt < 4 && visible.height < 24; attempt++) {
-          final distance = fieldRect.bottom > area.bottom
-              ? area.bottom - fieldRect.bottom - 8
-              : area.top - fieldRect.top + 8;
-          final limit = area.height * .75;
-          await tester.dragFrom(
-            Offset(area.left + 4, area.center.dy),
-            Offset(0, distance.clamp(-limit, limit).toDouble()),
-          );
-          await tester.pumpAndSettle();
-          fieldRect = tester.getRect(finder);
-          area = tester.getRect(viewport);
-          visible = fieldRect.intersect(area);
-        }
-        expect(
-          visible.width,
-          greaterThanOrEqualTo(24),
-          reason:
-              'Entry input must remain horizontally reachable: '
-              'field=$fieldRect visible=$visible',
-        );
-        expect(
-          visible.height,
-          greaterThanOrEqualTo(24),
-          reason:
-              'Entry input must remain reachable above the keyboard: '
-              'field=$fieldRect visible=$visible',
+        final visible = await revealEntryWithGesture(
+          finder,
+          requireCenter: false,
         );
         await tester.tapAt(visible.center);
       }
