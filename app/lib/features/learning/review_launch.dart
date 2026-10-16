@@ -9,6 +9,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_reading.dart';
 import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_session_route.dart';
@@ -249,7 +250,27 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                   ),
                   'count': counts[direction]!,
                 }),
-                icon: const PikoIcon(PikoIconName.rotateCcw),
+                expandLabel: direction == available.first,
+                labelAlignment: direction == available.first
+                    ? TextAlign.start
+                    : TextAlign.center,
+                trailingSpacing: pikoDesign.dimension(
+                  'components.collectionReview.mascotGap',
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (direction == available.first) ...[
+                      const PikoReading(),
+                      SizedBox(
+                        width: pikoDesign.dimension(
+                          'components.collectionReview.mascotGap',
+                        ),
+                      ),
+                    ],
+                    const PikoIcon(PikoIconName.rotateCcw),
+                  ],
+                ),
                 variant: direction == available.first
                     ? PikoButtonVariant.reviewPrimary
                     : PikoButtonVariant.reviewSecondary,

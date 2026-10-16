@@ -53,6 +53,8 @@
  dimension('--collection-card-metadata-size',collectionCard.metadataSize,8,100);
  dimension('--collection-card-metadata-line-height',collectionCard.metadataLineHeight,1,3,'');
  const collectionReview=config.components.collectionReview;
+ dimension('--collection-review-mascot-size',collectionReview.mascotSize,0,200);
+ dimension('--collection-review-mascot-gap',collectionReview.mascotGap,0,100);
  dimension('--collection-review-quick-width',collectionReview.quickWidth,44,1000);
  dimension('--collection-review-quick-padding-x',collectionReview.quickPaddingX,0,100);
  dimension('--collection-review-quick-padding-y',collectionReview.quickPaddingY,0,100);

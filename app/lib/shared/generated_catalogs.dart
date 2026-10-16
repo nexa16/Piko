@@ -47,6 +47,8 @@ const designCatalog = <String, Object?>{
 "collectionReview": <String, Object?>{
 "cardMinHeight": 86,
 "cardPadding": 20,
+"mascotGap": 8,
+"mascotSize": 64,
 "quickActionsBottom": 15,
 "quickCountMinWidth": 24,
 "quickCountSize": 12,

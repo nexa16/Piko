@@ -51,6 +51,9 @@
 [data-round="2"] .r2-detail-sub{margin-bottom:var(--r2-learning-gap)}
 [data-round="2"] .r2-review-stack{display:grid;gap:var(--r2-learning-gap)}
 [data-round="2"] #r2-review-actions .review-cta{margin:0;padding:var(--r2-learning-padding);min-height:var(--control-large)}
+[data-round="2"] .r2-review-primary{gap:var(--collection-review-mascot-gap)}
+[data-round="2"] .r2-review-primary>span:first-child{flex:1;min-width:0}
+[data-round="2"] .r2-review-mascot{display:block;width:var(--collection-review-mascot-size);height:var(--collection-review-mascot-size);object-fit:contain;image-rendering:pixelated;flex:none;pointer-events:none}
 [data-round="2"] .r2-review-primary{background:var(--piko-primary);color:var(--piko-onPrimary)}
 [data-round="2"] .r2-review-secondary{background:var(--r2-review-secondary-background);color:var(--r2-review-secondary-text)}
 [data-round="2"] .review-cta .meta{color:inherit}

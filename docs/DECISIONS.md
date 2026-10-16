@@ -1,10 +1,18 @@
 # Decision log
 
+## Reading Piko inside the first available normal-review card — accepted, 2026-10-16
+
+- **Placement:** Put one reading Piko (approved source frame 3) inside the first visible positive normal-review card on Collection Detail. It follows the card's left-aligned direction/count text and precedes the trailing review icon. If only the reverse direction is available, that card is first and receives the mascot. Two directions still show one Piko; Speed-only and states without available normal review show none. Do not add a Speed mascot in round 2.
+- **Geometry and art:** Use the canonical `components.collectionReview.mascotSize` at 64px square and `components.collectionReview.mascotGap` at 8px. Preserve the manually corrected frame-3 pixels in a transparent, lossless export with crisp edges. The art is decoration only; card text, icon, action and accessibility remain complete without it.
+- **Traceability:** This resolves the placement/scale handoff left open by the 2026-10-15 artwork decision. UX-MASCOT-001 advances to revision 2; MASCOT-001's availability rule remains revision 1. Later poses and their specific placement remain deferred. Production integration is in progress; host, visual and Android acceptance are pending. No publication is authorized.
+
 ## Round-2 implementation authorized — 2026-10-15
 
 The owner approved one isolated shared implementation branch based on merged develop, one specification per implementation commit and coherent targeted test batches. Preserve the ongoing UX checkout; incorporate accepted refinements at batch boundaries. Prefer simpler reversible/data-preserving choices and record them, without inventing functionality. JSON imports with multiple Collections are rejected. Final acceptance includes a local Android test APK and reproducible screenshots of every page and distinct dialogs/states. No publication is authorized. See implementation-round-2.md.
 
 ## Piko artwork placement and round-2 boundary — accepted, 2026-10-15
+
+The reading pose's presentation and handoff statements below are historical; the accepted 2026-10-16 placement decision above supersedes them.
 
 - **Owner clarification:** The Piko character is purely decorative. Context selects the picture only; the character has no interaction, action or learning function. Existing controls/text remain authoritative; exclude every in-app pose from focus and redundant accessibility/status announcements. The app/launcher icon keeps normal OS behavior.
 - **Round 2:** Use refined source frame 1 as Piko's app/launcher icon and reading frame 3 on Collection Detail when normal review is available. Preserve the owner's manual pixel corrections, 64×64 masters and editable source. Export the icon with its background and the reading pose with transparency when integration begins. Lucide remains the control/navigation icon family.

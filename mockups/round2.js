@@ -54,7 +54,7 @@
     const entries=filtered(),actions=J.directions.filter(d=>due(C(),d,entries).length);
     if(!C().entries.length)return '';
     if(!entries.length)return '<p class="meta">'+t('r2.noMatches')+'</p>';
-    return actions.length ? '<div class="r2-review-stack">'+actions.map((d,index)=>'<button class="card review-cta r2-review-'+(index?'secondary':'primary')+'" onclick="R2.startReview(\''+d+'\',true)"><span><strong>'+t('r2.due',{direction:directionLabel(d),count:due(C(),d,entries).length})+'</strong><span class="meta">'+t('action.reviewNow')+'</span></span>'+uiIcon('review')+'</button>').join('')+'</div>' : '<p class="card r2-caught-up">'+t('r2.caughtUp')+'</p>';
+    return actions.length ? '<div class="r2-review-stack">'+actions.map((d,index)=>'<button class="card review-cta r2-review-'+(index?'secondary':'primary')+'" onclick="R2.startReview(\''+d+'\',true)"><span><strong>'+t('r2.due',{direction:directionLabel(d),count:due(C(),d,entries).length})+'</strong><span class="meta">'+t('action.reviewNow')+'</span></span>'+(index===0?'<img class="r2-review-mascot" src="../app/assets/brand/piko-reading.png" width="64" height="64" alt="" aria-hidden="true" draggable="false">':'')+uiIcon('review')+'</button>').join('')+'</div>' : '<p class="card r2-caught-up">'+t('r2.caughtUp')+'</p>';
   }
   function speedActions() {
     const available=J.directions.filter(d=>speedIds(d).length);

@@ -32,6 +32,8 @@ class PikoButton extends StatelessWidget {
     this.iconLabelSpacing,
     this.trailingSpacing,
     this.autofocus = false,
+    this.expandLabel = false,
+    this.labelAlignment = TextAlign.center,
   });
   final String label;
   final VoidCallback? onPressed;
@@ -46,6 +48,8 @@ class PikoButton extends StatelessWidget {
   final double? iconLabelSpacing;
   final double? trailingSpacing;
   final bool autofocus;
+  final bool expandLabel;
+  final TextAlign labelAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +177,10 @@ class PikoButton extends StatelessWidget {
             if (icon != null && label.isNotEmpty)
               SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
             if (label.isNotEmpty)
-              Flexible(child: Text(label, textAlign: TextAlign.center)),
+              Flexible(
+                fit: expandLabel ? FlexFit.tight : FlexFit.loose,
+                child: Text(label, textAlign: labelAlignment),
+              ),
             if (trailing != null)
               SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
             ?trailing,
