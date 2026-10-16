@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
@@ -244,15 +245,33 @@ void main() {
                   .nativeText ==
               'Zweites Beispiel.',
         );
-        await tester.showKeyboard(key('content-example-native-1'));
-        await review.waitUntil(
-          tester,
-          () =>
-              MediaQuery.viewInsetsOf(
-                tester.element(find.byType(Scaffold).last),
-              ).bottom >
-              0,
+        // Restore the live Android surface for native IME metrics; the
+        // screenshot image surface is unsuitable for native focus checks.
+        const integrationChannel = MethodChannel(
+          'plugins.flutter.io/integration_test',
         );
+        await integrationChannel.invokeMethod<void>('revertFlutterImage');
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        await tap(key('content-example-native-1'));
+        var keyboardInset = 0.0;
+        final keyboardDeadline = DateTime.now().add(
+          const Duration(seconds: 15),
+        );
+        while (DateTime.now().isBefore(keyboardDeadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          await tester.pump();
+          keyboardInset = MediaQuery.viewInsetsOf(
+            tester.element(find.byType(CollectionDetail)),
+          ).bottom;
+          if (keyboardInset > 0) break;
+        }
+        expect(keyboardInset, greaterThan(0), reason: 'Real docked IME inset');
+        evidence['nativeKeyboardInset'] = keyboardInset;
+        await integrationChannel.invokeMethod<void>(
+          'convertFlutterSurfaceToImage',
+        );
+        await tester.pump();
         final keyboardBytes = await binding.takeScreenshot(
           '04a-editor-keyboard',
         );
