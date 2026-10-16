@@ -378,6 +378,10 @@ void main() {
       await f.review(rating: LearningRating.again);
       await f.review(reverse: true, rating: LearningRating.again);
       await SqliteSettingsRepository(f.db).write('locale', 'de');
+      // Legacy schemas used automatic hints; preserve that historical state.
+      await f.db.customStatement(
+        "UPDATE vocabulary_entries SET hint_visibility = 'always'",
+      );
       final before = await storedSnapshot(f.db);
       // Recreate the historical schema, where addition dates were unknown.
       for (final row in before['vocabulary_entries'] as List) {
@@ -408,7 +412,12 @@ void main() {
               );
               // The v10 fixture predates the additive successful-Speed marker.
               if (table.key == 'learning_items') row.remove('speed_completed');
+              if (table.key == 'collections') {
+                row.remove('automatic_hint_default');
+                row.remove('hint_default_offer_handled');
+              }
               if (table.key == 'vocabulary_entries') {
+                row.remove('active');
                 row.removeWhere(
                   (key, _) => const {
                     'added_at',

@@ -151,8 +151,8 @@ void main() {
     () async {
       final f = await fixture();
       expect(
-        await f.vocabulary.readHintVisibilityDefault(),
-        HintVisibility.always,
+        await f.vocabulary.readHintVisibilityDefault(collectionId: f.owner.id),
+        HintVisibility.hidden,
       );
       await f.vocabulary.updateWithContent(
         id: f.entry.id,
@@ -163,14 +163,14 @@ void main() {
         makeHintVisibilityDefault: true,
       );
       expect(
-        await f.vocabulary.readHintVisibilityDefault(),
+        await f.vocabulary.readHintVisibilityDefault(collectionId: f.owner.id),
         HintVisibility.hidden,
       );
       expect(
         (await f.vocabulary.watchById(f.other.id).first)!
             .content
             .hintVisibility,
-        HintVisibility.always,
+        HintVisibility.hidden,
       );
       final newWord = await f.vocabulary.create(
         collectionId: f.owner.id,
@@ -211,7 +211,7 @@ void main() {
       );
       expect(await completeSnapshot(f.db), before);
       await f.db.customStatement(
-        "CREATE TRIGGER reject_hint_default BEFORE UPDATE ON app_settings WHEN NEW.key = 'hintVisibility' BEGIN SELECT RAISE(ABORT, 'injected default failure'); END",
+        "CREATE TRIGGER reject_hint_default BEFORE UPDATE OF automatic_hint_default ON collections BEGIN SELECT RAISE(ABORT, 'injected default failure'); END",
       );
       await expectLater(
         f.vocabulary.updateWithContent(
@@ -316,6 +316,7 @@ void main() {
         // Recreate the historical schema, where addition dates were unknown.
         for (final row in before['vocabulary_entries'] as List) {
           (row as Map)['added_at'] = null;
+          row['hint_visibility'] = 'always';
         }
         final legacy = sqlite.sqlite3.open(file.path);
         try {
@@ -334,7 +335,12 @@ void main() {
               final row = Map<String, Object?>.of(
                 stored as Map<String, Object?>,
               );
+              if (table.key == 'collections') {
+                row.remove('automatic_hint_default');
+                row.remove('hint_default_offer_handled');
+              }
               if (table.key == 'vocabulary_entries') {
+                row.remove('active');
                 for (final column in [
                   'added_at',
                   'example_target_text',
@@ -368,7 +374,7 @@ void main() {
           const VocabularyContent(),
         );
         expect(
-          await repository.readHintVisibilityDefault(),
+          await repository.readHintVisibilityDefault(collectionId: f.owner.id),
           HintVisibility.hidden,
         );
         await migrated.close();

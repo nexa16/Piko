@@ -34,6 +34,7 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
                 ..where((entryRow) => entryRow.id.equals(row.entryId)))
               .getSingleOrNull();
       if (entry == null) throw SpeedCompletionFailure.itemNotFound;
+      if (!entry.active) throw SpeedCompletionFailure.inactive;
       if (entry.collectionId != scope.collectionId ||
           row.direction != scope.direction.name ||
           expected.entryId != entry.id ||

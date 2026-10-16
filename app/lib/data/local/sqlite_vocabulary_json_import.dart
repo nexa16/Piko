@@ -28,9 +28,10 @@ final class _EntryChange {
     required this.assignments,
     required this.changed,
     required this.content,
+    required this.active,
   });
   final String id, target, native;
-  final bool isNew, changed;
+  final bool isNew, changed, active;
   final VocabularyContent content;
 
   /// Null leaves existing assignments untouched; empty explicitly clears them.
@@ -134,6 +135,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         ![
           1,
           2,
+          3,
           VocabularyJsonFormat.schemaVersion,
         ].contains(decoded['schemaVersion'])) {
       issue(VocabularyJsonIssueCode.unsupportedVersion, 'schemaVersion');
@@ -215,7 +217,10 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
   Future<String> _importFingerprint(String collectionId) async {
     final result = <String, Object?>{};
     for (final (name, sql) in [
-      ('collections', 'SELECT * FROM collections WHERE id = ?'),
+      (
+        'collections',
+        'SELECT id,name,target_language,native_language FROM collections WHERE id = ?',
+      ),
       (
         'vocabulary_entries',
         'SELECT rowid AS original_rowid,* FROM vocabulary_entries WHERE collection_id = ? ORDER BY rowid',
@@ -315,9 +320,9 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
               .get())
         row.read<String>('id'): row.read<String>('collection_id'),
     };
-    final defaultVisibility = HintVisibility.fromStored(
-      await SqliteSettingsRepository(database).read(HintVisibility.settingKey),
-    );
+    final defaultVisibility = await SqliteVocabularyRepository(
+      database,
+    ).readHintVisibilityDefault(collectionId: request.collectionId);
     var usesDefaultVisibility = false;
     final dimensions = {
       for (final row
@@ -630,6 +635,18 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         }
       }
       if (old == null && !explicitVisibility) usesDefaultVisibility = true;
+      var active = old?.active ?? true;
+      if (request.schemaVersion >= 4 && row.containsKey('active')) {
+        if (row['active'] is! bool) {
+          issue(
+            VocabularyJsonIssueCode.invalidField,
+            '$path.active',
+            rowNumber,
+          );
+        } else if (request.groups.contains(VocabularyJsonGroup.activity)) {
+          active = row['active'] as bool;
+        }
+      }
       final content = VocabularyContent(
         examples: pairs,
         hintText: hintText,
@@ -784,11 +801,13 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           isNew: old == null,
           assignments: assignments,
           content: content,
+          active: active,
           changed:
               old == null ||
               target != old.targetText ||
               native != old.nativeText ||
               content != priorContent ||
+              active != old.active ||
               assignments != null && !sameAssignments(assignments),
         ),
       );
@@ -944,7 +963,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           if (entry.isNew) {
             final rowId = await database.allocateVocabularyRowId();
             await database.customInsert(
-              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,hint_text,hint_visibility,added_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,hint_text,hint_visibility,added_at,active) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
               variables: [
                 Variable(rowId),
                 Variable(entry.id),
@@ -957,6 +976,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                 Variable<String>(entry.content.hintText),
                 Variable(entry.content.hintVisibility.name),
                 Variable(clock.now().toUtc().toIso8601String()),
+                Variable(entry.active),
               ],
               updates: {database.vocabularyEntries},
             );
@@ -972,6 +992,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                     targetKey: Value(vocabularyComparisonKey(entry.target)),
                     nativeKey: Value(vocabularyComparisonKey(entry.native)),
 
+                    active: Value(entry.active),
                     hintText: Value(entry.content.hintText),
                     hintVisibility: Value(entry.content.hintVisibility.name),
                   ),

@@ -14,7 +14,15 @@ import 'retry_gap_migration_test.dart' show gateway, storedSnapshot;
 // Intentional inventory: additions require a stated product/integrity purpose.
 const allowedColumns = <String, Set<String>>{
   'app_settings': {'key', 'value'},
-  'collections': {'id', 'name', 'target_language', 'native_language'},
+  // Collection-owned Hint default and one-time offer state; no event history.
+  'collections': {
+    'id',
+    'name',
+    'target_language',
+    'native_language',
+    'automatic_hint_default',
+    'hint_default_offer_handled',
+  },
   'vocabulary_entries': {
     'id',
     'collection_id',
@@ -27,6 +35,7 @@ const allowedColumns = <String, Set<String>>{
     'hint_text',
     'hint_visibility',
     'added_at',
+    'active', // VOCAB-ACTIVE-001: current eligibility, never activity history.
   },
   // Ordered user-authored examples; no extra learning history.
   'vocabulary_examples': {'entry_id', 'position', 'target_text', 'native_text'},

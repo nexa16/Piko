@@ -19,7 +19,10 @@ final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
 }
 
 final class SqliteVocabularyRepository
-    implements VocabularyContentRepository, QuestionExamplesRepository {
+    implements
+        VocabularyContentRepository,
+        QuestionExamplesRepository,
+        CollectionHintPreferences {
   SqliteVocabularyRepository(this.database);
   final PikoDatabase database;
   final _issuer = Object();
@@ -29,23 +32,70 @@ final class SqliteVocabularyRepository
       'false';
 
   @override
-  Future<HintVisibility> readHintVisibilityDefault() async =>
-      HintVisibility.fromStored(
-        await SqliteSettingsRepository(
-          database,
-        ).read(HintVisibility.settingKey),
-      );
+  Future<HintVisibility> readHintVisibilityDefault({
+    required String collectionId,
+  }) async {
+    final row = await _collection(collectionId);
+    return row.automaticHintDefault
+        ? HintVisibility.always
+        : HintVisibility.hidden;
+  }
+
+  Future<Collection> _collection(String id) async {
+    final row = await (database.select(
+      database.collections,
+    )..where((c) => c.id.equals(id))).getSingleOrNull();
+    if (row == null) throw VocabularyValidation.collectionNotFound;
+    return row;
+  }
+
+  @override
+  Future<bool> hintDefaultOfferHandled(String collectionId) async =>
+      (await _collection(collectionId)).hintDefaultOfferHandled;
+
+  @override
+  Future<void> setCollectionHintDefault(
+    String collectionId,
+    bool automatic,
+  ) async {
+    final count =
+        await (database.update(
+          database.collections,
+        )..where((c) => c.id.equals(collectionId))).write(
+          CollectionsCompanion(automaticHintDefault: Value(automatic)),
+        );
+    if (count != 1) throw VocabularyValidation.collectionNotFound;
+  }
+
+  @override
+  Future<void> completeHintDefaultOffer(
+    String collectionId, {
+    required bool accept,
+  }) => database.transaction(() async {
+    final row = await _collection(collectionId);
+    if (row.hintDefaultOfferHandled) return;
+    await (database.update(
+      database.collections,
+    )..where((c) => c.id.equals(collectionId))).write(
+      CollectionsCompanion(
+        hintDefaultOfferHandled: const Value(true),
+        automaticHintDefault: accept ? const Value(true) : const Value.absent(),
+      ),
+    );
+  });
 
   Future<void> _writeContent(
     String id,
     VocabularyContent content,
     bool makeDefault,
+    bool? active,
   ) async {
     final count =
         await (database.update(
           database.vocabularyEntries,
         )..where((row) => row.id.equals(id))).write(
           VocabularyEntriesCompanion(
+            active: active == null ? const Value.absent() : Value(active),
             hintText: Value(content.hintText),
             hintVisibility: Value(content.hintVisibility.name),
           ),
@@ -53,9 +103,13 @@ final class SqliteVocabularyRepository
     if (count != 1) throw VocabularyValidation.entryNotFound;
     await SqliteVocabularyContent(database).replace(id, content);
     if (makeDefault) {
-      await SqliteSettingsRepository(
-        database,
-      ).write(HintVisibility.settingKey, content.hintVisibility.name);
+      final entry = await (database.select(
+        database.vocabularyEntries,
+      )..where((e) => e.id.equals(id))).getSingle();
+      await setCollectionHintDefault(
+        entry.collectionId,
+        content.hintVisibility == HintVisibility.always,
+      );
     }
   }
 
@@ -67,6 +121,7 @@ final class SqliteVocabularyRepository
     required Map<String, Set<String>> assignments,
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
+    bool active = true,
   }) {
     final normalized = content.normalized();
     final requested = {
@@ -80,7 +135,12 @@ final class SqliteVocabularyRepository
         nativeText: nativeText,
         assignments: requested,
       );
-      await _writeContent(saved.id, normalized, makeHintVisibilityDefault);
+      await _writeContent(
+        saved.id,
+        normalized,
+        makeHintVisibilityDefault,
+        active,
+      );
       return VocabularyRecord(
         id: saved.id,
         collectionId: saved.collectionId,
@@ -88,6 +148,7 @@ final class SqliteVocabularyRepository
         nativeText: saved.nativeText,
         content: normalized,
         addedAt: saved.addedAt,
+        active: active,
       );
     });
   }
@@ -100,6 +161,7 @@ final class SqliteVocabularyRepository
     required Map<String, Set<String>> assignments,
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
+    bool? active,
   }) {
     final normalized = content.normalized();
     final requested = {
@@ -113,7 +175,7 @@ final class SqliteVocabularyRepository
         nativeText: nativeText,
         assignments: requested,
       );
-      await _writeContent(id, normalized, makeHintVisibilityDefault);
+      await _writeContent(id, normalized, makeHintVisibilityDefault, active);
       return VocabularyRecord(
         id: saved.id,
         collectionId: saved.collectionId,
@@ -121,6 +183,7 @@ final class SqliteVocabularyRepository
         nativeText: saved.nativeText,
         content: normalized,
         addedAt: saved.addedAt,
+        active: active ?? saved.active,
       );
     });
   }
@@ -247,6 +310,7 @@ final class SqliteVocabularyRepository
                   nativeKey: Value(
                     vocabularyComparisonKey(original.nativeText),
                   ),
+                  active: Value(original.active),
                   hintText: Value(original.content.hintText),
                   hintVisibility: Value(original.content.hintVisibility.name),
                 ),
@@ -308,6 +372,7 @@ final class SqliteVocabularyRepository
   Future<VocabularyRecord> _record(VocabularyEntry row) async =>
       VocabularyRecord(
         id: row.id,
+        active: row.active,
         collectionId: row.collectionId,
         targetText: row.targetText,
         nativeText: row.nativeText,
@@ -375,7 +440,9 @@ final class SqliteVocabularyRepository
       if (collection == null) throw VocabularyValidation.collectionNotFound;
       final id = const Uuid().v4();
       final rowId = await database.allocateVocabularyRowId();
-      final visibility = await readHintVisibilityDefault();
+      final visibility = await readHintVisibilityDefault(
+        collectionId: collectionId,
+      );
       final addedAt = database.clock.now().toUtc();
       await database.customInsert(
         'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_visibility, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -428,6 +495,7 @@ final class SqliteVocabularyRepository
       );
       return VocabularyRecord(
         id: existing.id,
+        active: existing.active,
         collectionId: existing.collectionId,
         targetText: target,
         nativeText: native,

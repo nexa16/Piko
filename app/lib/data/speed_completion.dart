@@ -1,6 +1,7 @@
 import 'learning_item.dart';
 
 enum SpeedCompletionFailure {
+  inactive,
   invalidCompletion,
   collectionNotFound,
   itemNotFound,

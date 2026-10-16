@@ -215,7 +215,12 @@ void main() {
         for (final table in before.entries) {
           for (final stored in table.value as List) {
             final row = Map<String, Object?>.from(stored as Map);
+            if (table.key == 'collections') {
+              row.remove('automatic_hint_default');
+              row.remove('hint_default_offer_handled');
+            }
             if (table.key == 'vocabulary_entries') {
+              row.remove('active');
               row.remove('added_at');
               row['example_target_text'] = 'Premier.';
               row['example_native_text'] = 'Erster.';

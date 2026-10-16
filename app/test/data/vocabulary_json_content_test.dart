@@ -57,7 +57,7 @@ void main() {
       final before = await completeSnapshot(f.db);
       final encoded = await service.exportCollection(f.owner.id);
       final document = jsonDecode(encoded) as Map;
-      expect(document['schemaVersion'], 3);
+      expect(document['schemaVersion'], 4);
       final row =
           ((document['collections'] as List).single['entries'] as List).single
               as Map;
@@ -367,7 +367,7 @@ void main() {
           },
         ]),
       );
-      await settings.write(HintVisibility.settingKey, 'hidden');
+      await f.vocabulary.setCollectionHintDefault(f.owner.id, true);
       final afterSetting = await completeSnapshot(f.db);
       await expectLater(
         service.applyImport(derived),
@@ -385,7 +385,7 @@ void main() {
           },
         ]),
       );
-      await settings.write(HintVisibility.settingKey, 'always');
+      await f.vocabulary.setCollectionHintDefault(f.owner.id, false);
       expect((await service.applyImport(explicit)).newCount, 1);
       final existing = await service.analyzeImport(
         collectionId: f.owner.id,
@@ -396,7 +396,7 @@ void main() {
           },
         ]),
       );
-      await settings.write(HintVisibility.settingKey, 'hidden');
+      await f.vocabulary.setCollectionHintDefault(f.owner.id, true);
       await settings.write('locale', 'de');
       expect((await service.applyImport(existing)).updatedCount, 1);
       expect(
