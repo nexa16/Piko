@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 9,
-  "updated": "2026-10-16",
+  "revision": 10,
+  "updated": "2026-10-17",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
   "statusPolicy": [
@@ -1662,22 +1662,28 @@
     },
     {
       "id": "F19",
-      "revision": 1,
+      "revision": 4,
       "priority": "P2",
       "title": "Shorten the vocabulary editor",
       "kind": "Owner-reported usability concern; bounded Android observation",
       "screen": "Vocabulary inline editor; shared entry content",
       "requirements": [
-        "UX-COLL-011"
+        "UX-COLL-011",
+        "UX-COLL-012",
+        "UX-CAT-001",
+        "UX-VOCAB-ACTIVE-001",
+        "UX-VOCAB-DELETE-001"
       ],
       "summary": "Empty Example Pair and Hint fields, two visibility radio rows, a default checkbox and category/Delete controls remain expanded in a long editor card.",
-      "status": "specified",
-      "decision": "Owner accepted compact optional sections and a Hint visibility switch, explicitly for Later and outside round 4. No implementation round assigned.",
+      "status": "needs_verification",
+      "decision": "Round-5 compact editor/default/activity refinements are locally implemented; final host and scoped English Android evidence is recorded in implementation-round-5.md. Remaining native language, enlarged-text/accessibility and owner phone acceptance prevent full closure.",
       "workPackage": "entry",
       "acceptance": [
-        "Follow UX-COLL-011 r2 for compact empty/populated sections, switch mapping and separate explicit global-default choice.",
-        "Preserve raw drafts, errors, content, autosave/Discard, categories and learning across disclosure changes.",
-        "Complete revision-specific Android checks for keyboard, accessibility, narrow/enlarged text and both Hint states before closure."
+        "Follow UX-COLL-011 r4 and VOCAB-008–010 r3: compact empty/populated sections, per-word switch, no default checkbox, Collection settings initially off for existing/new Collections, and a first-ON offer shown once per Collection and remembered after acceptance or dismissal.",
+        "Preserve raw drafts, errors, content, autosave, categories and learning across section disclosure; saved-editor collapse follows VOCAB-EDIT-002 r2 without a Finish/Discard footer or rollback X.",
+        "Complete revision-specific Android checks for keyboard, accessibility, narrow/enlarged text and both Hint states before closure.",
+        "Verify independent Collection defaults, migration preserving existing entry visibility/learning, and offer persistence across words/editors/restart, including failed writes.",
+        "Show selected category values without group names when closed; expanded shows title/selected-values rows and New category group last. Keep Active as the last editor control; Delete is an explicit top-right menu action with existing Undo."
       ],
       "baselineEvidence": [],
       "verifiedAt": null,
@@ -1689,24 +1695,58 @@
         {
           "date": "2026-10-16",
           "event": "Owner accepted compact optional sections and switch, then explicitly deferred to Later outside round 4. Specified only; no implementation or fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner selected the compact editor for round-5 planning alongside answer-card editing and Active/Inactive vocabulary. Scheduling only; no implementation or verification claimed."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner screenshot feedback rejects the editor default checkbox. Accepted Collection-scoped default, initially off for existing/new Collections, and a first-ON offer once per Collection, consumed after acceptance or dismissal. Specs revised; prior sketch evidence remains historical, no app/mockup implementation or Android verification."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner refines the sketch: move Active to bottom, collapse Categories to values with expandable group rows and a final create-group action, relocate Delete to the top-right card menu and remove saved-editor Finish/Discard. Owning specs revised; source inspection at 6541e25 confirms older controls, with no new runtime or implementation evidence."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Definition handoff resolves current-card deactivation (owner: save then skip without grading), activity defaults/JSON, queue/retry preservation, Inactive status presentation and editor Back/Exit. Implementation requested in its dedicated chat; no runtime or finding closure claimed."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Implemented through source 628d973. Final host suite and isolated Android round5-d pass; key English captures and real Gboard/Back inspected. Status needs_verification preserves remaining acceptance gaps; not closed."
         }
       ],
       "impact": "Optional controls occupy substantial vertical space even when no optional content is present.",
-      "confidence": "High for the observed expanded state; no whole-card measurement or repeated reproduction. Improvement remains to verify.",
+      "confidence": "High for the implemented compact states and inspected English Android captures; broader native accessibility/language coverage remains pending.",
       "evidenceRefs": [
         {
           "review": "vocabulary-editor-review-2026-10-16",
           "kind": "Live Android observation; installed source revision unverified",
           "ref": "piko-ux.md#shared-prototype-components-and-collection-detail--accepted-2026-10-13"
+        },
+        {
+          "review": "hint-default-review-2026-10-17",
+          "kind": "Owner mockup screenshot and clarified design decision; no Android reproduction",
+          "ref": "implementation-round-5.md#collection-hint-default-refinement--2026-10-17"
+        },
+        {
+          "review": "round5-d",
+          "kind": "Isolated Android API36 English normal-size runtime and inspected captures; source 628d973",
+          "ref": "implementation-round-5.md#local-verification-and-candidate--2026-10-17"
         }
       ],
       "requirementRevisions": {
-        "UX-COLL-011": 2
+        "UX-COLL-011": 4,
+        "UX-COLL-012": 2,
+        "UX-CAT-001": 8,
+        "UX-VOCAB-ACTIVE-001": 3,
+        "UX-VOCAB-DELETE-001": 4
       },
-      "implementationRound": null,
+      "implementationRound": 5,
       "reconciliation": {
-        "implementationLedger": "implementation-round-4.md",
-        "findingClosure": "Later, explicitly excluded from round 4; implementation and Android verification pending."
+        "implementationLedger": "implementation-round-5.md",
+        "findingClosure": "Implemented and scoped verification passed; broader native acceptance and owner phone check remain pending."
       }
     }
   ],

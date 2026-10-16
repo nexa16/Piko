@@ -1,8 +1,8 @@
 # Piko
 
-**Status: Round 4 is implemented and locally verified for owner review. Owner manual review and phone acceptance are complete; development integration is in progress. Not a published product release.**
+**Status: Round 4 is accepted and integrated. Round 5 is locally implemented and verified, with one APK ready for owner review; manual/publication approval and phone acceptance remain pending. Not a published release.**
 
-The local-first Flutter app includes ordered multiple Example Pairs and Hint, JSON schema version 3 export with versions 1–3 accepted on import, shared Import/Export navigation, Collection grouping/view/sort preferences, and the round-4 dialog, book-launcher and palette refinements. The retained scrolling correction and unreproduced header report are documented in the [round-4 ledger](docs/implementation-round-4.md), together with candidate provenance, scoped verification and remaining acceptance gaps. The [round-3 ledger](docs/implementation-round-3.md) retains historical evidence. New feature implementation requires separate authorization; implementation evidence does not automatically close each UX finding.
+The local-first Flutter app includes compact autosaving vocabulary editors, editing within revealed normal/retry/Speed answers, independent Active/Inactive vocabulary, Collection Hint defaults and JSON schema-4 export with versions 1–4 accepted on import. The [round-5 ledger](docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the exact candidate, requirement revisions, host/Android evidence, exclusions and acceptance gaps. Earlier learning, examples, categories and Collection preferences are retained. UX findings are tracked separately; scoped implementation evidence does not automatically close every finding.
 
 This repository contains Piko's product planning, interactive mockups and local-first Flutter implementation.
 
@@ -14,6 +14,7 @@ This repository contains Piko's product planning, interactive mockups and local-
 - [Implementation-round-2 execution and evidence](docs/implementation-round-2.md)
 - [Implementation-round-3 checkpoints and evidence](docs/implementation-round-3.md)
 - [Implementation-round-4 candidate and verification](docs/implementation-round-4.md)
+- [Implementation-round-5 plan and learning-specification overview](docs/implementation-round-5.md)
 - [UX quality workflow](docs/ux-quality.md), [accepted criteria](docs/ux-consolidation-proposals.md) and [findings](docs/ux-findings.json)
 - [Historical round-3 mockup evidence](docs/implementation-round-3-mockup.md)
 - [Decision log](docs/DECISIONS.md)
