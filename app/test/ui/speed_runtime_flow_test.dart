@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/learning_item.dart';
+import 'package:piko/data/local/sqlite_settings_repository.dart';
+import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
@@ -41,6 +43,12 @@ void main() {
       final db = RuntimeDatabase(clock);
       final f = Fixture(database: db);
       await tester.runAsync(f.initialize);
+      // This test exercises both directional completion boundaries explicitly;
+      // fresh/migrated preference defaults have their own acceptance coverage.
+      await tester.runAsync(() => SqliteSettingsRepository(db).write(
+        PreferredDirection.settingKey,
+        PreferredDirection.both.name,
+      ));
       final direction = errors ? LearningDirection.nativeToTarget : LearningDirection.targetToNative;
       final opposite = errors ? LearningDirection.targetToNative : LearningDirection.nativeToTarget;
       var prematureRelease = false;
