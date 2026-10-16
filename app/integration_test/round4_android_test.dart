@@ -61,7 +61,22 @@ void main() {
         () => at.evaluate().isNotEmpty,
         description: '$at',
       );
-      Future<void> tap(Finder at) => review.tapVisible(tester, at);
+      Future<void> tap(Finder at) async {
+        await present(at);
+        // Lazy list extents can change while an expanded editor is scrolled.
+        // Let layout settle, then verify the actual target before tapping it.
+        for (var attempt = 0; attempt < 4; attempt++) {
+          await tester.ensureVisible(at);
+          await tester.pumpAndSettle();
+          if (at.hitTestable().evaluate().isNotEmpty) {
+            await tester.tap(at.hitTestable());
+            await tester.pumpAndSettle();
+            return;
+          }
+        }
+        fail('Target did not become hittable: $at');
+      }
+
       Future<void> capture(String name, {Finder? at}) async {
         await settleCatalogueCapture(tester, name, at: at);
         final bytes = await binding.takeScreenshot(name);

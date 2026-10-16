@@ -462,8 +462,8 @@ globalThis.PIKO_COPY = {
       "de": "JSON konnte nicht gelesen werden. Prüfe Kommas, Anführungszeichen und Klammern."
     },
     "json.unsupportedVersion": {
-      "en": "Use schemaVersion 1 or 2.",
-      "de": "Verwende schemaVersion 1 oder 2."
+      "en": "Use schemaVersion 1, 2 or 3.",
+      "de": "Verwende schemaVersion 1, 2 oder 3."
     },
     "json.oneCollection": {
       "en": "Include exactly one collection.",

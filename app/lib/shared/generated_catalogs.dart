@@ -1008,8 +1008,8 @@ const copyCatalog = <String, Object?>{
 "en": "Unchanged — skipped",
 },
 "json.unsupportedVersion": <String, Object?>{
-"de": "Verwende schemaVersion 1 oder 2.",
-"en": "Use schemaVersion 1 or 2.",
+"de": "Verwende schemaVersion 1, 2 oder 3.",
+"en": "Use schemaVersion 1, 2 or 3.",
 },
 "json.wordsOnly": <String, Object?>{
 "de": "Nur Vokabeln importieren (Fortschritt nicht wiederherstellen)",

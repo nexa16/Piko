@@ -121,7 +121,7 @@ class _ViewDialogState extends State<_ViewDialog> {
       List<(T, String)> options,
       void Function(T) select,
     ) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.4')),
       child: DropdownButtonFormField<T>(
         key: ValueKey(key),
         initialValue: value,
