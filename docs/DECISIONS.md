@@ -1,18 +1,75 @@
 # Decision log
 
-## Round-5 planning scope — accepted, 2026-10-16
+## Documentation rework selected for round 6 — 2026-10-17
 
-The owner selected all three proposed packages: compact optional editor sections (UX-COLL-011 r2 / F19), same-card editing after reveal in normal and Speed learning (VOCAB-EDIT-003 r1 / UX-CARD-014 r1), and independent Active/Inactive vocabulary (VOCAB-ACTIVE-001 r2 / UX-VOCAB-ACTIVE-001 r1). Their earlier Later/Undecided scheduling is superseded; round-4 exclusions and historical evidence remain intact. This changes scheduling only, so requirement revisions stay unchanged. Current-card deactivation, retry lifecycle, interchange compatibility and editor exit behavior remain explicit open decisions.
+The owner confirms the previously specified complete README/current-feature documentation rework and Git-ignored planning policy, and adds that package to round 6. DOC-001–007 r1 / UX-DOC-001/002 r1 and UX-LAB-001 r5 remain preserved in the separate documentation-specs checkout; the [round-6 ledger](implementation-round-6.md#documentation-rework-handoff--2026-10-17) owns reconciliation and execution planning. Preserve planning/decisions in ignored `.local/planning/` and remove former tracked paths only after verified preservation and dependency repair; retain Git history. No migration or app change is performed by this scope selection.
 
-The subsequent request to consider a larger batch starts a learning-backlog overview, not acceptance of additional features. The [round-5 ledger](implementation-round-5.md) owns selected scope, candidate additions and pending agreement. App/mockup implementation, publication and round-4 phone acceptance are not authorized by the planning selection.
+## Vocabulary selection approved for round 6 — 2026-10-17
 
-## Collection Hint default and first-use offer — accepted refinement, 2026-10-17
+The owner approved the complete revision-3 selection mockup and requested specification reconciliation and handover to current-round planning. VOCAB-SELECT-001 r1 / UX-COLL-013 r3 are assigned to round 6 without changing their behavior revisions. This accepts the three card states, interior indicators, stable positions and non-overlapping floating panel. The round-6 ledger owns the implementation handoff and preserved reference hashes. Earlier unassigned/proposed visual status is superseded. SPEED-004 r4 learning-from-selection and bulk vocabulary operations remain excluded. This is planning handover; app execution still awaits the explicit request for the clarified batch, and the existing build-5 APK does not contain this feature.
 
-The owner rejects the compact-editor sketch's Use this visibility for new vocabulary checkbox. Remove it from the vocabulary editor; maintain the default in each Collection's settings, initially off / Hidden until tapped. Keep the word's own Show hint automatically switch and offer an optional change to the Collection default on its first switch from off to on per Collection. A switch action alone does not change the default. Existing words retain their individual visibility; changing a default affects only later additions to that Collection. Revealing a hidden Hint during learning does not count as changing this setting.
+## Round-6 implementation scope additions — 2026-10-17
 
-VOCAB-008–010 r2 → r3 and UX-COLL-011 r2 → r3 supersede the original global, initially Always visible default and editor checkbox. IMPORT-HINT-001 r2 → r3 / IMPORT-JSON-002 r3 → r4 apply the destination Collection's default when a new imported word omits visibility; existing-entry and learning preservation remain intact. This refines the selected round-5 compact-editor package, without authorizing app or mockup changes. Earlier runtime and sketch evidence remain historical.
+The owner adds definition-ready statistics and the Collection Detail header to the current implementation scope and will provide further additions. The [round-6 ledger](implementation-round-6.md#current-scope-additions--2026-10-17) records the selected revisions and boundaries. This supersedes their earlier planning-only/unassigned scope status, while app execution awaits the owner's explicit request for the clarified batch. No app/APK change or new Android verification is claimed; separate full export and vocabulary selection are not selected by inference.
 
-The owner confirmed both follow-up choices: show the offer once per Collection on the first switch ON, remembering either acceptance or dismissal; initialize every existing Collection’s default to off as well, without rewriting existing words. The screenshot establishes the owner's objection to the visible checkbox; it does not reproduce a persistence or Android defect. The round-5 ledger records the implementation and verification boundary.
+## Selection states and floating-action clearance — 2026-10-17
+
+The owner endorsed floating actions, requires that they never cover the last vocabulary, and requested research plus different selectable/selected states. UX-COLL-013 r3 proposes interior empty/checked circular indicators and a separate scrolling viewport above the measured floating panel; r2 border-perched badges are superseded. Ordinary cards have no indicator. Maintain fixed content geometry and the existing selection semantics. Visual review and Flutter/Android verification remain pending.
+
+## Selection stays in place — 2026-10-17
+
+Owner browser feedback removes the hold hint and Select row and requires vocabulary to stay in place on selection. UX-COLL-013 r2 supersedes the r1 in-flow toolbar/check-column proposal. The revised mockup proposes a floating bottom panel and trailing-border check badges; card/text coordinates and scroll offset must stay stable through entering/toggling/clearing selection. The new placement is for visual review; no Flutter implementation is authorized.
+
+## Selection without vocabulary actions — 2026-10-17
+
+The owner requested transient multi-selection by long press and subsequent taps, Select all / Clear selection, retention through filters/grouping/expansion/sorting, and clearing on page navigation. The owner explicitly chose Select all matching search/filters, including collapsed groups. VOCAB-SELECT-001 / UX-COLL-013 r1 own this separate unscheduled feature. SPEED-004 r4 separates it from the still-deferred Speed launch. Only specifications and a visual mockup are authorized; no Flutter or Android acceptance is implied. Toolbar placement and card styling are reviewable proposals.
+
+
+## Statistics production decisions — 2026-10-17
+
+The owner accepted one Speed credit per vocabulary direction per learning day; preserved totals after deletion/reset/deactivation; fixed original learning-date keys across timezone changes; and starting both histories fresh at implementation, without reconstructing old reviews/Speed flags. Export clarification: no statistics in Collection-only export; specify a separate full export of all Collections plus statistics. Import ignores statistics, and full import/restore is not requested. STATS-005 r2, STATS-006 r1, STATS-007 r2, STATS-008–010 r1, DATA-005 r2 and UX-STATS-005–007 r1 own the definition-ready statistics package. EXPORT-FULL-001 / UX-EXPORT-FULL-001 r1 are a separate unscheduled specification. Routine design details define atomic credit, correction without added credit, coverage and load/error states. These definitions resolve earlier production prerequisites while preserving the exact approved visual baseline. App implementation, Android/phone verification and publication remain separately gated.
+
+## F22 withdrawn — 2026-10-17
+
+The owner can no longer reproduce F22 and requested its removal. Withdraw it from active investigation and round-6 pending work, superseding its earlier deferral and conditional repair scope. Preserve the finding ID, original report and bounded investigation history. This is owner-reported non-reproduction, not an agent-verified fix; existing typing/autosave requirements and their revisions remain unchanged. No app or mockup change is requested.
+
+## Round-6 statistics planning addition — 2026-10-17
+
+The owner asked to add statistics to the planning scope after approving the exact statistics mockup in the separate design checkout. Round 6 now includes a statistics planning package under UX-STATS-001 r2, UX-STATS-002/004 r2, STATS-005 r1, PARAM-STAT-002 r1 and MASCOT-004 / UX-MASCOT-004 r2, with UX-STATS-003 and STATS-006/007 unchanged. Local `codex/statistics-mockup` commit `9b4a977` preserves the interactive guide and reference captures. Production Speed counting/deduplication, history preservation/import/correction, clock/timezone aggregation and loading/error states remain prerequisites. This is planning selection, not Flutter implementation authorization; app/Android work remains pending a separate explicit request.
+
+## Round-6 learning-help scope addition — 2026-10-17
+
+The owner added the accepted FSRS information icon to round 6. Implement the bounded LEARN-007 r2 / UX-LEARN-007 r1 package: one Collection Detail metadata-row trigger, the How learning works dialog with initially collapsed More about scheduling, shared EN/DE copy and the specified accessibility/responsive behavior. This is an explanation of existing learning behavior, not a scheduler or grading change. App work and Android verification remain pending; the round-6 ledger owns its checkpoint.
+
+## Learning information placement and explanation — accepted, 2026-10-17
+
+The owner accepted one information icon at the trailing edge of Collection Detail's language/count metadata row above the learning actions, replacing the exploratory Learning-heading placement after showing the actual app screen. Open How learning works immediately, with More about scheduling as the initially collapsed technical section. LEARN-007 r2 / UX-LEARN-007 r1 own the behavior, exact accepted English text, localization follow-through and acceptance scenarios. The explanation covers recall, self-assessment, adaptive directional scheduling, reinforcement and Speed without changing their rules. The screenshot is composition evidence only; implementation and revision-specific Android checks remain pending. This initial documentation request did not add FSRS help to round 6; the later scope addition above supersedes that exclusion.
+
+## Round-6 implementation scope — 2026-10-17
+
+The owner selected and requested implementation of the fully approved vocabulary-list guide, UX-COLL-001 r6 / F20–F21, on the prepared round-6 branch. The same request selects a bounded Android investigation of F22: repair the focus interruption if its cause is established, otherwise document the missing reproduction information and defer the fix. This changes round assignment and implementation authorization, not the accepted list design or the existing autosave contract. The [round-6 ledger](implementation-round-6.md#selected-scope-and-checkpoints--2026-10-17) owns checkpoints, evidence and exclusions. Publication and phone acceptance remain separate.
+
+## Full vocabulary-list design approval — 2026-10-17
+
+The owner fully approved the final vocabulary-list design and requested exact specification alignment plus the mockup as implementation guide. UX-COLL-001 r6 remains the accepted revision; this records approval and resolves stale editorial references rather than changing behavior again. The [approved guide](piko-ux.md#approved-vocabulary-list-guide--2026-10-17) owns the composition, state table, geometry and reference scope. App implementation, round assignment and Android verification are still separate.
+
+
+## Collection list chips approved — 2026-10-17
+
+The owner approved the shared Filter/Group/Sort buttons and explicitly removed the grouping/sorting summary line. UX-COLL-001 r6 accepts consistent outline/chevron neutral states and tinted/reset active states; grouping reset means ungrouped, sorting reset means Original order. Current choices remain visible inside the pickers. The mockup is updated; app implementation and Android verification remain pending.
+
+
+## Round-5 definition completion and implementation handoff — 2026-10-17
+
+The owner requests the finalized plan be handed to the waiting implementation chat and explicitly chooses: deactivating the current revealed learning card saves the change, then skips it without grading and continues with eligible work. VOCAB-ACTIVE-001 r3 makes this the exception to ordinary same-answer editing, preserves all learning/history and retry deadlines, and prevents false completion or pass credit.
+
+The remaining bounded details are resolved under the standing implementation/design autonomy: existing/new words default Active; captured work revalidates activity; retries retain original deadlines/gaps; omission preserves existing activity; schema-4 interchange carries an explicit boolean and a separate Activity import group while legacy imports preserve state; inactive display occupies the readiness slot; Back/Exit use autosave/validation guards. These are preservation/compatibility choices, not additional owner-requested features. VOCAB-EDIT-003 r3, UX-CARD-014 r3, UX-VOCAB-ACTIVE-001 r3 and IMPORT-JSON-001 r4 / IMPORT-JSON-002 r5 own the details and acceptance scenarios.
+
+The three selected packages are definition-complete and may proceed in the implementation chat under its existing conditional implementation request. The separate Collection-list controls/group alignment and F22 investigation are not added by inference, nor are learning-statistics/help candidates. The round-5 ledger is the authoritative handoff; execution/account preferences stay in private run notes or chat. Publication and phone-acceptance gates remain separate.
+
+## Collection list preview refinement — 2026-10-17
+
+The owner likes the focused Collection list design and specifically endorses its state-dependent Expand all / Collapse all action. UX-COLL-001 r4 → r5 removes the redundant Ungrouped / Ohne Gruppierung status and requires stable toolbar/result-start positions when filters are applied or cleared. To meet that outcome, the focused mockup replaces the long toolbar-reset label with a contextual full-size X inside Filter (n), named Clear filters / Filter zurücksetzen for accessibility and tooltip, reserving the same footprint before selection. This supersedes only r4's reset presentation; direct category-only reset, search preservation and staged popup Apply remain unchanged. Grouping remains selectable and the current sort stays visible. The existing mockup request covers this iteration; app implementation/Android verification and round assignment remain pending.
 
 ## Compact editor layout and autosave actions — accepted refinement, 2026-10-17
 
@@ -22,13 +79,25 @@ For already saved vocabulary, remove the card-level Finish editing and Discard c
 
 Owning revisions: VOCAB-EDIT-002 r2 / VOCAB-EDIT-003 r2; UX-COLL-011 r4 / UX-COLL-012 r2; UX-CAT-001 r8; UX-VOCAB-ACTIVE-001 r2; UX-VOCAB-DELETE-001 r4; UX-ENTRY-002 r4 / UX-CARD-014 r2. This refines the selected editor package. The prior sketch and runtime evidence remain tied to their original contracts; specification acceptance does not authorize app/mockup changes. Source inspection and evidence limits are in UX-COLL-011 and the round-5 ledger.
 
-## Round-5 definition completion and implementation handoff — 2026-10-17
+## Collection Hint default and first-use offer — accepted refinement, 2026-10-17
 
-The owner requests the finalized plan be handed to the waiting implementation chat and explicitly chooses: deactivating the current revealed learning card saves the change, then skips it without grading and continues with eligible work. VOCAB-ACTIVE-001 r3 makes this the exception to ordinary same-answer editing, preserves all learning/history and retry deadlines, and prevents false completion or pass credit.
+The owner rejects the compact-editor sketch's Use this visibility for new vocabulary checkbox. Remove it from the vocabulary editor; maintain the default in each Collection's settings, initially off / Hidden until tapped. Keep the word's own Show hint automatically switch and offer an optional change to the Collection default on its first switch from off to on per Collection. A switch action alone does not change the default. Existing words retain their individual visibility; changing a default affects only later additions to that Collection. Revealing a hidden Hint during learning does not count as changing this setting.
 
-The remaining bounded details are resolved under the standing implementation/design autonomy: existing/new words default Active; captured work revalidates activity; retries retain original deadlines/gaps; omission preserves existing activity; schema-4 interchange carries an explicit boolean and a separate Activity import group while legacy imports preserve state; inactive display occupies the readiness slot; Back/Exit use autosave/validation guards. These are preservation/compatibility choices, not additional owner-requested features. VOCAB-EDIT-003 r3, UX-CARD-014 r3, UX-VOCAB-ACTIVE-001 r3 and IMPORT-JSON-001 r4 / IMPORT-JSON-002 r5 own the details and acceptance scenarios.
+VOCAB-008–010 r2 → r3 and UX-COLL-011 r2 → r3 supersede the original global, initially Always visible default and editor checkbox. IMPORT-HINT-001 r2 → r3 / IMPORT-JSON-002 r3 → r4 apply the destination Collection's default when a new imported word omits visibility; existing-entry and learning preservation remain intact. This refines the selected round-5 compact-editor package, without authorizing app or mockup changes. Earlier runtime and sketch evidence remain historical.
 
-The three selected packages are definition-complete and may proceed in the implementation chat under its existing conditional implementation request. The separate Collection-list controls/group alignment and F22 investigation are not added by inference, nor are learning-statistics/help candidates. The round-5 ledger is the authoritative handoff; execution/account preferences stay in private run notes or chat. Publication and phone-acceptance gates remain separate.
+The owner confirmed both follow-up choices: show the offer once per Collection on the first switch ON, remembering either acceptance or dismissal; initialize every existing Collection’s default to off as well, without rewriting existing words. The screenshot establishes the owner's objection to the visible checkbox; it does not reproduce a persistence or Android defect. The round-5 ledger records the implementation and verification boundary.
+
+## Collection group-header alignment and list controls — accepted, 2026-10-16
+
+The owner explicitly requests left-aligned vocabulary grouping headers. UX-COLL-001 r2 → r3 / F20 adds a common leading chevron slot and title start across collapsed/expanded groups, including wrapping long labels and accessible full-width activation. This is specification acceptance only; implementation round, implementation authorization and revision-specific Android verification remain pending. Keep the round-4 candidate's evidence tied to r2.
+
+The accompanying suggestions to replace Ansicht, surface grouping/sorting and move presentation/language preferences into a menu start the bounded [Collection list controls review](piko-ux.md#collection-list-controls-review--2026-10-16). The owner subsequently accepted the complete arrangement: Filter/Group/Sort directly below search; Display/Language order in the local list menu; one visible Expand all action whenever a displayed group is collapsed, otherwise Collapse all; both commands additionally in the menu; and a visibly named reset adjacent to active Filter (n). UX-COLL-001 r3 → r4 / F21 supersedes the combined View entry point and simultaneous visible bulk buttons. GROUP-001 r2 retains both functional actions with an updated presentation reference; FILTER-002 r5 / F11 retain their direct category-only reset semantics. F21 is now specified; implementation and Android verification remain pending. Screenshot observation and source inspection are distinguished from runtime reproduction; no app/mockup changes or new round selection are implied.
+
+## Round-5 planning scope — accepted, 2026-10-16
+
+The owner selected all three proposed packages: compact optional editor sections (UX-COLL-011 r2 / F19), same-card editing after reveal in normal and Speed learning (VOCAB-EDIT-003 r1 / UX-CARD-014 r1), and independent Active/Inactive vocabulary (VOCAB-ACTIVE-001 r2 / UX-VOCAB-ACTIVE-001 r1). Their earlier Later/Undecided scheduling is superseded; round-4 exclusions and historical evidence remain intact. This changes scheduling only, so requirement revisions stay unchanged. Current-card deactivation, retry lifecycle, interchange compatibility and editor exit behavior remain explicit open decisions.
+
+The subsequent request to consider a larger batch starts a learning-backlog overview, not acceptance of additional features. The [round-5 ledger](implementation-round-5.md) owns selected scope, candidate additions and pending agreement. App/mockup implementation, publication and round-4 phone acceptance are not authorized by the planning selection.
 
 ## Design autonomy and no further round-4 alignment — accepted, 2026-10-16
 
@@ -1095,3 +1164,24 @@ Owner approved the incremental APK checkpoint plan. Latest verified APK remains 
 ## 2026-10-16: Round-4 implementation agreement
 
 The owner authorized the eight accepted round-4 packages with solo execution, private recovery checkpoints and one final owner-review APK. Shared presentation precedes the complete examples/storage/JSON package, Collection views, and evidence-led header investigation. The canonical functional/UX requirements now record the approved ordering, nullable local addition dates, schema-3 compatibility, per-presentation example preference and same-session Import/Export draft retention. The scrolling correction is retained. Active/Inactive vocabulary, answer-card editing, compact-editor redesign, proficiency/Mastered and manual Speed selection remain excluded. The [round-4 ledger](implementation-round-4.md) owns progress, tests and candidate provenance; existing manual-review/publication and phone-acceptance gates remain.
+
+
+## Vocabulary-list stability boundary clarified — 2026-10-17
+
+The owner confirmed that UX-COLL-001 r6 requires stable layout within the vocabulary-list controls/results while allowing learning actions above the section to reflow when their availability changes. No viewport anchoring or retained blank space is required. This is an explicit interpretation of the approved list-guide scope, with no behavior revision, app/mockup change or new implementation authorization. Existing source-specific round6-e Android evidence verifies the accepted boundary; F21 can close independently of pending owner phone/round acceptance.
+
+## 2026-10-17: Collection Detail collapses into a persistent learning header
+
+The owner requested retaining title and entry count during scrolling, hiding title edit and language-pair subtitle, and merging directional cards into one compact action for each of Review and Speed. One eligible direction resolves directly; two prompt for direction. Speed retains its existing setup after direction resolution. UX-COLL-008 r6 / UX-SETUP-002 r8 and REVIEW-001 r3 / SETUP-008 r3 own this accepted behavior. The interactive mockup is authorized; exact composition/transition remains for visual review. No Flutter change, round assignment or Android acceptance is authorized or claimed. Earlier expanded-card rules remain in force at the top.
+
+Owner mockup follow-up: UX-COLL-008 r6 makes both compact actions icon-only and places them beside the Collection title, retaining the entry count below and localized accessible action names. This supersedes the initial proposed separate row with visible labels; no app implementation is authorized.
+
+Owner follow-up: compact Review and Speed now show icon plus summed directional eligible counts (no action-name text). Keep both buttons visible with disabled 0 independently per mode. Counts are directional items, not deduplicated words; existing single/two-direction routing remains. UX-COLL-008 r7 / UX-SETUP-002 r9; REVIEW-001 r4 / SETUP-008 r4 supersede the previous compact omission-at-zero rule. Mockup/specification only; app authorization remains pending.
+
+## 2026-10-17: Anchor the interacted element during same-screen updates
+
+Scheduling follow-up: the owner selected the all-page rule as the first, high-priority package of the next round, round 7. The round-7 ledger owns remaining cross-app coverage and verification after the accepted round-6 result. Existing authorization for affected Collection anchoring in round 6 remains unchanged. This selects planning/order without starting broader implementation or changing the behavior revision; earlier unassigned statements below are historical.
+
+Follow-up: the owner confirmed applying this rule on all pages. UX-ANCHOR-001 r1 now explicitly maps applicable same-surface updates across the application and popups, with cross-page acceptance scenarios and the existing navigation, requested-item, keyboard/accessibility and scroll-bound exceptions. This clarifies the already shared scope without a behavior revision, implementation-round assignment or app/mockup implementation authorization.
+
+The owner revised the jumping-list request into a shared rule: the clicked/interacted item retains its screen position and surrounding content moves accordingly. UX-ANCHOR-001 r1 owns this accepted principle and documented practical limits; UX-COLL-001 r7 supersedes the earlier r6 clarification allowing learning actions to displace the whole vocabulary section. The earlier request to anchor only Filter/Group/Sort is superseded. Scroll anchoring is an established technique, but selecting the interacted item is Piko policy, not a universal platform mandate; primary references and distinctions are in the owning requirement. Popup-origin anchoring, valid-scroll-bound clamping, removal fallback, keyboard/accessibility visibility and user-scroll precedence are explicit agent-selected details. No global implementation audit, app/mockup change or implementation-round assignment follows from this definition; source/video investigation and Android gaps remain explicit. F23 tracks the reported viewport movement separately from F21's historically verified r6 toolbar scope.

@@ -27,6 +27,28 @@ Future<void> flush(WidgetTester tester, CollectionDeletionFixture f) async {
   await tester.pumpAndSettle();
 }
 
+// UX-ANCHOR-001 r1 permits only scroll-bound clamping, without permanent slack.
+void expectAnchoredOrClamped(
+  WidgetTester tester,
+  Finder target,
+  double before,
+) {
+  final delta = tester.getRect(target).top - before;
+  if (delta.abs() <= 1) return;
+  final position = tester
+      .state<ScrollableState>(find.byType(Scrollable).first)
+      .position;
+  final desired = position.pixels + delta;
+  expect(
+    desired < position.minScrollExtent || desired > position.maxScrollExtent,
+    isTrue,
+  );
+  expect(
+    position.pixels,
+    delta > 0 ? position.maxScrollExtent : position.minScrollExtent,
+  );
+}
+
 Future<void> mount(
   WidgetTester tester,
   CollectionDeletionFixture f, {
@@ -86,7 +108,7 @@ Future<void> swipeDelete(
 
 void main() {
   testWidgets(
-    'Undo above a newly opened editor preserves position even when the short list cannot yet scroll',
+    'Undo above a raw editor uses the documented short-list scroll-bound fallback',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -100,7 +122,7 @@ void main() {
       final before = tester.getRect(card(active)).top;
       await tester.tap(button('Undo'));
       await flush(tester, f);
-      expect(tester.getRect(card(active)).top, closeTo(before, 1));
+      expectAnchoredOrClamped(tester, card(active), before);
       expect(tester.widget<TextField>(field(active)).controller!.text, ' ');
     },
   );
@@ -219,12 +241,12 @@ void main() {
         const TextSelection(baseOffset: 0, extentOffset: 1),
       );
       expect(text.focusNode!.hasFocus, isTrue);
-      expect(tester.getRect(card(active)).top, closeTo(before, 1));
+      expectAnchoredOrClamped(tester, card(active), before);
       await tester.tap(button('Undo'));
       await flush(tester, f);
       expect(card(deleted), findsOneWidget);
       expect(text.focusNode!.hasFocus, isTrue);
-      expect(tester.getRect(card(active)).top, closeTo(before, 1));
+      expectAnchoredOrClamped(tester, card(active), before);
       await tester.enterText(field(active), 'Valid again');
       await flush(tester, f);
       await tester.ensureVisible(finish('Collapse vocabulary editor'));

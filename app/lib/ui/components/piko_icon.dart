@@ -15,6 +15,7 @@ enum PikoIconName {
   chevronRight('chevron-right'),
   ellipsis('ellipsis'),
   grid2x2('grid-2x2'),
+  info('info'),
   layers('layers'),
   listFilter('list-filter'),
   pencil('pencil'),

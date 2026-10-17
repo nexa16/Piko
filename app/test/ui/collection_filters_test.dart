@@ -206,7 +206,7 @@ void main() {
       await h.mount(tester);
       expect(find.text('No matching vocabulary.'), findsOneWidget);
       await tester.tap(
-        find.byKey(const ValueKey('collection-no-matches-clear-filters')),
+        find.byTooltip('Clear filters'),
       );
       await tester.pumpAndSettle();
       expect(h.scope.filters, isEmpty);

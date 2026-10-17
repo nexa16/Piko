@@ -1,0 +1,12 @@
+.lp-selection-bar{position:fixed;z-index:15;bottom:calc(var(--space-3) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 2*var(--mobile-padding));max-width:calc(480px - 2*var(--mobile-padding));display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);padding:var(--space-3);background:var(--piko-tint);border:var(--border-width) solid var(--piko-primary);border-radius:var(--radius-control);box-shadow:0 var(--space-2) var(--space-6) color-mix(in srgb,var(--piko-ink) 14%,transparent)}
+.lp-selection-status{display:grid;gap:var(--space-1);min-width:0;overflow-wrap:anywhere}
+.lp-selection-status small{color:var(--piko-muted);font-size:calc(var(--font-small)*var(--lp-scale))}
+.lp-selection-actions{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.lp-selection-scroll .lp-word{position:relative;padding-right:calc(var(--space-4) + var(--icon-size) + var(--space-3))}
+.lp-selection-scroll .lp-selection-word{border-color:var(--piko-muted)}
+.lp-selection-check{position:absolute;right:var(--space-4);top:50%;transform:translateY(-50%);width:var(--icon-size);height:var(--icon-size);border:var(--border-width) solid var(--piko-muted);border-radius:50%;background:var(--piko-surface);display:grid;place-items:center;font-size:var(--font-small);line-height:1}
+.lp-selection-scroll .lp-word-selected{background:var(--piko-tint);border-color:var(--piko-primary);box-shadow:inset 0 0 0 var(--border-width) var(--piko-primary)}
+.lp-word-selected .lp-selection-check{background:var(--piko-primary);border-color:var(--piko-primary);color:var(--piko-onPrimary)}
+.lp-selection-leave{margin-inline:var(--mobile-padding);font-size:var(--font-small)!important}
+html[data-selection-preview=true],html[data-selection-preview=true] body{overflow:hidden;overflow-anchor:none}
+.lp-selection-scroll{position:fixed;inset:0 0 auto;max-width:480px;margin-inline:auto;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:var(--space-3);padding-bottom:var(--space-3)}

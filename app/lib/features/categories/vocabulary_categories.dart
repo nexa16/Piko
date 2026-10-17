@@ -25,6 +25,7 @@ class VocabularyCategories extends StatefulWidget {
     this.disabled = false,
     this.onPendingWrites,
     this.onMetadataChanged,
+    this.goldTags = false,
   });
   final String collectionId;
   final String? entryId;
@@ -36,6 +37,7 @@ class VocabularyCategories extends StatefulWidget {
   final bool disabled;
   final ValueChanged<Future<void>>? onPendingWrites;
   final VoidCallback? onMetadataChanged;
+  final bool goldTags;
   @override
   State<VocabularyCategories> createState() => _VocabularyCategoriesState();
 }
@@ -263,7 +265,7 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
               vertical: design.dimension('spacing.1'),
             ),
             decoration: BoxDecoration(
-              color: design.color('tint'),
+              color: design.color(widget.goldTags ? 'gold' : 'tint'),
               borderRadius: BorderRadius.circular(
                 design.dimension('components.buttons.radius'),
               ),
@@ -271,7 +273,7 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
             child: Text(
               value.name,
               style: TextStyle(
-                color: design.color('primary'),
+                color: design.color(widget.goldTags ? 'ink' : 'primary'),
                 fontSize: design.dimension('typography.small'),
               ),
             ),

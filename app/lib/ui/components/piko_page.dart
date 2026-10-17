@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
+import 'piko_interaction_anchor.dart';
 
 class PikoPage extends StatelessWidget {
   const PikoPage({super.key, required Widget this.child})
     : slivers = null,
-      physics = null;
-  const PikoPage.slivers({super.key, required this.slivers, this.physics})
-    : child = null;
+      physics = null,
+      interactionAnchor = null,
+      safeAreaBottom = true;
+  const PikoPage.slivers({
+    super.key,
+    required this.slivers,
+    this.physics,
+    this.interactionAnchor,
+    this.safeAreaBottom = true,
+  }) : child = null;
   final Widget? child;
   final List<Widget>? slivers;
   final ScrollPhysics? physics;
+  final PikoInteractionAnchor? interactionAnchor;
+  final bool safeAreaBottom;
   @override
   Widget build(BuildContext context) => SafeArea(
+    bottom: safeAreaBottom,
     child: LayoutBuilder(
       builder: (context, constraints) {
         final d = pikoDesign;
@@ -34,6 +45,19 @@ class PikoPage extends StatelessWidget {
             ),
             child: slivers == null
                 ? SingleChildScrollView(padding: padding, child: child)
+                : interactionAnchor != null
+                ? interactionAnchor!.scope(
+                    child: PikoAnchoredScrollView(
+                      interactionAnchor: interactionAnchor!,
+                      physics: physics,
+                      slivers: [
+                        SliverPadding(
+                          padding: padding,
+                          sliver: SliverMainAxisGroup(slivers: slivers!),
+                        ),
+                      ],
+                    ),
+                  )
                 : CustomScrollView(
                     physics: physics,
                     slivers: [
@@ -55,6 +79,7 @@ class PikoHeading extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleContent,
     this.leading,
     this.actions = const [],
     this.titleContent,
@@ -66,6 +91,7 @@ class PikoHeading extends StatelessWidget {
   /// Meaningful page context, such as a Collection's language pair and count.
   /// Review direction and progress remain separate session context widgets.
   final String? subtitle;
+  final Widget? subtitleContent;
   final Widget? leading;
   final List<Widget> actions;
 
@@ -122,18 +148,20 @@ class PikoHeading extends StatelessWidget {
               child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
       ),
-      if (subtitle != null)
+      if (subtitle != null || subtitleContent != null)
         Padding(
           padding: EdgeInsets.only(
             left: subtitleInset ?? pikoDesign.dimension('spacing.2'),
           ),
-          child: Text(
-            subtitle!,
-            style: TextStyle(
-              fontSize: pikoDesign.dimension('typography.small'),
-              color: pikoDesign.color('muted'),
-            ),
-          ),
+          child:
+              subtitleContent ??
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension('typography.small'),
+                  color: pikoDesign.color('muted'),
+                ),
+              ),
         ),
     ],
   );

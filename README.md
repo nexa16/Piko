@@ -1,6 +1,10 @@
 # Piko
 
-**Status: Round 4 is accepted and integrated. Round 5 is locally implemented and verified; owner publication approval is complete and the candidate update/appearance check passed. Phone-flow acceptance remains pending before development integration. Not a published release.**
+**Documentation rework selected for round 6:** DOC-001–007 / UX-DOC-001/002 cover the concise README, complete current-feature documentation and verified product screenshots/build manifest. Planning/history will move into Git-ignored storage under the preservation-first migration. This rework is pending; the [round-6 ledger](docs/implementation-round-6.md#documentation-rework-handoff--2026-10-17) owns the handoff.
+
+**Current round-6 checkpoint, 2026-10-17:** Build 7 includes the vocabulary-list/help changes, transient vocabulary selection (VOCAB-SELECT-001 r1 / UX-COLL-013 r3) and affected Collection anchoring (UX-ANCHOR-001 r1 / UX-COLL-001 r7). Scoped English and narrow/enlarged German Android checks pass; full host regression plus focused repairs is recorded in the [round-6 ledger](docs/implementation-round-6.md#checkpoint-handoff--2026-10-17). Owner review and exact-candidate phone acceptance remain pending. Statistics, the shrinking header and the documentation/planning migration are authorized but deferred from this checkpoint. No bulk vocabulary operation, learning from selection, full export or publication is included.
+
+**Candidate:** normal Android identity, version 0.1.0 / build 7; the ledger owns source, checksum, device evidence and outstanding gates. F22 remains withdrawn without a verified-fix claim. This is local development work, not a published release.
 
 The local-first Flutter app includes compact autosaving vocabulary editors, editing within revealed normal/retry/Speed answers, independent Active/Inactive vocabulary, Collection Hint defaults and JSON schema-4 export with versions 1–4 accepted on import. The [round-5 ledger](docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the exact candidate, requirement revisions, host/Android evidence, exclusions and acceptance gaps. Earlier learning, examples, categories and Collection preferences are retained. UX findings are tracked separately; scoped implementation evidence does not automatically close every finding.
 

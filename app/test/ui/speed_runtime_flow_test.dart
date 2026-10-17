@@ -76,6 +76,11 @@ void main() {
             db,
             () => binding.ready && speedAction(direction).evaluate().isNotEmpty,
           );
+          await tester.scrollUntilVisible(
+            find.byType(CollectionVocabulary),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
           final vocabulary = tester.widget<CollectionVocabulary>(
             find.byType(CollectionVocabulary),
           );
@@ -86,6 +91,7 @@ void main() {
           ))!;
           final before = (await tester.runAsync(() => completeSnapshot(db)))!;
           final copy = PikoCopy('en');
+          await tester.ensureVisible(speedAction(direction));
           await tester.tap(speedAction(direction));
           await settle(
             tester,

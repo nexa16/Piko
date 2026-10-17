@@ -218,6 +218,14 @@ void main() {
     (tester) async {
       final h = DetailSpeedHarness();
       await h.mount(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('vocabulary-one')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('vocabulary-one')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('vocabulary-one')));
       await tester.pumpAndSettle();
       final field = find.descendant(

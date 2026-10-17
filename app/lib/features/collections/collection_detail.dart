@@ -1,3 +1,4 @@
+import 'learning_help.dart';
 import 'collection_view_controls.dart';
 import 'collection_hint_settings.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,10 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
+import '../../ui/components/piko_page_navigation.dart';
+import '../vocabulary/vocabulary_selection.dart';
+import '../vocabulary/vocabulary_selection_panel.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
@@ -95,7 +100,32 @@ class CollectionDetail extends StatefulWidget {
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
 
-class _CollectionDetailState extends State<CollectionDetail> {
+class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
+  final _interactionAnchor = PikoInteractionAnchor();
+  final _selection = VocabularySelection();
+  RouteObserver<PageRoute<dynamic>>? _pageObserver;
+  PageRoute<dynamic>? _pageRoute;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final observer = PikoPageNavigation.maybeOf(context);
+    final route = ModalRoute.of(context);
+    if (observer != _pageObserver || route != _pageRoute) {
+      _pageObserver?.unsubscribe(this);
+      _pageObserver = observer;
+      _pageRoute = route is PageRoute<dynamic> ? route : null;
+      if (observer != null && _pageRoute != null) {
+        observer.subscribe(this, _pageRoute!);
+      }
+    }
+  }
+
+  @override
+  void didPushNext() {
+    _selection.clear();
+    _interactionAnchor.clear();
+  }
+
   bool get _directionReady =>
       widget.directionBinding == null ||
       widget.directionBinding!.value?.ready == true &&
@@ -880,6 +910,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void didUpdateWidget(CollectionDetail oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.collectionId != widget.collectionId) _selection.clear();
     if (oldWidget.categoriesRepository != widget.categoriesRepository ||
         oldWidget.categoryManagementBuilder !=
             widget.categoryManagementBuilder) {
@@ -932,6 +963,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
 
   @override
   void dispose() {
+    _pageObserver?.unsubscribe(this);
+    _selection.dispose();
     _identity++;
     _name.dispose();
     _nameFocus.dispose();
@@ -946,7 +979,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _selection,
+    builder: (_, _) => _withDirections(context),
+  );
+
+  Widget _withDirections(BuildContext context) {
     final directionBinding = widget.directionBinding;
     if (directionBinding != null) {
       return ValueListenableBuilder(
@@ -997,7 +1035,10 @@ class _CollectionDetailState extends State<CollectionDetail> {
               record == null) {
             _lastReadyCollection = null;
           }
-          return PikoPage.slivers(
+          final page = PikoPage.slivers(
+            safeAreaBottom: widget.queryBinding == null,
+            key: ValueKey('collection-page-${widget.collectionId}'),
+            interactionAnchor: _interactionAnchor,
             physics: const CollectionScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
@@ -1209,45 +1250,43 @@ class _CollectionDetailState extends State<CollectionDetail> {
                               ),
                             );
                             if (widget.entrySessionFactory == null) {
-                              return heading;
+                              return Row(
+                                children: [
+                                  Expanded(child: heading),
+                                  if (widget.queryBinding != null)
+                                    CollectionListMenu(
+                                      binding: widget.queryBinding!,
+                                      enabled: _queryControlsAvailable,
+                                    ),
+                                ],
+                              );
                             }
                             return PikoHeadingAction(
                               heading: heading,
                               gap: pikoDesign.dimension(
                                 'components.sectionHeading.gap',
                               ),
-                              action: Tooltip(
-                                message: copy.text('action.addEntry'),
-                                excludeFromSemantics: true,
-                                child: Semantics(
-                                  label: copy.text('action.addEntry'),
-                                  button: true,
-                                  enabled:
-                                      _deleteRequest == null &&
-                                      _renameRequest == null &&
-                                      !_openingEntry &&
-                                      !_learningBusy &&
-                                      _mutations?.isBusy != true,
-                                  onTap:
-                                      _deleteRequest != null ||
-                                          _renameRequest != null ||
-                                          _openingEntry ||
-                                          _learningBusy ||
-                                          _mutations?.isBusy == true
-                                      ? null
-                                      : _openEntry,
-                                  child: ExcludeSemantics(
-                                    child: PikoButton(
-                                      label: copy.text(
-                                        _genuinelyEmpty
-                                            ? 'collection.addFirstWord'
-                                            : 'action.new',
-                                      ),
-                                      icon: const PikoIcon(PikoIconName.plus),
-                                      variant: _genuinelyEmpty
-                                          ? PikoButtonVariant.primary
-                                          : PikoButtonVariant.ghost,
-                                      onPressed:
+                              action: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (widget.queryBinding != null)
+                                    CollectionListMenu(
+                                      binding: widget.queryBinding!,
+                                      enabled: _queryControlsAvailable,
+                                    ),
+                                  Tooltip(
+                                    message: copy.text('action.addEntry'),
+                                    excludeFromSemantics: true,
+                                    child: Semantics(
+                                      label: copy.text('action.addEntry'),
+                                      button: true,
+                                      enabled:
+                                          _deleteRequest == null &&
+                                          _renameRequest == null &&
+                                          !_openingEntry &&
+                                          !_learningBusy &&
+                                          _mutations?.isBusy != true,
+                                      onTap:
                                           _deleteRequest != null ||
                                               _renameRequest != null ||
                                               _openingEntry ||
@@ -1255,9 +1294,32 @@ class _CollectionDetailState extends State<CollectionDetail> {
                                               _mutations?.isBusy == true
                                           ? null
                                           : _openEntry,
+                                      child: ExcludeSemantics(
+                                        child: PikoButton(
+                                          label: copy.text(
+                                            _genuinelyEmpty
+                                                ? 'collection.addFirstWord'
+                                                : 'action.new',
+                                          ),
+                                          icon: const PikoIcon(
+                                            PikoIconName.plus,
+                                          ),
+                                          variant: _genuinelyEmpty
+                                              ? PikoButtonVariant.primary
+                                              : PikoButtonVariant.ghost,
+                                          onPressed:
+                                              _deleteRequest != null ||
+                                                  _renameRequest != null ||
+                                                  _openingEntry ||
+                                                  _learningBusy ||
+                                                  _mutations?.isBusy == true
+                                              ? null
+                                              : _openEntry,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
                             );
                           },
@@ -1270,117 +1332,24 @@ class _CollectionDetailState extends State<CollectionDetail> {
                         padding: EdgeInsets.only(
                           bottom: pikoDesign.dimension('spacing.3'),
                         ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final selectedCount = widget
-                                .queryBinding!
-                                .scope
-                                .filters
-                                .values
-                                .expand((ids) => ids)
-                                .toSet()
-                                .length;
-                            final filterLabel = selectedCount == 0
-                                ? copy.text('action.filters')
-                                : copy.text('collection.activeFilters', {
-                                    'count': selectedCount,
-                                  });
-                            final gap = pikoDesign.dimension('spacing.2');
-                            final labelSize = pikoDesign.dimension(
-                              'typography.label',
-                            );
-                            final scaler = MediaQuery.textScalerOf(context);
-                            final stack =
-                                constraints.maxWidth <
-                                    pikoDesign.dimension(
-                                      'layout.mobileBreakpoint',
-                                    ) ||
-                                scaler.scale(labelSize) > labelSize;
-                            final measure = TextPainter(
-                              text: TextSpan(
-                                text: filterLabel,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              textDirection: Directionality.of(context),
-                              textScaler: scaler,
-                            )..layout();
-                            final buttonWidth =
-                                measure.width.ceilToDouble() +
-                                pikoDesign.dimension('components.icons.size') +
-                                gap +
-                                2 *
-                                    pikoDesign.dimension(
-                                      'components.buttons.padding',
-                                    );
-                            measure.dispose();
-                            return Wrap(
-                              spacing: gap,
-                              runSpacing: gap,
-                              children: [
-                                SizedBox(
-                                  width: stack
-                                      ? constraints.maxWidth
-                                      : constraints.maxWidth -
-                                            buttonWidth -
-                                            gap,
-                                  child: CollectionSearchField(
-                                    scope: widget.queryBinding!.scope,
-                                    enabled: _queryControlsAvailable,
-                                  ),
-                                ),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: constraints.maxWidth,
-                                  ),
-                                  child: Align(
-                                    widthFactor: 1,
-                                    alignment: Alignment.centerLeft,
-                                    child: PikoButton(
-                                      key: const ValueKey('collection-filters'),
-                                      label: filterLabel,
-                                      icon: const PikoIcon(
-                                        PikoIconName.listFilter,
-                                      ),
-                                      variant: PikoButtonVariant.ghost,
-                                      onPressed:
-                                          _queryControlsAvailable &&
-                                              widget.queryBinding!.ready
-                                          ? _openFilters
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                                CollectionViewControls(
-                                  binding: widget.queryBinding!,
-                                  enabled: _queryControlsAvailable,
-                                ),
-                                if (selectedCount > 0)
-                                  Align(
-                                    widthFactor: 1,
-                                    alignment: Alignment.centerLeft,
-                                    child: PikoButton(
-                                      key: const ValueKey(
-                                        'collection-no-matches-clear-filters',
-                                      ),
-                                      label: copy.text('r2.clearFilters'),
-                                      variant: PikoButtonVariant.ghost,
-                                      onPressed: !_queryControlsAvailable
-                                          ? null
-                                          : () {
-                                              if (_queryControlsAvailable &&
-                                                  ModalRoute.of(
-                                                        context,
-                                                      )?.isCurrent ==
-                                                      true) {
-                                                widget.queryBinding!.scope
-                                                    .setFilters(const {});
-                                              }
-                                            },
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CollectionSearchField(
+                              scope: widget.queryBinding!.scope,
+                              enabled: _queryControlsAvailable,
+                            ),
+                            SizedBox(height: pikoDesign.dimension('spacing.2')),
+                            CollectionViewControls(
+                              binding: widget.queryBinding!,
+                              enabled: _queryControlsAvailable,
+                              onFilters: _openFilters,
+                            ),
+                            CollectionListResults(
+                              binding: widget.queryBinding!,
+                              enabled: _queryControlsAvailable,
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -1404,7 +1373,23 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   },
                   writeBarrier: barrierForBuild,
                   mutations: _mutations,
+                  selection: widget.queryBinding == null ? null : _selection,
                 ),
+            ],
+          );
+          if (widget.queryBinding == null) return page;
+          return Column(
+            children: [
+              Expanded(child: page),
+              VocabularySelectionPanel(
+                selection: _selection,
+                matchingIds:
+                    widget.queryBinding!.snapshot?.entries
+                        .map((entry) => entry.id)
+                        .toList() ??
+                    const [],
+                enabled: _queryControlsAvailable,
+              ),
             ],
           );
         },
@@ -1555,6 +1540,11 @@ class _CollectionDetailState extends State<CollectionDetail> {
     Widget heading(int? entryCount) => PikoHeading(
       title: record?.name ?? copy.text('collection.title'),
       subtitleInset: 0,
+      subtitleContent: record == null
+          ? null
+          : LearningHelpMetadata(
+              metadata: collectionEntryMetadata(context, record, entryCount),
+            ),
       subtitle: record == null
           ? null
           : collectionEntryMetadata(context, record, entryCount),

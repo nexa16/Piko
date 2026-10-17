@@ -6,6 +6,7 @@ import 'shared/copy_scope.dart';
 import 'shared/interface_locale.dart';
 import 'ui/piko_theme.dart';
 import 'ui/components/piko_icon.dart';
+import 'ui/components/piko_page_navigation.dart';
 
 void main() {
   registerPikoIconLicenses();
@@ -25,6 +26,7 @@ class PikoApp extends StatefulWidget {
 }
 
 class _PikoAppState extends State<PikoApp> {
+  final _pageObserver = RouteObserver<PageRoute<dynamic>>();
   InterfaceLocaleController? _owned;
   InterfaceLocaleController get _controller =>
       widget.localeController ??
@@ -64,6 +66,9 @@ class _PikoAppState extends State<PikoApp> {
       copy: PikoCopy(selected.languageCode),
       child: Builder(
         builder: (context) => MaterialApp(
+          navigatorObservers: [_pageObserver],
+          builder: (context, child) =>
+              PikoPageNavigation(observer: _pageObserver, child: child!),
           locale: selected,
           supportedLocales: PikoApp.supportedLocales,
           localizationsDelegates: GlobalMaterialLocalizations.delegates,

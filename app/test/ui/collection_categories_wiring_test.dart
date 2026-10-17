@@ -61,6 +61,10 @@ class MenuFixture {
   }
 
   Future<void> open(WidgetTester tester) async {
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('collection-menu'), skipOffstage: false),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('collection-menu')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Edit categories'));
@@ -140,12 +144,20 @@ void main() {
       final h = MenuFixture(f);
       try {
         await h.mount(tester, categories: categories);
+        await tester.scrollUntilVisible(
+          find.byKey(ValueKey('vocabulary-${f.entryId}')),
+          160,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(ValueKey('vocabulary-${f.entryId}')));
         await f.flush(tester);
         final target = find.descendant(
           of: find.byKey(ValueKey('inline-${f.entryId}-target')),
           matching: find.byType(TextField),
         );
+        await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
         await tester.enterText(target, '  ');
         await tester.pumpAndSettle();
         final raw = tester.widget<TextField>(target).controller;
@@ -214,6 +226,12 @@ void main() {
         await tester.tap(find.byTooltip('Close'));
         await tester.pumpAndSettle();
         expect(find.byType(CategoryManagement), findsNothing);
+        await tester.scrollUntilVisible(
+          target,
+          160,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
         expect(tester.widget<TextField>(target).controller, same(raw));
         expect(raw!.text, '  ');
         expect(
