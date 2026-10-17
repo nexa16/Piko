@@ -130,7 +130,6 @@ void main() {
         ProjectionService(projection(visible: [two], forward: 2, reverse: 1)),
       );
       expect(find.byKey(const ValueKey('vocabulary-one')), findsNothing);
-      expect(find.byKey(const ValueKey('vocabulary-two')), findsOneWidget);
       expect(find.text('FR → DE · 2 to review'), findsOneWidget);
       expect(find.text('DE → FR · 1 to review'), findsOneWidget);
       final first = tester.widget<PikoButton>(
@@ -141,6 +140,13 @@ void main() {
       );
       expect(first.variant, PikoButtonVariant.reviewPrimary);
       expect(second.variant, PikoButtonVariant.reviewSecondary);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('vocabulary-two')),
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('vocabulary-two')), findsOneWidget);
       expect(binding.snapshot!.entries.single.id, two.id);
     },
   );
@@ -242,6 +248,12 @@ void main() {
       final vocabulary = LiveVocabulary();
       final service = ProjectionService(projection());
       final binding = await mount(tester, service, vocabulary: vocabulary);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('vocabulary-one')),
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('vocabulary-one')));
       await tester.pumpAndSettle();
       final field = find.descendant(
@@ -257,6 +269,12 @@ void main() {
       expect(field, findsNothing);
       service.value = projection(visible: [two, one]);
       binding.scope.setSearch('');
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('vocabulary-two')),
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(field).controller, same(controller));
       expect(controller!.text, '  ');

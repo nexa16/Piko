@@ -71,6 +71,7 @@ void main() {
           await tester.ensureVisible(
             find.byTooltip(copy.text('list.resetSort')),
           );
+          await tester.pumpAndSettle();
           await tester.tap(find.byTooltip(copy.text('list.resetSort')));
           await tester.pumpAndSettle();
           expect(h.scope.view.sort, VocabularySort.original);
@@ -80,6 +81,7 @@ void main() {
           await tester.ensureVisible(
             find.byTooltip(copy.text('list.clearGrouping')),
           );
+          await tester.pumpAndSettle();
           await tester.tap(find.byTooltip(copy.text('list.clearGrouping')));
           await tester.pumpAndSettle();
           expect(h.scope.view.grouping, isNull);
@@ -122,8 +124,9 @@ void main() {
         await tester.tap(key('learning-help-scheduling'));
         await tester.pumpAndSettle();
         expect(find.text(copy.text('learnHelp.fsrs')), findsOneWidget);
-        Focus.of(tester.element(find.text(copy.text('learnHelp.scheduling'))))
-            .requestFocus();
+        Focus.of(
+          tester.element(find.text(copy.text('learnHelp.scheduling'))),
+        ).requestFocus();
         await tester.pump();
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);
         await tester.pumpAndSettle();
@@ -166,6 +169,12 @@ void main() {
       expect(h.scope.expandedGroups, isEmpty);
       final food = key('collection-group-food'),
           travel = key('collection-group-travel');
+      await tester.scrollUntilVisible(
+        food,
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(tester.getRect(food).left, tester.getRect(travel).left);
       await tester.tap(food);
       await tester.pumpAndSettle();

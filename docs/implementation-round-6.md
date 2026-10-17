@@ -62,25 +62,55 @@ immutable APKs and evidence remain preserved.
 
 ## Current scope additions — 2026-10-17
 
-### Vocabulary selection checkpoint — in progress
+### Vocabulary selection checkpoint — local candidate
 
 VOCAB-SELECT-001 r1 / UX-COLL-013 r3 are locally implemented. UUID selection is
-transient and independent of query preferences and learning eligibility. Saved
-cards support long hold and Shift+Space entry, then tap/Space/Enter toggles, including
-active zero selection. The three card states retain their indicator gutter. A
-measured floating panel footprint, including hidden-count space, is reserved before
-selection; the list viewport ends above it. Select all unions current query matches,
-including collapsed groups; Clear selection includes hidden UUIDs. PopupRoutes retain
-selection, while a real PageRoute departure clears it. Existing editor save/validation
-guards precede selection entry, and editable-field long press stays native. No bulk
-vocabulary action or learning-from-selection is exposed.
+transient and independent of query preferences and learning eligibility. Saved cards
+support long hold and Shift+Space entry, then tap/Space/Enter toggles, including active
+zero selection. The three card states retain their indicator gutter. The floating
+panel footprint, including hidden-count space, is reserved before selection; the list
+viewport ends above it. Select all unions current query matches, including collapsed
+groups; Clear selection includes hidden UUIDs. PopupRoutes retain selection; real
+PageRoute departure clears it. Editor save/validation guards precede entry and editable
+field long press stays native. No bulk vocabulary action or learning from selection.
 
-The affected 21-case host batch and analysis pass. Checks include complete SQLite
-Collection/learning export preservation using a fixed export clock, duplicate group
-appearances, collapsed Select all, hidden/global clear, stable card/text/scroll geometry,
-last-card clearance, keyboard entry/toggle, invalid raw drafts and route reset. Targeted
-German 320px/200% host panel reflow also passes. Final-source Android capture, actual
-touch/Back/learning-scope checks and a new normal APK remain pending.
+Application source is `b42ada6168432a35565553f62654fd199bea3954`; final native fixture
+repairs are frozen at `0afecdbc083c00bd34ce8f70c31473725af58377`, with identical
+application content. Isolated API-36/x86_64 profile runs `selection-en-a` and
+`selection-de-d` pass at English normal size and German actual 320dp/200% respectively.
+They verify three card states, stable card/text/scroll geometry, hidden selections,
+20 unique matches despite duplicate group appearances, collapsed Select all, Detailed
+and reversed displays, last-card clearance, actual Back from help, reset on learning
+navigation, unchanged 19-item learning eligibility despite selection, and exact
+Collection/learning JSON preservation. Protected fixture files remain unchanged;
+temporary device settings are restored. Earlier German attempts failed in test lookup
+of an offscreen sliver; they are retained as failures, not relabeled as passes. The
+repair waits for route transitions and inspects mounted offscreen state explicitly.
+
+The model test and seven focused UI tests pass, including invalid raw-draft preservation,
+keyboard entry/toggle, native-field long-press composition, route handling and enlarged
+help Back. Analysis is clean; 27 shared/model Node checks pass. Full host regression:
+1,189 passed and eight failed (1,197 total). All failures were viewport-dependent or
+superseded artificial editor-slack expectations. The four affected suites then pass
+all 19 tests after explicit lazy-row visibility and bounded-scroll fallback checks;
+raw text, selection, controller, focus and data assertions remain. This is a full run
+plus focused repairs, not a wholly passing full rerun. No app code changed for these
+fixture repairs.
+
+Immutable ordinary candidate: `.local/apks/piko-round6-selection-0afecdb.apk`, normal
+identity `io.github.nexa16.piko`, versionName 0.1.0 / build 7, minSdk 24 / targetSdk 36.
+Source: `0afecdbc083c00bd34ce8f70c31473725af58377`.
+SHA-256: `62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9`.
+Signing certificate SHA-256:
+`0e170fc0a27efc6a03525c90597bf66a957b683005238064a90958f60fee7bfb`, matching
+the preceding owner candidate. Instrumented captures remain private and are not the
+ordinary-product documentation gallery. An ordinary main-entry release build under the
+isolated identity also installs in place and cold-launches successfully; its inspected
+capture shows the real empty Home screen. The normal installed APK is unchanged.
+This smoke check does not establish normal-identity or phone acceptance.
+Native keyboard typing, TalkBack and owner
+phone acceptance remain pending; host checks do not establish them. Manual review,
+public-data approval and publication/merge gates remain outstanding.
 
 The owner added the packages below to the current round-6 implementation scope and will provide further additions. This selects pending implementation work; it does not start app implementation or alter the existing build-5 candidate. Earlier planning-only/unassigned statements below describe the prior scope. Await the owner's explicit request to execute the clarified batch; no new app, migration, APK or Android verification is claimed.
 
