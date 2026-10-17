@@ -1,6 +1,6 @@
 # Piko
 
-**Status: Round 4 is accepted and integrated. Round 5 is locally implemented and verified, with one APK ready for owner review; manual/publication approval and phone acceptance remain pending. Not a published release.**
+**Status: Round 4 is accepted and integrated. Round 5 is locally implemented and verified; owner publication approval is complete and the candidate update/appearance check passed. Phone-flow acceptance remains pending before development integration. Not a published release.**
 
 The local-first Flutter app includes compact autosaving vocabulary editors, editing within revealed normal/retry/Speed answers, independent Active/Inactive vocabulary, Collection Hint defaults and JSON schema-4 export with versions 1–4 accepted on import. The [round-5 ledger](docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the exact candidate, requirement revisions, host/Android evidence, exclusions and acceptance gaps. Earlier learning, examples, categories and Collection preferences are retained. UX findings are tracked separately; scoped implementation evidence does not automatically close every finding.
 

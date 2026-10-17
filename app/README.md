@@ -1,6 +1,6 @@
 # Piko application
 
-Local-first Flutter application under Android testing. The [round-5 ledger](../docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the current review candidate: compact autosaving editors, same-answer editing in normal/retry/Speed, Active/Inactive vocabulary, Collection Hint defaults and JSON v4 with v1–4 import compatibility. Prior ledgers retain historical evidence. Round 4 is accepted and integrated; round 5 awaits owner manual/publication approval and phone acceptance. Implementation rounds are planning scopes, not published versions. Store publication and promotion to main have not been requested.
+Local-first Flutter application under Android testing. The [round-5 ledger](../docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the current review candidate: compact autosaving editors, same-answer editing in normal/retry/Speed, Active/Inactive vocabulary, Collection Hint defaults and JSON v4 with v1–4 import compatibility. Prior ledgers retain historical evidence. Round 4 is accepted and integrated; round 5 has owner publication approval and a successful reported candidate update/appearance check; phone-flow acceptance remains pending before integration. Implementation rounds are planning scopes, not published versions. Store publication and promotion to main have not been requested.
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 

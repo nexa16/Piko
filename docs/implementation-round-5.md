@@ -1,6 +1,6 @@
 # Round 5 planning and implementation ledger
 
-**Status, 2026-10-17: the three authorized round-5 packages are locally implemented and verified. The owner reports that the updated app looks good. Public-data review found no blockers; publication approval and scenario-specific phone acceptance remain pending. Nothing has been pushed or released. F20/F21/F22 and additional learning candidates remain excluded.**
+**Status, 2026-10-17: the three authorized round-5 packages are locally implemented and verified. The owner approved publication after a review with no blockers and confirmed the candidate update/appearance check. Scenario-specific phone acceptance remains pending before merge. Publication is being prepared; nothing has been released. F20/F21/F22 and additional learning candidates remain excluded.**
 
 ## Local verification and candidate — 2026-10-17
 
@@ -31,7 +31,11 @@ No publication blocker was found. No credentials, private research, raw recordin
 
 APKs, runtime SQLite fixtures, screenshots, logs, source archives and run settings remain private. Separate list-preview code/copy and unrelated specification work stay unstaged. The candidate APK checksum was rechecked and its application source is unchanged by subsequent documentation. Existing host/Android evidence above therefore retains its stated scope; no new app run is claimed for this documentation-only review.
 
-Publication still requires the owner's approval of this reviewed branch under [AGENTS.md](../AGENTS.md#implementation-round-handoff). The proposed destination is a focused PR into `develop`; merge additionally requires the candidate phone scenarios, applicable checks and resolved review discussions. No push, PR, merge, release branch, tag or upload has occurred.
+The owner subsequently approved publication of the reviewed branch and requested a PR, squash integration and a fresh round-6 implementation branch. In the focused acceptance clarification, the owner explicitly confirmed only the candidate update and appearance check. Vocabulary learning, compact/same-card editing and Active/Inactive, including deactivating the current word without grading, remain unchecked on the phone. This is owner-reported evidence for the build-4 candidate above; no broader acceptance is inferred.
+
+The approved publication proceeds as a focused PR into `develop`. Under [AGENTS.md](../AGENTS.md#implementation-round-handoff), merge remains pending those phone scenarios, applicable checks and resolved review discussions. After merge, verify the fetched squash result, preserve unrelated local work and retained evidence, clean only verified obsolete references, then create `codex/round-6-implementation` from the updated `develop` and record its exact base and pending scope. No new app scope or release is authorized.
+
+The subsequent changes only record this approval/acceptance boundary in this ledger and its entry-point summaries. Their diff and commit metadata are reviewed before pushing; application source and the candidate checksum remain unchanged.
 
 ## Baseline and handoff
 
