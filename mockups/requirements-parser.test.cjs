@@ -38,9 +38,13 @@ test('canonical round 2 retains its features and fixes after later revisions', (
   const selected=rows.filter(r=>matchesRound(r,'2'));
   // Selection follows original/current delta metadata, not a historical row count.
   for(const id of ['MASCOT-001','UX-BRAND-001','UX-MASCOT-001'])assert.ok(selected.some(r=>r.id===id),id);
-  for(const id of ['MASCOT-002','MASCOT-003','MASCOT-004','UX-MASCOT-002','UX-MASCOT-003','UX-MASCOT-004']){
+  for(const id of ['MASCOT-002','MASCOT-003','UX-MASCOT-002','UX-MASCOT-003']){
     assert.ok(!selected.some(r=>r.id===id),id);
     assert.ok(matchesRound(rows.find(r=>r.id===id),'Later'),id);
+  }
+  for(const id of ['MASCOT-004','UX-MASCOT-004']){
+    assert.ok(!selected.some(r=>r.id===id),id);
+    assert.ok(matchesRound(rows.find(r=>r.id===id),'6'),id);
   }
   assert.ok(!selected.some(r=>r.id==='SPEED-004'));
   assert.ok(matchesRound(rows.find(r=>r.id==='SPEED-004'),'Later'));
@@ -92,6 +96,10 @@ test('round 4 implementation evidence retains owner acceptance and separately de
     const row=rows.find(r=>r.id===id);
     assert.ok(matchesRound(row,'4'),id);assert.match(row.implementation,/pending|planned/i,id);
   }
+  const list=rows.find(r=>r.id==='UX-COLL-001');
+  assert.equal(list.updated,'4, 6');
+  assert.ok(matchesRound(list,'6'));
+  assert.ok(!matchesRound(list,'5'));
   // Planning must retain complete acceptance paragraphs, not only the first line.
   const interchange=rows.find(r=>r.id==='UX-IMPORT-JSON-001');
   assert.equal(interchange.round,'2');assert.equal(interchange.updated,'4');

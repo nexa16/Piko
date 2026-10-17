@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 10,
+  "revision": 23,
   "updated": "2026-10-17",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -20,7 +20,7 @@
   "findings": [
     {
       "id": "F01",
-      "revision": 4,
+      "revision": 5,
       "priority": "P1",
       "title": "Give Save & Next and Finish visibly different names",
       "kind": "Likely usability concern",
@@ -36,7 +36,7 @@
       "acceptance": [
         "Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior.",
         "Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable.",
-        "Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls."
+        "Saved cards use autosave feedback and simple collapse under UX-COLL-012 r2, without inline Finish/Discard. New-draft Save & Next and page-level Finish retain their existing distinct creation/completion roles."
       ],
       "baselineEvidence": [
         "014",
@@ -64,6 +64,10 @@
         {
           "date": "2026-10-16",
           "event": "Current cross-references follow UX-ENTRY-002 r2 → r3. Historical evidence retains its original scope; the round-4 entry/navigation changes are pending and do not close this finding."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner removes saved-card Finish/Discard in the compact-editor refinement. UX-ENTRY-002 r4 references autosave/collapse under UX-COLL-012 r2; original new-entry actions remain unchanged. Specified only; historical verification retained."
         }
       ],
       "impact": "A person using touch has to remember which checkmark saves another word, exits the session, or ends an inline edit. Accessible names and tooltips help other interaction modes but do not resolve the immediate visual ambiguity.",
@@ -94,7 +98,7 @@
       ],
       "suggestedChange": "Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior. Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable. Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls.",
       "requirementRevisions": {
-        "UX-ENTRY-002": 3,
+        "UX-ENTRY-002": 4,
         "UX-SYSTEM-001": 6
       },
       "implementationRound": 3,
@@ -109,7 +113,7 @@
     },
     {
       "id": "F02",
-      "revision": 5,
+      "revision": 6,
       "priority": "P1",
       "title": "Make the JSON workflow’s next action and result obvious",
       "kind": "Likely usability concern",
@@ -160,6 +164,10 @@
         {
           "date": "2026-10-16",
           "event": "Owner confirmed round-4 add-method chooser and shared Import/Export popup reachable from the Collection menu. Previous UX-IMPORT-JSON-001 r3 / 002 r2 evidence remains historical; no new runtime verification or finding closure."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Round-5 activity interchange adds a separate Activity replacement choice and clear omitted-value behavior under UX-IMPORT-JSON-002 r4. Existing import safety/loading/navigation contracts remain; implementation and revision-specific verification pending."
         }
       ],
       "impact": "The main next step is difficult to distinguish from helper actions. After confirmation, people may need to search down the page to discover whether the import succeeded.",
@@ -191,7 +199,7 @@
       "suggestedChange": "Use an extensible Manual/Import chooser before method details; Manual opens the existing editor and Import the shared Collection-scoped popup. Collection menu Import/Export opens that same popup directly without a manual draft. Follow UX-IMPORT-JSON-001 revision 4 and UX-IMPORT-JSON-002 revision 3: distinct import/export operations; example → input → replacement choices/check → result/import. Initial menu operation and unsubmitted-input preservation remain open. Make the applicable next action prominent and place success/errors beside the step that produced them. Preserve atomic apply, stale-preview invalidation, learning, pending-write guards, safe dismissal/focus restoration and return to the Collection. IMPORT-JSON-003 is selected for round 4. Resolve multiple-example representation, date-added metadata and migration before implementation; round-3 single-pair evidence does not verify these additions.",
       "requirementRevisions": {
         "UX-IMPORT-JSON-001": 4,
-        "UX-IMPORT-JSON-002": 3,
+        "UX-IMPORT-JSON-002": 4,
         "UX-SYSTEM-001": 6,
         "ENTRY-012": 1
       },
@@ -651,7 +659,7 @@
     },
     {
       "id": "F07",
-      "revision": 4,
+      "revision": 5,
       "priority": "P2",
       "title": "Align category rows and clarify management levels",
       "kind": "Aesthetic judgment with a usability concern",
@@ -668,7 +676,8 @@
         "Align group titles, field labels and value rows to common leading edges.",
         "Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration.",
         "Keep in-place management, two visible selection modes, persistent Apply enabled only for changed selections, and explicit assignment. No new management page or manual reorder.",
-        "Accepted 2026-10-16: values use alphabetical A–Z display within each group across assignment/filter checklists, management and assigned tags/summaries (CAT-009 r5 / UX-CAT-001 r7). Keep group order, selections and drafts intact after saved create/rename; search subsets retain the same order. Manual custom value order is Later. Collation edge cases, implementation and runtime verification remain pending."
+        "Accepted 2026-10-16: values use alphabetical A–Z display within each group across assignment/filter checklists, management and assigned tags/summaries (CAT-009 r5 / UX-CAT-001 r7). Keep group order, selections and drafts intact after saved create/rename; search subsets retain the same order. Manual custom value order is Later. Collation edge cases, implementation and runtime verification remain pending.",
+        "Round-5 editor presentation follows UX-CAT-001 r8: values-only collapsed summary, expanded title/selection rows with New category group last. Existing picker confirmation and alphabetical ordering remain; no Android verification is inferred."
       ],
       "baselineEvidence": [
         "021",
@@ -696,6 +705,10 @@
         {
           "date": "2026-10-16",
           "event": "Preserved newer owner specification updates during workspace cleanup; synchronized current acceptance criteria without changing status or claiming implementation."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "UX-CAT-001 r8 revises only the vocabulary-editor disclosure/summary layout. Existing group/value alignment, ordering and popup rules remain; earlier evidence is historical and status stays specified."
         }
       ],
       "impact": "The eye repeatedly changes alignment, and the distinction between a dimension and its values takes more effort to scan.",
@@ -726,7 +739,7 @@
       ],
       "suggestedChange": "Align group titles, field labels and value rows to common leading edges. Distinguish group/value levels with 8/12/16 spacing and a subordinate text role; avoid divider-per-row decoration. Keep in-place management, two visible selection modes, changed-only confirmation and explicit assignment. No new management page or reorder.",
       "requirementRevisions": {
-        "UX-CAT-001": 5,
+        "UX-CAT-001": 8,
         "UX-SYSTEM-001": 6
       },
       "implementationRound": 3,
@@ -1747,6 +1760,242 @@
       "reconciliation": {
         "implementationLedger": "implementation-round-5.md",
         "findingClosure": "Implemented and scoped verification passed; broader native acceptance and owner phone check remain pending."
+      }
+    },
+    {
+      "id": "F20",
+      "revision": 6,
+      "priority": "P2",
+      "title": "Align vocabulary group headers",
+      "kind": "Owner-requested presentation change; screenshot observation",
+      "screen": "Collection Detail grouped vocabulary list",
+      "requirements": [
+        "UX-COLL-001"
+      ],
+      "requirementRevisions": {
+        "UX-COLL-001": 6
+      },
+      "summary": "Supplied screenshots show each group header centered as an icon/text block, so chevron and title starts vary with label length.",
+      "status": "fixed",
+      "decision": "UX-COLL-001 r6 group headers are locally implemented and verified on Android in normal and 320dp/200% EN/DE states. Owner phone acceptance remains separate.",
+      "workPackage": "collection-list",
+      "acceptance": [
+        "Follow UX-COLL-001 r6 (alignment retained from r3): common left-aligned chevron slot and title start across short/long, collapsed/expanded group headers; preserve count and wrapping titles.",
+        "Retain full-width accessible disclosure targets, expanded-state semantics and independent group behavior without changing filters, sorting, editing or learning.",
+        "Inspect the implementing Android revision at normal size and targeted narrow 320 logical-pixel width/200% EN/DE text before closure; previous r2 evidence is historical."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": "2026-10-17",
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Recorded two owner screenshots and bounded source inspection; accepted alignment specified as r3. No live reproduction, implementation or fix claimed."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Updated current requirement reference to r4 after toolbar acceptance. Alignment criteria and pending verification are unchanged."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner requested the focused mockup. UX-COLL-001 r4 profile implemented and browser-checked at 390/320px, EN/DE and 200% preview text; round-5 ledger owns scoped evidence. App implementation and Android verification remain pending; status stays specified."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner endorsed the focused mockup and its bulk action; UX-COLL-001 r5 removes redundant ungrouped status and stabilizes toolbar/list-start geometry during filter changes. Compact contextual clear X preserves reset semantics; app implementation and Android verification remain pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner approved shared chip buttons and removed the entire grouping/sort summary line under UX-COLL-001 r6. Mockup updated; Android verification and app implementation pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner fully approved the final list design and requested exact specification reconciliation plus mockup guide. No behavior revision beyond r6; status remains specified, not Android-fixed."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner selected and authorized round-6 Flutter implementation of UX-COLL-001 r6. Revision-specific Android verification remains pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Implemented left-aligned wrapping group disclosures; final round6-e Android inspection passes at source 16f2a13, including long collapsed/expanded EN/DE 320dp/200% headers."
+        }
+      ],
+      "impact": "Inconsistent leading edges make group names harder to scan.",
+      "confidence": "High for visible screenshot alignment; installed build, logical dimensions, scale and repeatability are unverified.",
+      "evidenceRefs": [
+        {
+          "review": "collection-list-controls-2026-10-16",
+          "kind": "Owner screenshots and source inspection, not runtime reproduction",
+          "ref": "piko-ux.md#collection-list-controls-review--2026-10-16"
+        }
+      ],
+      "implementationRound": 6,
+      "reconciliation": {
+        "implementationLedger": "implementation-round-6.md",
+        "findingClosure": "Revision-specific Android evidence recorded in implementation-round-6.md; owner acceptance remains separate."
+      },
+      "verification": {
+        "implementationRevision": "16f2a138043118575d369dbee10e5c0c4adfd7af",
+        "requirementRevisions": {
+          "UX-COLL-001": 6
+        },
+        "checks": [
+          "Full host regression plus focused viewport repairs",
+          "Collection/group tests",
+          "Final round6-e isolated Android acceptance and capture inspection"
+        ],
+        "androidStates": [
+          "Normal English collapsed/mixed/expanded groups",
+          "320dp/200% EN/DE long group labels and expanded cards"
+        ],
+        "evidenceRefs": [
+          "round6-e/02-collapsed-groups.png",
+          "round6-e/10b-de-320-200-groups.png",
+          "round6-e/10c-de-320-200-expanded.png",
+          "round6-e/13-en-320-200-groups.png"
+        ],
+        "limitation": "Physical-phone/TalkBack acceptance is pending. This finding is header alignment; F21 whole-page stability remains unresolved."
+      }
+    },
+    {
+      "id": "F21",
+      "revision": 6,
+      "priority": "P2",
+      "title": "Clarify and compact vocabulary list controls",
+      "kind": "Owner-reported clarity concern; accepted design",
+      "screen": "Collection Detail search and vocabulary list controls",
+      "requirements": [
+        "UX-COLL-001",
+        "GROUP-001",
+        "FILTER-002",
+        "UX-CAT-001"
+      ],
+      "requirementRevisions": {
+        "UX-COLL-001": 6,
+        "GROUP-001": 2,
+        "FILTER-002": 5,
+        "UX-CAT-001": 7
+      },
+      "summary": "The owner finds Ansicht unclear. Screenshots show Filter, View, two bulk actions and Clear filters distributed over several rows, delaying the vocabulary list.",
+      "status": "needs_verification",
+      "decision": "UX-COLL-001 r6 controls are locally implemented and internally stable on Android. Existing learning-action availability can reflow the whole section; the owner is clarifying whether that page displacement is also in scope. Do not claim whole-page stability or close this finding yet.",
+      "workPackage": "collection-list",
+      "acceptance": [
+        "Follow UX-COLL-001 r6: show Expand all when any displayed group is collapsed, otherwise Collapse all; keep both commands in the local list menu. Hide group actions when ungrouped and disable them for zero displayed groups. Canonical review owns the remaining accepted layout and state scenarios.",
+        "Preserve category-only direct reset, separate search clear, staged popup Apply/cancellation, per-Collection preferences and learning/data preservation.",
+        "After implementation, verify grouped/ungrouped/mixed/zero-result states, long labels, menu/keyboard/accessibility and pending edits on Android with narrow/enlarged EN/DE text.",
+        "Applying/changing/clearing filters at a fixed width/text scale retains toolbar and list-start positions; grouping/sort summary is absent in all states."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-16",
+          "event": "Recorded screenshot evidence, bounded source inspection and official Android design references. Proposed hierarchy remains open; no app/mockup work, device verification or round assignment."
+        },
+        {
+          "date": "2026-10-16",
+          "event": "Owner explicitly accepted the complete recommended arrangement in the specification-only clarification. F21 moves from open to specified under UX-COLL-001 r4; no implementation authorization or round assignment."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner requested the focused mockup. UX-COLL-001 r4 profile implemented and browser-checked at 390/320px, EN/DE and 200% preview text; round-5 ledger owns scoped evidence. App implementation and Android verification remain pending; status stays specified."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner endorsed the focused mockup and its bulk action; UX-COLL-001 r5 removes redundant ungrouped status and stabilizes toolbar/list-start geometry during filter changes. Compact contextual clear X preserves reset semantics; app implementation and Android verification remain pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner approved shared chip buttons and removed the entire grouping/sort summary line under UX-COLL-001 r6. Mockup updated; Android verification and app implementation pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner fully approved the final list design and requested exact specification reconciliation plus mockup guide. No behavior revision beyond r6; status remains specified, not Android-fixed."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner selected and authorized round-6 Flutter implementation of UX-COLL-001 r6. Revision-specific Android verification remains pending."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Implemented independent chips, staged pickers, local menu, contextual bulk and gold tags. Final round6-e checks pass for internal list geometry and preservation. Whole-page displacement from learning-action reflow remains explicitly unresolved."
+        }
+      ],
+      "impact": "The combined View label hides distinct operations, while disconnected actions occupy several rows before content.",
+      "confidence": "High for owner-reported label ambiguity and screenshot state; accepted design improvement remains to verify in the actual app.",
+      "evidenceRefs": [
+        {
+          "review": "collection-list-controls-2026-10-16",
+          "kind": "Owner screenshots; source structure is supporting evidence only",
+          "ref": "piko-ux.md#collection-list-controls-review--2026-10-16"
+        }
+      ],
+      "implementationRound": 6,
+      "reconciliation": {
+        "implementationLedger": "implementation-round-6.md",
+        "findingClosure": "Needs verification/owner clarification for whole-page stability; no fixed claim."
+      }
+    },
+    {
+      "id": "F22",
+      "revision": 3,
+      "priority": "P1",
+      "title": "Keep vocabulary typing focused through autosave",
+      "kind": "Owner-reported interaction defect; runtime reproduction pending",
+      "screen": "Android Collection vocabulary editor: Hint or example sentence",
+      "requirements": [
+        "UX-COLL-009",
+        "UX-COLL-011",
+        "VOCAB-EDIT-001",
+        "VOCAB-EDIT-002"
+      ],
+      "requirementRevisions": {
+        "UX-COLL-009": 2,
+        "UX-COLL-011": 4
+      },
+      "summary": "The owner confirms Hint or an example sentence in the Android Collection vocabulary editor and reports jumping, keyboard dismissal and focus loss after one typed letter; suspects autosave. Exact optional field/example index, initial content, build, view state and repeatability remain to be established during reproduction. Main vocabulary/translation fields are not confirmed affected.",
+      "status": "deferred",
+      "decision": "Preserve uninterrupted typing, saved-card autosave and guarded collapse under VOCAB-EDIT-002 r2. The owner authorized a focused fix if the Android cause is established. The first bounded current-source host test retained Hint/Example focus, and the emulator's normal app predates the owner candidate; no matching Android reproduction or cause was established. Defer the fix pending the exact failing sequence and candidate.",
+      "workPackage": "entry",
+      "acceptance": [
+        "Reproduce the reported optional-content flow in the Android Collection vocabulary editor using synthetic data; record the exact field/example index, candidate, initial content, view state and repeatability.",
+        "Type one character, wait through autosave, then continue without another tap; retain focus, caret/selection, native keyboard and a usable visible editing position through save transitions.",
+        "Check Hint and both languages of a complete Example Pair through saving, plus an empty/partial Example Pair through validation and completion. Preserve raw input, last-valid persistence, learning and saved-card autosave/guarded collapse; inspect the implementing Android revision before closure."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-17",
+          "event": "Recorded owner report and bounded source inspection at 6541e25. Owner confirmed the Android Collection vocabulary editor; affected field remains unconfirmed. Existing emulator was available at the launcher; no editor reproduction, app-data mutation or installation was performed. Clarification and implementation authorization pending. Current UX-COLL-011 r4 reference follows the separate card-menu specification; this report does not revise it."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner identified Hint or an example sentence as affected. Narrowed the report and acceptance scenarios to optional-content typing, consistent with the inspected disabling path but not proof of its runtime cause. No app implementation or new runtime verification."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner selected a round-6 Android investigation and authorized a focused repair if the cause is established; otherwise defer the fix with missing evidence recorded. Corrected the historical Finish/Discard reference to the accepted saved-card autosave/collapse contract. No reproduction or fix is claimed."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Bounded current-source production-composition widget test retained text and focus after first and second Hint/Example edits across autosave. Integrated source no longer passes query-readiness busy state into the optional fields. Emulator normal app is build 2, older than the owner candidate; no matching Android reproduction or cause was established. Fix deferred, not marked verified."
+        }
+      ],
+      "impact": "Repeated focus loss interrupts vocabulary input and forces the user to reactivate the field.",
+      "confidence": "Owner-reported symptom and optional-content scope; disabling path observed in source, exact reproduction conditions and runtime cause unconfirmed.",
+      "evidenceRefs": [
+        {
+          "review": "vocabulary-focus-2026-10-17",
+          "kind": "Owner report and source inspection; not runtime reproduction",
+          "ref": "piko-ux.md#vocabulary-editing-focus-loss--owner-report-2026-10-17"
+        }
+      ],
+      "implementationRound": 6,
+      "reconciliation": {
+        "implementationLedger": "implementation-round-6.md",
+        "findingClosure": "First bounded host check did not reproduce the owner symptom; matching Android build/sequence and revision-specific verification remain pending. Fix deferred until a cause is established."
       }
     }
   ],

@@ -29,7 +29,10 @@
     return rows.map(row => ({...row, body: row.body.trim()}));
   }
   function matchesRound(row, round) {
-    return round === 'All' || [row.round, row.updated, row.fix].includes(normalizeRound(round));
+    const selected = normalizeRound(round);
+    return selected === 'All' || [row.round, row.updated, row.fix]
+      .flatMap(value => (value || '').split(',').map(part => normalizeRound(part.trim())))
+      .includes(selected);
   }
   const api = {parse, matchesRound, normalizeRound};
   root.PikoRequirements = api;

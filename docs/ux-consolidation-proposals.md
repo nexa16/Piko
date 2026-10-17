@@ -2,27 +2,37 @@
 
 Reconciliation status, 2026-10-16: this preserves the accepted preparation criteria. Round-3 checkpoints 1–4 now record related implementation and scoped verification in [implementation-round-3.md](implementation-round-3.md). F01–F18 retain their recorded specified status until their complete acceptance criteria receive finding-specific evidence; historical preparation statements are not claims that the current app is unimplemented. New implementation is not authorized by this record.
 
-Design handoff accepted on 2026-10-16. All findings retain specified status; related app implementation is recorded separately in the round-3 ledger. Owning requirement revisions and DESIGN.md are authoritative; this register view is the implementation checklist.
+The original design handoff was accepted on 2026-10-16. Each finding's current status is owned by ux-findings.json; newer open proposals are explicitly distinguished below. Related app implementation is recorded in the implementation ledgers. Owning requirement revisions and DESIGN.md are authoritative; this reference view is the implementation checklist.
 
-## Later specification — edit within the answer card
+## F20 — Align vocabulary group headers
 
-VOCAB-EDIT-003 r1 / UX-CARD-014 r1 are general specifications for Later, excluded from round 4 with no implementation round assigned. They add a secondary pencil icon after reveal in normal and Speed Learning. Open the existing vocabulary-list editor in the same card; retain the learning header/progress, reuse editable content and Finish/Discard, and return to the same revealed answer without a grade or advance. Use the existing icon/copy and accessible target. Exact placement and editor-specific Exit/system-Back behavior remain open. This new feature is not a finding closure: implementation and Android verification are pending, and F01–F18 retain their existing status/evidence.
+Status: specified, implementation round unassigned. Requirement: UX-COLL-001 r6 (alignment introduced in r3). Use common left-aligned chevron/title edges in expanded and collapsed vocabulary groups, wrapping long names without centering the row. Retain full-width accessible targets, counts and independent expansion. Owner screenshots plus bounded source inspection support the finding; the requested focused mockup is browser-verified on 2026-10-17, while r6 Android verification remains pending. This is independent of F07's category-editor/management rows. The [owning review](piko-ux.md#collection-list-controls-review--2026-10-16) records evidence limits and acceptance scenarios.
+
+## F21 — Clarify and compact vocabulary list controls
+
+Status: final vocabulary-list design fully owner-approved on 2026-10-17; specified, no implementation round selected. Owners: UX-COLL-001 r6; preserve GROUP-001 r2, FILTER-002 r5 and UX-CAT-001 r7 / F11. Accepted: directly labeled Filter/Group/Sort controls, local overflow for Display/Language order, one state-dependent bulk action with both explicit commands also in the menu, and a contextual full-size category-only clear X inside Filter (n), explicitly named for accessibility/tooltip. The owner's 2026-10-17 refinement hides the ungrouped status label and keeps control/list-start positions stable across filter changes. Revision 6 accepts all three shared chips and removes the entire grouping/sorting summary line. Keep search and preference semantics, shared selection confirmation and large-text accessibility. The [approved guide](piko-ux.md#approved-vocabulary-list-guide--2026-10-17) owns the exact final design, mockup link and mixed-state policy. This supersedes the two simultaneous visible bulk buttons and the combined View popup. F11 semantics remain unchanged and its finding is neither reopened nor closed. The owner-requested focused mockup is browser-verified on 2026-10-17; the round-5 ledger owns its scoped checks. App implementation and Android verification remain pending.
+
+## Round-5 planning — edit within the answer card
+
+VOCAB-EDIT-003 r3 / UX-CARD-014 r3 are selected for round-5 planning, retaining their exclusion from round 4; the finalized handoff releases the owner’s implementation request. They add a secondary pencil icon after reveal in normal and Speed Learning. Open the existing vocabulary-list editor in the same card; retain the learning header/progress, reuse editable content, autosave feedback and simple collapse, and return to the same revealed answer without a grade or advance. Use the existing icon/copy and accessible target. Routine icon placement follows design autonomy; editor Exit/Back is defined in VOCAB-EDIT-003 r3. Successful current-card deactivation skips without grading under VOCAB-ACTIVE-001 r3. This new feature is not a finding closure: implementation and Android verification are pending, and F01–F18 retain their existing status/evidence.
 
 ## F19 — Shorten the vocabulary editor
 
-Status: specified for Later, explicitly excluded from round 4; no implementation round assigned. Requirement: UX-COLL-011 r2. Keep required fields visible; use compact optional Examples/Hint entry points or summaries and a labeled automatic-Hint switch inside Hint. The owning requirement contains draft/default-preservation rules, the bounded Android observation and pending acceptance scenarios. This is an accepted design, not an implemented or verified fix; F01–F18 retain their original scope and evidence.
+An owner-requested focused sketch combines this accepted compact-section design with the activity control under UX-VOCAB-ACTIVE-001. Its former placement is superseded by bottom placement; the finalized definition uses an Inactive label in the status slot; see the round-5 ledger for browser-only evidence. This does not close F19 or accept activity/session semantics.
+
+Status: specified and selected for round-5 planning, explicitly excluded from round 4; implementation is authorized by the owner-requested finalized handoff, with verification pending. Requirement: UX-COLL-011 r4 / UX-COLL-012 r2; VOCAB-008–010 r3. Keep required fields visible; use compact optional Examples/Hint entry points or summaries and a labeled per-word automatic-Hint switch inside Hint. The default belongs in Collection settings and starts off; the first switch ON offers a default change once per Collection, remembered after either choice. Existing Collection defaults also start off; existing words remain unchanged under VOCAB-008/009. Remove the editor’s separate default checkbox. Categories uses matching disclosure: values-only summary, expanded group title/selection rows and New category group last (UX-CAT-001 r8). Active is last (UX-VOCAB-ACTIVE-001 r3); Delete moves to the card’s top-right menu (UX-VOCAB-DELETE-001 r4); saved editors show autosave/collapse instead of Finish/Discard. The owning requirement contains draft/default-preservation rules, the bounded Android observation and pending acceptance scenarios. This is an accepted design, not an implemented or verified fix; F01–F18 retain their original scope and evidence.
 
 ## F01 — Give Save & Next and Finish visibly different names
 
-Status: specified. Requirements: UX-ENTRY-002 r3, UX-SYSTEM-001 r7.
+Status: specified. Requirements: UX-ENTRY-002 r4, UX-SYSTEM-001 r7.
 
 - Visible Save & Next on the draft and Finish in the page action area; preserve validation, persistence and exit behavior.
 - Use a growable text action rather than a fixed icon-width slot. On narrow/enlarged layouts the title gets its own row; navigation and Finish stay reachable.
-- Inline Finish editing and Discard changes remain distinct; place autosave status beside those controls.
+- Saved cards use autosave status and simple collapse under UX-COLL-012 r2; remove inline Finish/Discard. New-draft Save & Next and page Finish retain their distinct purposes.
 
 ## F02 — Make the JSON workflow’s next action and result obvious
 
-Status: specified. Requirements: UX-IMPORT-JSON-001 r4, UX-IMPORT-JSON-002 r3, UX-SYSTEM-001 r7.
+Status: specified. Requirements: UX-IMPORT-JSON-001 r4, UX-IMPORT-JSON-002 r4, UX-SYSTEM-001 r7.
 
 - Follow ENTRY-012 and UX-IMPORT-JSON-001 revision 4 / UX-IMPORT-JSON-002 revision 3: + New → extensible Manual/Import chooser; Manual → existing editor, Import → shared popup. Collection ellipsis → Import/Export opens that same popup directly. Show chosen-method details only; no binary method tabs or JSON action inside manual entry.
 - Keep distinct Import/Export operations in the popup; import follows example → input → replacement choices/check → result/import. The menu entry's initial operation and unsubmitted-input preservation remain open.

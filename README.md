@@ -1,6 +1,6 @@
 # Piko
 
-**Status: Round 5 is integrated through [PR #6](https://github.com/nexa16/Piko/pull/6). The owner checked the candidate update/appearance; detailed phone-flow acceptance remains unverified. The fresh [round-6 branch](docs/implementation-round-6.md) is prepared with scope pending. Not a published release.**
+**Status: Round 6 has a local build-5 review candidate with the approved vocabulary-list rework and EN/DE learning-help dialog. [The round-6 ledger](docs/implementation-round-6.md#candidate-and-remaining-handoff-gates) owns source/checksum, host/Android evidence and remaining gates. F21 page-reflow clarification and owner phone acceptance are pending. Statistics remains planning-only; F22 is deferred. Not a published release.**
 
 The local-first Flutter app includes compact autosaving vocabulary editors, editing within revealed normal/retry/Speed answers, independent Active/Inactive vocabulary, Collection Hint defaults and JSON schema-4 export with versions 1–4 accepted on import. The [round-5 ledger](docs/implementation-round-5.md#local-verification-and-candidate--2026-10-17) owns the exact candidate, requirement revisions, host/Android evidence, exclusions and acceptance gaps. Earlier learning, examples, categories and Collection preferences are retained. UX findings are tracked separately; scoped implementation evidence does not automatically close every finding.
 
