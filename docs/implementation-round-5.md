@@ -1,6 +1,14 @@
 # Round 5 planning and implementation ledger
 
-**Status, 2026-10-17: the three authorized round-5 packages are locally implemented and verified. The owner approved publication after a review with no blockers and confirmed the candidate update/appearance check. Scenario-specific phone acceptance remains pending before merge. [PR #6](https://github.com/nexa16/Piko/pull/6) is open into develop; nothing has been released. F20/F21/F22 and additional learning candidates remain excluded.**
+**Status, 2026-10-17: the three authorized packages are integrated through owner-merged [PR #6](https://github.com/nexa16/Piko/pull/6) at `1e3f520`. Scoped local verification and owner publication approval are complete. The owner checked the update/appearance only; detailed phone-flow acceptance remains unverified. The fresh round-6 branch is prepared; no release occurred. F20/F21/F22 and additional learning candidates remain excluded.**
+
+## Owner merge and next-branch handoff — 2026-10-17
+
+GitHub confirms that the owner squash-merged PR #6 on 2026-10-17 at `1e3f520061e8ce4cb07da247b8e6c4b145c5ef98`. The fetched merge tree exactly matches final published PR head `ee59a1d480dcdd8286601a0f0df6e1dc33716771`. The owner explicitly chose to proceed after confirming only the candidate update and appearance; vocabulary learning, compact/same-card editing and Active/Inactive phone scenarios remain unverified. The earlier pending-gate paragraphs below are the historical record, not evidence that those checks subsequently passed.
+
+After verifying the merge and waiting for the other shared-checkout chat to be idle, local develop was fast-forwarded and `codex/round-6-implementation` was created from that exact merge. All 15 existing changed/untracked files and the index were verified unchanged through the checkout; the round-5 APK checksum is unchanged. The redundant compact-mockup checkout's complete 522-file draft and both old branches' history were preserved in verified private archives/Git bundle before retiring that checkout and obsolete references. The remote round-5 branch was already deleted by GitHub. Both Piko chats use the sole remaining shared checkout.
+
+The [round-6 ledger](implementation-round-6.md) records the new branch/base and pending scope. No new app/mockup implementation, release, tag or store publication is authorized by this handoff.
 
 ## Local verification and candidate — 2026-10-17
 
