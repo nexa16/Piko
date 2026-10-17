@@ -101,6 +101,7 @@ class PikoDialog extends StatelessWidget {
     this.purpose = PikoDialogPurpose.form,
     this.dismissible = true,
     this.onClose,
+    this.closeLabel,
     super.key,
   });
   final String title;
@@ -112,6 +113,7 @@ class PikoDialog extends StatelessWidget {
   final PikoDialogPurpose purpose;
   final bool dismissible;
   final VoidCallback? onClose;
+  final String? closeLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -180,9 +182,9 @@ class PikoDialog extends StatelessWidget {
                       dimension: d.dimension('controls.largeHeight'),
                       child: PikoIconButton(
                         icon: const PikoIcon(PikoIconName.x),
-                        semanticLabel: PikoCopyScope.of(
-                          context,
-                        ).text('common.close'),
+                        semanticLabel:
+                            closeLabel ??
+                            PikoCopyScope.of(context).text('common.close'),
                         onPressed: !dismissible
                             ? null
                             : onClose ??

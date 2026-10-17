@@ -556,8 +556,6 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                       style: TextStyle(color: pikoDesign.color('muted')),
                     ),
                   ),
-                  SizedBox(width: pikoDesign.dimension('spacing.3')),
-                  const PikoIcon(PikoIconName.pencil),
                 ],
               ),
             ),
@@ -866,23 +864,69 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       if (record == null) {
         final id = item.group.id!,
             expanded = scope!.expandedGroups.contains(item.group.id);
-        return Padding(
+        return Container(
           key: ValueKey(item.key),
-          padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
-          child: Semantics(
-            expanded: expanded,
-            child: PikoButton(
-              key: ValueKey('collection-group-$id'),
-              label:
-                  '${item.group.name ?? PikoCopyScope.of(context).text('view.unassigned')} (${item.group.entries.length})',
-              icon: RotatedBox(
-                quarterTurns: expanded ? 1 : 0,
-                child: const PikoIcon(PikoIconName.chevronRight),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: pikoDesign
+                    .color('muted')
+                    .withValues(
+                      alpha: pikoDesign.dimension(
+                        'components.collectionList.dividerOpacity',
+                      ),
+                    ),
               ),
-              variant: PikoButtonVariant.neutral,
-              onPressed: actionBusy
+            ),
+          ),
+          child: Semantics(
+            button: true,
+            expanded: expanded,
+            child: InkWell(
+              key: ValueKey('collection-group-$id'),
+              onTap: actionBusy
                   ? null
                   : () => scope.expandGroups([id], !expanded),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: pikoDesign.dimension('spacing.3'),
+                ),
+                child: Row(
+                  children: [
+                    RotatedBox(
+                      quarterTurns: expanded ? 1 : 0,
+                      child: const PikoIcon(
+                        PikoIconName.chevronRight,
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: pikoDesign.dimension('spacing.2')),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  item.group.name ??
+                                  copy.text('view.unassigned'),
+                            ),
+                            TextSpan(
+                              text: ' (${item.group.entries.length})',
+                              style: TextStyle(
+                                color: pikoDesign.color('muted'),
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -895,7 +939,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           onPointerMove: onPointerMove,
           child: Padding(
             padding: EdgeInsets.only(
-              top: index == 0 ? 0 : pikoDesign.dimension('spacing.3'),
+              top: index == 0 ? 0 : pikoDesign.dimension('spacing.2'),
             ),
             child: KeyedSubtree(
               key: rowKeys.putIfAbsent(key, GlobalKey.new),

@@ -1,78 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:piko/features/collections/collection_query_binding.dart';
-import 'package:piko/features/collections/collection_view_scope.dart';
-import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/collections/collection_view_controls.dart';
+import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
-import 'collection_inline_edit_test.dart' show owner;
-import 'collection_query_detail_test.dart' show ProjectionService;
-import 'collection_filters_test.dart' show definitions;
+import 'collection_filters_test.dart' show FilterHarness;
 
 void main() {
   for (final language in ['en', 'de']) {
-    testWidgets(
-      '$language View popup at 320px/200% keeps Apply visible through changes and reversion',
-      (tester) async {
+    for (final picker in CollectionViewPicker.values) {
+      testWidgets('$language $picker staged picker at 320px/200%', (
+        tester,
+      ) async {
         tester.view.physicalSize = const Size(320, 900);
         tester.view.devicePixelRatio = 1;
         tester.platformDispatcher.textScaleFactorTestValue = 2;
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        final scope = CollectionViewScope(), copy = PikoCopy(language);
-        final binding = CollectionQueryBinding(
-          collectionId: owner.id,
-          service: ProjectionService(definitions()),
-          scope: scope,
-          invalidations: const Stream<void>.empty(),
-        );
-        addTearDown(() async {
-          await tester.pumpWidget(const SizedBox());
-          binding.dispose();
-          scope.dispose();
-        });
+        final h = FilterHarness(), copy = PikoCopy(language);
+        await h.mount(tester);
         await tester.pumpWidget(
           PikoApp(
             locale: Locale(language),
             home: Scaffold(
-              body: CollectionViewControls(binding: binding, enabled: true),
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () =>
+                      showCollectionViewPicker(context, h.binding, picker),
+                  child: const Text('Open'),
+                ),
+              ),
             ),
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('collection-view')));
+        await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         final apply = find.widgetWithText(PikoButton, copy.text('r2.apply'));
         final before = tester.getRect(apply);
         expect(before.bottom, lessThan(900));
-        expect(before.width, greaterThanOrEqualTo(48));
         expect(tester.widget<PikoButton>(apply).onPressed, isNull);
-        final mode = find.byType(DropdownButtonFormField<VocabularyViewMode>);
-        tester
-            .widget<DropdownButtonFormField<VocabularyViewMode>>(mode)
-            .onChanged!(VocabularyViewMode.detailed);
+        void choose(bool changed) {
+          switch (picker) {
+            case CollectionViewPicker.mode:
+              tester
+                  .widget<RadioGroup<VocabularyViewMode>>(
+                    find.byType(RadioGroup<VocabularyViewMode>),
+                  )
+                  .onChanged(
+                    changed
+                        ? VocabularyViewMode.detailed
+                        : VocabularyViewMode.compact,
+                  );
+            case CollectionViewPicker.languageOrder:
+              tester
+                  .widget<RadioGroup<bool>>(find.byType(RadioGroup<bool>))
+                  .onChanged(!changed);
+            case CollectionViewPicker.grouping:
+              tester
+                  .widget<RadioGroup<String>>(find.byType(RadioGroup<String>))
+                  .onChanged(changed ? 'topic' : '');
+            case CollectionViewPicker.sort:
+              tester
+                  .widget<RadioGroup<VocabularySort>>(
+                    find.byType(RadioGroup<VocabularySort>),
+                  )
+                  .onChanged(
+                    changed ? VocabularySort.newest : VocabularySort.original,
+                  );
+          }
+        }
+
+        choose(true);
         await tester.pumpAndSettle();
         expect(tester.getRect(apply), before);
         expect(tester.widget<PikoButton>(apply).onPressed, isNotNull);
-        tester
-            .widget<DropdownButtonFormField<VocabularyViewMode>>(mode)
-            .onChanged!(VocabularyViewMode.compact);
+        expect(h.scope.view, const CollectionViewPreferences());
+        choose(false);
         await tester.pumpAndSettle();
-        expect(tester.getRect(apply), before);
         expect(tester.widget<PikoButton>(apply).onPressed, isNull);
-        final order = find.byKey(const ValueKey('view.languageOrder'));
-        await tester.ensureVisible(order);
-        await tester.tap(order);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(copy.text('view.nativeFirst')).last);
+        choose(true);
         await tester.pumpAndSettle();
         await tester.tap(apply);
         await tester.pumpAndSettle();
-        expect(scope.view.targetFirst, isFalse);
+        expect(h.scope.view, isNot(const CollectionViewPreferences()));
         expect(tester.takeException(), isNull);
-      },
-    );
+      });
+    }
   }
 }

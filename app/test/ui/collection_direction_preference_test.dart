@@ -116,6 +116,11 @@ void main() {
       expect(find.byKey(ValueKey('vocabulary-status-${one.id}')), findsNothing);
       await preference.load();
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey('vocabulary-status-${one.id}-targetToNative')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
       for (final direction in LearningDirection.values) {
         expect(action('review', direction), findsOneWidget);
         expect(action('speed', direction), findsOneWidget);

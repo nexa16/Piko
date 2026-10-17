@@ -8,6 +8,7 @@ import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_deletion.dart';
 import 'package:piko/data/collections_repository.dart';
+import 'package:piko/data/vocabulary_content.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collections_home.dart';
@@ -83,6 +84,109 @@ class GatedRepository implements VocabularyRepository {
 }
 
 void main() {
+  testWidgets(
+    'F22 Hint and Example typing keep focus through the real runtime autosave',
+    (tester) async {
+      final db = ObservedDatabase();
+      final collections = SqliteCollectionsRepository(db);
+      final vocabulary = SqliteVocabularyRepository(db);
+      final owner = (await tester.runAsync(
+        () => collections.create(
+          name: 'F22 synthetic',
+          targetLanguage: VocabularyLanguage.french,
+          nativeLanguage: VocabularyLanguage.german,
+        ),
+      ))!;
+      final entry = (await tester.runAsync(
+        () => vocabulary.createWithContent(
+          collectionId: owner.id,
+          targetText: 'pomme',
+          nativeText: 'Apfel',
+          assignments: const {},
+          content: const VocabularyContent(
+            hintText: 'A fruit',
+            examples: [
+              ExamplePair(targetText: 'Une pomme.', nativeText: 'Ein Apfel.'),
+            ],
+          ),
+        ),
+      ))!;
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+      });
+      await tester.pumpWidget(
+        PikoApp(home: PikoRuntime(databaseFactory: () => db)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('collection-${owner.id}')));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey('vocabulary-${entry.id}')),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(ValueKey('vocabulary-${entry.id}')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('vocabulary-${entry.id}')));
+      await tester.pumpAndSettle();
+      final hintToggle = find.byKey(const ValueKey('content-hint-toggle'));
+      await tester.ensureVisible(hintToggle);
+      await tester.pumpAndSettle();
+      await tester.tap(hintToggle);
+      await tester.pumpAndSettle();
+      final hint = find.byKey(const ValueKey('content-hint'));
+      await tester.ensureVisible(hint);
+      await tester.tap(hint);
+      await tester.enterText(hint, 'B');
+      await tester.pumpAndSettle();
+      final edit = find.descendant(
+        of: hint,
+        matching: find.byType(EditableText),
+      );
+      expect(tester.widget<EditableText>(edit).focusNode.hasFocus, isTrue);
+      expect(tester.widget<EditableText>(edit).controller.text, 'B');
+      await tester.enterText(hint, 'BC');
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(edit).focusNode.hasFocus, isTrue);
+      expect(tester.widget<EditableText>(edit).controller.text, 'BC');
+      final examplesToggle = find.byKey(
+        const ValueKey('content-examples-toggle'),
+      );
+      await tester.ensureVisible(examplesToggle);
+      await tester.pumpAndSettle();
+      await tester.tap(examplesToggle);
+      await tester.pumpAndSettle();
+      final example = find.byKey(const ValueKey('content-example-native'));
+      await tester.ensureVisible(example);
+      await tester.tap(example);
+      await tester.enterText(example, 'E');
+      await tester.pumpAndSettle();
+      final exampleEdit = find.descendant(
+        of: example,
+        matching: find.byType(EditableText),
+      );
+      expect(
+        tester.widget<EditableText>(exampleEdit).focusNode.hasFocus,
+        isTrue,
+      );
+      await tester.enterText(example, 'Ein Beispiel.');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<EditableText>(exampleEdit).focusNode.hasFocus,
+        isTrue,
+      );
+      expect(
+        tester.widget<EditableText>(exampleEdit).controller.text,
+        'Ein Beispiel.',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'actual Collection row expands without allocating add-entry session; Plus alone opens real route',
     (tester) async {

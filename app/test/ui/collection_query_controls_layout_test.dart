@@ -117,8 +117,8 @@ void main() {
       scale.value = 1;
       await tester.pumpAndSettle();
       expect(
-        tester.getRect(filters).left,
-        greaterThanOrEqualTo(tester.getRect(search).right),
+        tester.getRect(filters).top,
+        greaterThanOrEqualTo(tester.getRect(search).bottom),
       );
       expect(tester.widget<TextField>(search).controller, same(controller));
       expect(controller.text, 'New query');

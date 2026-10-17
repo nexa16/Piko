@@ -44,6 +44,10 @@ const designCatalog = <String, Object?>{
 "titleSize": 15,
 "titleWeight": 700,
 },
+"collectionList": <String, Object?>{
+"dividerOpacity": 0.2,
+"outlineOpacity": 0.32,
+},
 "collectionReview": <String, Object?>{
 "cardMinHeight": 86,
 "cardPadding": 20,
@@ -1190,6 +1194,186 @@ const copyCatalog = <String, Object?>{
 "learn.typeFull": <String, Object?>{
 "de": "Antwort eingeben",
 "en": "Typed Answer",
+},
+"learnHelp.close": <String, Object?>{
+"de": "Lernerklärung schließen",
+"en": "Close learning explanation",
+},
+"learnHelp.correct": <String, Object?>{
+"de": "Richtig: Du hast dich an die Übersetzung erinnert.",
+"en": "Correct: You remembered the translation.",
+},
+"learnHelp.expiry": <String, Object?>{
+"de": "Wenn du eine Sitzung verlässt, bleibt noch offenes zusätzliches Üben bis 4 Uhr morgens Ortszeit verfügbar. Danach verfallen diese Übungserinnerungen; die langfristige Wiederholungsplanung der Vokabel bleibt bestehen.",
+"en": "If you leave a session, unfinished extra practice remains available until 4 a.m. local time. After that, those extra-practice reminders expire; the word’s long-term review schedule remains.",
+},
+"learnHelp.extra": <String, Object?>{
+"de": "Zusätzliches Üben nach einem Fehler zählt nicht als weitere geplante Wiederholung und verschiebt die nächste Wiederholung nicht immer weiter in die Zukunft.",
+"en": "Extra practice after a mistake does not count as another scheduled review or repeatedly push the next review further into the future.",
+},
+"learnHelp.fsrs": <String, Object?>{
+"de": "Piko nutzt FSRS, einen Algorithmus für verteilte Wiederholungen, um die nächste Fälligkeit jeder Vokabel zu berechnen. Anhand deiner bisherigen Wiederholungen, Bewertungen und der Zeit dazwischen schätzt er, wie gut du dich erinnern wirst.",
+"en": "Piko uses FSRS, a spaced-repetition algorithm, to calculate when each word is due again. It uses your previous reviews, your ratings and the time between reviews to estimate how well you’ll remember it.",
+},
+"learnHelp.hard": <String, Object?>{
+"de": "Schwer + Richtig: Du hast dich erinnert, aber es war anstrengend. Wähle Schwer und tippe dann auf Richtig.",
+"en": "Hard + Correct: You remembered it, but recalling it took effort. Select Hard, then tap Correct.",
+},
+"learnHelp.honest": <String, Object?>{
+"de": "Bewerte deine Erinnerung ehrlich. Vergessen gehört zum Lernen.",
+"en": "Rate your recall honestly. Forgetting is part of learning.",
+},
+"learnHelp.incorrect": <String, Object?>{
+"de": "Falsch: Du konntest dich nicht erinnern oder deine Antwort war falsch.",
+"en": "Incorrect: You couldn’t remember it or your answer was wrong.",
+},
+"learnHelp.intro": <String, Object?>{
+"de": "Piko verteilt deine Wiederholungen über die Zeit, damit du Vokabeln länger behältst.",
+"en": "Piko spreads your reviews over time to help you remember vocabulary for longer.",
+},
+"learnHelp.mistake": <String, Object?>{
+"de": "Die Vokabel kommt während der Sitzung zum zusätzlichen Üben wieder, bis du sie richtig beantwortest. Meist beantwortest du zuerst andere Vokabeln. Sind zu wenige übrig, erscheint vor der nächsten Wiederholung ein kurzer Countdown.",
+"en": "The word returns for extra practice during the session until you answer it correctly. You’ll usually answer other words first. If too few remain, a short countdown appears before the next repetition.",
+},
+"learnHelp.mistakeTitle": <String, Object?>{
+"de": "Was passiert nach einem Fehler?",
+"en": "What happens after a mistake?",
+},
+"learnHelp.ratings": <String, Object?>{
+"de": "Richtig, Schwer + Richtig und Falsch geben der Wiederholungsplanung unterschiedliche Informationen über deine Erinnerung.",
+"en": "Correct, Hard + Correct and Incorrect give the scheduler different information about your recall.",
+},
+"learnHelp.recall": <String, Object?>{
+"de": "Versuche, dich an die Übersetzung zu erinnern, bevor du die Antwort aufdeckst. Beurteile dann, wie es dir ging:",
+"en": "Try to recall the translation before revealing the answer. Then judge how you did:",
+},
+"learnHelp.return": <String, Object?>{
+"de": "Vokabeln, an die du dich gut erinnerst, kommen meist nach längeren Abständen wieder. Schwierige Vokabeln kommen früher zurück. Piko plant jede Übersetzungsrichtung getrennt. Eine Vokabel in einer Richtung zu kennen bedeutet daher nicht, dass du sie auch in der anderen kennst.",
+"en": "Words you remember well generally return after longer gaps. Words you struggle with return sooner. Piko schedules each translation direction separately, so knowing a word in one direction doesn’t mean you know it in the other.",
+},
+"learnHelp.returnTitle": <String, Object?>{
+"de": "Wann kommt eine Vokabel wieder?",
+"en": "When will a word return?",
+},
+"learnHelp.scheduling": <String, Object?>{
+"de": "Mehr zur Wiederholungsplanung",
+"en": "More about scheduling",
+},
+"learnHelp.speed": <String, Object?>{
+"de": "Speed übt neue Vokabeln zusätzlich in kleinen Gruppen. So wirst du mit ihnen vertraut; geplante Wiederholungen helfen dir, sie langfristig zu behalten.",
+"en": "Speed gives new words extra practice in small groups. It helps you get familiar with them; scheduled reviews help you remember them over time.",
+},
+"learnHelp.speedTitle": <String, Object?>{
+"de": "Was ist Speed-Lernen?",
+"en": "What is Speed learning?",
+},
+"learnHelp.title": <String, Object?>{
+"de": "So funktioniert das Lernen",
+"en": "How learning works",
+},
+"list.adjective": <String, Object?>{
+"de": "Adjektiv",
+"en": "Adjective",
+},
+"list.adverb": <String, Object?>{
+"de": "Adverb",
+"en": "Adverb",
+},
+"list.clearGrouping": <String, Object?>{
+"de": "Gruppierung aufheben",
+"en": "Remove grouping",
+},
+"list.compactHelp": <String, Object?>{
+"de": "Beide Sprachen nebeneinander. Lange Texte durch Antippen lesen.",
+"en": "Both languages side by side. Tap to read long text.",
+},
+"list.controls": <String, Object?>{
+"de": "Steuerung der Vokabelliste",
+"en": "Vocabulary list controls",
+},
+"list.current": <String, Object?>{
+"de": "{group} · {sort}",
+"en": "{group} · {sort}",
+},
+"list.deFirst": <String, Object?>{
+"de": "Deutsch zuerst",
+"en": "German first",
+},
+"list.detailedHelp": <String, Object?>{
+"de": "Sprachen untereinander, mit vorhandenen Beispielen.",
+"en": "Languages stacked, including available examples.",
+},
+"list.group": <String, Object?>{
+"de": "Gruppieren",
+"en": "Group",
+},
+"list.groupedValue": <String, Object?>{
+"de": "Gruppiert nach {value}",
+"en": "Grouped by {value}",
+},
+"list.groups": <String, Object?>{
+"de": "Gruppen",
+"en": "Groups",
+},
+"list.koFirst": <String, Object?>{
+"de": "Koreanisch zuerst",
+"en": "Korean first",
+},
+"list.noMatchesHelp": <String, Object?>{
+"de": "Suche ändern oder Kategorienfilter zurücksetzen.",
+"en": "Change the search or clear the category filters.",
+},
+"list.noun": <String, Object?>{
+"de": "Nomen",
+"en": "Noun",
+},
+"list.options": <String, Object?>{
+"de": "Optionen für die Vokabelliste",
+"en": "Vocabulary list options",
+},
+"list.original": <String, Object?>{
+"de": "Originalreihenfolge",
+"en": "Original order",
+},
+"list.previewLanguage": <String, Object?>{
+"de": "Vorschausprache",
+"en": "Preview language",
+},
+"list.previewNote": <String, Object?>{
+"de": "Interaktive Beispieldaten. Filter, Gruppierung, Sortierung und Darstellung ausprobieren. Vokabel antippen, um sie vollständig zu lesen. Änderungen gelten bis zum Neuladen; Lernen und Bearbeiten sind hier nicht nachgebildet.",
+"en": "Interactive sample data. Explore filters, grouping, sorting and display. Tap a word to read it in full. Changes last until reload; learning and editing are outside this preview.",
+},
+"list.previewTitle": <String, Object?>{
+"de": "Listenvorschau",
+"en": "List preview",
+},
+"list.resetSort": <String, Object?>{
+"de": "Originalreihenfolge wiederherstellen",
+"en": "Restore original order",
+},
+"list.resultCount": <String, Object?>{
+"de": "{count} von {total} Vokabeln",
+"en": "{count} of {total} words",
+},
+"list.sort": <String, Object?>{
+"de": "Sortieren",
+"en": "Sort",
+},
+"list.textSize": <String, Object?>{
+"de": "Textgröße",
+"en": "Text size",
+},
+"list.ungroupedValue": <String, Object?>{
+"de": "Ohne Gruppierung",
+"en": "Ungrouped",
+},
+"list.verb": <String, Object?>{
+"de": "Verb",
+"en": "Verb",
+},
+"list.wordType": <String, Object?>{
+"de": "Wortart",
+"en": "Word type",
 },
 "metric.average": <String, Object?>{
 "de": "Ø / aktiver Lerntag",

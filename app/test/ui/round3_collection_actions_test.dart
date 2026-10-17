@@ -17,9 +17,7 @@ void main() {
     });
     await h.mount(tester);
     expect(find.text('Filters (1)'), findsOneWidget);
-    final clear = find.byKey(
-      const ValueKey('collection-no-matches-clear-filters'),
-    );
+    final clear = find.byTooltip('Clear filters');
     await tester.ensureVisible(clear);
     await tester.tap(clear);
     await tester.pumpAndSettle();

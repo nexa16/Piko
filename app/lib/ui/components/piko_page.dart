@@ -55,6 +55,7 @@ class PikoHeading extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleContent,
     this.leading,
     this.actions = const [],
     this.titleContent,
@@ -66,6 +67,7 @@ class PikoHeading extends StatelessWidget {
   /// Meaningful page context, such as a Collection's language pair and count.
   /// Review direction and progress remain separate session context widgets.
   final String? subtitle;
+  final Widget? subtitleContent;
   final Widget? leading;
   final List<Widget> actions;
 
@@ -122,18 +124,20 @@ class PikoHeading extends StatelessWidget {
               child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
       ),
-      if (subtitle != null)
+      if (subtitle != null || subtitleContent != null)
         Padding(
           padding: EdgeInsets.only(
             left: subtitleInset ?? pikoDesign.dimension('spacing.2'),
           ),
-          child: Text(
-            subtitle!,
-            style: TextStyle(
-              fontSize: pikoDesign.dimension('typography.small'),
-              color: pikoDesign.color('muted'),
-            ),
-          ),
+          child:
+              subtitleContent ??
+              Text(
+                subtitle!,
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension('typography.small'),
+                  color: pikoDesign.color('muted'),
+                ),
+              ),
         ),
     ],
   );
