@@ -275,6 +275,13 @@ void main() {
         expect(ownerSelection.active, isFalse);
         expect(ownerSelection.ids, isEmpty);
         await native('back-learning');
+        await review.waitUntil(
+          tester,
+          () =>
+              find.byType(ReviewSessionRoute).evaluate().isEmpty &&
+              find.byType(CollectionVocabulary).evaluate().isNotEmpty,
+          description: 'native Back returns to Collection vocabulary',
+        );
         expect(selection().active, isFalse);
         expect(await json.exportCollection(fixture.owner.id), before);
         manifest['learningScopeCount'] = due;
