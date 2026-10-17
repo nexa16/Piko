@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import '../../ui/piko_theme.dart';
 
 /// Reserves the same label, count and trailing target in every state.
@@ -70,105 +71,124 @@ class _CollectionListChipState extends State<CollectionListChip> {
                   ),
       ),
     );
-    return SizedBox(
-      width: width,
-      child: Material(
-        color: widget.active
-            ? pikoDesign.color('tint')
-            : pikoDesign.color('surface'),
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: EdgeInsets.all(pikoDesign.dimension('states.borderWidth')),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                child: InkWell(
-                  focusNode: focus,
-                  onTap: widget.onOpen,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: pikoDesign.dimension('controls.largeHeight'),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: pikoDesign.dimension('spacing.3'),
-                      ),
-                      child: Align(
-                        widthFactor: 1,
-                        child: Semantics(
-                          label:
-                              label +
-                              (widget.count != null && widget.count! > 0
-                                  ? ' (${widget.count})'
-                                  : ''),
-                          excludeSemantics: true,
-                          child: Stack(
-                            alignment: Alignment.centerLeft,
-                            children: [
-                              Opacity(
-                                opacity: 0,
-                                child: Text(label + reserve, style: style),
-                              ),
-                              Positioned.fill(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    label +
-                                        (widget.count != null &&
-                                                widget.count! > 0
-                                            ? ' (${widget.count})'
-                                            : ''),
-                                    style: style,
+    return PikoAnchorRegion(
+      child: Builder(
+        builder: (anchorContext) => SizedBox(
+          width: width,
+          child: Material(
+            color: widget.active
+                ? pikoDesign.color('tint')
+                : pikoDesign.color('surface'),
+            shape: shape,
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: EdgeInsets.all(
+                pikoDesign.dimension('states.borderWidth'),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      focusNode: focus,
+                      onTap: widget.onOpen == null
+                          ? null
+                          : () {
+                              PikoAnchorRegion.capture(anchorContext);
+                              widget.onOpen!();
+                            },
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: pikoDesign.dimension(
+                            'controls.largeHeight',
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: pikoDesign.dimension('spacing.3'),
+                          ),
+                          child: Align(
+                            widthFactor: 1,
+                            child: Semantics(
+                              label:
+                                  label +
+                                  (widget.count != null && widget.count! > 0
+                                      ? ' (${widget.count})'
+                                      : ''),
+                              excludeSemantics: true,
+                              child: Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [
+                                  Opacity(
+                                    opacity: 0,
+                                    child: Text(label + reserve, style: style),
                                   ),
-                                ),
+                                  Positioned.fill(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        label +
+                                            (widget.count != null &&
+                                                    widget.count! > 0
+                                                ? ' (${widget.count})'
+                                                : ''),
+                                        style: style,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Semantics(
-                button: true,
-                label: widget.active ? widget.resetLabel : label,
-                enabled: widget.onOpen != null,
-                child: Tooltip(
-                  message: widget.active ? widget.resetLabel : label,
-                  child: InkWell(
-                    onTap: widget.active && widget.onReset != null
-                        ? () {
-                            widget.onReset!();
-                            focus.requestFocus();
-                          }
-                        : widget.onOpen,
-                    child: SizedBox(
-                      width: pikoDesign.dimension('controls.largeHeight'),
-                      height: pikoDesign.dimension('controls.largeHeight'),
-                      child: Center(
-                        child: IconTheme(
-                          data: IconThemeData(
-                            color: pikoDesign.color('primary'),
+                  Semantics(
+                    button: true,
+                    label: widget.active ? widget.resetLabel : label,
+                    enabled: widget.onOpen != null,
+                    child: Tooltip(
+                      message: widget.active ? widget.resetLabel : label,
+                      child: InkWell(
+                        onTap: widget.active && widget.onReset != null
+                            ? () {
+                                PikoAnchorRegion.capture(anchorContext);
+                                widget.onReset!();
+                                focus.requestFocus();
+                              }
+                            : widget.onOpen == null
+                            ? null
+                            : () {
+                                PikoAnchorRegion.capture(anchorContext);
+                                widget.onOpen!();
+                              },
+                        child: SizedBox(
+                          width: pikoDesign.dimension('controls.largeHeight'),
+                          height: pikoDesign.dimension('controls.largeHeight'),
+                          child: Center(
+                            child: IconTheme(
+                              data: IconThemeData(
+                                color: pikoDesign.color('primary'),
+                              ),
+                              child: widget.active
+                                  ? const PikoIcon(PikoIconName.x, size: 20)
+                                  : const RotatedBox(
+                                      quarterTurns: 1,
+                                      child: PikoIcon(
+                                        PikoIconName.chevronRight,
+                                        size: 20,
+                                      ),
+                                    ),
+                            ),
                           ),
-                          child: widget.active
-                              ? const PikoIcon(PikoIconName.x, size: 20)
-                              : const RotatedBox(
-                                  quarterTurns: 1,
-                                  child: PikoIcon(
-                                    PikoIconName.chevronRight,
-                                    size: 20,
-                                  ),
-                                ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

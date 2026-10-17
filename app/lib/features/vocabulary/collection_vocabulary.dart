@@ -12,6 +12,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
 import 'inline_vocabulary_edit_controller.dart';
@@ -231,6 +232,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       editor?.edits.awaitSavedEdits() ?? Future<void>.value();
 
   void preserveAnchor(String id, double top, int revision, [int attempt = 0]) {
+    if (PikoInteractionAnchor.maybeOf(context) != null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || revision != anchorRevision || attempt > 3) return;
       final position = Scrollable.maybeOf(context)?.position;
@@ -865,67 +867,73 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       if (record == null) {
         final id = item.group.id!,
             expanded = scope!.expandedGroups.contains(item.group.id);
-        return Container(
+        return PikoAnchorRegion(
           key: ValueKey(item.key),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: pikoDesign
-                    .color('muted')
-                    .withValues(
-                      alpha: pikoDesign.dimension(
-                        'components.collectionList.dividerOpacity',
-                      ),
-                    ),
-              ),
-            ),
-          ),
-          child: Semantics(
-            button: true,
-            expanded: expanded,
-            child: InkWell(
-              key: ValueKey('collection-group-$id'),
-              onTap: actionBusy
-                  ? null
-                  : () => scope.expandGroups([id], !expanded),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: pikoDesign.dimension('spacing.3'),
+          child: Builder(
+            builder: (anchorContext) => Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: pikoDesign
+                        .color('muted')
+                        .withValues(
+                          alpha: pikoDesign.dimension(
+                            'components.collectionList.dividerOpacity',
+                          ),
+                        ),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    RotatedBox(
-                      quarterTurns: expanded ? 1 : 0,
-                      child: const PikoIcon(
-                        PikoIconName.chevronRight,
-                        size: 20,
-                      ),
+              ),
+              child: Semantics(
+                button: true,
+                expanded: expanded,
+                child: InkWell(
+                  key: ValueKey('collection-group-$id'),
+                  onTap: actionBusy
+                      ? null
+                      : () {
+                          PikoAnchorRegion.capture(anchorContext);
+                          scope.expandGroups([id], !expanded);
+                        },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: pikoDesign.dimension('spacing.3'),
                     ),
-                    SizedBox(width: pikoDesign.dimension('spacing.2')),
-                    Expanded(
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text:
-                                  item.group.name ??
-                                  copy.text('view.unassigned'),
-                            ),
-                            TextSpan(
-                              text: ' (${item.group.entries.length})',
-                              style: TextStyle(
-                                color: pikoDesign.color('muted'),
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                          ],
+                    child: Row(
+                      children: [
+                        RotatedBox(
+                          quarterTurns: expanded ? 1 : 0,
+                          child: const PikoIcon(
+                            PikoIconName.chevronRight,
+                            size: 20,
+                          ),
                         ),
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        SizedBox(width: pikoDesign.dimension('spacing.2')),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      item.group.name ??
+                                      copy.text('view.unassigned'),
+                                ),
+                                TextSpan(
+                                  text: ' (${item.group.entries.length})',
+                                  style: TextStyle(
+                                    color: pikoDesign.color('muted'),
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -944,7 +952,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             ),
             child: KeyedSubtree(
               key: rowKeys.putIfAbsent(key, GlobalKey.new),
-              child: row(record, item.group.id),
+              child: PikoAnchorRegion(child: row(record, item.group.id)),
             ),
           ),
         ),

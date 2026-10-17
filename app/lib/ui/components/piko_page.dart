@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
+import 'piko_interaction_anchor.dart';
 
 class PikoPage extends StatelessWidget {
   const PikoPage({super.key, required Widget this.child})
     : slivers = null,
-      physics = null;
-  const PikoPage.slivers({super.key, required this.slivers, this.physics})
-    : child = null;
+      physics = null,
+      interactionAnchor = null;
+  const PikoPage.slivers({
+    super.key,
+    required this.slivers,
+    this.physics,
+    this.interactionAnchor,
+  }) : child = null;
   final Widget? child;
   final List<Widget>? slivers;
   final ScrollPhysics? physics;
+  final PikoInteractionAnchor? interactionAnchor;
   @override
   Widget build(BuildContext context) => SafeArea(
     child: LayoutBuilder(
@@ -34,6 +41,19 @@ class PikoPage extends StatelessWidget {
             ),
             child: slivers == null
                 ? SingleChildScrollView(padding: padding, child: child)
+                : interactionAnchor != null
+                ? interactionAnchor!.scope(
+                    child: PikoAnchoredScrollView(
+                      interactionAnchor: interactionAnchor!,
+                      physics: physics,
+                      slivers: [
+                        SliverPadding(
+                          padding: padding,
+                          sliver: SliverMainAxisGroup(slivers: slivers!),
+                        ),
+                      ],
+                    ),
+                  )
                 : CustomScrollView(
                     physics: physics,
                     slivers: [

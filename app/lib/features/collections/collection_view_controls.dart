@@ -3,6 +3,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import 'collection_list_chip.dart';
 import '../../ui/piko_theme.dart';
 import 'collection_query_binding.dart';
@@ -123,59 +124,64 @@ class CollectionListMenu extends StatelessWidget {
             scope.view,
           ).map((g) => g.id).whereType<String>().toList();
     final available = enabled && binding.ready && !scope.viewPending;
-    return PopupMenuButton<String>(
-      key: const ValueKey('collection-list-menu'),
-      tooltip: copy.text('list.options'),
-      enabled: available,
-      icon: const RotatedBox(
-        quarterTurns: 1,
-        child: PikoIcon(PikoIconName.ellipsis),
+    return PikoAnchorRegion(
+      child: Builder(
+        builder: (anchorContext) => PopupMenuButton<String>(
+          key: const ValueKey('collection-list-menu'),
+          tooltip: copy.text('list.options'),
+          enabled: available,
+          onOpened: () => PikoAnchorRegion.capture(anchorContext),
+          icon: const RotatedBox(
+            quarterTurns: 1,
+            child: PikoIcon(PikoIconName.ellipsis),
+          ),
+          constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'mode',
+              child: Text(
+                '${copy.text('view.mode')}\n${copy.text('view.${scope.view.mode.name}')}',
+              ),
+            ),
+            PopupMenuItem(
+              value: 'languageOrder',
+              child: Text(
+                '${copy.text('view.languageOrder')}\n${copy.text(scope.view.targetFirst ? 'view.targetFirst' : 'view.nativeFirst')}',
+              ),
+            ),
+            if (scope.view.grouping != null) ...[
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                enabled: false,
+                child: Text(copy.text('list.groups')),
+              ),
+              PopupMenuItem(
+                value: 'expand',
+                enabled: groups.any((id) => !scope.expandedGroups.contains(id)),
+                child: Text(copy.text('view.expandAll')),
+              ),
+              PopupMenuItem(
+                value: 'collapse',
+                enabled: groups.any(scope.expandedGroups.contains),
+                child: Text(copy.text('view.collapseAll')),
+              ),
+            ],
+          ],
+          onSelected: (value) {
+            if (value == 'expand' || value == 'collapse') {
+              scope.expandGroups(groups, value == 'expand');
+            } else {
+              showCollectionViewPicker(
+                context,
+                binding,
+                value == 'mode'
+                    ? CollectionViewPicker.mode
+                    : CollectionViewPicker.languageOrder,
+              );
+            }
+          },
+        ),
       ),
-      constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          value: 'mode',
-          child: Text(
-            '${copy.text('view.mode')}\n${copy.text('view.${scope.view.mode.name}')}',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'languageOrder',
-          child: Text(
-            '${copy.text('view.languageOrder')}\n${copy.text(scope.view.targetFirst ? 'view.targetFirst' : 'view.nativeFirst')}',
-          ),
-        ),
-        if (scope.view.grouping != null) ...[
-          const PopupMenuDivider(),
-          PopupMenuItem<String>(
-            enabled: false,
-            child: Text(copy.text('list.groups')),
-          ),
-          PopupMenuItem(
-            value: 'expand',
-            enabled: groups.any((id) => !scope.expandedGroups.contains(id)),
-            child: Text(copy.text('view.expandAll')),
-          ),
-          PopupMenuItem(
-            value: 'collapse',
-            enabled: groups.any(scope.expandedGroups.contains),
-            child: Text(copy.text('view.collapseAll')),
-          ),
-        ],
-      ],
-      onSelected: (value) {
-        if (value == 'expand' || value == 'collapse') {
-          scope.expandGroups(groups, value == 'expand');
-        } else {
-          showCollectionViewPicker(
-            context,
-            binding,
-            value == 'mode'
-                ? CollectionViewPicker.mode
-                : CollectionViewPicker.languageOrder,
-          );
-        }
-      },
     );
   }
 }
@@ -227,15 +233,22 @@ class CollectionListResults extends StatelessWidget {
                 style: TextStyle(color: pikoDesign.color('muted')),
               ),
               if (scope.view.grouping != null)
-                PikoButton(
-                  key: const ValueKey('collection-toggle-groups'),
-                  label: copy.text(
-                    expand ? 'view.expandAll' : 'view.collapseAll',
+                PikoAnchorRegion(
+                  child: Builder(
+                    builder: (anchorContext) => PikoButton(
+                      key: const ValueKey('collection-toggle-groups'),
+                      label: copy.text(
+                        expand ? 'view.expandAll' : 'view.collapseAll',
+                      ),
+                      variant: PikoButtonVariant.ghost,
+                      onPressed: enabled && binding.ready && groups.isNotEmpty
+                          ? () {
+                              PikoAnchorRegion.capture(anchorContext);
+                              scope.expandGroups(groups, expand);
+                            }
+                          : null,
+                    ),
                   ),
-                  variant: PikoButtonVariant.ghost,
-                  onPressed: enabled && binding.ready && groups.isNotEmpty
-                      ? () => scope.expandGroups(groups, expand)
-                      : null,
                 ),
             ],
           ),

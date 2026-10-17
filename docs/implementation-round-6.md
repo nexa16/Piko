@@ -15,6 +15,26 @@ archives before retiring their checkouts. Their branches and unique commits rema
 The documentation definitions referenced below are recoverable from the private
 archive index; the existing canonical owners remain active until reconciliation.
 
+### Collection anchoring checkpoint — in progress
+
+UX-ANCHOR-001 r1 / UX-COLL-001 r7 are implemented for the Collection viewport,
+Filter/Group/Sort and their resets, list display-menu origins, group disclosures,
+bulk group disclosure and vocabulary cards. Compensation occurs during viewport
+layout before paint. User scrolling, explicit reveal requests and viewport/text-scale
+changes supersede an old anchor. Missing targets choose the closest surviving
+contextual region; scroll bounds clamp without retained blank padding.
+
+Seven focused host cases pass, including production Collection popup loading and
+learning-action changes, grouping/sorting, repeated disclosure, asynchronous height
+changes, user/explicit scroll precedence, removal fallback and viewport changes.
+The affected Collection regression passed 20 tests before the final expanded cases.
+An isolated API-36/x86-64 profile fixture on prior app source reproduces a 113dp
+Filter displacement when Clear filters restores learning actions. This establishes
+a synthetic baseline, not the owner's exact video/build. Debug installation stopped
+on insufficient staging space without uninstall/data clearing; a smaller profile
+fixture runs successfully, preserving protected files and restoring settings.
+Final-source Android checks and candidate packaging remain pending; F23 is not fixed.
+
 ## Current scope additions — 2026-10-17
 
 The owner added the packages below to the current round-6 implementation scope and will provide further additions. This selects pending implementation work; it does not start app implementation or alter the existing build-5 candidate. Earlier planning-only/unassigned statements below describe the prior scope. Await the owner's explicit request to execute the clarified batch; no new app, migration, APK or Android verification is claimed.

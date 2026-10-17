@@ -17,6 +17,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
@@ -97,6 +98,7 @@ class CollectionDetail extends StatefulWidget {
 }
 
 class _CollectionDetailState extends State<CollectionDetail> {
+  final _interactionAnchor = PikoInteractionAnchor();
   bool get _directionReady =>
       widget.directionBinding == null ||
       widget.directionBinding!.value?.ready == true &&
@@ -999,6 +1001,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
             _lastReadyCollection = null;
           }
           return PikoPage.slivers(
+            key: ValueKey('collection-page-${widget.collectionId}'),
+            interactionAnchor: _interactionAnchor,
             physics: const CollectionScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
