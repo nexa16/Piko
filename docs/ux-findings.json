@@ -2052,7 +2052,7 @@
         "UX-COLL-001": 7
       },
       "summary": "Owner reports jumping when changing grouping/filtering/sorting, then revises the intended outcome to a shared same-screen rule: preserve the interacted item and let surrounding content move.",
-      "status": "specified",
+      "status": "in_progress",
       "decision": "UX-ANCHOR-001 r1 owns the shared anchor, transition and fallback policy; UX-COLL-001 r7 supersedes the prior internal-only stability boundary. F21 retains historical r6 closure; it does not verify this new behavior.",
       "workPackage": "interaction-anchoring",
       "acceptance": [
@@ -2063,6 +2063,10 @@
       "baselineEvidence": [],
       "verifiedAt": null,
       "history": [
+        {
+          "date": "2026-10-17",
+          "event": "Owner authorized affected Collection anchoring for round 6. Local source 77294de implements pre-paint viewport compensation; focused host checks pass. A synthetic API-36 profile baseline on prior app source measures 113dp movement on Clear filters. Final-source Android matrix and broader app coverage remain pending; no fixed claim."
+        },
         {
           "date": "2026-10-17",
           "event": "Owner supplied a private recording and reported jumping, then replaced the toolbar-only proposal with a shared interacted-item anchor rule and requested research. Bounded initial-frame/source inspection only; exact runtime sequence/build/repeatability and full video decoding remain unconfirmed. Specification accepted; implementation and Android verification pending."
@@ -2077,7 +2081,7 @@
       ],
       "reconciliation": {
         "implementationLedger": "implementation-round-6.md",
-        "findingClosure": "Pending explicit implementation request and revision-specific Android verification. No round assignment inferred."
+        "findingClosure": "Affected Collection work authorized for round 6 and in progress. Complete revision-specific Android evidence is required for closure; broader app coverage is separately planned."
       }
     }
   ],

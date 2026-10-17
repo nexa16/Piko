@@ -48,8 +48,14 @@ class _AnchorScope extends InheritedWidget {
 /// An entire chip/card/header is the stable identity, including its reset target.
 /// The region remains passive outside a Collection's anchored viewport.
 class PikoAnchorRegion extends StatefulWidget {
-  const PikoAnchorRegion({super.key, required this.child});
+  const PikoAnchorRegion({
+    super.key,
+    required this.child,
+    this.anchorId,
+    this.fallbackId,
+  });
   final Widget child;
+  final Object? anchorId, fallbackId;
 
   /// Action callbacks also use this path for semantic/keyboard activation.
   static void capture(BuildContext context) {
@@ -81,19 +87,36 @@ class _RegionState extends State<PikoAnchorRegion> {
         }
         return KeyEventResult.ignored;
       },
-      child: _Region(key: _key, anchor: anchor, child: widget.child),
+      child: _Region(
+        key: _key,
+        anchor: anchor,
+        anchorId: widget.anchorId,
+        fallbackId: widget.fallbackId,
+        child: widget.child,
+      ),
     );
   }
 }
 
 class _Region extends SingleChildRenderObjectWidget {
-  const _Region({super.key, required this.anchor, required super.child});
+  const _Region({
+    super.key,
+    required this.anchor,
+    required super.child,
+    this.anchorId,
+    this.fallbackId,
+  });
   final PikoInteractionAnchor anchor;
+  final Object? anchorId, fallbackId;
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderRegion(anchor);
+  RenderObject createRenderObject(BuildContext context) => _RenderRegion(anchor)
+    ..anchorId = anchorId
+    ..fallbackId = fallbackId;
   @override
   void updateRenderObject(BuildContext context, _RenderRegion renderObject) {
+    renderObject
+      ..anchorId = anchorId
+      ..fallbackId = fallbackId;
     if (renderObject.anchor == anchor) return;
     renderObject.anchor._regions.remove(renderObject);
     renderObject.anchor = anchor;
@@ -104,6 +127,7 @@ class _Region extends SingleChildRenderObjectWidget {
 class _RenderRegion extends RenderProxyBox {
   _RenderRegion(this.anchor);
   PikoInteractionAnchor anchor;
+  Object? anchorId, fallbackId;
   _AnchoredRenderViewport? get parentViewport {
     RenderObject? node = parent;
     while (node != null) {
@@ -246,7 +270,12 @@ class _AnchoredRenderViewport extends RenderViewport {
           (anchor._tops[b]! - previousTop).abs(),
         ),
       );
-      target = anchor._target = candidates.first;
+      target = anchor._target = target.fallbackId == null
+          ? candidates.first
+          : candidates
+                    .where((r) => r.anchorId == target.fallbackId)
+                    .firstOrNull ??
+                candidates.first;
     }
     final position = offset as ScrollPosition;
     // The viewport retries its sliver layout before paint. No post-frame jump,

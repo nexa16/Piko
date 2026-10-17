@@ -869,6 +869,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             expanded = scope!.expandedGroups.contains(item.group.id);
         return PikoAnchorRegion(
           key: ValueKey(item.key),
+          anchorId: item.key,
           child: Builder(
             builder: (anchorContext) => Container(
               decoration: BoxDecoration(
@@ -952,7 +953,12 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             ),
             child: KeyedSubtree(
               key: rowKeys.putIfAbsent(key, GlobalKey.new),
-              child: PikoAnchorRegion(child: row(record, item.group.id)),
+              child: PikoAnchorRegion(
+                fallbackId: item.group.id == null
+                    ? null
+                    : 'group-${item.group.id}',
+                child: row(record, item.group.id),
+              ),
             ),
           ),
         ),

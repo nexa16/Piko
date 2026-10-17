@@ -23,7 +23,7 @@ void main() {
       ValueNotifier<bool> visible,
     })
   >
-  mount(WidgetTester tester) async {
+  mount(WidgetTester tester, {bool contextual = false}) async {
     final anchor = PikoInteractionAnchor();
     final scroll = ScrollController();
     final height = ValueNotifier(300.0);
@@ -48,10 +48,19 @@ void main() {
                     builder: (_, value, _) => Column(
                       children: [
                         SizedBox(height: value),
+                        if (contextual)
+                          const PikoAnchorRegion(
+                            anchorId: 'header',
+                            child: SizedBox(
+                              key: ValueKey('header'),
+                              height: 100,
+                            ),
+                          ),
                         ValueListenableBuilder<bool>(
                           valueListenable: visible,
                           builder: (_, show, _) => show
                               ? PikoAnchorRegion(
+                                  fallbackId: contextual ? 'header' : null,
                                   child: TextButton(
                                     key: const ValueKey('origin'),
                                     onPressed: () {},
@@ -288,6 +297,20 @@ void main() {
     await tester.pump();
     expect(fixture.scroll.position.pixels, pixels);
   });
+
+  testWidgets(
+    'removal prefers the owning header over a closer neighboring card',
+    (tester) async {
+      final fixture = await mount(tester, contextual: true);
+      await tester.tap(origin);
+      final header = find.byKey(const ValueKey('header'));
+      final top = tester.getTopLeft(header).dy;
+      fixture.height.value = 350;
+      fixture.visible.value = false;
+      await tester.pump();
+      expect(tester.getTopLeft(header).dy, closeTo(top, .01));
+    },
+  );
 
   testWidgets('explicit reveal scrolling supersedes an old interaction', (
     tester,
