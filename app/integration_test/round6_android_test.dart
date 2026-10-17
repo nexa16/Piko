@@ -52,6 +52,21 @@ void main() {
         description: '$finder',
       );
       Future<void> tap(Finder finder) async {
+        if (finder.evaluate().isEmpty) {
+          tester
+              .state<ScrollableState>(find.byType(Scrollable).first)
+              .position
+              .jumpTo(0);
+          await tester.pumpAndSettle();
+          if (finder.evaluate().isEmpty) {
+            await tester.scrollUntilVisible(
+              finder,
+              160,
+              scrollable: find.byType(Scrollable).first,
+            );
+            await tester.pumpAndSettle();
+          }
+        }
         await present(finder);
         await tester.ensureVisible(finder);
         await tester.pumpAndSettle();
