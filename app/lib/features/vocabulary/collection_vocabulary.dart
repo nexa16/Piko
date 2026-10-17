@@ -561,6 +561,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             ),
           if (widget.categoriesRepository != null)
             VocabularyCategories(
+              goldTags: true,
               collectionId: widget.collection.id,
               entryId: record.id,
               repository: widget.categoriesRepository!,

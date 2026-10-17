@@ -178,17 +178,31 @@ void main() {
           'collection-sort',
         ];
         final positions = {
-          for (final id in controls) id: tester.getRect(key(id)),
+          for (final id in controls)
+            id: tester
+                .getRect(key(id))
+                .shift(-tester.getTopLeft(key('collection-filters'))),
         };
-        final start = tester.getTopLeft(key('collection-list-results'));
+        final origin = tester.getTopLeft(key('collection-filters'));
+        final start =
+            tester.getTopLeft(key('collection-list-results')) - origin;
         await capture('04-all-active', at: key('collection-filters'));
         await tap(find.byTooltip('Clear filters'));
         expect(scope.view.grouping, topic.id);
         expect(scope.view.sort, VocabularySort.targetDescending);
         expect({
-          for (final id in controls) id: tester.getRect(key(id)),
+          for (final id in controls)
+            id: tester
+                .getRect(key(id))
+                .shift(-tester.getTopLeft(key('collection-filters'))),
         }, positions);
-        expect(tester.getTopLeft(key('collection-list-results')), start);
+        expect(
+          tester.getTopLeft(key('collection-list-results')) -
+              tester.getTopLeft(key('collection-filters')),
+          start,
+        );
+        manifest['learningPanelReflowDelta'] =
+            (tester.getTopLeft(key('collection-filters')) - origin).dy;
         await tap(find.byTooltip('Restore original order'));
         expect(scope.view.grouping, topic.id);
         await tap(key('collection-list-menu'));
