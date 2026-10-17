@@ -60,6 +60,14 @@ void main() {
       }
 
       Future<void> capture(String name, {Finder? at}) async {
+        if (at != null && at.evaluate().isEmpty) {
+          await tester.scrollUntilVisible(
+            at,
+            160,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.pumpAndSettle();
+        }
         await settleCatalogueCapture(tester, name, at: at);
         final context = tester.element(find.byType(CollectionDetail));
         (manifest['captures'] as List).add({

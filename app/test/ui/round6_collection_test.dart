@@ -122,11 +122,21 @@ void main() {
         await tester.tap(key('learning-help-scheduling'));
         await tester.pumpAndSettle();
         expect(find.text(copy.text('learnHelp.fsrs')), findsOneWidget);
+        Focus.of(tester.element(find.text(copy.text('learnHelp.scheduling'))))
+            .requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(find.text(copy.text('learnHelp.fsrs')), findsNothing);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pumpAndSettle();
+        expect(find.text(copy.text('learnHelp.fsrs')), findsOneWidget);
         final close = find.byTooltip(copy.text('learnHelp.close'));
         expect(tester.getRect(close).top, greaterThanOrEqualTo(0));
         expect(tester.getRect(close).bottom, lessThan(1100));
         await tester.tap(close);
         await tester.pumpAndSettle();
+        expect(tester.widget<PikoIconButton>(info).focusNode!.hasFocus, isTrue);
         await tester.ensureVisible(info);
         await tester.tap(info);
         await tester.pumpAndSettle();
