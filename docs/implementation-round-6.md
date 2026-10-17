@@ -15,6 +15,32 @@ archives before retiring their checkouts. Their branches and unique commits rema
 The documentation definitions referenced below are recoverable from the private
 archive index; the existing canonical owners remain active until reconciliation.
 
+## Checkpoint handoff — 2026-10-17
+
+Build 7 is the stopping checkpoint for this execution. It retains the earlier approved
+Collection list/help packages and adds affected Collection anchoring and selection as
+specified below. Statistics, the persistent shrinking header and DOC-001–007 /
+UX-DOC-001/002 / UX-LAB-001 planning migration are authorized but deferred, not partly
+implemented. Resume with a complete header or statistics package from this branch,
+using the preserved specification sources; reconcile concurrent planning edits first.
+No shared planning paths have been retired. Earlier dated planning-only/authorization
+statements below are historical and superseded by the expanded authorization above.
+
+The immutable candidate and exact source/checksum are in the selection checkpoint below.
+The current app content is unchanged from that candidate source. Final host evidence is
+a full regression run plus focused repairs, with clean analysis. Scoped Android
+acceptance is recorded separately for each package; F23 remains needs-verification.
+This was sequential implementation and a local self-review, without an independent
+reviewer. Normal-identity installation, native keyboard/TalkBack gaps and owner phone
+learning/changed-flow acceptance remain explicit. No release or publication is claimed.
+
+Manual review should compare `develop...codex/round-6-expansion`, inspect the included
+requirement revisions and the private candidate/captures, and assess the documented
+limitations. Public-data review and approval remain required before pushing this round.
+Concurrent uncommitted audit/Play/model-policy/round-7 planning is preserved separately
+and is not part of this implementation commit set. The private recovery index owns all
+retired workspace source, output archives and verification checksums.
+
 ### Collection anchoring checkpoint — local candidate
 
 UX-ANCHOR-001 r1 / UX-COLL-001 r7 are implemented for the Collection viewport,
