@@ -1,14 +1,14 @@
 # Working on Piko
 
 - Read README.md and all relevant docs before changing scope.
-- Treat docs/PRODUCT.md as the product-definition source of truth.
-- Treat docs/DECISIONS.md as the record of deliberate choices.
+- Use the Git-ignored `.local/planning/index.md` to locate current product contracts, quick specs, priorities and the single active ledger. Resolve the canonical store across worktrees; do not create divergent copies.
+- Feature records own accepted functional and UX rules in separate sections. Preserve consequential rationale and original evidence in private history; public README/app documentation describes current implemented behavior.
 - Do not invent requirements, target users, architecture, or release dates.
 - Ask the user when a missing decision would materially change the result.
 - Keep raw or identifiable user research outside the public repository.
 - Keep secrets out of tracked files and examples.
 - Update documentation whenever an accepted decision changes.
-- Before UX specification or UI implementation work, read `docs/ux-quality.md` and the relevant entries in `docs/ux-findings.json`. Keep proposed design choices explicit; follow the accepted review scope and require revision-specific Android verification before marking a finding fixed.
+- Before UX specification or UI implementation work, read the private planning workflow, shared design record and relevant feature/finding entries. Keep proposed choices explicit and require revision-specific Android verification before marking a finding fixed.
 - When implementation begins, add tests alongside behavior.
 - Use focused branches named codex/<short-description> for substantive work.
 - Keep commits narrowly scoped and explain observable outcomes.
@@ -18,10 +18,10 @@
 ## Owner findings and feature requests
 
 - A reported finding, bug, defect or new feature starts clarification and specification work. It never implicitly authorizes implementation, even during an authorized implementation round. Begin implementation only when the owner explicitly requests it for the clarified scope.
-- First establish what the owner means: the affected flow, observed behavior and intended outcome. Ask focused questions where details materially affect understanding; do not silently turn an ambiguous report into an accepted requirement.
+- First capture the affected flow, observed behavior or desired outcome as a short Idea/Proposal in its owning feature record using `piko-spec-update`. Do not require full refinement for quick capture or silently turn an ambiguous report into an accepted requirement. Ask when intent itself cannot be recorded accurately or a material decision is needed.
 - A very small, focused investigation is appropriate to help understand the issue. Attempt reproduction on the existing Android emulator/device when relevant, or use the available mockup, existing tests or source inspection. Keep the investigation proportional to the report; do not expand it into a broad audit or change app/mockup behavior as a fix.
 - Record the exact preconditions, data/state, action sequence, expected versus actual result, relevant build/environment and repeatability that can be established. Distinguish the owner's report, directly observed evidence and hypotheses. Source inspection alone is not runtime reproduction; if reproduction is unavailable or unsuccessful, state the limitation and remaining questions.
-- Then document the understood finding and agreed behavior in the owning functional and/or UX specifications, preserving requirement IDs and revision rules. Include reproduction evidence and concrete acceptance scenarios; keep unresolved details explicit and raw recordings or identifying data outside the public repository.
+- Use `piko-planning` to refine selected quick specs into agreed behavior and concrete acceptance scenarios in their owning functional/UX sections, preserving IDs/revisions. Keep unresolved details and reported-versus-observed evidence explicit; raw recordings and identifying research remain outside the public repository.
 - Specification acceptance and successful reproduction do not authorize app or mockup implementation. Keep implementation and verification pending until separately requested and performed.
 
 ## Design autonomy and efficient clarification
@@ -30,7 +30,7 @@
 - For an accepted scope, ask only when the intended outcome is genuinely unclear or a choice would contradict accepted behavior, materially expand scope or put data/learning preservation at risk. An implementation detail listed as open is not automatically an owner approval gate. Record the chosen detail in its owning specification when resolved.
 - Use the working Flutter app as the primary UI review surface, guided by the canonical functional/UX/design requirements. HTML mockups and small sketches are optional exploration tools when they resolve a real uncertainty or the owner requests them; do not maintain a parallel mockup implementation of every app change.
 - After implementation is authorized, verify the actual app and let the owner give design feedback on the working result. Intermediate design reviews are optional, not a routine prerequisite. This does not waive automated/Android checks or the existing publication and phone-acceptance gates.
-- Keep documentation proportional: maintain the owning requirement and one implementation ledger; use cross-references in summaries instead of repeating the full rules. Preserve stable IDs and historical evidence.
+- Keep documentation proportional: the index owns ordering, feature records own meaning, and one active ledger owns authorization/progress/evidence. Rewrite current rules in place rather than appending repeated status narratives. Preserve IDs and historical evidence.
 
 ## Authentication
 
@@ -46,7 +46,7 @@
 - Before the first push or any first publication of local history, review the complete proposed file set and all commits being published with the user. Present the findings and wait for the user's approval before publishing.
 - Check file contents, filenames, metadata, commit author/committer identities, email addresses, and history for credentials, tokens, environment files, private research, personal data, recordings, transcripts, machine-specific paths, and generated artifacts.
 - Before subsequent pushes or public uploads, review the new content and commits for the same risks. Stop and involve the user if anything is questionable; never assume an ignore rule is enough.
-- Keep private material outside the repository. Use explicitly listed files when staging; do not stage unrelated local files.
+- Keep secrets, identifiable research and raw recordings outside the public repository. Internal planning may use the owner's explicit Git-ignored `.local/planning/` exception; never stage or publish its contents. Use explicitly listed files when staging; do not stage unrelated local files.
 
 ## Branches
 
@@ -64,23 +64,20 @@
 2. Wait for the owner's manual review approval before pushing the completed round and creating its focused PR into `develop`. Include the public-data review above in the proposed publication review and satisfy its approval requirements. Once approved, proceed without asking for the same approval again. Reuse an existing PR for that branch; use an outcome-based title and retain spec/verification evidence in the description.
 3. Keep the PR unmerged until the owner confirms that the candidate APK installs or updates on their phone and the agreed happy path passes, including vocabulary learning and the relevant changed flow. Record which candidate and scenarios were checked and distinguish owner-reported evidence from agent verification. Do not infer broader acceptance from a happy-path check. Resolve any uncertainty about which candidate was tested before merging.
 4. After the manual review approval, owner-confirmed phone check, passing required checks and resolved review discussions, squash-merge the approved PR into `develop`. These gates are the standing authorization to complete the merge; do not ask for redundant permission. If the owner already merged it, verify the actual GitHub merge instead. Changes after approval require review and verification of the affected scope; an app change requires an updated candidate and phone check. Never bypass branch protection.
-5. Fetch and verify the merged result before deleting the completed branch locally and remotely. Squash merges require PR/head and content verification, not only an ancestry check. Preserve any uncommitted files, unique commits, APKs and useful evidence before cleanup; keep private material outside tracked history. Wait for chats using an affected checkout to be idle, then remove redundant worktrees and only the verified obsolete refs. Do not delete unrelated or active work.
-6. Update local `develop` from the fetched integration branch without discarding local work, then create the next round's fresh `codex/round-<next>-implementation` branch from the latest `develop`. Do not continue from the old pre-squash branch. Record the new branch/base and pending scope in the next ledger. Creating the branch permits preparation; new app/mockup implementation still requires the owner's explicit request for the clarified scope.
+5. Use `piko-planning` to fetch and verify the merged result before removing completed local/remote branches or worktrees. Squash merges require PR/head and content verification, not only ancestry. Preserve dirty files, unique commits, APKs, evidence and the entire ignored planning store; a managed Git archive may omit ignored files. Wait for affected chats to be idle, then remove only verified obsolete targets. Do not delete unrelated/active work.
+6. Reconcile implemented work into concise private contracts and current public feature/technical documentation if omitted; retain partial delivery and acceptance gaps. Archive the completed ledger. Update local `develop` safely and create or reuse the correctly based `codex/round-<next>-implementation` branch with one prepared ledger. Refine quick specs and suggest an ordered next scope. Branch preparation or scope acceptance does not authorize app/mockup execution; that remains a separate explicit request.
 
 This handoff is development integration. Release branches, promotion to `main`, tags and store publication retain their separate owner-requested process.
 
-## Existing product planning
+## Internal planning and skills
 
-- Read `docs/PRODUCT.md`, `docs/ROADMAP.md`, `docs/piko-functional.md`, and `docs/piko-ux.md` before product or mockup changes.
-- Original handoff materials are local references only. Do not stage or publish `docs/HANDOFF.md` or `.local/`; public documentation must stand on its own.
-- Keep pending browser annotations in the UX specification. Do not apply deferred mockup changes until the user asks.
-- `docs/PRODUCT.md` is the product brief and scope entry point; it links the detailed functional and UX requirements. Keep behavior and UX specifications separate and preserve requirement IDs.
-- Respect confirmed requirements. Keep proposals, open questions, and deferred ideas explicit; newer accepted decisions supersede conflicting legacy text.
-- When mockup work is specifically useful or requested, work page by page in `mockups/piko-mockup.html` and update the relevant UX documentation. A mockup pass is not required before app implementation.
-- The mockup uses sample data and placeholders. Do not represent its persistence, AI, import, or learning calculations as working application features.
-- Do not implement an application or select a stack until the user requests that work.
-- Use `shared/copy.js` as the single source for interface labels and English/German translations. Preserve stable keys and matching placeholders; do not duplicate UI wording in mockup templates or future app code.
-- Record proposed visual principles in `docs/DESIGN.md`. Update accepted design decisions and their owning UX requirements; during authorized implementation, keep shared tokens/copy and application adapters aligned. Update mockup behavior only when that work is requested or needed for an unresolved design question. Identify outdated prototype behavior rather than treating it as the current application contract.
-- Use `shared/design-config.js` as the single canonical source for semantic colors and reusable spacing, typography, radii, control and component configuration. `theme.js`, `design-tokens.css` and `design-runtime.js` are adapters, not independent defaults. The approved nine-color Piko palette is the sole UI color target for all preview rounds and the application; migration remains pending a separate implementation request. Keep studio experiments as drafts until the unified exported configuration is reviewed and accepted.
-- Use accepted UX/design requirements and shared configuration to guide the working application; the HTML/CSS mockup is a historical/exploratory reference, not a pixel-perfect constraint or mandatory duplicate. Preserve confirmed owner choices and correct awkward prototype layouts through the design autonomy above. Record meaningful decisions in the owning UX/design documentation. Do not create a parallel Figma source. Centralize recurring UI components and design tokens, including spacing, typography, radii and dimensions. Keep state variants explicit. Implementation authorization remains scoped to the owner's explicit requests.
-- Keep the studio's design summary factual: concrete accepted rules and separately identified open decisions, not vague style slogans. Reconcile each new owner critique into the canonical UX/design documentation and studio summary; do not mark an ambiguous suggestion accepted or claim an unverified implementation complete.
+- Read the private planning index/workflow, affected feature records and current ledger; read original history only when needed. If the private store is unavailable, locate/recover it before changing affected requirements. Do not infer contracts from obsolete public snapshots.
+- `piko-spec-update` captures ideas/findings as lightweight quick specs and applies explicit accepted requirement changes. `piko-planning` refines candidates, verifies prior integration, safely prepares branch/ledger and proposes scope. `piko-implementation` executes authorized revisions, tests/Android checks and the existing handoff. Existing decisions persist across these skills.
+- Keep IDs stable; increment behavior revisions only for accepted behavior changes, not editorial repair or defects against unchanged rules. Preserve dropped/superseded IDs and evidence in history. Owner decisions are required before dropping uncertain accepted intentions.
+- Findings live beside their owning requirements with stable Fxx IDs and their original lifecycle/evidence. Migration, a commit, a passing host test or a mockup never closes Android verification. Reopen the same finding for a regression.
+- Keep one short index link per relevant planning item, no parallel backlog/decision/status registers. Move completed ledgers and superseded narratives into history after preserving provenance. Git ignore is not a backup or erasure of old published commits; preserve private planning before checkout cleanup.
+- Sustained planning/implementation work posts meaningful chat progress at checkpoints, verification results, discoveries and blockers. Keep silence below 60 seconds where tool execution permits; use bounded waits. Say what finished, current uncertainty and next action without raw logs or repeated unchanged updates.
+- Public documentation stands alone and describes implemented capabilities/limitations. Private planning links, account/budget notes, local absolute paths and raw evidence do not belong in tracked documents or PR descriptions. Preserve the original handoff privately; do not publish `.local/`.
+- Use the working Flutter app as the primary UI review surface. HTML mockups remain optional historical/exploratory references using sample data; update only when requested or useful for an unresolved design question. No parallel Figma source or mandatory duplicate implementation.
+- `shared/copy.js` owns EN/DE wording and placeholders. `shared/design-config.js` owns semantic colors, spacing, typography, radii, dimensions and component roles; adapters are not independent defaults. Keep generated app adapters aligned. The approved nine-color palette and existing accepted design rules remain authoritative; studio experiments stay drafts.
+- Preserve explicit owner choices, apply design autonomy within accepted scope and document meaningful decisions in the owning record. Keep prototype/studio summaries factual, distinguish browser evidence from Android, and never infer a release schedule or implementation authorization.

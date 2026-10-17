@@ -8,7 +8,7 @@ Why is this change needed?
 
 ## Product or documentation impact
 
-Which requirements or deliberate decisions changed? Link relevant planning documents.
+Which requirement IDs/revisions or accepted decisions changed? Summarize observable impact without copying private planning or linking to ignored records. Link current public feature/technical documentation where relevant.
 
 ## Validation performed
 
