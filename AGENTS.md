@@ -15,6 +15,46 @@
 - Do not claim work is complete merely because code was written; verify the intended outcome.
 - Add GitHub Project integration or heavier lifecycle automation only when the project's delivery volume justifies it.
 
+## Task models and mismatch check
+
+Use the owner's accepted balanced policy. These are Piko workflow defaults, not capability guarantees or hard model bans. Explicit owner choices override them; prefer the lightest setting that meets the quality and verification requirements.
+
+| Task | Preferred model | Reasoning |
+| --- | --- | --- |
+| Bounded copy/translation edits, formatting, factual ledger updates, simple lookups and known commands | GPT-6 Luna (`gpt-6-luna`) | Medium; Low for mechanical work |
+| Normal requirements clarification, UX specifications, Flutter UI, focused fixes, meaningful tests and routine code review | GPT-6.1 Sol (`gpt-6.1-sol`) | Medium |
+| Persistence/migrations, import/export compatibility, learning/scheduling logic, changes spanning components and correctness-sensitive review | GPT-6.1 Sol (`gpt-6.1-sol`) | High |
+| Difficult unresolved debugging, conflicting requirements/evidence, major architecture tradeoffs or deep independent audit | GPT-6 Astra (`gpt-6-astra`) | High; limit to the demanding scope |
+
+- At task start and material scope changes, classify by ambiguity and consequence, not file count. A small stored-data/learning change belongs in the higher-risk tier. Running known checks can be routine; diagnosing failures may require a higher tier. For mixed work, use the highest relevant tier for consequential work without requesting switches for every small step.
+- Compare with the active model/reasoning only when trusted current-session metadata exposes them or the owner identifies them. Global defaults, another chat's settings, a model catalogue and self-identification are not proof of this chat's setting. When unavailable, state that the active setting is unknown and give the recommendation at the start of substantive work; do not claim a detected mismatch or repeatedly ask for the same information.
+- For a known setting materially too weak for the scope, or a substantial routine batch unnecessarily using a stronger model, ask once: "This task involves [reason]. Piko's policy recommends [model + effort]; the current setting is [known setting]. Switch to the recommendation, or keep the current setting for this task?" Use the available question tool, or ask directly if none is available. Do not interrupt a brief reply or small follow-up solely to recommend a cheaper model.
+- While awaiting the choice, continue useful independent preparation and wait before demanding work or substantial avoidable usage. Respect an explicit task-specific override; repeat the warning only if scope or evidence materially changes.
+- The owner changes this chat's setting using the model/reasoning control beneath the composer. Do not claim to switch it automatically or infer that a suggested switch happened. Resume from the existing state after an owner-reported switch, preserving scope, tests and acceptance gates.
+- If a preferred model is unavailable, explain an available alternative and obtain the owner's choice when capability or expected usage materially changes; do not silently substitute an older version. Escalate for concrete unresolved difficulty, not merely a failed command. Recommend a lower tier for later independent routine work when appropriate.
+- This is an instruction-based advisory, not a guaranteed runtime detector or enforcement hook. It does not authorize delegation, app/mockup changes, publication or weaker verification. Apply the policy to separately authorized subagents too. Per-run priority, reserve and checkpoint agreements remain separate.
+
+- Review the model policy monthly, and sooner when a relevant model is released/retired, availability or reasoning controls change, or observed task results challenge the routing. At the start of an implementation round, check whether the review is overdue; perform it before relying on stale routing. Use current official OpenAI model-selection documentation, Codex model availability and the changelog; distinguish documented guidance from Piko observations and unverified account access.
+- The monthly review is scheduled as a quiet heartbeat in the policy chat. Recommend concrete routing changes with reasons and official sources; obtain the owner's acceptance before changing this table. Keep successful review dates/sources in private local notes, with 2026-10-17 as the initial baseline; advance the date only after a successful review. If review is unavailable, state that limitation when relevant instead of asserting the policy is current. No meaningful change requires no notification; notify for actionable changes, review failures or required owner action. Preserve existing task-specific overrides and verification gates.
+
+Basis: [official model-selection guidance](https://developers.openai.com/api/docs/guides/model-selection), [Codex model controls](https://learn.chatgpt.com/docs/models) and [changelog](https://learn.chatgpt.com/docs/changelog), reviewed 2026-10-17. Model identifiers are reviewed defaults, not permanent selections.
+
+### Extra-conservative mode with save-codex-usage
+
+When the owner invokes `$save-codex-usage` or explicitly requests usage-saving mode, read and apply that skill and use this temporary routing override. A discussion about the mode does not activate it. Follow the skill's task/follow-up lifetime; do not make it the default for unrelated work or chats.
+
+| Task in usage-saving mode | Suggested model and reasoning |
+| --- | --- |
+| Mechanical edits, lookups, known commands and factual ledger updates | GPT-6 Luna, Low |
+| Clear, bounded specifications/copy, small UI changes, focused fixes/tests with established acceptance criteria | GPT-6 Luna, Medium; High if tracing several steps is necessary |
+| Ambiguous specifications, changes spanning components, persistence/migrations, import/export or learning correctness | GPT-6.1 Sol, Medium; retain High for consequential data/learning reasoning |
+| Difficult unresolved investigation or major consequential tradeoff | GPT-6.1 Sol, High first; suggest GPT-6 Astra only if concrete difficulty warrants escalation |
+
+- At activation and material scope changes, briefly suggest the applicable model/effort with the task reason, even when the active setting is unknown. This is a recommendation, not a claim that a switch occurred. Preserve an explicitly selected model; explain a cheaper suitable alternative once when useful.
+- For an optional usage-saving switch, follow the skill: continue useful authorized work on the current model unless the owner asks to wait. This overrides the balanced policy's wait-for-choice rule for optional savings. A hard owner budget or a concrete correctness blocker still requires its own disposition.
+- Reduce context duplication and unnecessary calls, use bounded sequential work and escalate narrowly when results warrant it. Never route consequential work to Luna merely because its edit is small, skip required verification or claim exact quota savings. The extra-conservative mapping is Piko policy, not a measured savings guarantee.
+- Include both routing modes in the existing monthly/update-triggered model review. Changes still require owner acceptance.
+
 ## Owner findings and feature requests
 
 - A reported finding, bug, defect or new feature starts clarification and specification work. It never implicitly authorizes implementation, even during an authorized implementation round. Begin implementation only when the owner explicitly requests it for the clarified scope.
