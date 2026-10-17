@@ -10,6 +10,7 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/learning_help.dart';
 import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
@@ -232,9 +233,23 @@ void main() {
         );
         await capture('04-last-card-clearance');
         expect(await json.exportCollection(fixture.owner.id), before);
+        final retainedSelection = selection();
         await tap(key('collection-learning-help'));
+        expect(find.byType(LearningHelpDialog), findsOneWidget);
         await native('back-help');
-        expect(selection().ids.length, 20);
+        await review.waitUntil(
+          tester,
+          () => find.byType(LearningHelpDialog).evaluate().isEmpty,
+          description: 'native Back closes learning help',
+        );
+        expect(find.byType(CollectionDetail), findsOneWidget);
+        expect(
+          ModalRoute.of(
+            tester.element(find.byType(CollectionDetail)),
+          )!.isCurrent,
+          isTrue,
+        );
+        expect(retainedSelection.ids.length, 20);
         await scope.saveView(const CollectionViewPreferences());
         await tester.pumpAndSettle();
         await tap(key('vocabulary-clear-selection'));
