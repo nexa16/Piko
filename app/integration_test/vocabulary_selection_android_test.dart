@@ -52,7 +52,9 @@ void main() {
       var passed = false;
       Finder key(String value) => find.byKey(ValueKey(value));
       VocabularySelection selection() => tester
-          .widget<CollectionVocabulary>(find.byType(CollectionVocabulary))
+          .widget<CollectionVocabulary>(
+            find.byType(CollectionVocabulary, skipOffstage: false),
+          )
           .selection!;
       Future<void> reveal(Finder finder) async {
         if (finder.evaluate().isEmpty) {
@@ -279,9 +281,16 @@ void main() {
           tester,
           () =>
               find.byType(ReviewSessionRoute).evaluate().isEmpty &&
-              find.byType(CollectionVocabulary).evaluate().isNotEmpty,
-          description: 'native Back returns to Collection vocabulary',
+              find.byType(CollectionDetail).evaluate().isNotEmpty,
+          description: 'native Back returns to Collection',
         );
+        expect(
+          ModalRoute.of(
+            tester.element(find.byType(CollectionDetail)),
+          )!.isCurrent,
+          isTrue,
+        );
+        await reveal(card);
         expect(selection().active, isFalse);
         expect(await json.exportCollection(fixture.owner.id), before);
         manifest['learningScopeCount'] = due;

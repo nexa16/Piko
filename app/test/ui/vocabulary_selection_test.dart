@@ -339,4 +339,28 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'enlarged help Back retains mounted selection even with the list outside the viewport',
+    (tester) async {
+      final h = SelectionHarness();
+      await h.mount(tester, locale: 'de', width: 320, scale: 2);
+      await h.start(tester);
+      final retained = h.selection(tester);
+      final help = key('collection-learning-help');
+      await h.reveal(tester, help);
+      await tester.tap(help);
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(CollectionDetail), findsOneWidget);
+      expect(
+        find.byType(CollectionVocabulary, skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(retained.ids, {h.fixture.entry.id});
+      await h.reveal(tester, key('vocabulary-${h.fixture.entry.id}'));
+      expect(h.selection(tester).ids, {h.fixture.entry.id});
+    },
+  );
 }
