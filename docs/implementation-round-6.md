@@ -62,6 +62,26 @@ immutable APKs and evidence remain preserved.
 
 ## Current scope additions — 2026-10-17
 
+### Vocabulary selection checkpoint — in progress
+
+VOCAB-SELECT-001 r1 / UX-COLL-013 r3 are locally implemented. UUID selection is
+transient and independent of query preferences and learning eligibility. Saved
+cards support long hold and Shift+Space entry, then tap/Space/Enter toggles, including
+active zero selection. The three card states retain their indicator gutter. A
+measured floating panel footprint, including hidden-count space, is reserved before
+selection; the list viewport ends above it. Select all unions current query matches,
+including collapsed groups; Clear selection includes hidden UUIDs. PopupRoutes retain
+selection, while a real PageRoute departure clears it. Existing editor save/validation
+guards precede selection entry, and editable-field long press stays native. No bulk
+vocabulary action or learning-from-selection is exposed.
+
+The affected 21-case host batch and analysis pass. Checks include complete SQLite
+Collection/learning export preservation using a fixed export clock, duplicate group
+appearances, collapsed Select all, hidden/global clear, stable card/text/scroll geometry,
+last-card clearance, keyboard entry/toggle, invalid raw drafts and route reset. Targeted
+German 320px/200% host panel reflow also passes. Final-source Android capture, actual
+touch/Back/learning-scope checks and a new normal APK remain pending.
+
 The owner added the packages below to the current round-6 implementation scope and will provide further additions. This selects pending implementation work; it does not start app implementation or alter the existing build-5 candidate. Earlier planning-only/unassigned statements below describe the prior scope. Await the owner's explicit request to execute the clarified batch; no new app, migration, APK or Android verification is claimed.
 
 | Added package | Owning definition | Pending outcome and verification |

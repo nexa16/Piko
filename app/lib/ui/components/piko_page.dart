@@ -6,19 +6,23 @@ class PikoPage extends StatelessWidget {
   const PikoPage({super.key, required Widget this.child})
     : slivers = null,
       physics = null,
-      interactionAnchor = null;
+      interactionAnchor = null,
+      safeAreaBottom = true;
   const PikoPage.slivers({
     super.key,
     required this.slivers,
     this.physics,
     this.interactionAnchor,
+    this.safeAreaBottom = true,
   }) : child = null;
   final Widget? child;
   final List<Widget>? slivers;
   final ScrollPhysics? physics;
   final PikoInteractionAnchor? interactionAnchor;
+  final bool safeAreaBottom;
   @override
   Widget build(BuildContext context) => SafeArea(
+    bottom: safeAreaBottom,
     child: LayoutBuilder(
       builder: (context, constraints) {
         final d = pikoDesign;

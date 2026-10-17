@@ -62,6 +62,7 @@ globalThis.PIKO_COPY = {
     "selection.preview": {"en":"Selection preview","de":"Auswahlvorschau"},
     "selection.controls": {"en":"Vocabulary selection","de":"Vokabelauswahl"},
     "selection.count": {"en":"{count} selected","de":"{count} ausgewählt"},
+    "selection.pair": {"en":"{target}, {native}","de":"{target}, {native}"},
     "selection.hidden": {"en":"{count} hidden by filters or search","de":"{count} durch Filter oder Suche ausgeblendet"},
     "selection.all": {"en":"Select all","de":"Alle auswählen"},
     "selection.clear": {"en":"Clear selection","de":"Auswahl aufheben"},

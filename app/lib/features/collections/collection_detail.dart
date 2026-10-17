@@ -18,6 +18,9 @@ import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
+import '../../ui/components/piko_page_navigation.dart';
+import '../vocabulary/vocabulary_selection.dart';
+import '../vocabulary/vocabulary_selection_panel.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
@@ -97,8 +100,32 @@ class CollectionDetail extends StatefulWidget {
   State<CollectionDetail> createState() => _CollectionDetailState();
 }
 
-class _CollectionDetailState extends State<CollectionDetail> {
+class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   final _interactionAnchor = PikoInteractionAnchor();
+  final _selection = VocabularySelection();
+  RouteObserver<PageRoute<dynamic>>? _pageObserver;
+  PageRoute<dynamic>? _pageRoute;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final observer = PikoPageNavigation.maybeOf(context);
+    final route = ModalRoute.of(context);
+    if (observer != _pageObserver || route != _pageRoute) {
+      _pageObserver?.unsubscribe(this);
+      _pageObserver = observer;
+      _pageRoute = route is PageRoute<dynamic> ? route : null;
+      if (observer != null && _pageRoute != null) {
+        observer.subscribe(this, _pageRoute!);
+      }
+    }
+  }
+
+  @override
+  void didPushNext() {
+    _selection.clear();
+    _interactionAnchor.clear();
+  }
+
   bool get _directionReady =>
       widget.directionBinding == null ||
       widget.directionBinding!.value?.ready == true &&
@@ -883,6 +910,7 @@ class _CollectionDetailState extends State<CollectionDetail> {
   @override
   void didUpdateWidget(CollectionDetail oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.collectionId != widget.collectionId) _selection.clear();
     if (oldWidget.categoriesRepository != widget.categoriesRepository ||
         oldWidget.categoryManagementBuilder !=
             widget.categoryManagementBuilder) {
@@ -935,6 +963,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
 
   @override
   void dispose() {
+    _pageObserver?.unsubscribe(this);
+    _selection.dispose();
     _identity++;
     _name.dispose();
     _nameFocus.dispose();
@@ -949,7 +979,12 @@ class _CollectionDetailState extends State<CollectionDetail> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _selection,
+    builder: (_, _) => _withDirections(context),
+  );
+
+  Widget _withDirections(BuildContext context) {
     final directionBinding = widget.directionBinding;
     if (directionBinding != null) {
       return ValueListenableBuilder(
@@ -1000,7 +1035,8 @@ class _CollectionDetailState extends State<CollectionDetail> {
               record == null) {
             _lastReadyCollection = null;
           }
-          return PikoPage.slivers(
+          final page = PikoPage.slivers(
+            safeAreaBottom: widget.queryBinding == null,
             key: ValueKey('collection-page-${widget.collectionId}'),
             interactionAnchor: _interactionAnchor,
             physics: const CollectionScrollPhysics(),
@@ -1337,7 +1373,23 @@ class _CollectionDetailState extends State<CollectionDetail> {
                   },
                   writeBarrier: barrierForBuild,
                   mutations: _mutations,
+                  selection: widget.queryBinding == null ? null : _selection,
                 ),
+            ],
+          );
+          if (widget.queryBinding == null) return page;
+          return Column(
+            children: [
+              Expanded(child: page),
+              VocabularySelectionPanel(
+                selection: _selection,
+                matchingIds:
+                    widget.queryBinding!.snapshot?.entries
+                        .map((entry) => entry.id)
+                        .toList() ??
+                    const [],
+                enabled: _queryControlsAvailable,
+              ),
             ],
           );
         },

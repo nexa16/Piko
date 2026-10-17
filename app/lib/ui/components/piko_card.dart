@@ -8,6 +8,7 @@ class PikoCard extends StatelessWidget {
     required this.child,
     this.padding,
     this.selected = false,
+    this.selectable = false,
     this.focused = false,
     this.animationDuration,
     this.constraints,
@@ -15,6 +16,7 @@ class PikoCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final bool selected;
+  final bool selectable;
   final bool focused;
   final Duration? animationDuration;
   final BoxConstraints? constraints;
@@ -27,13 +29,15 @@ class PikoCard extends StatelessWidget {
       builder: (context, showFocus) {
         final visibleFocus = focused && showFocus;
         final decoration = BoxDecoration(
-          color: pikoDesign.color('surface'),
+          color: pikoDesign.color(selectable && selected ? 'tint' : 'surface'),
           borderRadius: BorderRadius.circular(
             pikoDesign.dimension('radii.card'),
           ),
           border: Border.all(
             color: selected || visibleFocus
                 ? pikoDesign.color('primary')
+                : selectable
+                ? pikoDesign.color('muted')
                 : PikoTheme.border,
             width: pikoDesign.dimension(
               visibleFocus ? 'states.focusWidth' : 'states.borderWidth',

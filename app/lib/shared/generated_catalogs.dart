@@ -1899,6 +1899,10 @@ const copyCatalog = <String, Object?>{
 "de": "Auswahlmockup mit Beispieldaten. Vokabel eine halbe Sekunde gedrückt halten, dann weitere antippen. Alle auswählen umfasst alle Such-/Filtertreffer, auch in eingeklappten Gruppen. Auswahl aufheben gilt auch für ausgeblendete Vokabeln. Keine Aktionen auf ausgewählte Vokabeln. Der Vorschau-Link öffnet die normale Liste; Browser-Zurück zeigt wieder eine leere Auswahl. Tastatur: Umschalt+Leertaste auf einer Vokabel startet die Auswahl; danach Tab und Leertaste zum Umschalten.",
 "en": "Selection mockup with sample data. Hold a word for half a second, then tap others. Select all includes all search/filter matches, even in collapsed groups. Clear selection includes hidden words. No actions on selected vocabulary. The preview-only leave link opens the ordinary list; browser Back returns with an empty selection. Keyboard: Shift+Space on a word starts selection; then Tab and Space to toggle.",
 },
+"selection.pair": <String, Object?>{
+"de": "{target}, {native}",
+"en": "{target}, {native}",
+},
 "selection.preview": <String, Object?>{
 "de": "Auswahlvorschau",
 "en": "Selection preview",

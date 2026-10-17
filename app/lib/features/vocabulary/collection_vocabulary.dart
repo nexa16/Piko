@@ -23,6 +23,8 @@ import '../categories/vocabulary_categories.dart';
 import 'vocabulary_learning_status.dart';
 import 'vocabulary_content_editor.dart';
 import 'saved_vocabulary_editor.dart';
+import 'vocabulary_selection.dart';
+import 'package:flutter/services.dart';
 
 /// A repository-backed Collection list. This widget owns editors, never storage.
 class CollectionVocabulary extends StatefulWidget {
@@ -36,6 +38,7 @@ class CollectionVocabulary extends StatefulWidget {
     this.queryBinding,
     this.categoriesRepository,
     this.sliver = false,
+    this.selection,
     this.preferredDirections = const {
       LearningDirection.targetToNative,
       LearningDirection.nativeToTarget,
@@ -51,6 +54,7 @@ class CollectionVocabulary extends StatefulWidget {
 
   /// Production Detail shares a single lazy viewport with its header.
   final bool sliver;
+  final VocabularySelection? selection;
   final Set<LearningDirection> preferredDirections;
   @override
   State<CollectionVocabulary> createState() => _CollectionVocabularyState();
@@ -99,6 +103,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   @override
   void initState() {
     super.initState();
+    widget.selection?.addListener(changed);
     widget.mutations?.addListener(changed);
     widget.writeBarrier?.addListener(barrierChanged);
     widget.writeBarrier?.attach(drainEditor);
@@ -109,6 +114,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   @override
   void didUpdateWidget(CollectionVocabulary oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.selection != widget.selection) {
+      oldWidget.selection?.removeListener(changed);
+      widget.selection?.addListener(changed);
+    }
     if (oldWidget.queryBinding != widget.queryBinding) {
       oldWidget.queryBinding?.removeListener(projectionChanged);
       widget.queryBinding?.addListener(projectionChanged);
@@ -497,6 +506,22 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
 
   String occurrence(String id, String? group) =>
       group == null ? id : '$group/$id';
+  Future<void> selectRecord(String id) async {
+    final selection = widget.selection;
+    if (selection == null || actionBusy) return;
+    final owner = widget.collection.id;
+    if (!selection.active && editor != null) await activateRow(null);
+    if (!mounted ||
+        widget.collection.id != owner ||
+        editor != null ||
+        actionBusy ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        !rows.any((entry) => entry.id == id)) {
+      return;
+    }
+    selection.toggle(id);
+  }
+
   Future<void> activateOccurrence(String id, String? group) async {
     if (actionBusy) return;
     await activateRow(id);
@@ -517,6 +542,16 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     final first = view.targetFirst ? record.targetText : record.nativeText;
     final second = view.targetFirst ? record.nativeText : record.targetText;
     final expanded = current != null;
+    final selecting = widget.selection?.active == true;
+    final canSelect = widget.selection != null && !expanded && !actionBusy;
+    void activate() {
+      if (selecting) {
+        selectRecord(record.id);
+      } else {
+        activateOccurrence(record.id, group);
+      }
+    }
+
     Widget content;
     if (current == null) {
       content = Column(
@@ -628,47 +663,116 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
       ],
     );
-    final card = Semantics(
-      label: expanded
-          ? null
-          : copy.text('vocab.editPair', {
-              'target': record.targetText,
-              'native': record.nativeText,
-            }),
-      button: !expanded,
-      expanded: expanded,
-      onTap: expanded || actionBusy
-          ? null
-          : () => activateOccurrence(record.id, group),
-      child: ExcludeSemantics(
-        excluding: false,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: expanded || actionBusy
-                ? null
-                : () => activateOccurrence(record.id, group),
-            excludeFromSemantics: true,
-            canRequestFocus: !expanded && !actionBusy,
-            onFocusChange: (value) => setState(
-              () => focusedId = value
-                  ? record.id
-                  : focusedId == record.id
-                  ? null
-                  : focusedId,
+    if (widget.selection != null) {
+      final indicatorSize = pikoDesign.dimension('components.icons.size');
+      content = Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              right: indicatorSize + pikoDesign.dimension('spacing.3'),
             ),
-            borderRadius: BorderRadius.circular(
-              pikoDesign.dimension('radii.card'),
-            ),
-            child: PikoCard(
-              key: ValueKey('vocabulary-${occurrence(record.id, group)}'),
-              focused: focusedId == record.id,
-              padding: EdgeInsets.all(
-                pikoDesign.dimension(
-                  expanded ? 'components.cards.padding' : 'spacing.4',
+            child: content,
+          ),
+          if (selecting)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  key: ValueKey(
+                    'vocabulary-selection-indicator-${occurrence(record.id, group)}',
+                  ),
+                  width: indicatorSize,
+                  height: indicatorSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: pikoDesign.color(
+                      widget.selection!.contains(record.id)
+                          ? 'primary'
+                          : 'surface',
+                    ),
+                    border: Border.all(
+                      color: pikoDesign.color(
+                        widget.selection!.contains(record.id)
+                            ? 'primary'
+                            : 'muted',
+                      ),
+                      width: pikoDesign.dimension('states.borderWidth'),
+                    ),
+                  ),
+                  child: widget.selection!.contains(record.id)
+                      ? IconTheme.merge(
+                          data: IconThemeData(
+                            color: pikoDesign.color('onPrimary'),
+                          ),
+                          child: PikoIcon(
+                            PikoIconName.check,
+                            size: indicatorSize - 4,
+                          ),
+                        )
+                      : null,
                 ),
               ),
-              child: content,
+            ),
+        ],
+      );
+    }
+    final card = CallbackShortcuts(
+      bindings: {
+        if (canSelect)
+          const SingleActivator(LogicalKeyboardKey.space, shift: true): () =>
+              selectRecord(record.id),
+        if (canSelect && selecting) ...{
+          const SingleActivator(LogicalKeyboardKey.space): () =>
+              selectRecord(record.id),
+          const SingleActivator(LogicalKeyboardKey.enter): () =>
+              selectRecord(record.id),
+        },
+      },
+      child: Semantics(
+        label: expanded
+            ? null
+            : copy.text(selecting ? 'selection.pair' : 'vocab.editPair', {
+                'target': record.targetText,
+                'native': record.nativeText,
+              }),
+        button: !expanded,
+        toggled: selecting ? widget.selection!.contains(record.id) : null,
+        onLongPress: canSelect ? () => selectRecord(record.id) : null,
+        expanded: expanded,
+        onTap: expanded || actionBusy ? null : activate,
+        child: ExcludeSemantics(
+          excluding: selecting,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: expanded || actionBusy ? null : activate,
+              onLongPress: canSelect ? () => selectRecord(record.id) : null,
+              excludeFromSemantics: true,
+              canRequestFocus: !expanded && !actionBusy,
+              onFocusChange: (value) => setState(
+                () => focusedId = value
+                    ? record.id
+                    : focusedId == record.id
+                    ? null
+                    : focusedId,
+              ),
+              borderRadius: BorderRadius.circular(
+                pikoDesign.dimension('radii.card'),
+              ),
+              child: PikoCard(
+                key: ValueKey('vocabulary-${occurrence(record.id, group)}'),
+                focused: focusedId == record.id,
+                selected: selecting && widget.selection!.contains(record.id),
+                selectable: selecting,
+                padding: EdgeInsets.all(
+                  pikoDesign.dimension(
+                    expanded ? 'components.cards.padding' : 'spacing.4',
+                  ),
+                ),
+                child: content,
+              ),
             ),
           ),
         ),
@@ -693,7 +797,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           card
         else
           PikoSwipeReveal(
-            enabled: !expanded && !actionBusy,
+            enabled: !expanded && !actionBusy && !selecting,
             label: copy.text('vocab.delete'),
             onDelete: actionBusy ? null : () => deleteEntry(record),
             child: card,
@@ -1001,6 +1105,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
 
   @override
   void dispose() {
+    widget.selection?.removeListener(changed);
     widget.queryBinding?.removeListener(projectionChanged);
     generation++;
     widget.mutations?.removeListener(changed);
