@@ -1,5 +1,35 @@
 # Decision log
 
+## Round-5 planning scope — accepted, 2026-10-16
+
+The owner selected all three proposed packages: compact optional editor sections (UX-COLL-011 r2 / F19), same-card editing after reveal in normal and Speed learning (VOCAB-EDIT-003 r1 / UX-CARD-014 r1), and independent Active/Inactive vocabulary (VOCAB-ACTIVE-001 r2 / UX-VOCAB-ACTIVE-001 r1). Their earlier Later/Undecided scheduling is superseded; round-4 exclusions and historical evidence remain intact. This changes scheduling only, so requirement revisions stay unchanged. Current-card deactivation, retry lifecycle, interchange compatibility and editor exit behavior remain explicit open decisions.
+
+The subsequent request to consider a larger batch starts a learning-backlog overview, not acceptance of additional features. The [round-5 ledger](implementation-round-5.md) owns selected scope, candidate additions and pending agreement. App/mockup implementation, publication and round-4 phone acceptance are not authorized by the planning selection.
+
+## Collection Hint default and first-use offer — accepted refinement, 2026-10-17
+
+The owner rejects the compact-editor sketch's Use this visibility for new vocabulary checkbox. Remove it from the vocabulary editor; maintain the default in each Collection's settings, initially off / Hidden until tapped. Keep the word's own Show hint automatically switch and offer an optional change to the Collection default on its first switch from off to on per Collection. A switch action alone does not change the default. Existing words retain their individual visibility; changing a default affects only later additions to that Collection. Revealing a hidden Hint during learning does not count as changing this setting.
+
+VOCAB-008–010 r2 → r3 and UX-COLL-011 r2 → r3 supersede the original global, initially Always visible default and editor checkbox. IMPORT-HINT-001 r2 → r3 / IMPORT-JSON-002 r3 → r4 apply the destination Collection's default when a new imported word omits visibility; existing-entry and learning preservation remain intact. This refines the selected round-5 compact-editor package, without authorizing app or mockup changes. Earlier runtime and sketch evidence remain historical.
+
+The owner confirmed both follow-up choices: show the offer once per Collection on the first switch ON, remembering either acceptance or dismissal; initialize every existing Collection’s default to off as well, without rewriting existing words. The screenshot establishes the owner's objection to the visible checkbox; it does not reproduce a persistence or Android defect. The round-5 ledger records the implementation and verification boundary.
+
+## Compact editor layout and autosave actions — accepted refinement, 2026-10-17
+
+The owner places Active at the editor bottom; Categories should follow the compact Examples/Hint disclosure style. Closed Categories shows selected values without group titles. Expanded, show each category group’s title and selected values in one logical row, with the existing New category group action last. Long content may wrap; preserve existing group/value ordering, assignment identity and picker confirmation. Move Delete vocabulary from the editor body to a top-right three-dot card menu, keeping explicit activation and existing Undo.
+
+For already saved vocabulary, remove the card-level Finish editing and Discard changes controls. Valid changes autosave; a simple collapse control keeps saved changes, while invalid drafts or failed saves remain visible and recoverable. This supersedes the older reversible editor session, including its X/checkmark action pattern. New-word Save & Next/global Finish and category-popup Apply/cancel retain their separate creation/selection roles. Answer-card editing adopts the same saved-editor model without grading or advancing. Session Exit/Back and current-card activity semantics still require their existing round-5 decisions; deletion during learning is not added.
+
+Owning revisions: VOCAB-EDIT-002 r2 / VOCAB-EDIT-003 r2; UX-COLL-011 r4 / UX-COLL-012 r2; UX-CAT-001 r8; UX-VOCAB-ACTIVE-001 r2; UX-VOCAB-DELETE-001 r4; UX-ENTRY-002 r4 / UX-CARD-014 r2. This refines the selected editor package. The prior sketch and runtime evidence remain tied to their original contracts; specification acceptance does not authorize app/mockup changes. Source inspection and evidence limits are in UX-COLL-011 and the round-5 ledger.
+
+## Round-5 definition completion and implementation handoff — 2026-10-17
+
+The owner requests the finalized plan be handed to the waiting implementation chat and explicitly chooses: deactivating the current revealed learning card saves the change, then skips it without grading and continues with eligible work. VOCAB-ACTIVE-001 r3 makes this the exception to ordinary same-answer editing, preserves all learning/history and retry deadlines, and prevents false completion or pass credit.
+
+The remaining bounded details are resolved under the standing implementation/design autonomy: existing/new words default Active; captured work revalidates activity; retries retain original deadlines/gaps; omission preserves existing activity; schema-4 interchange carries an explicit boolean and a separate Activity import group while legacy imports preserve state; inactive display occupies the readiness slot; Back/Exit use autosave/validation guards. These are preservation/compatibility choices, not additional owner-requested features. VOCAB-EDIT-003 r3, UX-CARD-014 r3, UX-VOCAB-ACTIVE-001 r3 and IMPORT-JSON-001 r4 / IMPORT-JSON-002 r5 own the details and acceptance scenarios.
+
+The three selected packages are definition-complete and may proceed in the implementation chat under its existing conditional implementation request. The separate Collection-list controls/group alignment and F22 investigation are not added by inference, nor are learning-statistics/help candidates. The round-5 ledger is the authoritative handoff; execution/account preferences stay in private run notes or chat. Publication and phone-acceptance gates remain separate.
+
 ## Design autonomy and no further round-4 alignment — accepted, 2026-10-16
 
 The owner considers the established design principles sufficient and delegates coherent implementation details to the agent, with design feedback on the working result. The currently selected round-4 specification package needs no further owner alignment or preliminary mockup pass. Resolve remaining routine presentation/implementation choices within the accepted outcomes and record them in their owning specifications; ask only about genuinely unclear intent, conflicts or material scope/data/learning consequences. Existing exclusions and separately unscheduled requests are not added by this delegation.

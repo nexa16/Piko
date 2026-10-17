@@ -115,6 +115,7 @@ void main() {
         'nativeText',
         'examples',
         'addedAt',
+        'active',
         'hint',
         'categoryAssignments',
         'learning',
@@ -125,7 +126,7 @@ void main() {
       expect(entry['categoryAssignments'], isEmpty);
       expect(entry['examples'], isEmpty);
       expect(entry['addedAt'], instant.toUtc().toIso8601String());
-      expect(entry['hint'], {'text': null, 'visibility': 'always'});
+      expect(entry['hint'], {'text': null, 'visibility': 'hidden'});
       final learning = entry['learning'] as Map<String, dynamic>;
       expect(learning.keys.toSet(), {'targetToNative', 'nativeToTarget'});
       final items = await (f.db.select(

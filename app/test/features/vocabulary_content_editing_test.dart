@@ -9,6 +9,49 @@ import '../data/regular_reviews_test.dart' show Fixture;
 import '../data/speed_eligibility_test.dart' show completeSnapshot;
 
 void main() {
+  test(
+    'Collection offer changes only future drafts; failed preference writes remain blocking until retried',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final session = EntrySessionController(
+        collectionId: f.owner.id,
+        repository: f.vocabulary,
+      );
+      addTearDown(session.dispose);
+      await session.initializeContentDefault();
+      session.setTargetText('Word');
+      session.setNativeText('Wort');
+      final currentVisibility = session.draft.content.hintVisibility;
+      await f.vocabulary.completeHintDefaultOffer(f.owner.id, accept: true);
+      expect(session.draft.content.hintVisibility, currentVisibility);
+      await session.confirmAndNext();
+      expect(session.draft.content.hintVisibility, HintVisibility.always);
+      final edits = await InlineVocabularyEditController.open(
+        entryId: f.entry.id,
+        collectionId: f.owner.id,
+        repository: f.vocabulary,
+      );
+      addTearDown(edits.dispose);
+      final failure = StateError('synthetic preference write failure');
+      await edits.trackPreferenceWrite(Future<void>.error(failure));
+      await edits.awaitSavedEdits();
+      expect(edits.error, same(failure));
+      edits.setTargetText('Changed');
+      await edits.awaitSavedEdits();
+      expect(edits.error, same(failure));
+      await edits.trackPreferenceWrite(Future.value());
+      expect(edits.error, isNull);
+      await session.trackPreferenceWrite(null, Future<void>.error(failure));
+      await expectLater(session.completeSession(), throwsA(same(failure)));
+      expect(session.isCompleted, isFalse);
+      await session.trackPreferenceWrite(null, Future.value());
+      await session.completeSession();
+      expect(session.isCompleted, isTrue);
+    },
+  );
+
   for (final finish in [false, true]) {
     test(
       'pre-hydration ${finish ? 'Finish' : 'Save Next'} admits one locked write',
@@ -130,12 +173,15 @@ void main() {
           hintText: 'raw hint',
         ),
       );
-      expect(await settings.read(HintVisibility.settingKey), 'always');
+      expect(
+        await f.vocabulary.readHintVisibilityDefault(collectionId: f.owner.id),
+        HintVisibility.always,
+      );
       expect(
         (await f.vocabulary.watchById(f.entry.id).first)!
             .content
             .hintVisibility,
-        HintVisibility.always,
+        HintVisibility.hidden,
       );
       expect(session.draft.content, const VocabularyContent());
       expect(session.draft.makeHintVisibilityDefault, isFalse);
@@ -274,7 +320,7 @@ final class _HeldContentDefaultRepository
   VocabularyRecord? saved;
 
   @override
-  Future<HintVisibility> readHintVisibilityDefault() {
+  Future<HintVisibility> readHintVisibilityDefault({String? collectionId}) {
     reads++;
     return defaultRead.future;
   }
@@ -287,6 +333,7 @@ final class _HeldContentDefaultRepository
     required Map<String, Set<String>> assignments,
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
+    bool active = true,
   }) async {
     creates++;
     return saved = VocabularyRecord(

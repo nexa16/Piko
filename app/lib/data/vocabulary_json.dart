@@ -23,7 +23,8 @@ enum VocabularyJsonGroup {
   nativeText,
   categoryAssignments,
   example,
-  hint;
+  hint,
+  activity;
 
   static const all = {
     targetText,
@@ -31,6 +32,7 @@ enum VocabularyJsonGroup {
     categoryAssignments,
     example,
     hint,
+    activity,
   };
 }
 
@@ -122,7 +124,7 @@ abstract final class VocabularyJsonFormat {
         easyId = '1e56de42-7a49-4ef9-906a-a3bc7ba998e9';
     return const JsonEncoder.withIndent('  ').convert({
       'format': format,
-      'schemaVersion': 3,
+      'schemaVersion': schemaVersion,
       'collections': [
         {
           'id': collection,
@@ -170,7 +172,7 @@ abstract final class VocabularyJsonFormat {
   }
 
   static const format = 'piko-vocabulary';
-  static const schemaVersion = 3;
+  static const schemaVersion = 4;
   static const schedulerLibrary = 'fsrs';
   static const schedulerVersion = '2.0.1';
   static const maxImportBytes = 1000000;

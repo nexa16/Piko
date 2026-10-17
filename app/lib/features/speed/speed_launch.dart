@@ -1,3 +1,4 @@
+import '../../data/categories_repository.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class SpeedLaunch extends StatefulWidget {
     required this.snapshot,
     required this.factory,
     required this.vocabularyRepository,
+    this.categoriesRepository,
     required this.beforeLaunch,
     required this.onBusyChanged,
     this.snapshotLoader,
@@ -39,6 +41,7 @@ class SpeedLaunch extends StatefulWidget {
   final CollectionQuerySnapshot snapshot;
   final SpeedSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
+  final CategoriesRepository? categoriesRepository;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<bool> onBusyChanged;
   final Future<CollectionQuerySnapshot> Function()? snapshotLoader;
@@ -231,6 +234,8 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
             collection: launchSnapshot.collection,
             session: session,
             vocabularyRepository: repository,
+            categoriesRepository: widget.categoriesRepository,
+            onPendingWrites: widget.onPendingWrites,
           ),
         ),
       );

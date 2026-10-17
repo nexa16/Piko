@@ -66,7 +66,12 @@ final class RegularReviewReceipt implements LearningAnswerReceipt {
   final ScopeAnswerState? scopeNext;
 }
 
+abstract interface class ActivityReviewSource {
+  Future<Set<String>> activeEntryIds({Set<String>? expectedEntryIds});
+}
+
 enum RegularReviewFailure {
+  inactive,
   itemNotFound,
   staleState,
   reinforcementNotRetained,

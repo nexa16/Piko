@@ -22,6 +22,18 @@ final class LearningSessionProgress {
   int get firstTryCorrect => firstTryItems.length;
   double get fraction => total == 0 ? 0 : completed / total;
 
+  LearningSessionProgress excludingUncompleted(
+    Set<SessionItemIdentity> excluded,
+  ) {
+    final remove = members.intersection(excluded).difference(completedItems);
+    if (remove.isEmpty) return this;
+    return LearningSessionProgress(
+      members: members.difference(remove),
+      completed: completedItems,
+      firstTry: firstTryItems,
+    );
+  }
+
   LearningSessionProgress accepting(LearningAnswerReceipt receipt) {
     final identity = (
       itemId: receipt.prior.id,

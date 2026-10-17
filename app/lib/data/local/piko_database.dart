@@ -20,6 +20,10 @@ class Collections extends Table {
   TextColumn get name => text()();
   TextColumn get targetLanguage => text()();
   TextColumn get nativeLanguage => text()();
+  BoolColumn get automaticHintDefault =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get hintDefaultOfferHandled =>
+      boolean().withDefault(const Constant(false))();
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -35,6 +39,7 @@ class VocabularyEntries extends Table {
   TextColumn get nativeText => text()();
   TextColumn get targetKey => text()();
   TextColumn get nativeKey => text()();
+  BoolColumn get active => boolean().withDefault(const Constant(true))();
   TextColumn get exampleTargetText => text().nullable().check(
     const CustomExpression<bool>(
       'example_target_text IS NULL OR length(example_target_text) BETWEEN 1 AND 1000',
@@ -288,7 +293,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -392,6 +397,15 @@ class PikoDatabase extends _$PikoDatabase {
           await customStatement(
             'INSERT INTO vocabulary_examples(entry_id, position, target_text, native_text) SELECT id, 0, example_target_text, example_native_text FROM vocabulary_entries WHERE example_target_text IS NOT NULL',
           );
+        }
+        if (from < 16) {
+          if (from >= 4) {
+            await m.addColumn(vocabularyEntries, vocabularyEntries.active);
+          }
+          if (from >= 2) {
+            await m.addColumn(collections, collections.automaticHintDefault);
+            await m.addColumn(collections, collections.hintDefaultOfferHandled);
+          }
         }
       });
     },

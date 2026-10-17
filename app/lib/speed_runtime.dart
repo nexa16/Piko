@@ -46,7 +46,7 @@ final class PikoSpeedRuntime {
     if (eligible.isEmpty) throw SpeedLaunchFailure.noNewVocabulary;
     final originals = {for (final item in eligible) item.entryId: item};
     final completedAt = <String, DateTime>{};
-    return SpeedLearningSession(
+    final session = SpeedLearningSession(
       initial: SpeedSession.start(
         collectionId: collectionId,
         direction: direction,
@@ -54,6 +54,8 @@ final class PikoSpeedRuntime {
         poolSize: poolSize,
       ),
       presentationActive: false,
+      activeEntryIds: () =>
+          source.activeEntryIds(expectedEntryIds: originals.keys.toSet()),
       onPendingWrites: onPendingWrites,
       commitCompletion: (completion) async {
         final prior = originals[completion.entryId]!;
@@ -68,5 +70,7 @@ final class PikoSpeedRuntime {
         );
       },
     );
+    await session.revalidateActivity();
+    return session;
   }
 }

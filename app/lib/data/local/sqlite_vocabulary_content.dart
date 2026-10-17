@@ -59,6 +59,7 @@ final class SqliteVocabularyContent {
   VocabularyRecord record(VocabularyEntry row, List<ExamplePair> pairs) =>
       VocabularyRecord(
         id: row.id,
+        active: row.active,
         collectionId: row.collectionId,
         targetText: row.targetText,
         nativeText: row.nativeText,

@@ -7,6 +7,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import 'category_assignment_picker.dart';
+import '../vocabulary/vocabulary_disclosure.dart';
 import 'category_dimension_form.dart';
 
 /// Shared category presentation for one vocabulary row. A Collection projection
@@ -288,43 +289,59 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final dimension in dims) ...[
-          SizedBox(height: design.dimension('spacing.2')),
-          SizedBox(
-            width: double.infinity,
-            child: PikoButton(
-              key: ValueKey(
-                'category-picker-${widget.entryId ?? 'draft'}-${dimension.id}',
+    return VocabularyDisclosure(
+      controlKey: ValueKey('categories-toggle-${widget.entryId ?? 'draft'}'),
+      label: all.isEmpty
+          ? copy.text('action.categories')
+          : [
+              for (final dimension in dims)
+                for (final value
+                    in definitions[dimension.id] ??
+                        const <CategoryValueRecord>[])
+                  if (assigned[dimension.id]?.contains(value.id) == true)
+                    value.name,
+            ].join(' · '),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final dimension in dims) ...[
+            SizedBox(height: design.dimension('spacing.2')),
+            SizedBox(
+              width: double.infinity,
+              child: PikoButton(
+                key: ValueKey(
+                  'category-picker-${widget.entryId ?? 'draft'}-${dimension.id}',
+                ),
+                label: [
+                  dimension.name,
+                  [
+                    for (final value
+                        in definitions[dimension.id] ??
+                            const <CategoryValueRecord>[])
+                      if (assigned[dimension.id]?.contains(value.id) == true)
+                        value.name,
+                  ].join(', '),
+                ].where((v) => v.isNotEmpty).join(' · '),
+                icon: const PikoIcon(PikoIconName.layers),
+                trailing: const PikoIcon(PikoIconName.chevronRight),
+                variant: PikoButtonVariant.neutral,
+                onPressed: popup || widget.disabled
+                    ? null
+                    : () => pick(dimension, assigned[dimension.id] ?? const {}),
               ),
-              label: dimension.name,
-              icon: const PikoIcon(PikoIconName.layers),
-              trailing: const PikoIcon(PikoIconName.chevronRight),
-              variant: PikoButtonVariant.neutral,
-              onPressed: popup || widget.disabled
-                  ? null
-                  : () => pick(dimension, assigned[dimension.id] ?? const {}),
+            ),
+          ],
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: PikoButton(
+              label: copy.text('category.addDimension'),
+              icon: const PikoIcon(PikoIconName.plus),
+              variant: PikoButtonVariant.ghost,
+              onPressed: popup || widget.disabled ? null : createDimension,
             ),
           ),
-          if (chips(dimension).isNotEmpty)
-            Wrap(
-              spacing: design.dimension('spacing.1'),
-              runSpacing: design.dimension('spacing.1'),
-              children: chips(dimension),
-            ),
         ],
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: PikoButton(
-            label: copy.text('category.addDimension'),
-            icon: const PikoIcon(PikoIconName.plus),
-            variant: PikoButtonVariant.ghost,
-            onPressed: popup || widget.disabled ? null : createDimension,
-          ),
-        ),
-      ],
+      ),
     );
   }
 

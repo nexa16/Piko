@@ -264,6 +264,8 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                                   policy: widget.reviewCountPolicy!,
                                   clock: widget.reviewCountClock,
                                   factory: widget.reviewSessionFactory!,
+                                  categoriesRepository:
+                                      widget.categoriesRepository,
                                   vocabularyRepository:
                                       widget.vocabularyRepository!,
                                   beforeLaunch: () async {},

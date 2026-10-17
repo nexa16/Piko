@@ -46,8 +46,9 @@ final class SqliteLearningRepository implements RegularReviewWriter {
   }
 
   Future<List<LearningItemRecord>> _scopedItems(
-    CollectionReviewGateway scope,
-  ) => database.transaction(() async {
+    CollectionReviewGateway scope, {
+    bool includeInactive = false,
+  }) => database.transaction(() async {
     final collection = await (database.select(
       database.collections,
     )..where((row) => row.id.equals(scope.collectionId))).getSingleOrNull();
@@ -75,7 +76,15 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     if (scope.entryIds != null && selected.length != scope.entryIds!.length) {
       throw RegularReviewFailure.itemNotFound;
     }
-    return List.unmodifiable(selected);
+    final activeIds = {
+      for (final row in rows)
+        if (row.readTable(entries).active) row.readTable(entries).id,
+    };
+    return List.unmodifiable(
+      selected.where(
+        (item) => includeInactive || activeIds.contains(item.entryId),
+      ),
+    );
   });
 
   LearningItemRecord _record(LearningItem row) {
@@ -176,13 +185,17 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         ),
       );
     }
+    final activeItems = {
+      for (final row in rows)
+        if (row.readTable(entries).active) row.readTable(items).id,
+    };
     final active = <RetryObligation>[];
     for (final retry in validated) {
       if (!at.isBefore(retry.expiresAt)) {
         await (database.delete(
           retries,
         )..where((row) => row.id.equals(retry.id))).go();
-      } else {
+      } else if (activeItems.contains(retry.itemId)) {
         active.add(retry);
       }
     }
@@ -364,6 +377,10 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             .where((item) => item.id == round.itemId)
             .firstOrNull;
         if (item == null) throw RegularReviewFailure.outOfScope;
+        final entry = await (database.select(
+          database.vocabularyEntries,
+        )..where((row) => row.id.equals(item.entryId))).getSingle();
+        if (!entry.active) throw RegularReviewFailure.inactive;
         if (item.generation != round.generation) throw RetryFailure.staleState;
         final actual = state.rounds
             .where((row) => row.id == round.id)
@@ -443,11 +460,15 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       );
     }
     final result = await database.transaction<RetryAnswerReceipt?>(() async {
-      final items = await _scopedItems(scope);
+      final items = await _scopedItems(scope, includeInactive: true);
       final item = items
           .where((item) => item.id == expected.itemId)
           .firstOrNull;
       if (item == null) throw RegularReviewFailure.outOfScope;
+      final entry = await (database.select(
+        database.vocabularyEntries,
+      )..where((row) => row.id.equals(item.entryId))).getSingle();
+      if (!entry.active) throw RegularReviewFailure.inactive;
       if (item.generation != expected.generation ||
           expectedPrior != null && !_sameItem(item, expectedPrior)) {
         throw RetryFailure.staleState;
@@ -562,6 +583,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
         database.vocabularyEntries,
       )..where((entry) => entry.id.equals(row.entryId))).getSingleOrNull();
       if (entry == null) throw RegularReviewFailure.itemNotFound;
+      if (!entry.active) throw RegularReviewFailure.inactive;
       if (scope != null) {
         // Recheck authoritative ownership in the event/card write transaction.
         // Neither a discovered list nor the caller's prior can establish scope.
@@ -751,7 +773,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
           .customSelect(
             'SELECT l.* FROM learning_items l '
             'JOIN vocabulary_entries v ON v.id = l.entry_id '
-            'WHERE v.collection_id = ? AND l.direction = ? AND l.speed_completed = 0 '
+            'WHERE v.collection_id = ? AND v.active = 1 AND l.direction = ? AND l.speed_completed = 0 '
             'AND NOT EXISTS (SELECT 1 FROM regular_reviews r '
             'WHERE r.item_id = l.id AND r.generation = l.generation) '
             'ORDER BY v.rowid',
@@ -785,6 +807,7 @@ final class SqliteLearningRepository implements RegularReviewWriter {
 final class CollectionReviewGateway
     implements
         RetryReviewSource,
+        ActivityReviewSource,
         ReviewCorrectionSource,
         SpeedCompletionWriter {
   const CollectionReviewGateway._(
@@ -837,7 +860,24 @@ final class CollectionReviewGateway
 
   /// Non-presentational discovery; SESSION-018 owns due eligibility/selection.
   /// An existing empty Collection returns []; a deleted owner fails explicitly.
-  Future<List<LearningItemRecord>> items() => _repository._scopedItems(this);
+  Future<List<LearningItemRecord>> items() =>
+      _repository._scopedItems(this, includeInactive: true);
+
+  @override
+  Future<Set<String>> activeEntryIds({Set<String>? expectedEntryIds}) =>
+      _repository.database.transaction(() async {
+        final all = await _repository._scopedItems(this, includeInactive: true);
+        if (expectedEntryIds != null &&
+            !all
+                .map((item) => item.entryId)
+                .toSet()
+                .containsAll(expectedEntryIds)) {
+          throw RegularReviewFailure.itemNotFound;
+        }
+        return {
+          for (final item in await _repository._scopedItems(this)) item.entryId,
+        };
+      });
 
   /// Decode UTC instants; valid stored timestamp spellings need not sort lexically.
   @override

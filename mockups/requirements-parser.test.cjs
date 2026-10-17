@@ -44,7 +44,12 @@ test('canonical round 2 retains its features and fixes after later revisions', (
   }
   assert.ok(!selected.some(r=>r.id==='SPEED-004'));
   assert.ok(matchesRound(rows.find(r=>r.id==='SPEED-004'),'Later'));
-  for(const id of ['IMPORT-JSON-001','IMPORT-JSON-002','SPEED-001','CAT-001','FILTER-003','ENTRY-001','ENTRY-005','UX-ENTRY-001','UX-ENTRY-003','UX-ENTRY-004','UX-VOCAB-DELETE-001','UX-CARD-012','RETRY-005','UX-LAB-001'])assert.ok(selected.some(r=>r.id===id),id);
+  for(const id of ['IMPORT-JSON-001','IMPORT-JSON-002','SPEED-001','CAT-001','FILTER-003','ENTRY-001','ENTRY-005','UX-ENTRY-001','UX-ENTRY-003','UX-ENTRY-004','UX-CARD-012','RETRY-005','UX-LAB-001'])assert.ok(selected.some(r=>r.id===id),id);
+  // The accepted card-menu revision moves deletion's current delta from 2 to 5.
+  const deletion=rows.find(r=>r.id==='UX-VOCAB-DELETE-001');
+  assert.equal(deletion.round,'1');assert.equal(deletion.updated,'5');
+  assert.equal(deletion.revision,4);assert.ok(matchesRound(deletion,'5'));
+  assert.ok(!matchesRound(deletion,'2'));
   assert.ok(selected.every(r=>r.status!=='Open'&&r.status!=='Proposed'));
   assert.equal(selected.find(r=>r.id==='REVIEW-001').round,'1');
   assert.equal(selected.find(r=>r.id==='UX-CARD-012').revision,1);

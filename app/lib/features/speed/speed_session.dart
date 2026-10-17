@@ -186,6 +186,51 @@ final class SpeedSession {
     );
   }
 
+  /// Remove unfinished inactive work without recording an attempt or starting a game.
+  SpeedSession excluding(Set<String> excluded) {
+    final remove = excluded
+        .difference(completedEntryIds)
+        .intersection(entryIds.toSet());
+    if (remove.isEmpty) return this;
+    final nextWaiting = waiting.where((id) => !remove.contains(id)).toList();
+    final nextPool = <String>[];
+    for (final id in pool) {
+      if (!remove.contains(id)) {
+        nextPool.add(id);
+      } else if (nextWaiting.isNotEmpty) {
+        nextPool.add(nextWaiting.removeAt(0));
+      }
+    }
+    final remainingPass = pass
+        .skip(turnIndex)
+        .where((id) => !remove.contains(id))
+        .toList();
+    final keepBreak = needsBreak && nextPool.isNotEmpty;
+    final nextPass = remainingPass.isNotEmpty
+        ? remainingPass
+        : keepBreak
+        ? <String>[]
+        : nextPool;
+    return SpeedSession._(
+      collectionId: collectionId,
+      direction: direction,
+      poolSize: poolSize,
+      entryIds: entryIds.where((id) => !remove.contains(id)),
+      pool: nextPool,
+      waiting: nextWaiting,
+      pass: nextPass,
+      turnIndex: 0,
+      rotation: rotation,
+      completedEntryIds: completedEntryIds,
+      itemProgress: {
+        for (final pair in itemProgress.entries)
+          if (!remove.contains(pair.key)) pair.key: pair.value,
+      },
+      needsBreak: keepBreak,
+      numberGame: keepBreak ? numberGame : null,
+    );
+  }
+
   /// Only an explicit Correct/Incorrect advances the pass or changes counters.
   SpeedSession answer({required String entryId, required SpeedAnswer answer}) {
     if (entryId != currentEntryId || isComplete) {

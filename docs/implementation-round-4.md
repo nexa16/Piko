@@ -1,6 +1,6 @@
 # Round 4 implementation ledger
 
-**Status, 2026-10-16: selected app scope implemented and verified locally. Owner manual/publication review and candidate phone acceptance are complete. [PR #5](https://github.com/nexa16/Piko/pull/5) is published and ready for squash integration. Header report remains unreproduced; no broader phone coverage is inferred.**
+**Status, 2026-10-17: selected app scope implemented and verified locally. Owner manual/publication review and candidate phone acceptance are complete. [PR #5](https://github.com/nexa16/Piko/pull/5) is squash-merged into develop at `6541e25`; branch cleanup is complete. Header report remains unreproduced; no broader phone coverage is inferred.**
 
 ## Execution agreement — 2026-10-16
 
@@ -174,4 +174,4 @@ Earlier evidence references identify the actual source used at capture/build tim
 
 The owner approved the reviewed publication and explicitly requested merging [PR #5](https://github.com/nexa16/Piko/pull/5). The delivered `piko-round4-561e269.apk` is accepted on the owner's phone. This is owner-reported acceptance; it does not expand the agent's scoped Android evidence or establish broader device/scenario coverage. The candidate checksum and original/equivalent source mapping above are unchanged.
 
-The reviewed Round 4 history was pushed separately from the ongoing, uncommitted Round 5 preparation. GitHub reports the PR mergeable, with no review discussions, required status checks or Actions workflows configured on develop at this inspection. Final merge uses the verified PR head without bypassing protection. Fetch/content verification and safe branch handoff follow the standing repository process; no release, tag, store publication or promotion to main is authorized.
+The reviewed Round 4 history was pushed separately from the ongoing, uncommitted Round 5 preparation. GitHub confirmed the squash merge on 2026-10-16 at `6541e25d951e569f07c8de79cc778db03c59fe47`; its fetched tree exactly matches approved PR head `ac4cc13888f95191e67501cbffc76652e1228cda`. No review discussions, required status checks or Actions workflows were configured on develop at the merge inspection, and no protection was bypassed. On 2026-10-17, after the other Piko chats became idle, the shared checkout moved to the fresh Round 5 branch and the verified obsolete Round 4 local references were removed. Uncommitted work, the immutable APK and recoverable pre-squash history were preserved. The [Round 5 handoff](implementation-round-5.md#baseline-and-handoff) records the new base. No release, tag, store publication or promotion to main occurred.

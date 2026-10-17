@@ -29,6 +29,21 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       hasInitialWork =
           members.isNotEmpty ||
           (selection?.retries.rounds.isNotEmpty ?? false) {
+    final retryMembers = {
+      for (final round in selection?.retries.rounds ?? <RetryObligation>[])
+        (itemId: round.itemId, generation: round.generation),
+    };
+    for (final item in [
+      ...members,
+      ...?selection?.retries.items.where(
+        (item) => retryMembers.contains((
+          itemId: item.id,
+          generation: item.generation,
+        )),
+      ),
+    ]) {
+      _capturedItems[item.id] = item;
+    }
     _progress = LearningSessionProgress(
       members: {
         for (final item in members)
@@ -114,6 +129,93 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       List.unmodifiable(_waitMutations);
   late final GradingCoordinator<LearningAnswerReceipt> _grading;
   final Map<String, RetryObligation> _rounds = {};
+  final Map<int, LearningItemRecord> _capturedItems = {};
+  final Set<String> _excludedEntries = {};
+  bool endedByExclusion = false;
+
+  void _excludeInactive(Set<String> active) {
+    final hadWork = unreviewedMembers.isNotEmpty || _rounds.isNotEmpty;
+    _excludedEntries.addAll(
+      _capturedItems.values
+          .where((item) => !active.contains(item.entryId))
+          .map((item) => item.entryId),
+    );
+    final excluded = {
+      for (final item in _capturedItems.values)
+        if (_excludedEntries.contains(item.entryId))
+          (itemId: item.id, generation: item.generation),
+    };
+    _progress = _progress.excludingUncompleted(excluded);
+    final change = _lastProgressChange;
+    if (change != null) {
+      _lastProgressChange = SessionProgressChange(
+        receipt: change.receipt,
+        prior: change.prior.excludingUncompleted(excluded),
+        next: change.next.excludingUncompleted(excluded),
+      );
+    }
+    _rounds.removeWhere(
+      (_, round) => excluded.contains((
+        itemId: round.itemId,
+        generation: round.generation,
+      )),
+    );
+    while (_index < members.length &&
+        _excludedEntries.contains(members[_index].entryId)) {
+      _index++;
+    }
+    if (hadWork &&
+        regularItemsExhausted &&
+        _rounds.isEmpty &&
+        _grading.current == null) {
+      endedByExclusion = true;
+    }
+    final handle = _grading.current;
+    if (handle != null && _excludedEntries.contains(handle.item.entryId)) {
+      _grading.retireUnanswered(handle);
+      _currentRetry = null;
+      endedByExclusion = regularItemsExhausted && _rounds.isEmpty;
+    }
+  }
+
+  Future<void> _refreshActivity() async {
+    final source = _source;
+    if (source is ActivityReviewSource) {
+      final active = await (source as ActivityReviewSource).activeEntryIds(
+        expectedEntryIds: _capturedItems.values
+            .map((item) => item.entryId)
+            .toSet(),
+      );
+      if (!_stopped && !_disposed) _excludeInactive(active);
+    }
+  }
+
+  /// Prune captured work without a grade, ordinal, history, or new membership.
+  Future<void> revalidateActivity() async {
+    if (_stopped ||
+        _disposed ||
+        isSubmitting ||
+        isCorrecting ||
+        _source is! ActivityReviewSource) {
+      return;
+    }
+    final result = Completer<LearningAnswerReceipt?>();
+    _pending = result.future;
+    try {
+      _register?.call(awaitPending());
+      await _refreshActivity();
+      if (current == null) await _refreshAndSelect(_clock.now().toUtc());
+      _selectionError = null;
+    } catch (error) {
+      if (!_stopped && !_disposed) _selectionError = error;
+    } finally {
+      _pending = null;
+      result.complete(null);
+      _changed();
+      _scheduleWake();
+    }
+  }
+
   ScopeAnswerState? _scopeState;
   RetryObligation? _currentRetry;
   Object? _selectionError;
@@ -180,8 +282,11 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
 
   List<RegularReviewReceipt> get acceptedReviews =>
       List.unmodifiable(_receipts);
-  List<LearningItemRecord> get unreviewedMembers =>
-      List.unmodifiable(members.skip(_index));
+  List<LearningItemRecord> get unreviewedMembers => List.unmodifiable(
+    members
+        .skip(_index)
+        .where((item) => !_excludedEntries.contains(item.entryId)),
+  );
 
   void _changed() {
     if (!_stopped && !_disposed) _emit();
@@ -275,7 +380,16 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
     LearningItemRecord item,
     LearningRating rating,
     DateTime at,
-  ) {
+  ) async {
+    final source = _source;
+    if (source is ActivityReviewSource) {
+      final active = await (source as ActivityReviewSource).activeEntryIds(
+        expectedEntryIds: _capturedItems.values
+            .map((item) => item.entryId)
+            .toSet(),
+      );
+      if (!active.contains(item.entryId)) throw RegularReviewFailure.inactive;
+    }
     final round = _currentRetry;
     if (round != null) {
       final source = _source;
@@ -328,6 +442,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   }
 
   Future<void> _refreshAndSelect(DateTime at) async {
+    await _refreshActivity();
     final source = _source;
     if (source is RetryReviewSource) {
       var state = await source.retryState(at: at);
@@ -735,7 +850,18 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       }
       result.complete(receipt);
     } catch (error, stack) {
-      if (error == RetryFailure.expired && submittedRetry != null) {
+      if (error == RegularReviewFailure.inactive) {
+        _excludeInactive(
+          _capturedItems.values.map((item) => item.entryId).toSet()
+            ..remove(handle.item.entryId),
+        );
+        try {
+          await _refreshAndSelect(at);
+        } catch (failure) {
+          _selectionError = failure;
+        }
+        result.complete(null);
+      } else if (error == RetryFailure.expired && submittedRetry != null) {
         _rounds.remove(submittedRetry.id);
         if (!_stopped && !_disposed) {
           _currentRetry = null;

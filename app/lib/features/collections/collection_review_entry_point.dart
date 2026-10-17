@@ -1,3 +1,4 @@
+import '../../data/categories_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/clock.dart';
@@ -16,6 +17,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
     required this.policy,
     required this.factory,
     required this.vocabularyRepository,
+    this.categoriesRepository,
     required this.beforeLaunch,
     required this.onPendingWrites,
     required this.onBusyChanged,
@@ -30,6 +32,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
   final CollectionReviewCountPolicy policy;
   final ReviewSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
+  final CategoriesRepository? categoriesRepository;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
@@ -60,6 +63,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
           collection: collection,
           factory: factory,
           vocabularyRepository: vocabularyRepository,
+          categoriesRepository: categoriesRepository,
           beforeLaunch: beforeLaunch,
           onPendingWrites: onPendingWrites,
           onBusyChanged: onBusyChanged,

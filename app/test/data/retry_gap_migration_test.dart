@@ -254,6 +254,12 @@ void main() {
                   }
                 else if (table == 'learning_items')
                   {...row, 'speed_completed': 0}
+                else if (table == 'collections')
+                  {
+                    ...row,
+                    'automatic_hint_default': 0,
+                    'hint_default_offer_handled': 0,
+                  }
                 else if (table == 'vocabulary_entries')
                   {
                     ...row,
@@ -261,6 +267,7 @@ void main() {
                     'example_native_text': null,
                     'hint_text': null,
                     'hint_visibility': 'always',
+                    'active': 1,
                     'added_at': null,
                   }
                 else

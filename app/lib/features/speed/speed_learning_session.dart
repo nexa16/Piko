@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import 'speed_session.dart';
+import '../../data/speed_completion.dart';
 
 /// A single presentation, distinct even when the same word appears next pass.
 final class SpeedTurnHandle {
@@ -27,6 +28,7 @@ final class SpeedLearningSession extends ChangeNotifier {
     required Future<void> Function(SpeedCompletion) commitCompletion,
     void Function(Future<void>)? onPendingWrites,
     bool presentationActive = true,
+    this.activeEntryIds,
     bool Function()? isPresentationCurrent,
   }) : _state = initial,
        // Preserve public callback names while keeping owned fields private,
@@ -43,7 +45,85 @@ final class SpeedLearningSession extends ChangeNotifier {
     _activate();
   }
 
+  final Future<Set<String>> Function()? activeEntryIds;
+  bool endedByExclusion = false;
   final Future<void> Function(SpeedCompletion) _commitCompletion;
+
+  void _exclude(Set<String> inactive) {
+    final state = _state;
+    if (state == null) return;
+    final next = state.excluding(inactive);
+    if (identical(next, state)) return;
+    final currentId = _current?.entryId;
+    _state = next;
+    endedByExclusion = next.isComplete;
+    if (next.currentEntryId != currentId) _activate();
+  }
+
+  Future<void> _refreshActivity() async {
+    final read = activeEntryIds;
+    if (read == null) return;
+    final active = await read();
+    if (!_stopped && !_disposed) {
+      _exclude(_state!.entryIds.toSet().difference(active));
+    }
+  }
+
+  Future<void> revalidateActivity() async {
+    if (_stopped || _disposed || isSubmitting || activeEntryIds == null) return;
+    final result = Completer<bool>();
+    _pending = result.future;
+    try {
+      _register?.call(awaitPending());
+      await _refreshActivity();
+      _error = null;
+    } catch (error) {
+      _error = error;
+    } finally {
+      _pending = null;
+      result.complete(false);
+      if (!_stopped && !_disposed) notifyListeners();
+    }
+  }
+
+  Future<bool> _submitChecked(SpeedTurnHandle handle, SpeedAnswer answer) {
+    final result = Completer<bool>();
+    _pending = result.future;
+    _error = null;
+    Future<void> run() async {
+      try {
+        _register?.call(awaitPending());
+        await _refreshActivity();
+        if (_stopped || _disposed || !identical(_current, handle)) {
+          result.complete(false);
+          return;
+        }
+        final next = _state!.answer(entryId: handle.entryId, answer: answer);
+        if (next.completion != null) await _commitCompletion(next.completion!);
+        if (!_stopped && !_disposed && identical(_current, handle)) {
+          _accept(next);
+          await _refreshActivity();
+        }
+        result.complete(true);
+      } catch (error, stack) {
+        if (error == SpeedCompletionFailure.inactive) {
+          _exclude({handle.entryId});
+          result.complete(false);
+        } else {
+          if (!_stopped && !_disposed) _error = error;
+          result.completeError(error, stack);
+        }
+      } finally {
+        if (identical(_pending, result.future)) _pending = null;
+        if (!_stopped && !_disposed) notifyListeners();
+      }
+    }
+
+    unawaited(run());
+    if (!_stopped && !_disposed) notifyListeners();
+    return result.future;
+  }
+
   final void Function(Future<void>)? _register;
   bool Function()? _isPresentationCurrent;
   SpeedSession? _state;
@@ -96,6 +176,7 @@ final class SpeedLearningSession extends ChangeNotifier {
 
   Future<bool> submitAnswer(SpeedTurnHandle handle, SpeedAnswer answer) {
     if (!canAnswer(handle)) return Future.value(false);
+    if (activeEntryIds != null) return _submitChecked(handle, answer);
     final next = _state!.answer(entryId: handle.entryId, answer: answer);
     if (next.completion == null) {
       _accept(next);

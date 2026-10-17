@@ -9,7 +9,23 @@ import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'category_assignment_picker_test.dart'
     show PickerFixture, value, checked;
-import 'category_inline_value_test.dart' show press;
+import 'category_inline_value_test.dart' as actions;
+
+Future<void> press(WidgetTester tester, Finder action) async {
+  await tester.pumpAndSettle();
+  if (action.evaluate().isEmpty) {
+    final section = find.byWidgetPredicate(
+      (w) =>
+          w.key is ValueKey<String> &&
+          (w.key as ValueKey<String>).value.startsWith('categories-toggle-'),
+    );
+    await tester.ensureVisible(section.last);
+    await tester.pumpAndSettle();
+    await tester.tap(section.last.hitTestable());
+    await tester.pumpAndSettle();
+  }
+  await actions.press(tester, action);
+}
 
 Finder target(PickerFixture f) => find.descendant(
   of: find.byKey(ValueKey('inline-${f.entryId}-target')),
@@ -17,8 +33,17 @@ Finder target(PickerFixture f) => find.descendant(
 );
 Finder picker(PickerFixture f) =>
     find.byKey(ValueKey('category-picker-${f.entryId}-${f.dimension.id}'));
-Finder label(PickerFixture f, int index) =>
-    find.byKey(ValueKey('category-label-${f.entryId}-${f.values[index].id}'));
+Finder label(PickerFixture f, int index) {
+  final section = find.byKey(ValueKey('categories-toggle-${f.entryId}'));
+  return section.evaluate().isNotEmpty
+      ? find.descendant(
+          of: section,
+          matching: find.textContaining(f.values[index].name),
+        )
+      : find.byKey(
+          ValueKey('category-label-${f.entryId}-${f.values[index].id}'),
+        );
+}
 
 Future<void> mount(
   WidgetTester tester,

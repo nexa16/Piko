@@ -534,6 +534,14 @@ void main() {
               'value': 'nativeToTarget',
             },
           ],
+          'collections': [
+            for (final row in (before['collections'] as List).cast<Map>())
+              {
+                ...row,
+                'automatic_hint_default': 0,
+                'hint_default_offer_handled': 0,
+              },
+          ],
           'vocabulary_entries': [
             for (final row
                 in (before['vocabulary_entries'] as List).cast<Map>())
@@ -543,6 +551,7 @@ void main() {
                 'example_native_text': null,
                 'hint_text': null,
                 'hint_visibility': 'always',
+                'active': 1,
                 'added_at': null,
               },
           ],

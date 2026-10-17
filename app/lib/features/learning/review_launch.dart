@@ -1,3 +1,4 @@
+import '../../data/categories_repository.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
@@ -40,6 +41,7 @@ class ReviewLaunch extends StatefulWidget {
     required this.collection,
     required this.factory,
     required this.vocabularyRepository,
+    this.categoriesRepository,
     required this.beforeLaunch,
     required this.onPendingWrites,
     required this.onBusyChanged,
@@ -60,6 +62,7 @@ class ReviewLaunch extends StatefulWidget {
   final CollectionRecord collection;
   final ReviewSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
+  final CategoriesRepository? categoriesRepository;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
@@ -209,6 +212,8 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
             collection: collection,
             session: launched,
             vocabularyRepository: vocabulary,
+            categoriesRepository: widget.categoriesRepository,
+            onPendingWrites: widget.onPendingWrites,
           ),
         ),
       );

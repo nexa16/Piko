@@ -114,6 +114,10 @@ void main() {
         returned: returns.add,
       );
       await tester.enterText(input, 'source JSON');
+      expect(
+        find.text(PikoCopy('en').text('json.activityHelp')),
+        findsOneWidget,
+      );
       await pressJson(tester, 'json.analyze');
       final check = tester.widget<PikoButton>(
         find.widgetWithText(PikoButton, PikoCopy('en').text('json.analyze')),
@@ -336,6 +340,7 @@ void main() {
           VocabularyJsonGroup.categoryAssignments,
           VocabularyJsonGroup.example,
           VocabularyJsonGroup.hint,
+          VocabularyJsonGroup.activity,
         });
         final staleApply = tester
             .widget<PikoButton>(

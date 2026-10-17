@@ -823,6 +823,10 @@ const copyCatalog = <String, Object?>{
 "de": "Bild oder PDF hochladen",
 "en": "Upload image or PDF",
 },
+"json.activityHelp": <String, Object?>{
+"de": "Der Aktivitätsstatus ersetzt die Einstellung Aktiv oder Inaktiv, wenn sie angegeben ist. Fehlt sie oder ist sie nicht ausgewählt, behalten vorhandene Vokabeln ihre Einstellung und neue sind aktiv. Für ältere Dateien gelten dieselben Standards.",
+"en": "Activity replaces a word’s Active or Inactive setting when supplied. If omitted or not selected, existing words keep their setting and new words are Active. Older files keep the same defaults.",
+},
 "json.analyze": <String, Object?>{
 "de": "JSON prüfen",
 "en": "Check JSON",
@@ -1839,9 +1843,37 @@ const copyCatalog = <String, Object?>{
 "de": "Ohne Gruppierung",
 "en": "Ungrouped",
 },
+"vocab.active": <String, Object?>{
+"de": "Aktiv",
+"en": "Active",
+},
+"vocab.activeHelp": <String, Object?>{
+"de": "Beim Wiederholen und Intensivlernen dabei.",
+"en": "Included in normal and Speed learning.",
+},
+"vocab.activity": <String, Object?>{
+"de": "Aktivitätsstatus",
+"en": "Activity",
+},
 "vocab.addExample": <String, Object?>{
 "de": "Beispielpaar hinzufügen",
 "en": "Add example pair",
+},
+"vocab.addExamples": <String, Object?>{
+"de": "Beispiele hinzufügen",
+"en": "Add examples",
+},
+"vocab.addHint": <String, Object?>{
+"de": "Hinweis hinzufügen",
+"en": "Add hint",
+},
+"vocab.collectionHintDefault": <String, Object?>{
+"de": "Hinweise für neue Vokabeln automatisch anzeigen",
+"en": "Show hints automatically for new vocabulary",
+},
+"vocab.collectionHintDefaultHelp": <String, Object?>{
+"de": "Gilt nur für neue Vokabeln in dieser Sammlung.",
+"en": "Applies only to new words in this Collection.",
 },
 "vocab.contentDefaultLoadFailed": <String, Object?>{
 "de": "Die Hinweis-Sichtbarkeit konnte nicht geladen werden. Versuche es erneut.",
@@ -1863,6 +1895,10 @@ const copyCatalog = <String, Object?>{
 "de": "{target} · {native} bearbeiten",
 "en": "Edit {target} · {native}",
 },
+"vocab.editorMenu": <String, Object?>{
+"de": "Vokabelaktionen",
+"en": "Vocabulary actions",
+},
 "vocab.examplePair": <String, Object?>{
 "de": "Beispielpaar",
 "en": "Example pair",
@@ -1883,6 +1919,10 @@ const copyCatalog = <String, Object?>{
 "de": "Beispielpaare",
 "en": "Example pairs",
 },
+"vocab.examplesCount": <String, Object?>{
+"de": "{count} Beispielpaare",
+"en": "{count} example pairs",
+},
 "vocab.hint": <String, Object?>{
 "de": "Hinweis",
 "en": "Hint",
@@ -1891,9 +1931,37 @@ const copyCatalog = <String, Object?>{
 "de": "Immer sichtbar",
 "en": "Always visible",
 },
+"vocab.hintAutomatic": <String, Object?>{
+"de": "Hinweis automatisch anzeigen",
+"en": "Show hint automatically",
+},
+"vocab.hintDefaultAccept": <String, Object?>{
+"de": "Für neue Vokabeln verwenden",
+"en": "Use for new words",
+},
+"vocab.hintDefaultFailed": <String, Object?>{
+"de": "Der Hinweisstandard konnte nicht gespeichert werden. Bitte erneut versuchen.",
+"en": "Could not save the Hint default. Please retry.",
+},
+"vocab.hintDefaultKeep": <String, Object?>{
+"de": "Bisherigen Standard behalten",
+"en": "Keep current default",
+},
+"vocab.hintDefaultOfferBody": <String, Object?>{
+"de": "Hinweise auch bei neuen Vokabeln in dieser Sammlung automatisch anzeigen? Vorhandene Vokabeln behalten ihre eigene Einstellung.",
+"en": "Also show hints automatically for new vocabulary in this Collection? Existing words keep their own setting.",
+},
+"vocab.hintDefaultOfferTitle": <String, Object?>{
+"de": "Hinweise bei neuen Vokabeln anzeigen?",
+"en": "Show hints for new words?",
+},
 "vocab.hintHidden": <String, Object?>{
 "de": "Bis zum Antippen verborgen",
 "en": "Hidden until tapped",
+},
+"vocab.hintTapHelper": <String, Object?>{
+"de": "Wenn ausgeschaltet, wird der Hinweis durch Antippen sichtbar.",
+"en": "When off, tap the hint to reveal it.",
 },
 "vocab.hintTooLong": <String, Object?>{
 "de": "Der Hinweis darf höchstens 2000 Zeichen enthalten.",
@@ -1902,6 +1970,14 @@ const copyCatalog = <String, Object?>{
 "vocab.hintVisibility": <String, Object?>{
 "de": "Hinweis beim Lernen",
 "en": "Hint during learning",
+},
+"vocab.inactive": <String, Object?>{
+"de": "Inaktiv",
+"en": "Inactive",
+},
+"vocab.inactiveHelp": <String, Object?>{
+"de": "Bleibt sichtbar. In beiden Richtungen vom Lernen ausgeschlossen.",
+"en": "Stays visible. Excluded from learning in both directions.",
 },
 "vocab.inlineAutoSave": <String, Object?>{
 "de": "Gültige Änderungen werden automatisch gespeichert.",
@@ -1946,6 +2022,10 @@ const copyCatalog = <String, Object?>{
 "vocab.makeHintDefault": <String, Object?>{
 "de": "Diese Sichtbarkeit für neue Vokabeln verwenden",
 "en": "Use this visibility for new vocabulary",
+},
+"vocab.oneExample": <String, Object?>{
+"de": "{count} Beispielsatzpaar",
+"en": "{count} example pair",
 },
 "vocab.removeExample": <String, Object?>{
 "de": "Beispiel {number} entfernen",

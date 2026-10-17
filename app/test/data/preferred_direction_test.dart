@@ -99,6 +99,10 @@ void main() {
           } else {
             await settings.write(PreferredDirection.settingKey, saved.name);
           }
+          // Legacy schemas used automatic hints; preserve that historical state.
+          await f.db.customStatement(
+            "UPDATE vocabulary_entries SET hint_visibility = 'always'",
+          );
           final before = await completeSnapshot(f.db);
           // Recreate the historical schema, where addition dates were unknown.
           for (final row in before['vocabulary_entries'] as List) {
@@ -121,7 +125,12 @@ void main() {
                 final row = Map<String, Object?>.of(
                   stored as Map<String, Object?>,
                 );
+                if (table.key == 'collections') {
+                  row.remove('automatic_hint_default');
+                  row.remove('hint_default_offer_handled');
+                }
                 if (table.key == 'vocabulary_entries') {
+                  row.remove('active');
                   for (final column in [
                     'added_at',
                     'example_target_text',

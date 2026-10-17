@@ -11,7 +11,6 @@ import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
-import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_icon.dart';
 
 class ControlledRollback implements VocabularyRepository {
@@ -149,303 +148,128 @@ Future<ValueNotifier<VocabularyRepository>> mount(
   return dependency;
 }
 
+// VOCAB-EDIT-003 r3 removed rollback from saved-card UI. Repository-level
+// snapshot restoration remains covered separately for deletion/integrity uses.
 void main() {
   for (final locale in ['en', 'de']) {
     testWidgets(
-      '$locale has one unchanged collapse X, then distinct labelled 44px Finish and Discard with keyboard activation',
+      '$locale autosave retains one accessible collapse chevron without Finish/Discard or rollback',
       (tester) async {
         final f = Fixture();
         await tester.runAsync(f.initialize);
-        await mount(tester, f, locale: locale);
-        final semantics = tester.ensureSemantics();
-        try {
-          await tester.tap(card(f.one.id));
-          await flush(tester, f);
-          expect(discard(f.one.id), findsNothing);
-          expect(
-            tester.widget<PikoIconButton>(finish(f.one.id)).semanticLabel,
-            locale == 'en'
-                ? 'Collapse vocabulary editor'
-                : 'Vokabeleditor einklappen',
-          );
-          await tester.enterText(field(f.one.id), 'Changed');
-          await flush(tester, f);
-          final labels = locale == 'en'
-              ? ['Finish editing', 'Discard changes']
-              : ['Bearbeiten abschließen', 'Änderungen verwerfen'];
-          for (final (finder, label) in [
-            (finish(f.one.id), labels[0]),
-            (discard(f.one.id), labels[1]),
-          ]) {
-            final rect = tester.getRect(finder);
-            expect(rect.width, greaterThanOrEqualTo(44));
-            expect(rect.height, greaterThanOrEqualTo(44));
-            expect(find.bySemanticsLabel(label), findsOneWidget);
-            expect(
-              find.descendant(
-                of: finder,
-                matching: find.byWidgetPredicate(
-                  (w) => w is Tooltip && w.message == label,
-                ),
-              ),
-              findsOneWidget,
-            );
-          }
-          final completeIcon = find.descendant(
-            of: finish(f.one.id),
-            matching: find.byType(PikoIcon),
-          );
-          final discardIcon = find.descendant(
-            of: discard(f.one.id),
-            matching: find.byType(PikoIcon),
-          );
-          Focus.of(tester.element(completeIcon)).requestFocus();
-          await tester.pump();
-          expect(Focus.of(tester.element(completeIcon)).hasPrimaryFocus, isTrue);
-          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-          await tester.pump();
-          expect(Focus.of(tester.element(discardIcon)).hasPrimaryFocus, isTrue);
-          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-          await flush(tester, f);
-          expect(field(f.one.id), findsNothing);
-          expect(
-            (await tester.runAsync(
-              () => f.real.watchById(f.one.id).first,
-            ))!.targetText,
-            'One',
-          );
-        } finally {
-          semantics.dispose();
-        }
+        await mount(
+          tester,
+          f,
+          locale: locale,
+          width: 392,
+          scale: 2,
+          keyboard: 300,
+        );
+        await tester.tap(card(f.one.id));
+        await flush(tester, f);
+        await tester.enterText(field(f.one.id), 'Changed');
+        await flush(tester, f);
+        expect(discard(f.one.id), findsNothing);
+        final control = finish(f.one.id);
+        await tester.ensureVisible(control);
+        await tester.pumpAndSettle();
+        final rect = tester.getRect(control);
+        expect(rect.width, greaterThanOrEqualTo(44));
+        expect(rect.height, greaterThanOrEqualTo(44));
+        expect(rect.bottom, lessThanOrEqualTo(700));
+        final icon = find.descendant(
+          of: control,
+          matching: find.byType(PikoIcon),
+        );
+        expect(tester.widget<PikoIcon>(icon).name, PikoIconName.chevronRight);
+        Focus.of(tester.element(icon)).requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await flush(tester, f);
+        expect(field(f.one.id), findsNothing);
+        expect(
+          (await tester.runAsync(
+            () => f.real.watchById(f.one.id).first,
+          ))!.targetText,
+          'Changed',
+        );
+        expect(f.repository.restores, 0);
+        expect(tester.takeException(), isNull);
       },
     );
   }
   testWidgets(
-    'invalid raw input cannot Finish but Discard restores both opening fields and leaves learning state unchanged',
+    'invalid collapse retains raw selection and saved content; correction saves without rollback',
     (tester) async {
       final f = Fixture();
       await tester.runAsync(f.initialize);
       await mount(tester, f);
-      final progress = await tester.runAsync(
-        () async =>
-            (await f.db
-                    .customSelect('SELECT * FROM learning_items ORDER BY id')
-                    .get())
-                .map((r) => r.data)
-                .toList(),
+      final before = await tester.runAsync(
+        () =>
+            f.db.customSelect('SELECT * FROM learning_items ORDER BY id').get(),
       );
       await tester.tap(card(f.one.id));
       await flush(tester, f);
       await tester.enterText(field(f.one.id), 'Changed');
       await flush(tester, f);
-      await tester.enterText(field(f.one.id, false), ' ');
-      await tester.pumpAndSettle();
+      await tester.enterText(field(f.one.id, false), '  ');
+      final raw = tester.widget<TextField>(field(f.one.id, false)).controller!;
+      raw.selection = const TextSelection(baseOffset: 0, extentOffset: 1);
       await tester.tap(finish(f.one.id));
-      await tester.pumpAndSettle();
+      await flush(tester, f);
       expect(field(f.one.id), findsOneWidget);
-      await tester.tap(discard(f.one.id));
-      await flush(tester, f);
-      expect(field(f.one.id), findsNothing);
-      final saved = (await tester.runAsync(
-        () => f.real.watchById(f.one.id).first,
-      ))!;
-      expect(saved.targetText, 'One');
-      expect(saved.nativeText, 'Eins');
+      expect(raw.text, '  ');
       expect(
-        await tester.runAsync(
-          () async =>
-              (await f.db
-                      .customSelect('SELECT * FROM learning_items ORDER BY id')
-                      .get())
-                  .map((r) => r.data)
-                  .toList(),
-        ),
-        progress,
+        raw.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 1),
       );
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      expect(discard(f.one.id), findsNothing);
-    },
-  );
-  testWidgets(
-    'queued autosaves drain then one rollback; pending controls and fields cannot compete',
-    (tester) async {
-      final f = Fixture();
-      await tester.runAsync(f.initialize);
-      await mount(tester, f);
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      final updates = Completer<void>();
-      f.repository.updateGate = updates;
-      await tester.enterText(field(f.one.id), 'A');
-      await tester.enterText(field(f.one.id), 'B');
-      await tester.tap(discard(f.one.id));
-      await tester.pump();
-      await tester.tap(discard(f.one.id));
-      await tester.pump();
-      expect(f.repository.restores, 0);
-      expect(tester.widget<TextField>(field(f.one.id)).enabled, isFalse);
-      expect(tester.widget<PikoButton>(finish(f.one.id)).onPressed, isNull);
-      await tester.tap(card(f.two.id));
-      await tester.pump();
-      expect(field(f.two.id), findsNothing);
-      updates.complete();
-      await flush(tester, f);
-      expect(f.repository.restores, 1);
-      expect(field(f.one.id), findsNothing);
       expect(
         (await tester.runAsync(
           () => f.real.watchById(f.one.id).first,
         ))!.targetText,
-        'One',
-      );
-    },
-  );
-  testWidgets(
-    'rollback storage failure retains raw selection and focus, and retry restores the original capture',
-    (tester) async {
-      final f = Fixture();
-      await tester.runAsync(f.initialize);
-      await mount(tester, f);
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      await tester.enterText(field(f.one.id), 'Changed');
-      await flush(tester, f);
-      final text = tester.widget<TextField>(field(f.one.id));
-      text.controller!.selection = const TextSelection(
-        baseOffset: 0,
-        extentOffset: 2,
-      );
-      f.repository.failRestore = true;
-      await tester.tap(discard(f.one.id));
-      await flush(tester, f);
-      expect(
-        find.text("Couldn't discard changes. Please try again."),
-        findsOneWidget,
-      );
-      expect(text.controller!.text, 'Changed');
-      expect(
-        text.controller!.selection,
-        const TextSelection(baseOffset: 0, extentOffset: 2),
-      );
-      expect(text.focusNode!.hasFocus, isTrue);
-      f.repository.failRestore = false;
-      await tester.tap(find.text('Try again'));
-      await flush(tester, f);
-      expect(field(f.one.id), findsNothing);
-      expect(f.repository.restores, 2);
-    },
-  );
-  testWidgets(
-    'opening-pair collision keeps Discard error and raw editor until retry becomes safe',
-    (tester) async {
-      final f = Fixture();
-      await tester.runAsync(f.initialize);
-      await mount(tester, f);
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      await tester.enterText(field(f.one.id), 'Changed');
-      await flush(tester, f);
-      final other = (await tester.runAsync(
-        () => f.real.create(
-          collectionId: f.owner.id,
-          targetText: 'One',
-          nativeText: 'Eins',
-        ),
-      ))!;
-      await tester.tap(discard(f.one.id));
-      await flush(tester, f);
-      expect(field(f.one.id), findsOneWidget);
-      expect(
-        tester.widget<TextField>(field(f.one.id)).controller!.text,
         'Changed',
       );
-      expect(
-        (await tester.runAsync(
-          () => f.real.watchById(other.id).first,
-        ))!.targetText,
-        'One',
+      expect(discard(f.one.id), findsNothing);
+      expect(f.repository.restores, 0);
+      await tester.enterText(field(f.one.id, false), 'Neu');
+      await flush(tester, f);
+      await tester.tap(finish(f.one.id));
+      await flush(tester, f);
+      expect(field(f.one.id), findsNothing);
+      final after = await tester.runAsync(
+        () =>
+            f.db.customSelect('SELECT * FROM learning_items ORDER BY id').get(),
       );
-      await tester.runAsync(
-        () => (f.db.delete(
-          f.db.vocabularyEntries,
-        )..where((row) => row.id.equals(other.id))).go(),
-      );
-      await tester.tap(find.text('Try again'));
+      expect(after!.map((row) => row.data), before!.map((row) => row.data));
+    },
+  );
+  testWidgets(
+    'collapse drains queued autosaves and rejects competing edits until final content is saved',
+    (tester) async {
+      final f = Fixture();
+      await tester.runAsync(f.initialize);
+      await mount(tester, f);
+      await tester.tap(card(f.one.id));
+      await flush(tester, f);
+      final gate = Completer<void>();
+      f.repository.updateGate = gate;
+      await tester.enterText(field(f.one.id), 'First');
+      await tester.pump();
+      await tester.enterText(field(f.one.id), 'Latest');
+      await tester.pump();
+      await tester.tap(finish(f.one.id));
+      await tester.pump();
+      expect(tester.widget<TextField>(field(f.one.id)).enabled, isFalse);
+      expect(f.repository.restores, 0);
+      gate.complete();
       await flush(tester, f);
       expect(field(f.one.id), findsNothing);
       expect(
         (await tester.runAsync(
           () => f.real.watchById(f.one.id).first,
         ))!.targetText,
-        'One',
+        'Latest',
       );
-    },
-  );
-  testWidgets(
-    'late rollback cannot collapse or focus a replacement row or navigate a covered route',
-    (tester) async {
-      final f = Fixture();
-      await tester.runAsync(f.initialize);
-      final dependency = await mount(tester, f);
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      await tester.enterText(field(f.one.id), 'Changed');
-      await flush(tester, f);
-      final gate = Completer<void>();
-      f.repository.restoreGate = gate;
-      await tester.tap(discard(f.one.id));
-      await tester.pump();
-      dependency.value = ControlledRollback(f.real);
-      await flush(tester, f);
-      await tester.tap(card(f.two.id));
-      await flush(tester, f);
-      await tester.enterText(field(f.two.id), ' ');
-      final text = tester.widget<TextField>(field(f.two.id));
-      final navigator = Navigator.of(tester.element(field(f.two.id)));
-      unawaited(
-        navigator.push<void>(
-          MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('Other route')),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      gate.complete();
-      await flush(tester, f);
-      expect(find.text('Other route'), findsOneWidget);
-      expect(navigator.canPop(), isTrue);
-      navigator.pop();
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<TextField>(field(f.two.id)).controller,
-        same(text.controller),
-      );
-      expect(text.controller!.text, ' ');
-    },
-  );
-  testWidgets(
-    'German 392px 200 percent reaches both independent controls above simulated keyboard',
-    (tester) async {
-      final f = Fixture();
-      await tester.runAsync(f.initialize);
-      await mount(tester, f, locale: 'de', width: 392, scale: 2, keyboard: 300);
-      await tester.tap(card(f.one.id));
-      await flush(tester, f);
-      await tester.enterText(field(f.one.id), ' ');
-      await tester.pumpAndSettle();
-      for (final action in [finish(f.one.id), discard(f.one.id)]) {
-        await tester.ensureVisible(action);
-        await tester.pumpAndSettle();
-        final rect = tester.getRect(action);
-        expect(rect.top, greaterThanOrEqualTo(0));
-        expect(rect.bottom, lessThanOrEqualTo(700));
-        expect(rect.right, lessThanOrEqualTo(392));
-      }
-      await tester.tap(discard(f.one.id));
-      await flush(tester, f);
-      expect(field(f.one.id), findsNothing);
-      expect(tester.takeException(), isNull);
     },
   );
 }

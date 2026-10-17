@@ -10,7 +10,7 @@ import '../vocabulary_json.dart';
 import '../vocabulary_content.dart';
 import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
-import 'sqlite_settings_repository.dart';
+import 'sqlite_vocabulary_repository.dart';
 
 part 'sqlite_vocabulary_json_import.dart';
 
@@ -209,6 +209,7 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         'id': entry.id,
         'targetText': entry.targetText,
         'nativeText': entry.nativeText,
+        'active': entry.active,
         'examples': [
           for (final pair in content.examples)
             {'targetText': pair.targetText, 'nativeText': pair.nativeText},

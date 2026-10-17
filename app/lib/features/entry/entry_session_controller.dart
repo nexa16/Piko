@@ -13,21 +13,27 @@ final class EntryDraft {
   const EntryDraft({
     this.targetText = '',
     this.nativeText = '',
-    this.content = const VocabularyContent(),
+    this.content = const VocabularyContent(
+      hintVisibility: HintVisibility.hidden,
+    ),
     this.makeHintVisibilityDefault = false,
+    this.active = true,
   }) : assignments = const {};
   EntryDraft.categorized({
     this.targetText = '',
     this.nativeText = '',
     Map<String, Set<String>> assignments = const {},
-    this.content = const VocabularyContent(),
+    this.content = const VocabularyContent(
+      hintVisibility: HintVisibility.hidden,
+    ),
     this.makeHintVisibilityDefault = false,
+    this.active = true,
   }) : assignments = _freezeEntryAssignments(assignments);
   final String targetText;
   final String nativeText;
   final Map<String, Set<String>> assignments;
   final VocabularyContent content;
-  final bool makeHintVisibilityDefault;
+  final bool makeHintVisibilityDefault, active;
   bool get hasOptionalText =>
       content.examples.any(
         (pair) =>
@@ -74,6 +80,7 @@ final class _SavedEntryBuffer {
          nativeText: committed.nativeText,
          assignments: assignments,
          content: committed.content,
+         active: committed.active,
        );
   VocabularyRecord committed;
   EntryDraft draft;
@@ -134,9 +141,13 @@ final class EntrySessionController extends ChangeNotifier {
   String? _deletingId, _restoringId;
   bool get supportsDeletion => _deletionService != null;
   bool get supportsCategories => _repository is CategorizedVocabularyRepository;
+  CollectionHintPreferences? get hintPreferences =>
+      _repository is CollectionHintPreferences
+      ? _repository as CollectionHintPreferences
+      : null;
   bool get supportsContent => _repository is VocabularyContentRepository;
   bool _contentDefaultReady = false, _draftContentEdited = false;
-  HintVisibility _newHintVisibility = HintVisibility.always;
+  HintVisibility _newHintVisibility = HintVisibility.hidden;
   Future<void>? _contentDefaultLoad;
   Object? contentDefaultError;
   bool get contentReady => !supportsContent || _contentDefaultReady;
@@ -151,7 +162,7 @@ final class EntrySessionController extends ChangeNotifier {
     unawaited(() async {
       try {
         final visibility = await (_repository as VocabularyContentRepository)
-            .readHintVisibilityDefault();
+            .readHintVisibilityDefault(collectionId: collectionId);
         if (!_disposed) {
           _newHintVisibility = visibility;
           _contentDefaultReady = true;
@@ -161,6 +172,7 @@ final class EntrySessionController extends ChangeNotifier {
               targetText: _draft.targetText,
               nativeText: _draft.nativeText,
               assignments: _draft.assignments,
+              active: _draft.active,
               content: VocabularyContent(
                 examples: _draft.content.examples,
                 hintText: _draft.content.hintText,
@@ -215,7 +227,28 @@ final class EntrySessionController extends ChangeNotifier {
   bool get isCompleted => !_disposed && _completed;
 
   EntryDraft get draft => _draft;
-  Object? get draftError => _draftError;
+  final Set<Future<void>> _preferenceWrites = {};
+  final Map<String?, Object> _preferenceErrors = {};
+  Object? get draftError => _draftError ?? _preferenceErrors[null];
+
+  Future<void> trackPreferenceWrite(String? entryId, Future<void> operation) {
+    final done = Completer<void>();
+    _preferenceWrites.add(done.future);
+    unawaited(() async {
+      try {
+        await operation;
+        _preferenceErrors.remove(entryId);
+      } catch (failure) {
+        _preferenceErrors[entryId] = failure;
+      } finally {
+        _preferenceWrites.remove(done.future);
+        done.complete();
+        if (!_disposed) notifyListeners();
+      }
+    }());
+    return done.future;
+  }
+
   List<VocabularyRecord> get confirmedEntries =>
       List.unmodifiable(_confirmedEntries);
 
@@ -238,7 +271,7 @@ final class EntrySessionController extends ChangeNotifier {
     return SavedEntryEditState(
       draft: buffer.draft,
       committed: buffer.committed,
-      error: buffer.error,
+      error: buffer.error ?? _preferenceErrors[id],
       isSaving: _savedWorkers.containsKey(id),
     );
   }
@@ -249,6 +282,7 @@ final class EntrySessionController extends ChangeNotifier {
     String? nativeText,
     Map<String, Set<String>>? assignments,
     VocabularyContent? content,
+    bool? active,
     bool? makeHintVisibilityDefault,
   }) {
     _ensureEditable();
@@ -261,6 +295,7 @@ final class EntrySessionController extends ChangeNotifier {
     if (target == buffer.draft.targetText &&
         native == buffer.draft.nativeText &&
         (content == null || content == buffer.draft.content) &&
+        (active == null || active == buffer.draft.active) &&
         (makeHintVisibilityDefault == null ||
             makeHintVisibilityDefault ==
                 buffer.draft.makeHintVisibilityDefault) &&
@@ -273,6 +308,7 @@ final class EntrySessionController extends ChangeNotifier {
       nativeText: native,
       assignments: assignments ?? buffer.draft.assignments,
       content: content ?? buffer.draft.content,
+      active: active ?? buffer.draft.active,
       makeHintVisibilityDefault:
           makeHintVisibilityDefault ?? buffer.draft.makeHintVisibilityDefault,
     );
@@ -340,6 +376,7 @@ final class EntrySessionController extends ChangeNotifier {
                 nativeText: snapshot.nativeText,
                 assignments: snapshot.assignments,
                 content: snapshot.content,
+                active: snapshot.active,
                 makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
               )
             : repository is CategorizedVocabularyRepository
@@ -381,8 +418,10 @@ final class EntrySessionController extends ChangeNotifier {
   Future<void> awaitSavedEdits() async {
     while (_savedWorkers.isNotEmpty ||
         _rechecks.isNotEmpty ||
-        _categoryMetadata != null) {
+        _categoryMetadata != null ||
+        _preferenceWrites.isNotEmpty) {
       await Future.wait([
+        ..._preferenceWrites,
         ..._savedWorkers.values,
         ..._rechecks.values,
         ?_categoryMetadata,
@@ -449,6 +488,7 @@ final class EntrySessionController extends ChangeNotifier {
             nativeText: updated.nativeText,
             assignments: categoryAssignments[id] ?? buffer.draft.assignments,
             content: updated.content,
+            active: updated.active,
           );
         }
         buffer.committed = updated;
@@ -792,12 +832,14 @@ final class EntrySessionController extends ChangeNotifier {
       // Disposal ends the lifetime; do not begin a new write after draining.
       if (_disposed) throw StateError('The entry session has ended.');
       for (final record in _confirmedEntries) {
-        final error = _savedBuffers[record.id]?.error;
+        final error =
+            _savedBuffers[record.id]?.error ?? _preferenceErrors[record.id];
         if (error != null) {
           _activeEntryId = record.id;
           throw SavedEntryCompletionBlocked(record.id, error);
         }
       }
+      if (_preferenceErrors[null] case final error?) throw error;
       final target = normalizeVocabularyText(snapshot.targetText);
       final native = normalizeVocabularyText(snapshot.nativeText);
       if (target.isNotEmpty ||
@@ -845,7 +887,19 @@ final class EntrySessionController extends ChangeNotifier {
     try {
       if (!contentReady) await initializeContentDefault();
       if (_disposed) throw StateError('The entry session has ended.');
+      while (_preferenceWrites.isNotEmpty) {
+        await Future.wait(_preferenceWrites.toList());
+      }
+      if (_preferenceErrors[null] case final error?) throw error;
       snapshot = _draft;
+      // An accepted Collection offer applies to the next fresh draft only.
+      // Read before creating so a failed read cannot duplicate a saved entry.
+      if (_repository is CollectionHintPreferences &&
+          _repository is VocabularyContentRepository) {
+        _newHintVisibility = await (_repository).readHintVisibilityDefault(
+          collectionId: collectionId,
+        );
+      }
       final record = await _create(snapshot);
       if (record.collectionId != collectionId) {
         throw StateError(
@@ -936,6 +990,19 @@ final class EntrySessionController extends ChangeNotifier {
     }
   }
 
+  void setActive(bool active) {
+    _ensureEditable();
+    _draft = EntryDraft.categorized(
+      targetText: _draft.targetText,
+      nativeText: _draft.nativeText,
+      assignments: _draft.assignments,
+      content: _draft.content,
+      active: active,
+    );
+    _draftRevision++;
+    notifyListeners();
+  }
+
   void setContent(
     VocabularyContent content, {
     bool? makeHintVisibilityDefault,
@@ -948,6 +1015,7 @@ final class EntrySessionController extends ChangeNotifier {
       nativeText: _draft.nativeText,
       assignments: _draft.assignments,
       content: content,
+      active: _draft.active,
       makeHintVisibilityDefault:
           makeHintVisibilityDefault ?? _draft.makeHintVisibilityDefault,
     );
@@ -964,6 +1032,7 @@ final class EntrySessionController extends ChangeNotifier {
       nativeText: native,
       assignments: _draft.assignments,
       content: _draft.content,
+      active: _draft.active,
       makeHintVisibilityDefault: _draft.makeHintVisibilityDefault,
     );
     _draftRevision++;
@@ -980,6 +1049,7 @@ final class EntrySessionController extends ChangeNotifier {
         nativeText: snapshot.nativeText,
         assignments: snapshot.assignments,
         content: snapshot.content,
+        active: snapshot.active,
         makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
       );
     }
@@ -1028,6 +1098,7 @@ final class EntrySessionController extends ChangeNotifier {
       nativeText: _draft.nativeText,
       assignments: next,
       content: _draft.content,
+      active: _draft.active,
       makeHintVisibilityDefault: _draft.makeHintVisibilityDefault,
     );
     _draftRevision++;
@@ -1085,6 +1156,7 @@ final class EntrySessionController extends ChangeNotifier {
             nativeText: value.nativeText,
             assignments: prune(value.assignments),
             content: value.content,
+            active: value.active,
             makeHintVisibilityDefault: value.makeHintVisibilityDefault,
           );
           var changed = false;

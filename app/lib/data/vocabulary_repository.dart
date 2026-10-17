@@ -8,6 +8,7 @@ final class VocabularyRecord {
     required this.nativeText,
     this.content = const VocabularyContent(),
     this.addedAt,
+    this.active = true,
   });
   final String id;
   final String collectionId;
@@ -15,6 +16,7 @@ final class VocabularyRecord {
   final String nativeText;
   final VocabularyContent content;
   final DateTime? addedAt;
+  final bool active;
 }
 
 enum VocabularyValidation {
@@ -77,7 +79,9 @@ abstract interface class VocabularyRepository {
 /// Optional content capability; legacy text-only implementations stay valid.
 abstract interface class VocabularyContentRepository
     implements CategorizedVocabularyRepository {
-  Future<HintVisibility> readHintVisibilityDefault();
+  Future<HintVisibility> readHintVisibilityDefault({
+    required String collectionId,
+  });
   Future<VocabularyRecord> createWithContent({
     required String collectionId,
     required String targetText,
@@ -85,6 +89,7 @@ abstract interface class VocabularyContentRepository
     required Map<String, Set<String>> assignments,
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
+    bool active = true,
   });
   Future<VocabularyRecord> updateWithContent({
     required String id,
@@ -93,6 +98,16 @@ abstract interface class VocabularyContentRepository
     required Map<String, Set<String>> assignments,
     required VocabularyContent content,
     bool makeHintVisibilityDefault = false,
+    bool? active,
+  });
+}
+
+abstract interface class CollectionHintPreferences {
+  Future<bool> hintDefaultOfferHandled(String collectionId);
+  Future<void> setCollectionHintDefault(String collectionId, bool automatic);
+  Future<void> completeHintDefaultOffer(
+    String collectionId, {
+    required bool accept,
   });
 }
 
