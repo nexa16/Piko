@@ -1,6 +1,6 @@
 # Round 5 planning and implementation ledger
 
-**Status, 2026-10-17: the three authorized round-5 packages are locally implemented and verified. The owner approved publication after a review with no blockers and confirmed the candidate update/appearance check. Scenario-specific phone acceptance remains pending before merge. Publication is being prepared; nothing has been released. F20/F21/F22 and additional learning candidates remain excluded.**
+**Status, 2026-10-17: the three authorized round-5 packages are locally implemented and verified. The owner approved publication after a review with no blockers and confirmed the candidate update/appearance check. Scenario-specific phone acceptance remains pending before merge. [PR #6](https://github.com/nexa16/Piko/pull/6) is open into develop; nothing has been released. F20/F21/F22 and additional learning candidates remain excluded.**
 
 ## Local verification and candidate — 2026-10-17
 
@@ -36,6 +36,8 @@ The owner subsequently approved publication of the reviewed branch and requested
 The approved publication proceeds as a focused PR into `develop`. Under [AGENTS.md](../AGENTS.md#implementation-round-handoff), merge remains pending those phone scenarios, applicable checks and resolved review discussions. After merge, verify the fetched squash result, preserve unrelated local work and retained evidence, clean only verified obsolete references, then create `codex/round-6-implementation` from the updated `develop` and record its exact base and pending scope. No new app scope or release is authorized.
 
 The subsequent changes only record this approval/acceptance boundary in this ledger and its entry-point summaries. Their diff and commit metadata are reviewed before pushing; application source and the candidate checksum remain unchanged.
+
+Publication is complete in [PR #6](https://github.com/nexa16/Piko/pull/6), titled “Add compact vocabulary editing and activity-aware learning”. GitHub reports it mergeable; at the publication inspection it has no status checks or review discussions, and develop has no configured branch rules/protection. The owner phone-flow gate above is still pending, so no squash merge, branch cleanup or round-6 branch creation has occurred. Recheck GitHub state and verify the exact merged content once that gate is satisfied.
 
 ## Baseline and handoff
 
