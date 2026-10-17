@@ -747,6 +747,102 @@ const copyCatalog = <String, Object?>{
 "de": "Änderungen nicht gespeichert",
 "en": "Changes not saved",
 },
+"header.choose": <String, Object?>{
+"de": "Lernrichtung wählen",
+"en": "Choose learning direction",
+},
+"header.due": <String, Object?>{
+"de": "{direction} · {count} zum Wiederholen",
+"en": "{direction} · {count} to review",
+},
+"header.edit": <String, Object?>{
+"de": "Sammlungstitel bearbeiten",
+"en": "Edit collection title",
+},
+"header.editNote": <String, Object?>{
+"de": "Der Titel bleibt im ausgeklappten Kopf bearbeitbar.",
+"en": "Title editing remains available in the expanded header.",
+},
+"header.entries": <String, Object?>{
+"de": "{count} Einträge",
+"en": "{count} entries",
+},
+"header.jump": <String, Object?>{
+"de": "Kompakten Kopf zeigen",
+"en": "Show compact header",
+},
+"header.new": <String, Object?>{
+"de": "{direction} · {count} neu",
+"en": "{direction} · {count} new",
+},
+"header.none": <String, Object?>{
+"de": "Kein Lernen verfügbar",
+"en": "No learning available",
+},
+"header.note": <String, Object?>{
+"de": "Scrolle innerhalb der Vorschau. Lernstarts sind simuliert.",
+"en": "Scroll inside the preview. Learning launches are simulated.",
+},
+"header.one": <String, Object?>{
+"de": "Eine Richtung",
+"en": "One direction",
+},
+"header.options": <String, Object?>{
+"de": "Sammlungsoptionen",
+"en": "Collection options",
+},
+"header.optionsNote": <String, Object?>{
+"de": "Sammlungsaktionen bleiben im angehefteten Navigationsmenü.",
+"en": "Collection actions stay in the persistent navigation menu.",
+},
+"header.preview": <String, Object?>{
+"de": "Schrumpfender Sammlungskopf · Prototyp",
+"en": "Collapsing collection header · prototype",
+},
+"header.review": <String, Object?>{
+"de": "Wiederholen",
+"en": "Review",
+},
+"header.reviewCount": <String, Object?>{
+"de": "Wiederholen · {count} Wiederholungen",
+"en": "Review · {count} repetitions",
+},
+"header.scenario": <String, Object?>{
+"de": "Verfügbare Richtungen",
+"en": "Available directions",
+},
+"header.simulated": <String, Object?>{
+"de": "Dieser Prototyp simuliert den Start von {direction}. Es werden keine Lerndaten geändert.",
+"en": "This prototype simulates launching {direction}. No learning data changes.",
+},
+"header.speed": <String, Object?>{
+"de": "Intensiv",
+"en": "Speed",
+},
+"header.speedContext": <String, Object?>{
+"de": "{direction} · {count} neue Vokabeln. Die App behält die Einstellung der Durchgangsgröße vor dem Start.",
+"en": "{direction} · {count} new words. The app retains its pool-size setup before starting.",
+},
+"header.speedCount": <String, Object?>{
+"de": "Intensiv · {count} neue Vokabeln",
+"en": "Speed · {count} new words",
+},
+"header.speedSetup": <String, Object?>{
+"de": "Intensivlernen einrichten · Vorschau",
+"en": "Speed setup preview",
+},
+"header.started": <String, Object?>{
+"de": "Wiederholvorschau",
+"en": "Review preview",
+},
+"header.top": <String, Object?>{
+"de": "Nach oben",
+"en": "Back to top",
+},
+"header.two": <String, Object?>{
+"de": "Beide Richtungen",
+"en": "Both directions",
+},
 "home.collections": <String, Object?>{
 "de": "Meine Sammlungen",
 "en": "My collections",
@@ -1770,6 +1866,46 @@ const copyCatalog = <String, Object?>{
 "r2.waitDemo": <String, Object?>{
 "de": "Wiederholungs-Countdown",
 "en": "Retry countdown",
+},
+"selection.all": <String, Object?>{
+"de": "Alle auswählen",
+"en": "Select all",
+},
+"selection.clear": <String, Object?>{
+"de": "Auswahl aufheben",
+"en": "Clear selection",
+},
+"selection.controls": <String, Object?>{
+"de": "Vokabelauswahl",
+"en": "Vocabulary selection",
+},
+"selection.count": <String, Object?>{
+"de": "{count} ausgewählt",
+"en": "{count} selected",
+},
+"selection.hidden": <String, Object?>{
+"de": "{count} durch Filter oder Suche ausgeblendet",
+"en": "{count} hidden by filters or search",
+},
+"selection.hint": <String, Object?>{
+"de": "Vokabel gedrückt halten, um sie auszuwählen.",
+"en": "Hold a word to select it.",
+},
+"selection.leave": <String, Object?>{
+"de": "Vorschau: Seite verlassen",
+"en": "Preview: leave this page",
+},
+"selection.note": <String, Object?>{
+"de": "Auswahlmockup mit Beispieldaten. Vokabel eine halbe Sekunde gedrückt halten, dann weitere antippen. Alle auswählen umfasst alle Such-/Filtertreffer, auch in eingeklappten Gruppen. Auswahl aufheben gilt auch für ausgeblendete Vokabeln. Keine Aktionen auf ausgewählte Vokabeln. Der Vorschau-Link öffnet die normale Liste; Browser-Zurück zeigt wieder eine leere Auswahl. Tastatur: Umschalt+Leertaste auf einer Vokabel startet die Auswahl; danach Tab und Leertaste zum Umschalten.",
+"en": "Selection mockup with sample data. Hold a word for half a second, then tap others. Select all includes all search/filter matches, even in collapsed groups. Clear selection includes hidden words. No actions on selected vocabulary. The preview-only leave link opens the ordinary list; browser Back returns with an empty selection. Keyboard: Shift+Space on a word starts selection; then Tab and Space to toggle.",
+},
+"selection.preview": <String, Object?>{
+"de": "Auswahlvorschau",
+"en": "Selection preview",
+},
+"selection.start": <String, Object?>{
+"de": "Auswählen",
+"en": "Select",
 },
 "settings.ai": <String, Object?>{
 "de": "KI-Unterstützung",

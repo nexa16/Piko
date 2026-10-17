@@ -34,6 +34,8 @@
 
 ## Authentication
 
+- In this Windows sandbox, GitHub CLI stores authentication outside the workspace in `%APPDATA%\GitHub CLI\hosts.yml`. Start `gh auth login` with `sandbox_permissions: require_escalated` so it can save the authorization on the first attempt. A sandboxed login can complete browser authorization and then fail with Access denied while saving, forcing the owner to authorize a second device code. Do not repeat that known failing path or print/copy credential-file contents.
+- Verify the saved session in the same elevated context: the sandbox can still see stale credentials and return HTTP 401 after a successful login. Do not start another device authorization for that mismatch. For elevated repository queries, pass `--repo nexa16/Piko` explicitly to `gh` to avoid Git's different-owner checkout error; do not add a global safe-directory exception merely for a GitHub query.
 - If the command-line GitHub session is unauthenticated, start `gh auth login -h github.com --git-protocol https --web` yourself. Present its one-time device code in an easy-to-copy code block and open the verification URL in a visible Codex browser tab; use the user's default browser only when the Codex browser is unavailable.
 - Ask the user to complete sign-in and authorization in the browser. Keep the login command waiting, then verify completion and confirm the active account is `nexa16` before resuming. Never commit the one-time code or authentication output.
 - If a GitHub browser session requires sign-in, ask the user to sign in. Do not ask the user to send passwords, tokens, recovery codes, or other credentials in chat.

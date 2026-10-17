@@ -30,7 +30,7 @@ Follow [design autonomy](../AGENTS.md#design-autonomy-and-efficient-clarificatio
 
 ## Finding lifecycle
 
-Use open → specified → in_progress → needs_verification → fixed. Deferred requires a reason. Reopen the same ID with a history event for a regression; assign the next ID to an independent issue. Severity and implementation order are separate.
+Use open → specified → in_progress → needs_verification → fixed. Deferred requires a reason. Withdrawn removes a finding from active work at the owner's request; record the reason and history, preserve its ID and evidence, and do not imply an implemented or verified fix. Reopen the same ID with a history event for a regression; assign the next ID to an independent issue. Severity and implementation order are separate.
 
 Specified requires an accepted concrete decision, owning requirement revision and acceptance criteria. Fixed requires implementation revision, relevant passing checks, a named Android state inspection and evidence reference. A mockup, commit, generated file or host test alone is insufficient. Preserve original observations and prior verification history.
 

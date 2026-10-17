@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 24,
+  "revision": 26,
   "updated": "2026-10-17",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -10,7 +10,8 @@
     "in_progress",
     "needs_verification",
     "fixed",
-    "deferred"
+    "deferred",
+    "withdrawn"
   ],
   "priorityPolicy": {
     "P0": "Task blocking",
@@ -1972,10 +1973,10 @@
     },
     {
       "id": "F22",
-      "revision": 3,
+      "revision": 4,
       "priority": "P1",
       "title": "Keep vocabulary typing focused through autosave",
-      "kind": "Owner-reported interaction defect; runtime reproduction pending",
+      "kind": "Withdrawn owner report; no longer reproducible by owner",
       "screen": "Android Collection vocabulary editor: Hint or example sentence",
       "requirements": [
         "UX-COLL-009",
@@ -1988,8 +1989,8 @@
         "UX-COLL-011": 4
       },
       "summary": "The owner confirms Hint or an example sentence in the Android Collection vocabulary editor and reports jumping, keyboard dismissal and focus loss after one typed letter; suspects autosave. Exact optional field/example index, initial content, build, view state and repeatability remain to be established during reproduction. Main vocabulary/translation fields are not confirmed affected.",
-      "status": "deferred",
-      "decision": "Preserve uninterrupted typing, saved-card autosave and guarded collapse under VOCAB-EDIT-002 r2. The owner authorized a focused fix if the Android cause is established. The first bounded current-source host test retained Hint/Example focus, and the emulator's normal app predates the owner candidate; no matching Android reproduction or cause was established. Defer the fix pending the exact failing sequence and candidate.",
+      "status": "withdrawn",
+      "decision": "On 2026-10-17 the owner could no longer reproduce F22 and requested its removal. Withdraw from active investigation and round-6 pending work; retain the original report and evidence for traceability. No cause-established repair or Android-verified fix is claimed. Existing typing/autosave requirements remain unchanged.",
       "workPackage": "entry",
       "acceptance": [
         "Reproduce the reported optional-content flow in the Android Collection vocabulary editor using synthetic data; record the exact field/example index, candidate, initial content, view state and repeatability.",
@@ -2014,6 +2015,10 @@
         {
           "date": "2026-10-17",
           "event": "Bounded current-source production-composition widget test retained text and focus after first and second Hint/Example edits across autosave. Integrated source no longer passes query-readiness busy state into the optional fields. Emulator normal app is build 2, older than the owner candidate; no matching Android reproduction or cause was established. Fix deferred, not marked verified."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner reports F22 is no longer reproducible and requests removal. Finding withdrawn from active work, not marked fixed; no app/mockup change or new agent runtime verification."
         }
       ],
       "impact": "Repeated focus loss interrupts vocabulary input and forces the user to reactivate the field.",
@@ -2028,7 +2033,51 @@
       "implementationRound": 6,
       "reconciliation": {
         "implementationLedger": "implementation-round-6.md",
-        "findingClosure": "First bounded host check did not reproduce the owner symptom; matching Android build/sequence and revision-specific verification remain pending. Fix deferred until a cause is established."
+        "findingClosure": "Withdrawn at owner request on 2026-10-17 because the owner can no longer reproduce it. No further F22 work is pending; historical evidence is retained without a verified-fix claim."
+      }
+    },
+    {
+      "id": "F23",
+      "revision": 1,
+      "priority": "P2",
+      "title": "Preserve the interacted control during list reflow",
+      "kind": "Owner-reported viewport movement; accepted revised interaction rule",
+      "screen": "Collection Detail filtering, grouping and sorting",
+      "requirements": [
+        "UX-ANCHOR-001",
+        "UX-COLL-001"
+      ],
+      "requirementRevisions": {
+        "UX-ANCHOR-001": 1,
+        "UX-COLL-001": 7
+      },
+      "summary": "Owner reports jumping when changing grouping/filtering/sorting, then revises the intended outcome to a shared same-screen rule: preserve the interacted item and let surrounding content move.",
+      "status": "specified",
+      "decision": "UX-ANCHOR-001 r1 owns the shared anchor, transition and fallback policy; UX-COLL-001 r7 supersedes the prior internal-only stability boundary. F21 retains historical r6 closure; it does not verify this new behavior.",
+      "workPackage": "interaction-anchoring",
+      "acceptance": [
+        "Verify the same-screen anchor and Collection scenario matrix in UX-ANCHOR-001 r1, including staged popup origins, section removal/restoration, sort/group changes and group disclosure.",
+        "Measure position throughout transitions and settled updates, with reduced motion, rapid interactions, scroll bounds, removal fallback, keyboard/accessibility and EN/DE narrow/enlarged layouts.",
+        "Record candidate/source, synthetic preconditions, exact actions, repeatability and revision-specific Android evidence; preserve raw edits and learning."
+      ],
+      "baselineEvidence": [],
+      "verifiedAt": null,
+      "history": [
+        {
+          "date": "2026-10-17",
+          "event": "Owner supplied a private recording and reported jumping, then replaced the toolbar-only proposal with a shared interacted-item anchor rule and requested research. Bounded initial-frame/source inspection only; exact runtime sequence/build/repeatability and full video decoding remain unconfirmed. Specification accepted; implementation and Android verification pending."
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "review": "interaction-anchoring-2026-10-17",
+          "kind": "Owner report, bounded initial-frame/source inspection and primary-source research; not runtime reproduction",
+          "ref": "piko-ux.md#interaction-anchoring--accepted-2026-10-17"
+        }
+      ],
+      "reconciliation": {
+        "implementationLedger": "implementation-round-6.md",
+        "findingClosure": "Pending explicit implementation request and revision-specific Android verification. No round assignment inferred."
       }
     }
   ],

@@ -55,7 +55,11 @@ test('canonical round 2 retains its features and fixes after later revisions', (
   assert.equal(deletion.revision,4);assert.ok(matchesRound(deletion,'5'));
   assert.ok(!matchesRound(deletion,'2'));
   assert.ok(selected.every(r=>r.status!=='Open'&&r.status!=='Proposed'));
-  assert.equal(selected.find(r=>r.id==='REVIEW-001').round,'1');
+  // The accepted compact-header launch routing moves this delta to round 6.
+  const review=rows.find(r=>r.id==='REVIEW-001');
+  assert.equal(review.round,'1');assert.equal(review.updated,'6');
+  assert.equal(review.revision,4);assert.ok(matchesRound(review,'6'));
+  assert.ok(!selected.some(r=>r.id==='REVIEW-001'));
   assert.equal(selected.find(r=>r.id==='UX-CARD-012').revision,1);
   assert.ok(selected.find(r=>r.id==='IMPORT-JSON-001').body.includes('"schemaVersion": 1'));
   for(const id of ['SPEED-001','SPEED-002','SPEED-012','SPEED-013'])assert.equal(selected.find(r=>r.id===id).revision,2,id);
@@ -118,4 +122,15 @@ test('prototype literal copy references exist in the shared bilingual catalog',(
     const key=match[1];if(key.endsWith('.'))continue;
     assert.ok(context.PIKO_COPY.entries[key]?.en,key);assert.ok(context.PIKO_COPY.entries[key]?.de,key);
   }
+});
+
+test('statistics production definitions and separate full export retain complete filterable records',()=>{
+  const rows=canonicalRows();
+  for(const id of ['STATS-005','STATS-006','STATS-007','STATS-008','STATS-009','STATS-010','DATA-005','UX-STATS-005','UX-STATS-006','UX-STATS-007']){
+    const row=rows.find(r=>r.id===id);assert.ok(row,id);assert.ok(matchesRound(row,'6'),id);assert.equal(row.status,'Confirmed');assert.ok(row.body.length>100,id);
+  }
+  assert.equal(rows.find(r=>r.id==='STATS-007').revision,2);
+  assert.match(rows.find(r=>r.id==='STATS-010').body,/Do not reconstruct old reviews/);
+  const report=rows.find(r=>r.id==='EXPORT-FULL-001');assert.equal(report.round,'Undecided');assert.match(report.body,/piko.full-export/);assert.match(report.body,/Acceptance:/);assert.match(report.body,/cancelled|Cancelled/);
+  assert.equal(rows.find(r=>r.id==='UX-EXPORT-FULL-001').round,'Undecided');
 });

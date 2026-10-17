@@ -1,5 +1,38 @@
 # Decision log
 
+## Documentation rework selected for round 6 — 2026-10-17
+
+The owner confirms the previously specified complete README/current-feature documentation rework and Git-ignored planning policy, and adds that package to round 6. DOC-001–007 r1 / UX-DOC-001/002 r1 and UX-LAB-001 r5 remain preserved in the separate documentation-specs checkout; the [round-6 ledger](implementation-round-6.md#documentation-rework-handoff--2026-10-17) owns reconciliation and execution planning. Preserve planning/decisions in ignored `.local/planning/` and remove former tracked paths only after verified preservation and dependency repair; retain Git history. No migration or app change is performed by this scope selection.
+
+## Vocabulary selection approved for round 6 — 2026-10-17
+
+The owner approved the complete revision-3 selection mockup and requested specification reconciliation and handover to current-round planning. VOCAB-SELECT-001 r1 / UX-COLL-013 r3 are assigned to round 6 without changing their behavior revisions. This accepts the three card states, interior indicators, stable positions and non-overlapping floating panel. The round-6 ledger owns the implementation handoff and preserved reference hashes. Earlier unassigned/proposed visual status is superseded. SPEED-004 r4 learning-from-selection and bulk vocabulary operations remain excluded. This is planning handover; app execution still awaits the explicit request for the clarified batch, and the existing build-5 APK does not contain this feature.
+
+## Round-6 implementation scope additions — 2026-10-17
+
+The owner adds definition-ready statistics and the Collection Detail header to the current implementation scope and will provide further additions. The [round-6 ledger](implementation-round-6.md#current-scope-additions--2026-10-17) records the selected revisions and boundaries. This supersedes their earlier planning-only/unassigned scope status, while app execution awaits the owner's explicit request for the clarified batch. No app/APK change or new Android verification is claimed; separate full export and vocabulary selection are not selected by inference.
+
+## Selection states and floating-action clearance — 2026-10-17
+
+The owner endorsed floating actions, requires that they never cover the last vocabulary, and requested research plus different selectable/selected states. UX-COLL-013 r3 proposes interior empty/checked circular indicators and a separate scrolling viewport above the measured floating panel; r2 border-perched badges are superseded. Ordinary cards have no indicator. Maintain fixed content geometry and the existing selection semantics. Visual review and Flutter/Android verification remain pending.
+
+## Selection stays in place — 2026-10-17
+
+Owner browser feedback removes the hold hint and Select row and requires vocabulary to stay in place on selection. UX-COLL-013 r2 supersedes the r1 in-flow toolbar/check-column proposal. The revised mockup proposes a floating bottom panel and trailing-border check badges; card/text coordinates and scroll offset must stay stable through entering/toggling/clearing selection. The new placement is for visual review; no Flutter implementation is authorized.
+
+## Selection without vocabulary actions — 2026-10-17
+
+The owner requested transient multi-selection by long press and subsequent taps, Select all / Clear selection, retention through filters/grouping/expansion/sorting, and clearing on page navigation. The owner explicitly chose Select all matching search/filters, including collapsed groups. VOCAB-SELECT-001 / UX-COLL-013 r1 own this separate unscheduled feature. SPEED-004 r4 separates it from the still-deferred Speed launch. Only specifications and a visual mockup are authorized; no Flutter or Android acceptance is implied. Toolbar placement and card styling are reviewable proposals.
+
+
+## Statistics production decisions — 2026-10-17
+
+The owner accepted one Speed credit per vocabulary direction per learning day; preserved totals after deletion/reset/deactivation; fixed original learning-date keys across timezone changes; and starting both histories fresh at implementation, without reconstructing old reviews/Speed flags. Export clarification: no statistics in Collection-only export; specify a separate full export of all Collections plus statistics. Import ignores statistics, and full import/restore is not requested. STATS-005 r2, STATS-006 r1, STATS-007 r2, STATS-008–010 r1, DATA-005 r2 and UX-STATS-005–007 r1 own the definition-ready statistics package. EXPORT-FULL-001 / UX-EXPORT-FULL-001 r1 are a separate unscheduled specification. Routine design details define atomic credit, correction without added credit, coverage and load/error states. These definitions resolve earlier production prerequisites while preserving the exact approved visual baseline. App implementation, Android/phone verification and publication remain separately gated.
+
+## F22 withdrawn — 2026-10-17
+
+The owner can no longer reproduce F22 and requested its removal. Withdraw it from active investigation and round-6 pending work, superseding its earlier deferral and conditional repair scope. Preserve the finding ID, original report and bounded investigation history. This is owner-reported non-reproduction, not an agent-verified fix; existing typing/autosave requirements and their revisions remain unchanged. No app or mockup change is requested.
+
 ## Round-6 statistics planning addition — 2026-10-17
 
 The owner asked to add statistics to the planning scope after approving the exact statistics mockup in the separate design checkout. Round 6 now includes a statistics planning package under UX-STATS-001 r2, UX-STATS-002/004 r2, STATS-005 r1, PARAM-STAT-002 r1 and MASCOT-004 / UX-MASCOT-004 r2, with UX-STATS-003 and STATS-006/007 unchanged. Local `codex/statistics-mockup` commit `9b4a977` preserves the interactive guide and reference captures. Production Speed counting/deduplication, history preservation/import/correction, clock/timezone aggregation and loading/error states remain prerequisites. This is planning selection, not Flutter implementation authorization; app/Android work remains pending a separate explicit request.
@@ -1136,3 +1169,19 @@ The owner authorized the eight accepted round-4 packages with solo execution, pr
 ## Vocabulary-list stability boundary clarified — 2026-10-17
 
 The owner confirmed that UX-COLL-001 r6 requires stable layout within the vocabulary-list controls/results while allowing learning actions above the section to reflow when their availability changes. No viewport anchoring or retained blank space is required. This is an explicit interpretation of the approved list-guide scope, with no behavior revision, app/mockup change or new implementation authorization. Existing source-specific round6-e Android evidence verifies the accepted boundary; F21 can close independently of pending owner phone/round acceptance.
+
+## 2026-10-17: Collection Detail collapses into a persistent learning header
+
+The owner requested retaining title and entry count during scrolling, hiding title edit and language-pair subtitle, and merging directional cards into one compact action for each of Review and Speed. One eligible direction resolves directly; two prompt for direction. Speed retains its existing setup after direction resolution. UX-COLL-008 r6 / UX-SETUP-002 r8 and REVIEW-001 r3 / SETUP-008 r3 own this accepted behavior. The interactive mockup is authorized; exact composition/transition remains for visual review. No Flutter change, round assignment or Android acceptance is authorized or claimed. Earlier expanded-card rules remain in force at the top.
+
+Owner mockup follow-up: UX-COLL-008 r6 makes both compact actions icon-only and places them beside the Collection title, retaining the entry count below and localized accessible action names. This supersedes the initial proposed separate row with visible labels; no app implementation is authorized.
+
+Owner follow-up: compact Review and Speed now show icon plus summed directional eligible counts (no action-name text). Keep both buttons visible with disabled 0 independently per mode. Counts are directional items, not deduplicated words; existing single/two-direction routing remains. UX-COLL-008 r7 / UX-SETUP-002 r9; REVIEW-001 r4 / SETUP-008 r4 supersede the previous compact omission-at-zero rule. Mockup/specification only; app authorization remains pending.
+
+## 2026-10-17: Anchor the interacted element during same-screen updates
+
+Scheduling follow-up: the owner selected the all-page rule as the first, high-priority package of the next round, round 7. The round-7 ledger owns remaining cross-app coverage and verification after the accepted round-6 result. Existing authorization for affected Collection anchoring in round 6 remains unchanged. This selects planning/order without starting broader implementation or changing the behavior revision; earlier unassigned statements below are historical.
+
+Follow-up: the owner confirmed applying this rule on all pages. UX-ANCHOR-001 r1 now explicitly maps applicable same-surface updates across the application and popups, with cross-page acceptance scenarios and the existing navigation, requested-item, keyboard/accessibility and scroll-bound exceptions. This clarifies the already shared scope without a behavior revision, implementation-round assignment or app/mockup implementation authorization.
+
+The owner revised the jumping-list request into a shared rule: the clicked/interacted item retains its screen position and surrounding content moves accordingly. UX-ANCHOR-001 r1 owns this accepted principle and documented practical limits; UX-COLL-001 r7 supersedes the earlier r6 clarification allowing learning actions to displace the whole vocabulary section. The earlier request to anchor only Filter/Group/Sort is superseded. Scroll anchoring is an established technique, but selecting the interacted item is Piko policy, not a universal platform mandate; primary references and distinctions are in the owning requirement. Popup-origin anchoring, valid-scroll-bound clamping, removal fallback, keyboard/accessibility visibility and user-scroll precedence are explicit agent-selected details. No global implementation audit, app/mockup change or implementation-round assignment follows from this definition; source/video investigation and Android gaps remain explicit. F23 tracks the reported viewport movement separately from F21's historically verified r6 toolbar scope.
