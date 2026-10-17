@@ -2052,7 +2052,7 @@
         "UX-COLL-001": 7
       },
       "summary": "Owner reports jumping when changing grouping/filtering/sorting, then revises the intended outcome to a shared same-screen rule: preserve the interacted item and let surrounding content move.",
-      "status": "in_progress",
+      "status": "needs_verification",
       "decision": "UX-ANCHOR-001 r1 owns the shared anchor, transition and fallback policy; UX-COLL-001 r7 supersedes the prior internal-only stability boundary. F21 retains historical r6 closure; it does not verify this new behavior.",
       "workPackage": "interaction-anchoring",
       "acceptance": [
@@ -2063,6 +2063,10 @@
       "baselineEvidence": [],
       "verifiedAt": null,
       "history": [
+        {
+          "date": "2026-10-17",
+          "event": "Collection source 4c132be passes 21 affected host tests, analysis and isolated API-36 profile checks at normal EN and native 320dp/200% DE. Clear filters measures 0dp across 40 frames versus 113dp at baseline; Sort and repeated group disclosure stay stable, with asserted bounds fallback on short grouped pages. Exact exports/protected files are preserved. Build-6 checkpoint packaged. Native editor/removal fallback, TalkBack and final integration checks remain pending; no full finding closure."
+        },
         {
           "date": "2026-10-17",
           "event": "Owner authorized affected Collection anchoring for round 6. Local source 77294de implements pre-paint viewport compensation; focused host checks pass. A synthetic API-36 profile baseline on prior app source measures 113dp movement on Clear filters. Final-source Android matrix and broader app coverage remain pending; no fixed claim."
@@ -2081,7 +2085,7 @@
       ],
       "reconciliation": {
         "implementationLedger": "implementation-round-6.md",
-        "findingClosure": "Affected Collection work authorized for round 6 and in progress. Complete revision-specific Android evidence is required for closure; broader app coverage is separately planned."
+        "findingClosure": "Affected Collection implementation and scoped native evidence recorded in the round-6 ledger. Remaining finding-specific native checks and broader app coverage are explicit; not marked fixed."
       }
     }
   ],

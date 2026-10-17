@@ -15,25 +15,50 @@ archives before retiring their checkouts. Their branches and unique commits rema
 The documentation definitions referenced below are recoverable from the private
 archive index; the existing canonical owners remain active until reconciliation.
 
-### Collection anchoring checkpoint — in progress
+### Collection anchoring checkpoint — local candidate
 
 UX-ANCHOR-001 r1 / UX-COLL-001 r7 are implemented for the Collection viewport,
 Filter/Group/Sort and their resets, list display-menu origins, group disclosures,
 bulk group disclosure and vocabulary cards. Compensation occurs during viewport
 layout before paint. User scrolling, explicit reveal requests and viewport/text-scale
-changes supersede an old anchor. Missing targets choose the closest surviving
-contextual region; scroll bounds clamp without retained blank padding.
+changes supersede an old anchor. Missing vocabulary targets prefer their owning
+group header, then the nearest surviving contextual region; scroll bounds clamp
+without retained blank padding.
 
-Seven focused host cases pass, including production Collection popup loading and
+Eight focused host cases pass, including production Collection popup loading and
 learning-action changes, grouping/sorting, repeated disclosure, asynchronous height
 changes, user/explicit scroll precedence, removal fallback and viewport changes.
-The affected Collection regression passed 20 tests before the final expanded cases.
+The final affected Collection regression passes 21 tests; analysis reports no issues.
+All 40 focused shared-generator, specification-parser and reference-model checks pass.
 An isolated API-36/x86-64 profile fixture on prior app source reproduces a 113dp
 Filter displacement when Clear filters restores learning actions. This establishes
 a synthetic baseline, not the owner's exact video/build. Debug installation stopped
 on insufficient staging space without uninstall/data clearing; a smaller profile
 fixture runs successfully, preserving protected files and restoring settings.
-Final-source Android checks and candidate packaging remain pending; F23 is not fixed.
+Final source `4c132bea936189e7cb5bff2852ad899767e365e6` passes the isolated
+API-36/x86-64 profile checks at normal English and native 320dp/200% German.
+Clear filters has 0dp displacement in all 40 sampled frames, versus 113dp in the
+prior-source fixture. Sort remains stable; collapsing into a short grouped page
+uses the explicitly asserted scroll-bound fallback. Four group disclosure toggles
+retain their header. Exact Collection JSON/learning export and protected isolated
+files remain unchanged. Settings are restored and verified after each run. Captures
+`anchor-final-en` and `anchor-final-de` were inspected; they are instrumented profile
+app-surface evidence, not ordinary-product documentation screenshots. Profile-mode
+runner startup needed its profiling flag; the failed attempt never executed a test.
+
+The normal production-identity build-6 APK is preserved privately as
+`piko-round6-anchors-4c132be.apk`, SHA-256
+`5484995c8de997f7bf67297536b86f17a3be26fe118f409399988e2aa1a197ea`.
+Version name remains `0.1.0`; signing certificate matches the earlier owner candidate.
+This is an intermediate checkpoint, not the expanded round's final handoff. Normal
+APK install/launch, physical-phone/TalkBack, native editor/removal fallback and full
+final regression remain pending. F23 remains awaiting complete verification; shared
+all-page coverage belongs to the separately planned next round. No publication.
+
+Cleanup additionally retired five old non-Git build checkouts after byte-verifying
+their archived source and complete final outputs. Seven obsolete checkouts and two
+redundant branch aliases were retired in total; active Android work, unique commits,
+immutable APKs and evidence remain preserved.
 
 ## Current scope additions — 2026-10-17
 
