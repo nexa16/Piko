@@ -1268,7 +1268,7 @@ const copyCatalog = <String, Object?>{
 "en": "What is Speed learning?",
 },
 "learnHelp.title": <String, Object?>{
-"de": "So funktioniert das Lernen",
+"de": "Lernen erklärt",
 "en": "How learning works",
 },
 "list.adjective": <String, Object?>{

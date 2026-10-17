@@ -268,7 +268,22 @@ void main() {
         await capture('09-de-320-200-list', at: key('collection-search'));
         await tap(key('collection-group'));
         await capture('10-de-320-200-picker');
-        await tap(find.byTooltip(const PikoCopy('de').text('common.close')));
+        await tap(key('view.grouping-${topic.id}'));
+        await tap(
+          find.widgetWithText(
+            PikoButton,
+            const PikoCopy('de').text('r2.apply'),
+          ),
+        );
+        await capture(
+          '10b-de-320-200-groups',
+          at: key('collection-group-${travel.id}'),
+        );
+        await tap(key('collection-toggle-groups'));
+        await capture(
+          '10c-de-320-200-expanded',
+          at: key('collection-group-${travel.id}'),
+        );
         await tap(key('collection-learning-help'));
         await capture('11-de-320-200-help');
         await tap(key('learning-help-scheduling'));
@@ -277,6 +292,15 @@ void main() {
           at: find.text(const PikoCopy('de').text('learnHelp.expiry')),
         );
         await tap(find.byTooltip(const PikoCopy('de').text('learnHelp.close')));
+        locale.value = const Locale('en');
+        await tester.pumpAndSettle();
+        await capture(
+          '13-en-320-200-groups',
+          at: key('collection-group-${travel.id}'),
+        );
+        await tap(key('collection-learning-help'));
+        await capture('14-en-320-200-help');
+        await tap(find.byTooltip(const PikoCopy('en').text('learnHelp.close')));
         await native('restore');
         locale.value = const Locale('en');
         await tester.pumpAndSettle();

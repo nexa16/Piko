@@ -3,7 +3,7 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
-"learnHelp.title": {"en":"How learning works","de":"So funktioniert das Lernen"},
+"learnHelp.title": {"en":"How learning works","de":"Lernen erklärt"},
 "learnHelp.close": {"en":"Close learning explanation","de":"Lernerklärung schließen"},
 "learnHelp.intro": {"en":"Piko spreads your reviews over time to help you remember vocabulary for longer.","de":"Piko verteilt deine Wiederholungen über die Zeit, damit du Vokabeln länger behältst."},
 "learnHelp.recall": {"en":"Try to recall the translation before revealing the answer. Then judge how you did:","de":"Versuche, dich an die Übersetzung zu erinnern, bevor du die Antwort aufdeckst. Beurteile dann, wie es dir ging:"},
