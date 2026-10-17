@@ -1,5 +1,7 @@
 # Contributing
 
+Use [developer setup](docs/development.md) for commands and [documentation maintenance](docs/maintenance.md) when updating current-app documentation.
+
 1. Fetch the latest branches. Start ordinary development from the latest `develop` branch.
 2. Create a short-lived branch for substantive work; use codex/<short-description> for Codex work.
 3. Capture ideas with `piko-spec-update`, refine/prepare rounds with `piko-planning`, and execute explicitly authorized scope with `piko-implementation`. Internal records use the Git-ignored `.local/planning/index.md`; feature records own requirements and one ledger owns execution/evidence. Public documentation describes implemented behavior and has no private planning dependencies.

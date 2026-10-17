@@ -1,0 +1,982 @@
+{
+  "schemaVersion": 1,
+  "build": {
+    "id": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+    "repository": "https://github.com/nexa16/Piko",
+    "packageId": "io.github.nexa16.piko",
+    "entryPoint": "app/lib/main.dart",
+    "activity": ".MainActivity",
+    "versionName": "0.1.0",
+    "versionCode": 7,
+    "minSdk": 24,
+    "targetSdk": 36,
+    "artifact": "piko-round6-selection-0afecdb.apk",
+    "apkSha256": "62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+    "mode": "release",
+    "flavor": "default",
+    "signing": {
+      "classification": "Android debug certificate; development artifact",
+      "certificateSha256": "0e170fc0a27efc6a03525c90597bf66a957b683005238064a90958f60fee7bfb"
+    },
+    "sourceCommit": "0afecdbc083c00bd34ce8f70c31473725af58377",
+    "sourceCondition": "Frozen committed application source. Later documentation/test-only commits do not change this APK identity.",
+    "applicationTrees": {
+      "app/lib": "24550508513da3029a46e70e3eabe136cd0a2808",
+      "app/assets": "17e9f6ee300177171a799b058b4adf89f71c7d32",
+      "shared": "784d98c032b71ee6bd7204215d91c2d0f4fe5e53"
+    },
+    "configuration": [
+      {
+        "path": "app/pubspec.yaml",
+        "sha256": "1c9c9fd6b531ed2629b915c6a288eff734e73b480ebeef25052b11a0028bac84"
+      },
+      {
+        "path": "app/pubspec.lock",
+        "sha256": "e40454dbb898407e24f8c0371e03bfc2da564ec6b1af2c4db521ba03d7027f10"
+      },
+      {
+        "path": "app/android/app/build.gradle.kts",
+        "sha256": "bfa7ff405779d47b6b07ef948cf16786ad16e97e8022714a0c79852e83f55bec"
+      },
+      {
+        "path": "app/tool/generate_shared.mjs",
+        "sha256": "a71592fa65a39678effe75a3cace502d4605094d55f5c0b85db8d05f77d0164d"
+      }
+    ],
+    "builtOn": "2026-10-17",
+    "builtOnPrecision": "day; original candidate build record, no exact build-time claim",
+    "timeZone": "Europe/Vienna",
+    "toolchain": {
+      "flutter": "3.44.7 stable",
+      "dart": "3.12.2",
+      "dependencyLock": "app/pubspec.lock",
+      "androidBuildConfiguration": "app/android/app/build.gradle.kts"
+    },
+    "identityVerification": {
+      "method": "SHA-256 of preserved artifact and installed base.apk; aapt package/version/SDK inspection; normal MainActivity launch; apksigner certificate verification",
+      "result": "matched selected artifact; ordinary main entry point; no test harness or application-ID override"
+    }
+  },
+  "documents": {
+    "features": "docs/features.md",
+    "technical": "docs/technical.md",
+    "gallery": "docs/screenshots.md",
+    "setup": "docs/development.md",
+    "maintenance": "docs/maintenance.md",
+    "verification": "docs/verification.md"
+  },
+  "fixture": {
+    "id": "piko-documentation-fr-de-v1",
+    "content": "Synthetic French/German Collection: one manually entered word plus three native-file imports with Topic categories. Captures show successive draft, list, learning and settings states; they are not simultaneous database snapshots.",
+    "importInputSha256": "ad42f3d44cbd4379cbdaa70601cafbae13127daf18f99081188bf44fbed6e797",
+    "entryPoint": "Ordinary UI creation, native file import and user actions; no direct database injection",
+    "privacy": "No personal vocabulary/accounts; original captures and action evidence retained privately"
+  },
+  "verification": {
+    "summary": "docs/verification.md",
+    "sourceReferences": "docs/technical.md",
+    "method": "Direct ordinary-product Android observation plus selected-source inspection and named host checks; historical instrumented evidence remains separate",
+    "unverified": [
+      "Physical-phone install/update and accessibility/TalkBack",
+      "All locale, text-scale, keyboard and OS combinations",
+      "Fresh-machine setup and unsupported desktop/iOS/web platforms",
+      "Full Android migration/termination/clock-boundary acceptance rerun",
+      "Speed minigame and error-reset device scenarios in this capture session"
+    ]
+  },
+  "screenshots": [
+    {
+      "id": "01-empty-home",
+      "path": "docs/images/01-empty-home.png",
+      "sha256": "e0543b3a7be3c72d014afe8be5ea0cd42980d3b18858a878ad4c6bc26b60742c",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Empty Home after removing the synthetic Collection",
+      "task": "docs/features.md#collections",
+      "locale": "en",
+      "displayedLanguagePair": null,
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:39:10.86Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Piko Home with no Collections and a Create first collection button",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "02-create-collection",
+      "path": "docs/images/02-create-collection.png",
+      "sha256": "5d9948008a04484597c2a785c186e3e4224d6df911148867d41e7963ec41969c",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "New Collection dialog with default Korean/German pair",
+      "task": "docs/features.md#collections",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "ko",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:24:23.212Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "New Collection dialog showing target/native language and Collection name fields",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "03-entry-draft",
+      "path": "docs/images/03-entry-draft.png",
+      "sha256": "3ee0bf7b5e801f7b89d951a60e820b37f6bb5c2fdccc94326ad44643a252f3db",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Unconfirmed French/German word draft",
+      "task": "docs/features.md#add-vocabulary",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:25:18.834Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Manual-entry draft for pomme and Apfel with Not saved yet and Save & Next",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "04-optional-content",
+      "path": "docs/images/04-optional-content.png",
+      "sha256": "4939de0e27527ce2ccd9741e815822b098ea786475426679928e0212e2fd169e",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Entry draft scrolled to example pair and hidden hint",
+      "task": "docs/features.md#optional-content",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:26:21.911Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Expanded French/German example pair, hint text, automatic-hint switch and draft confirmation",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "05-import-preview",
+      "path": "docs/images/05-import-preview.png",
+      "sha256": "2fc64619103a107487aa0aca8e1997c9641c247a0bc1f09b1bf531fa5e980cd2",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Import scrolled to selected groups and zero-error preview",
+      "task": "docs/features.md#transfer",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:28:02.939Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Import preview with three new words, zero errors and Import vocabulary action",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "06-collection-list",
+      "path": "docs/images/06-collection-list.png",
+      "sha256": "90895f7cc165b2067adb7b1055a4fbd8a9b5299c212b979827031d99ac5dd459",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Four-word Collection before learning; list top",
+      "task": "docs/features.md#collections",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:28:37.537Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "French Collection with four due words, Speed action, search and independent list controls",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "07-categories",
+      "path": "docs/images/07-categories.png",
+      "sha256": "f6f9b2d8f09b5cd98e51d2e1fd4fc91efd504d957a26f6725245e2a761624fc2",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Expanded Topic dimension in More options",
+      "task": "docs/features.md#categories",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:28:48.593Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Topic category editor with One value and Multiple values modes and alphabetical values",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "08-grouped-list",
+      "path": "docs/images/08-grouped-list.png",
+      "sha256": "5f9fcac6df906826e831f228450f8e9302689fbcec86336387d9e8f9447e12bd",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Topic grouping with four collapsed groups; page slightly scrolled",
+      "task": "docs/features.md#list-controls",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:29:07.5Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Grouped list with Drinks, Food, Greetings and Unassigned collapsed, plus Expand all",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "10-hidden-selection",
+      "path": "docs/images/10-hidden-selection.png",
+      "sha256": "be47a59694b1ce243d72af773bce51fa53fb0b8f72feb2396a718d9f57115d8e",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "All four selected; Food filter leaves three selected words hidden",
+      "task": "docs/features.md#selection",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:29:49.61Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Filtered Food word selected with summary showing four selected and three hidden",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "11-learning-help",
+      "path": "docs/images/11-learning-help.png",
+      "sha256": "d8350b8b1df0d509d0c0d39ebb21d202ffb5bcea6c96a278c8b0366a555b84fc",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "How learning works dialog at the main explanation",
+      "task": "docs/features.md#long-term",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:30:21.282Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Learning help explaining Correct, Hard plus Correct, Incorrect and repetition timing",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "12-speed-setup",
+      "path": "docs/images/12-speed-setup.png",
+      "sha256": "204564e1bb167a4751d646cb6585292efeaf7b3a0a1dbeebdedf50268f80e30e",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Four eligible new words; maximum five words per pass",
+      "task": "docs/features.md#speed",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:30:22.906Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Speed setup with French to German direction, four new words and pass-size field",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "13-speed-answer",
+      "path": "docs/images/13-speed-answer.png",
+      "sha256": "851929dd3534573ab6a3c4ad27f2754defd7539c343b5a46cc419ed699a8689f",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Revealed Speed answer before first completion",
+      "task": "docs/features.md#speed",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:30:41.943Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Speed answer for pomme and Apfel with examples, hint and Incorrect/Correct actions",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "14-long-term-answer",
+      "path": "docs/images/14-long-term-answer.png",
+      "sha256": "750b9097690ded486bb0b3f2687506ccc1750cceea1fad680266c9e4cc54426b",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "First revealed regular answer; no grades yet",
+      "task": "docs/features.md#long-term",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:31:14.953Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Long-term answer with Hard checkbox, Incorrect and Correct buttons",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "15-answer-editor",
+      "path": "docs/images/15-answer-editor.png",
+      "sha256": "81053a8d4d293fd09dd68ce6f1eed742a8b7281d9027a2739db84d1893b04be0",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Inline editor open within the same revealed regular answer",
+      "task": "docs/features.md#edit-vocabulary",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:31:23.883Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Saved vocabulary editor inside review with French/German fields and a collapse control",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "16-grade-correction",
+      "path": "docs/images/16-grade-correction.png",
+      "sha256": "8e49c095fec059086e18098aae48af0a41980fe8cd69f5858375688f45f3e072",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Replacing the immediately previous Incorrect grade",
+      "task": "docs/features.md#long-term",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:31:51.055Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Previous-grade correction showing Incorrect and the original revealed answer",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "17-retry-state",
+      "path": "docs/images/17-retry-state.png",
+      "sha256": "91f0b5c520af422301355e3c14c81a069bf1912ae1023e077179046789afd8c1",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Three words complete; countdown before the remaining repetition",
+      "task": "docs/features.md#long-term",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:32:19.194Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Long-term progress at three of four with a countdown to the next repetition",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "18-review-summary",
+      "path": "docs/images/18-review-summary.png",
+      "sha256": "183ba1983df28c57c3481f4dc56af9f0e17fe15ae529d7800d9997b01cf2dae4",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Four completed, three correct on first try",
+      "task": "docs/features.md#long-term",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:32:45.02Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Review complete dialog reporting four vocabulary completed and three first-try correct",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "19-export",
+      "path": "docs/images/19-export.png",
+      "sha256": "868239e6287e748e5d00749642516723204ff5edf64e827d740393db5b520bc9",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Native save completed; Export tab success",
+      "task": "docs/features.md#transfer",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:33:41.208Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Collection Export tab with Copy JSON, Save JSON file and JSON file saved feedback",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "20-settings",
+      "path": "docs/images/20-settings.png",
+      "sha256": "84d3d7022a9ff787638b564bc48bbae4fe24048fdc1dd187d171f60ad88826ae",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "App-wide preferences in English",
+      "task": "docs/features.md#settings",
+      "locale": "en",
+      "displayedLanguagePair": null,
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:33:57.626Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "English Settings with app language, learning direction and question-example controls",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "21-settings-de",
+      "path": "docs/images/21-settings-de.png",
+      "sha256": "5fc7495040666ae59ee558ee1b69222c9bad146aa51f6d3c7f7dc015f0e9df9e",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "App-wide preferences after switching to Deutsch",
+      "task": "docs/features.md#settings",
+      "locale": "de",
+      "displayedLanguagePair": null,
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:34:25.206Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "German Settings with retained Deutsch app-language selection",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "22-saved-editor",
+      "path": "docs/images/22-saved-editor.png",
+      "sha256": "f1d5d58e115fc38ae27c4b4c2bff3aca523ec59376aad18e6f7d35d511c2c2dc",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Collection list scrolled to the saved bonjour editor",
+      "task": "docs/features.md#edit-vocabulary",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:35:30.934Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Saved bonjour and Guten Tag vocabulary editor with optional-content and Active controls",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "23-collection-settings",
+      "path": "docs/images/23-collection-settings.png",
+      "sha256": "03e230d6df250c2a7783877bb5b400d32bdd73b13ade01652be0d3354637b8ea",
+      "buildId": "sha256:62570d7fa8176244e28eaac9e6097f8dec3e857c5fdc4b330865be843193fea9",
+      "classification": "ordinary-product-emulator",
+      "state": "Collection More options with Settings expanded",
+      "task": "docs/features.md#optional-content",
+      "locale": "en",
+      "displayedLanguagePair": [
+        "fr",
+        "de"
+      ],
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "capturedAt": "2026-10-17T16:38:45.345Z",
+      "fixture": "piko-documentation-fr-de-v1",
+      "alt": "Collection Hint default in expanded Settings, separate from app-wide preferences",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    }
+  ]
+}
