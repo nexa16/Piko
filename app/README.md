@@ -1,6 +1,6 @@
 # Piko application
 
-Local-first Flutter application under Android testing. The current [round-6 review candidate](../docs/implementation-round-6.md#candidate-and-remaining-handoff-gates) includes the approved vocabulary-list controls/group presentation and EN/DE learning-help dialog. Scoped host/Android checks pass; the ledger owns exact source/checksum, the open F21 page-reflow clarification and pending owner/phone acceptance. Round-5 editors, Active/Inactive vocabulary, Collection Hint defaults and JSON v4 are retained; its earlier evidence and phone-flow gaps remain in the prior ledger. Statistics is planning-only and F22 remains deferred. No release or store publication is authorized.
+Local-first Flutter application under Android testing. The current [round-6 review candidate](../docs/implementation-round-6.md#candidate-and-remaining-handoff-gates) includes the approved vocabulary-list controls/group presentation and EN/DE learning-help dialog. Scoped host/Android checks pass; the ledger owns exact source/checksum, the accepted list-stability boundary and pending owner/phone acceptance. Round-5 editors, Active/Inactive vocabulary, Collection Hint defaults and JSON v4 are retained; its earlier evidence and phone-flow gaps remain in the prior ledger. Statistics is planning-only and F22 remains deferred. No release or store publication is authorized.
 
 Toolchain baseline: Flutter 3.44.7 stable, Dart 3.12.2. Android application ID: `io.github.nexa16.piko`.
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 23,
+  "revision": 24,
   "updated": "2026-10-17",
   "reviewedAppRevision": "660f343938bbf195671a1714b6ff06dd16900bdb",
   "sourceRevision": "b6b840c",
@@ -1877,17 +1877,17 @@
         "UX-CAT-001": 7
       },
       "summary": "The owner finds Ansicht unclear. Screenshots show Filter, View, two bulk actions and Clear filters distributed over several rows, delaying the vocabulary list.",
-      "status": "needs_verification",
-      "decision": "UX-COLL-001 r6 controls are locally implemented and internally stable on Android. Existing learning-action availability can reflow the whole section; the owner is clarifying whether that page displacement is also in scope. Do not claim whole-page stability or close this finding yet.",
+      "status": "fixed",
+      "decision": "The owner clarified UX-COLL-001 r6: keep the vocabulary-list layout stable internally while allowing learning actions above it to reflow. Existing round6-e Android evidence verifies the accepted boundary; no app or APK change is required. Owner phone/round acceptance remains separate.",
       "workPackage": "collection-list",
       "acceptance": [
         "Follow UX-COLL-001 r6: show Expand all when any displayed group is collapsed, otherwise Collapse all; keep both commands in the local list menu. Hide group actions when ungrouped and disable them for zero displayed groups. Canonical review owns the remaining accepted layout and state scenarios.",
         "Preserve category-only direct reset, separate search clear, staged popup Apply/cancellation, per-Collection preferences and learning/data preservation.",
         "After implementation, verify grouped/ungrouped/mixed/zero-result states, long labels, menu/keyboard/accessibility and pending edits on Android with narrow/enlarged EN/DE text.",
-        "Applying/changing/clearing filters at a fixed width/text scale retains toolbar and list-start positions; grouping/sort summary is absent in all states."
+        "Applying/changing/clearing filters at a fixed width/text scale retains toolbar and result-start positions within the vocabulary-list layout; learning actions above it may reflow the section; grouping/sort summary is absent in all states."
       ],
       "baselineEvidence": [],
-      "verifiedAt": null,
+      "verifiedAt": "2026-10-17",
       "history": [
         {
           "date": "2026-10-16",
@@ -1920,6 +1920,10 @@
         {
           "date": "2026-10-17",
           "event": "Implemented independent chips, staged pickers, local menu, contextual bulk and gold tags. Final round6-e checks pass for internal list geometry and preservation. Whole-page displacement from learning-action reflow remains explicitly unresolved."
+        },
+        {
+          "date": "2026-10-17",
+          "event": "Owner explicitly accepted internal vocabulary-list stability with learning-action reflow above it. This clarifies the existing r6 boundary without changing behavior/revision. Existing round6-e source16f2a13 evidence establishes the scoped pass; F21 marked fixed, with phone/round acceptance still pending."
         }
       ],
       "impact": "The combined View label hides distinct operations, while disconnected actions occupy several rows before content.",
@@ -1934,7 +1938,36 @@
       "implementationRound": 6,
       "reconciliation": {
         "implementationLedger": "implementation-round-6.md",
-        "findingClosure": "Needs verification/owner clarification for whole-page stability; no fixed claim."
+        "findingClosure": "Fixed against the owner-clarified UX-COLL-001 r6 boundary with source-specific round6-e Android evidence; phone/round acceptance remains separate."
+      },
+      "verification": {
+        "implementationRevision": "16f2a138043118575d369dbee10e5c0c4adfd7af",
+        "requirementRevisions": {
+          "UX-COLL-001": 6,
+          "GROUP-001": 2,
+          "FILTER-002": 5
+        },
+        "checks": [
+          "27-case list/picker/filter/layout suite",
+          "16-case affected acceptance with keyboard/focus checks",
+          "Final round6-e isolated Android run and capture inspection",
+          "Owner clarification of internal-layout stability boundary"
+        ],
+        "androidStates": [
+          "Neutral/all-active/mixed/reset chips with stable internal geometry",
+          "Grouped/ungrouped, collapsed/mixed/expanded and no-results states",
+          "Display/language menu, staged pickers and independent resets",
+          "320dp/200% EN/DE long controls/groups/help"
+        ],
+        "evidenceRefs": [
+          "round6-e/01-neutral-list.png",
+          "round6-e/04-all-active.png",
+          "round6-e/05-detailed-reversed.png",
+          "round6-e/08-no-results.png",
+          "round6-e/10b-de-320-200-groups.png",
+          "round6-e/13-en-320-200-groups.png"
+        ],
+        "limitation": "Learning actions above the list may reflow the whole section, as explicitly accepted. Physical-phone/TalkBack and round/publication acceptance remain pending."
       }
     },
     {

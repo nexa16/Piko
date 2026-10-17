@@ -1131,3 +1131,8 @@ Owner approved the incremental APK checkpoint plan. Latest verified APK remains 
 ## 2026-10-16: Round-4 implementation agreement
 
 The owner authorized the eight accepted round-4 packages with solo execution, private recovery checkpoints and one final owner-review APK. Shared presentation precedes the complete examples/storage/JSON package, Collection views, and evidence-led header investigation. The canonical functional/UX requirements now record the approved ordering, nullable local addition dates, schema-3 compatibility, per-presentation example preference and same-session Import/Export draft retention. The scrolling correction is retained. Active/Inactive vocabulary, answer-card editing, compact-editor redesign, proficiency/Mastered and manual Speed selection remain excluded. The [round-4 ledger](implementation-round-4.md) owns progress, tests and candidate provenance; existing manual-review/publication and phone-acceptance gates remain.
+
+
+## Vocabulary-list stability boundary clarified — 2026-10-17
+
+The owner confirmed that UX-COLL-001 r6 requires stable layout within the vocabulary-list controls/results while allowing learning actions above the section to reflow when their availability changes. No viewport anchoring or retained blank space is required. This is an explicit interpretation of the approved list-guide scope, with no behavior revision, app/mockup change or new implementation authorization. Existing source-specific round6-e Android evidence verifies the accepted boundary; F21 can close independently of pending owner phone/round acceptance.
