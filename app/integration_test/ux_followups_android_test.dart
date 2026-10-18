@@ -123,14 +123,28 @@ void main() {
             if (phase == 'ime-back') 'raw': '0',
             if (phase == 'ime-back')
               'x':
-                  (tester.getCenter(key('speed-pool-size')).dx *
+                  (tester
+                              .getCenter(
+                                find.descendant(
+                                  of: key('speed-pool-size'),
+                                  matching: find.byType(EditableText),
+                                ),
+                              )
+                              .dx *
                           View.of(
                             tester.element(key('speed-pool-size')),
                           ).devicePixelRatio)
                       .round(),
             if (phase == 'ime-back')
               'y':
-                  (tester.getCenter(key('speed-pool-size')).dy *
+                  (tester
+                              .getCenter(
+                                find.descendant(
+                                  of: key('speed-pool-size'),
+                                  matching: find.byType(EditableText),
+                                ),
+                              )
+                              .dy *
                           View.of(
                             tester.element(key('speed-pool-size')),
                           ).devicePixelRatio)
