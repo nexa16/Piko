@@ -97,7 +97,7 @@ void main() {
       'scale': config.scale,
       'normalProductionDatabaseOpened': false,
     };
-    var passed = false, converted = false;
+    var passed = false, converted = false, sampling = false;
     Finder key(String id) => find.byKey(ValueKey(id));
     CollectionDetail detail() =>
         tester.widget<CollectionDetail>(find.byType(CollectionDetail));
@@ -223,15 +223,17 @@ void main() {
       final before = await stored(db);
       step('collapse and independent counts');
       final transition = <Map<String, Object?>>[];
-      var sampling = true;
+      sampling = true;
+      final sampledPosition = position();
       void frame(Duration _) {
         if (!sampling) return;
         final compact = key('collection-compact-header');
+        final rendered = compact.evaluate().firstOrNull?.findRenderObject();
         transition.add({
-          'offset': position().pixels,
-          'compact': compact.evaluate().isNotEmpty,
-          if (compact.evaluate().isNotEmpty)
-            'top': tester.getTopLeft(compact).dy,
+          'offset': sampledPosition.pixels,
+          'compact': rendered is RenderBox,
+          if (rendered is RenderBox)
+            'top': rendered.localToGlobal(Offset.zero).dy,
         });
         tester.binding.addPostFrameCallback(frame);
       }
@@ -440,6 +442,7 @@ void main() {
       ];
       passed = true;
     } finally {
+      sampling = false;
       if (db.queryGate?.isCompleted == false) db.queryGate!.complete();
       db.queryGate = null;
       await tester.pumpWidget(const SizedBox());
