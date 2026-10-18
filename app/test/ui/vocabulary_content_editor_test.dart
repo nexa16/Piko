@@ -6,6 +6,7 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 
 import 'package:piko/ui/components/piko_card.dart';
+import 'package:piko/ui/components/piko_form.dart';
 
 void main() {
   testWidgets(
@@ -36,6 +37,22 @@ void main() {
       final target = find.byKey(const ValueKey('content-example-target'));
       expect(target, findsNothing);
       expect(find.byKey(const ValueKey('content-hint')), findsOneWidget);
+      final hintSection = find.byKey(const ValueKey('content-hint-section'));
+      final hintGroup = find.descendant(
+        of: hintSection,
+        matching: find.byType(PikoFormGroup),
+      );
+      final switchTitle = find.text(
+        const PikoCopy('en').text('vocab.hintAutomatic'),
+      );
+      expect(
+        tester.getRect(switchTitle).left - tester.getRect(hintGroup).left,
+        16,
+      );
+      expect(
+        DefaultTextStyle.of(tester.element(switchTitle)).style.fontWeight,
+        FontWeight.w700,
+      );
       await tester.tap(find.byKey(const ValueKey('content-add-example')));
       await tester.pumpAndSettle();
       expect(target, findsOneWidget);

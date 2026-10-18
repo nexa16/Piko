@@ -114,7 +114,6 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    final gap = pikoDesign.dimension('spacing.3');
     Widget field(String key, String label, TextEditingController controller) =>
         PikoFormFieldRow(
           child: PikoField(
@@ -139,71 +138,57 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: gap),
         PikoFormSection(
           key: const ValueKey('content-examples-section'),
           title: copy.text('vocab.examples'),
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < pairs.length; i++) ...[
-                  field(
-                    i == 0
-                        ? 'content-example-target'
-                        : 'content-example-target-$i',
-                    copy.text('vocab.exampleTarget', {
-                      'language': widget.targetLanguage,
-                    }),
-                    pairs[i].$1,
-                  ),
-                  SizedBox(height: gap),
-                  field(
-                    i == 0
-                        ? 'content-example-native'
-                        : 'content-example-native-$i',
-                    copy.text('vocab.exampleTarget', {
-                      'language': widget.nativeLanguage,
-                    }),
-                    pairs[i].$2,
-                  ),
-                  PikoButton(
-                    label: copy.text('vocab.removeExample', {'number': i + 1}),
-                    variant: PikoButtonVariant.ghost,
-                    onPressed: widget.enabled
-                        ? () {
-                            final removed = pairs.removeAt(i);
-                            publish();
-                            setState(() {});
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              removed.$1.dispose();
-                              removed.$2.dispose();
-                            });
-                          }
-                        : null,
-                  ),
-                  SizedBox(height: gap),
-                ],
-                PikoButton(
-                  key: const ValueKey('content-add-example'),
-                  icon: const PikoIcon(PikoIconName.plus),
-                  variant: PikoButtonVariant.ghost,
-                  label: copy.text(
-                    pairs.isEmpty ? 'vocab.addExamples' : 'vocab.addExample',
-                  ),
-                  onPressed: widget.enabled
-                      ? () {
-                          setState(
-                            () => pairs.add((
-                              TextEditingController(),
-                              TextEditingController(),
-                            )),
-                          );
-                        }
-                      : null,
-                ),
-                SizedBox(height: gap),
-              ],
+            for (var i = 0; i < pairs.length; i++) ...[
+              field(
+                i == 0 ? 'content-example-target' : 'content-example-target-$i',
+                copy.text('vocab.exampleTarget', {
+                  'language': widget.targetLanguage,
+                }),
+                pairs[i].$1,
+              ),
+              field(
+                i == 0 ? 'content-example-native' : 'content-example-native-$i',
+                copy.text('vocab.exampleTarget', {
+                  'language': widget.nativeLanguage,
+                }),
+                pairs[i].$2,
+              ),
+              PikoFormRow(
+                title: copy.text('vocab.removeExample', {'number': i + 1}),
+                trailing: const PikoIcon(PikoIconName.trash),
+                onTap: widget.enabled
+                    ? () {
+                        final removed = pairs.removeAt(i);
+                        publish();
+                        setState(() {});
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          removed.$1.dispose();
+                          removed.$2.dispose();
+                        });
+                      }
+                    : null,
+              ),
+            ],
+            PikoFormRow(
+              key: const ValueKey('content-add-example'),
+              title: copy.text(
+                pairs.isEmpty ? 'vocab.addExamples' : 'vocab.addExample',
+              ),
+              trailing: const PikoIcon(PikoIconName.plus),
+              onTap: widget.enabled
+                  ? () {
+                      setState(
+                        () => pairs.add((
+                          TextEditingController(),
+                          TextEditingController(),
+                        )),
+                      );
+                    }
+                  : null,
             ),
           ],
         ),
@@ -211,41 +196,42 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
           key: const ValueKey('content-hint-section'),
           title: copy.text('vocab.hint'),
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                field('content-hint', copy.text('vocab.hint'), hint),
-                SizedBox(height: gap),
-                PikoSwitch(
-                  key: const ValueKey('content-hint-automatic'),
-
-                  title: Text(copy.text('vocab.hintAutomatic')),
-                  subtitle: Text(copy.text('vocab.hintTapHelper')),
-                  value: widget.value.hintVisibility == HintVisibility.always,
-                  onChanged: widget.enabled
-                      ? (value) {
-                          final wasHidden =
-                              widget.value.hintVisibility ==
-                              HintVisibility.hidden;
-                          publish(
-                            visibility: value
-                                ? HintVisibility.always
-                                : HintVisibility.hidden,
-                            makeDefault: false,
-                          );
-                          if (value && wasHidden) offer();
-                        }
-                      : null,
-                ),
-                if (offerFailed) ...[
-                  Text(copy.text('vocab.hintDefaultFailed')),
-                  PikoButton(
-                    label: copy.text('action.retry'),
-                    onPressed: offerPending ? null : retryDismissal,
-                  ),
-                ],
-              ],
+            field('content-hint', copy.text('vocab.hint'), hint),
+            PikoFormFieldRow(
+              child: PikoSwitch(
+                key: const ValueKey('content-hint-automatic'),
+                title: Text(copy.text('vocab.hintAutomatic')),
+                subtitle: Text(copy.text('vocab.hintTapHelper')),
+                value: widget.value.hintVisibility == HintVisibility.always,
+                onChanged: widget.enabled
+                    ? (value) {
+                        final wasHidden =
+                            widget.value.hintVisibility ==
+                            HintVisibility.hidden;
+                        publish(
+                          visibility: value
+                              ? HintVisibility.always
+                              : HintVisibility.hidden,
+                          makeDefault: false,
+                        );
+                        if (value && wasHidden) offer();
+                      }
+                    : null,
+              ),
             ),
+            if (offerFailed)
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(copy.text('vocab.hintDefaultFailed')),
+                    PikoButton(
+                      label: copy.text('action.retry'),
+                      onPressed: offerPending ? null : retryDismissal,
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ],

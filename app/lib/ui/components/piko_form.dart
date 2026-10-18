@@ -88,60 +88,64 @@ class PikoFormRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = pikoDesign.color(danger ? 'danger' : 'ink');
-    return Semantics(
-      button: true,
-      enabled: onTap != null,
-      child: Opacity(
-        opacity: onTap == null
-            ? pikoDesign.dimension('states.disabledOpacity')
-            : 1,
-        child: InkWell(
-          focusNode: focusNode,
-          onTap: onTap == null
-              ? null
-              : () {
-                  PikoAnchorRegion.capture(context);
-                  onTap!();
-                },
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: pikoDesign.dimension('controls.largeHeight'),
-            ),
-            child: PikoFormFieldRow(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.bodyMedium!
-                              .copyWith(
-                                color: color,
-                                fontWeight: pikoDesign.weight(
-                                  'typography.controlWeight',
-                                ),
-                              ),
-                        ),
-                        if (subtitle != null)
+    return PikoAnchorAction(
+      builder: (context) => Semantics(
+        button: true,
+        enabled: onTap != null,
+        child: Opacity(
+          opacity: onTap == null
+              ? pikoDesign.dimension('states.disabledOpacity')
+              : 1,
+          child: InkWell(
+            focusNode: focusNode,
+            onTap: onTap == null
+                ? null
+                : () {
+                    PikoAnchorRegion.capture(context);
+                    onTap!();
+                  },
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: pikoDesign.dimension('controls.largeHeight'),
+              ),
+              child: PikoFormFieldRow(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle!,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            title,
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  color: color,
+                                  fontWeight: pikoDesign.weight(
+                                    'typography.controlWeight',
+                                  ),
+                                ),
                           ),
-                      ],
-                    ),
-                  ),
-                  if (trailing != null) ...[
-                    SizedBox(width: pikoDesign.dimension('spacing.3')),
-                    IconTheme(
-                      data: IconThemeData(
-                        color: pikoDesign.color(danger ? 'danger' : 'primary'),
+                          if (subtitle != null)
+                            Text(
+                              subtitle!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
                       ),
-                      child: trailing!,
                     ),
+                    if (trailing != null) ...[
+                      SizedBox(width: pikoDesign.dimension('spacing.3')),
+                      IconTheme(
+                        data: IconThemeData(
+                          color: pikoDesign.color(
+                            danger ? 'danger' : 'primary',
+                          ),
+                        ),
+                        child: trailing!,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

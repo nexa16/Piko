@@ -409,7 +409,12 @@ void main() {
           final saved = entryScreen.session.confirmedEntries.single;
           expect(key('entry-card-${saved.id}'), findsOneWidget);
           await record('entry-session-retains-history', capture: true);
-          await tap(key('entry-card-${saved.id}'));
+          final stackRect = tester.getRect(key('entry-stack'));
+          await tester.dragFrom(
+            Offset(stackRect.left + 4, stackRect.center.dy),
+            const Offset(0, 2000),
+          );
+          await tester.pumpAndSettle();
           expect(entryScreen.session.activeEntryId, saved.id);
           await record('entry-session-revisit', capture: true);
           await pageBack();
