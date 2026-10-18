@@ -298,6 +298,10 @@ void main() {
           await tap(find.textContaining(copy.text('view.mode')).last);
           await record('layout-picker');
           await close();
+          await tap(key('collection-list-menu'));
+          await tap(find.textContaining(copy.text('view.languageOrder')).last);
+          await record('language-order-picker');
+          await close();
           await tap(key('collection-learning-help'));
           await record('learning-help');
           await tap(find.byTooltip(copy.text('learnHelp.close')));
@@ -317,9 +321,10 @@ void main() {
           await close();
           await tap(key('inline-menu-${fixture.entry.id}'));
           await tap(find.text(copy.text('vocab.delete')).last);
-          await record('delete-vocabulary-confirmation');
-          await tap(button('action.cancel'));
-          await tap(key('inline-complete-${fixture.entry.id}'));
+          // Explicit vocabulary deletion uses its bounded Undo contract;
+          // Collection/category definitions separately require confirmation.
+          await tap(button('vocab.undo'));
+          await record('vocabulary-restored-after-undo');
           await tap(button('action.addEntry'));
           await record('entry-method');
           await tap(button('entry.manualMethod'));
