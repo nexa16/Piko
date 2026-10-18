@@ -39,8 +39,6 @@ import 'data/local/sqlite_statistics_repository.dart';
 import 'features/statistics/statistics_binding.dart';
 import 'features/statistics/statistics_page.dart';
 import 'platform/device_clock_changes.dart';
-import 'features/ai/ai_content.dart';
-import 'features/ai/supabase_ai_gateway.dart';
 
 /// Owns private runtime storage. Injected feature repositories remain caller-owned.
 class PikoRuntime extends StatefulWidget {
@@ -49,7 +47,6 @@ class PikoRuntime extends StatefulWidget {
     this.databaseFactory,
     this.settingsRepositoryFactory,
     this.jsonPlatform,
-    this.aiAccess,
   });
 
   /// Test/composition injection; the runtime owns the returned database.
@@ -58,13 +55,11 @@ class PikoRuntime extends StatefulWidget {
   /// Composition seam; uses the same runtime-owned database, never a second store.
   final SettingsRepository Function(PikoDatabase)? settingsRepositoryFactory;
   final VocabularyJsonPlatform? jsonPlatform;
-  final AiAccess? aiAccess;
   @override
   State<PikoRuntime> createState() => _PikoRuntimeState();
 }
 
 class _PikoRuntimeState extends State<PikoRuntime> {
-  late final aiAccess = widget.aiAccess ?? AiAccess(SupabaseAiGateway());
   late final database =
       widget.databaseFactory?.call() ??
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
@@ -181,7 +176,6 @@ class _PikoRuntimeState extends State<PikoRuntime> {
           registerPending: trackWrites,
           fullExportService: fullExportService,
           fullExportPlatform: widget.jsonPlatform,
-          aiAccess: aiAccess,
         ),
       ),
     );
@@ -237,7 +231,6 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     final deletion = SqliteVocabularyDeletionService(database);
     return EntrySessionResources(
       categoriesRepository: categories,
-      aiAccess: aiAccess,
       onPendingWrites: trackWrites,
       session: EntrySessionController(
         collectionId: collectionId,
@@ -316,7 +309,6 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
-    if (widget.aiAccess == null) aiAccess.dispose();
     _statistics?.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();

@@ -70,15 +70,13 @@ void main() {
             await h.flush(tester);
             final copy = PikoCopy(language);
             expect(find.byType(PikoHeading), findsOneWidget);
-            expect(find.byType(PikoCard), findsNWidgets(5));
+            expect(find.byType(PikoCard), findsNWidgets(4));
             expect(settings.dropdown, findsOneWidget);
             final direction = find.byType(DropdownButton<PreferredDirection>);
             expect(direction, findsOneWidget);
-            expect(find.byType(PikoButton), findsNWidgets(3));
+            expect(find.byType(PikoButton), findsNWidgets(2));
             expect(find.byKey(const ValueKey('settings-full-export')), findsOneWidget);
-            final ai = find.byKey(const ValueKey('ai-connection'));
-            expect(tester.widget<PikoButton>(ai).onPressed, isNull);
-            expect(find.text(copy.text('ai.unavailable')), findsOneWidget);
+            expect(find.byKey(const ValueKey('ai-connection')), findsNothing);
             final title = find.text(copy.text('nav.settings'));
             expect(title, findsOneWidget);
             expect(
@@ -113,9 +111,6 @@ void main() {
               copy.text('common.back'),
               copy.text('fullExport.action'),
               copy.text('fullExport.description'),
-              copy.text('ai.connectionTitle'),
-              copy.text('ai.unavailable'),
-              copy.text('ai.enable'),
               'English',
               'Deutsch',
             };

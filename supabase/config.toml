@@ -1,9 +1,0 @@
-project_id = "piko-ai"
-
-[functions.piko-content]
-# The function verifies each bearer token with Auth before accounting/spending.
-# This supports current signing keys; the publishable API key is not a JWT.
-verify_jwt = false
-
-[functions.piko-maintenance]
-verify_jwt = false

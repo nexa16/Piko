@@ -1,8 +1,0 @@
-[
-  {"targetLanguage":"fr","nativeLanguage":"de","targetText":"chat","nativeText":"Katze"},
-  {"targetLanguage":"fr","nativeLanguage":"de","targetText":"prendre","nativeText":"nehmen"},
-  {"targetLanguage":"ko","nativeLanguage":"de","targetText":"먹다","nativeText":"essen"},
-  {"targetLanguage":"en","nativeLanguage":"de","targetText":"bank","nativeText":"Bank"},
-  {"targetLanguage":"de","nativeLanguage":"en","targetText":"Schloss","nativeText":"castle"},
-  {"targetLanguage":"ko","nativeLanguage":"en","targetText":"길","nativeText":"path"}
-]

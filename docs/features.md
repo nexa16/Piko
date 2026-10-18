@@ -232,8 +232,6 @@ From Home, open **Settings**. Choose **App language** → English or Deutsch. Th
 
 Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
 
-**AI suggestions** shows whether optional example/Hint access is available. Ordinary builds currently keep it disabled; no live service is included or required for local editing and learning. The prepared manual-entry integration offers a preview and explicit Use/Discard actions when a separately approved service is configured. It never fills either vocabulary text or saves a draft automatically.
-
 <img src="images/20-settings.png" width="320" alt="English Settings with app language, learning direction and question-example controls">
 
 Ordinary product emulator capture · [Full image](images/20-settings.png) · [Capture metadata: `20-settings`](build-manifest.json)

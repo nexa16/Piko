@@ -21,8 +21,6 @@ dependencies:
   fsrs: 2.0.1
   file_picker: 13.1.0
   intl: 0.20.2
-  supabase_flutter: 2.18.3
-  http: 1.6.0
 
 dev_dependencies:
   integration_test:
