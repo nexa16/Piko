@@ -59,14 +59,25 @@ void main() {
           try {
             expect(find.text(copy.text('summary.title')), findsOneWidget);
             expect(
+              find.byKey(const ValueKey('piko-celebration')),
+              findsOneWidget,
+            );
+            final art = tester.widget<Image>(
+              find.byKey(const ValueKey('piko-celebration')),
+            );
+            expect(art.excludeFromSemantics, isTrue);
+            expect(art.filterQuality, FilterQuality.none);
+            expect(
               find.text(copy.text('learn.summaryEncouragement')),
               findsOneWidget,
             );
             expect(find.text('25'), findsOneWidget);
             expect(find.text('23'), findsOneWidget);
             expect(find.text('30'), findsNothing); // Total is not learned.
-            expect(tester.widget<PikoDialog>(find.byType(PikoDialog)).actions,
-              isEmpty); // The close icon is allowed; no extra return CTA.
+            expect(
+              tester.widget<PikoDialog>(find.byType(PikoDialog)).actions,
+              isEmpty,
+            ); // The close icon is allowed; no extra return CTA.
             expect(find.text(copy.text('summary.sample')), findsNothing);
             for (final metric in [
               ('completed', '25', 'summary.completed'),

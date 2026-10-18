@@ -62,6 +62,8 @@ class DetailSpeedHarness {
   final requests =
       <({LearningDirection direction, Set<String> visible, int pool})>[];
   Completer<void>? factoryGate;
+  Completer<void>? completionGate;
+  bool failCompletion = false;
   late final binding = CollectionQueryBinding(
     collectionId: owner.id,
     service: service,
@@ -87,7 +89,10 @@ class DetailSpeedHarness {
         eligibleEntryIds: visibleEntryIds,
         poolSize: poolSize,
       ),
-      commitCompletion: (_) async {},
+      commitCompletion: (_) async {
+        await completionGate?.future;
+        if (failCompletion) throw StateError('Synthetic completion failure');
+      },
       presentationActive: false,
     );
   }

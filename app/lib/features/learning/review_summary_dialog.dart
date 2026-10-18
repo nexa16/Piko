@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
+import '../../ui/components/piko_celebration.dart';
 import '../../ui/piko_theme.dart';
 import 'learning_session_progress.dart';
 
@@ -53,7 +54,16 @@ class ReviewSummaryDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(copy.text('learn.summaryEncouragement')),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: Text(copy.text('learn.summaryEncouragement'))),
+              SizedBox(
+                width: d.dimension('components.collectionReview.mascotGap'),
+              ),
+              const PikoCelebration(),
+            ],
+          ),
           Padding(
             padding: EdgeInsets.symmetric(vertical: gap),
             child: LayoutBuilder(

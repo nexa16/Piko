@@ -37,6 +37,7 @@ import 'collection_search_field.dart';
 import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
+import '../speed/speed_completion_notice.dart';
 import '../speed/selected_speed_launch.dart';
 import '../speed/speed_setup_dialog.dart'
     show SpeedSessionFactory, SelectedSpeedSessionFactory;
@@ -1053,30 +1054,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   children: [
                     _detailHeading(record, ready),
                     if (_speedCompletedCount != null && ready)
-                      Semantics(
-                        liveRegion: true,
-                        child: Row(
-                          key: const ValueKey('speed-completion-notice'),
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _speedCompletedCount == 1
-                                    ? copy.text('speed.completionNoticeOne')
-                                    : copy.text('speed.completionNotice', {
-                                        'count': _speedCompletedCount!,
-                                      }),
-                              ),
-                            ),
-                            PikoIconButton(
-                              semanticLabel: copy.text(
-                                'speed.dismissCompletion',
-                              ),
-                              icon: const PikoIcon(PikoIconName.x),
-                              onPressed: () =>
-                                  setState(() => _speedCompletedCount = null),
-                            ),
-                          ],
-                        ),
+                      SpeedCompletionNotice(
+                        count: _speedCompletedCount!,
+                        onDismiss: () =>
+                            setState(() => _speedCompletedCount = null),
                       ),
                     if (_deleting) Text(copy.text('collection.deleting')),
                     if (_deleteError != null)
@@ -1546,6 +1527,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             !_openingSpeed &&
             (binding.ready || _openingReview),
         presentation: ReviewLaunchPresentation.collectionCard,
+        showMascot: _speedCompletedCount == null,
         dueCount: total,
         directionCounts: counts,
         allowedDirections: _directions,

@@ -46,6 +46,7 @@ class ReviewLaunch extends StatefulWidget {
     required this.onPendingWrites,
     required this.onBusyChanged,
     this.enabled = true,
+    this.showMascot = true,
     this.presentation = ReviewLaunchPresentation.plain,
     this.dueCount,
     this.onSessionClosed,
@@ -67,6 +68,7 @@ class ReviewLaunch extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
   final bool enabled;
+  final bool showMascot;
   final ReviewLaunchPresentation presentation;
   final int? dueCount;
   final VoidCallback? onSessionClosed;
@@ -275,7 +277,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (direction == available.first) ...[
+                    if (widget.showMascot && direction == available.first) ...[
                       const PikoReading(),
                       SizedBox(
                         width: pikoDesign.dimension(

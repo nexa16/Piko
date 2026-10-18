@@ -139,7 +139,7 @@ Correct schedules a later review. Hard plus Correct uses the scheduler's Hard ra
 
 **Correct previous review** lets you replace the immediately previous grade while its correction control is available. Choose the corrected grade for that answer. This replaces its effect rather than adding an extra ordinary review. It is not a general learning-history editor.
 
-When the captured work and repetitions are complete, dismiss the summary to return to the Collection. **Exit review** leaves earlier saved answers intact. A save error keeps the operation unresolved; retry the grade instead of counting it as saved. **Nothing due right now** means the current scope has no eligible scheduled work, not that the vocabulary is mastered.
+When the captured work and repetitions are complete, the existing summary shows the completed counts and a decorative celebration Piko. Dismiss it to return to the Collection. **Exit review** leaves earlier saved answers intact. A save error keeps the operation unresolved; retry the grade instead of counting it as saved. **Nothing due right now** means the current scope has no eligible scheduled work, not that the vocabulary is mastered.
 
 The Collection's information icon explains scheduling and repetitions. Readiness labels such as New, Retry pending, Due now and Next review are scheduling information. The build does not offer typed-answer assessment or automatic knowledge-level/mastery grading. Learning is independent for target → native and native → target.
 
@@ -159,6 +159,8 @@ For selected practice, use the separate selection action. A single preferred dir
 Reveal each answer and choose Correct or Incorrect. A word finishes after a consecutive correct streak: one correct with no errors, two after one error, three after two, and four after three or more. An error resets that word's streak. Completed words leave the pool; waiting words enter as space becomes available. A short numbers game can interrupt unfinished work between passes. The session ends without an extra game once all work is complete.
 
 Speed completion persists word-by-word. Completing a word preserves Long-term scheduling, history and pending repetitions in both directions, including after errors. Each completed word direction contributes at most once to that learning day's Speed statistics. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
+
+After every word has successfully saved its completion, Speed returns to the Collection with its completed-word message and one celebration Piko, temporarily replacing the reading pose. Dismiss the message with X; it also clears when another learning launch starts or when leaving the Collection. Exit, initially empty work, failed saves and exhaustion caused only by deactivation do not celebrate. No extra summary or timer is added.
 
 <img src="images/12-speed-setup.png" width="320" alt="Speed setup with French to German direction, four new words and pass-size field">
 
