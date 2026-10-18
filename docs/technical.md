@@ -1,6 +1,6 @@
 # Technical reference
 
-This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout and statistics sections, schema 19, category ordering/carry-over and Speed preservation describe subsequent source changes. Their current source links are relative to this checkout. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented application build, including statistics, schema 19, category ordering/carry-over and Speed preservation. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
@@ -24,7 +24,7 @@ The runtime hydrates retained language and learning-direction settings and track
 
 UI composition seams permit injected repositories/controllers/clocks in tests. An injected route or synthetic test entry point is not the ordinary product entry point used by the gallery.
 
-Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/main.dart), [`PikoRuntime`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/piko_runtime.dart), [`CollectionViewScopes`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/collections/collection_view_scope.dart).
+Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/main.dart), [`PikoRuntime`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/piko_runtime.dart), [`CollectionViewScopes`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/collections/collection_view_scope.dart).
 
 <a id="interaction-layout"></a>
 ## Interaction layout
@@ -33,7 +33,7 @@ Shared pages, dialog bodies and the entry stack preserve the interacted control'
 
 Only one interaction owns a scroll container at a time. A new interaction, deliberate scrolling or an explicit reveal takes precedence. Removed controls fall back to their surviving contextual header or neighbor. Scroll bounds, viewport/text-scale changes and keyboard/caret visibility limit exact coordinate retention. Entry-stack navigation keeps its existing centered transition; optional content grows from its header.
 
-These changes are newer than the gallery APK. Source: [shared anchoring](../app/lib/ui/components/piko_interaction_anchor.dart), [entry coordination](../app/lib/features/entry/entry_session_screen.dart). Host behavior and regression checks cover transitions, bounds, raw input, selection, keyboard navigation and enlarged text; device evidence remains tied to the exact tested source.
+The selected APK includes these changes. Source: [shared anchoring](../app/lib/ui/components/piko_interaction_anchor.dart), [entry coordination](../app/lib/features/entry/entry_session_screen.dart). Host behavior and regression checks cover transitions, bounds, raw input, selection, keyboard navigation and enlarged text; device evidence remains tied to the exact tested source.
 
 <a id="storage"></a>
 ## Storage and migrations
@@ -53,7 +53,7 @@ Upgrades run additive/backfill steps appropriate to the starting schema, inside 
 
 Saved editors serialize admitted writes, retain invalid raw drafts for correction, and distinguish validation from persistence errors. Pending writes are drained at relevant navigation/learning boundaries. Deletion and Undo use ownership/conflict checks; restoration cannot overwrite unrelated edits. Do not manipulate allocator high-water marks or infer preservation from a newly created empty database. Android preservation and termination protocols are in [developer setup](development.md#android-verification).
 
-Sources: [`PikoDatabase` and migrations](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/sqlite_vocabulary_repository.dart).
+Sources: [`PikoDatabase` and migrations](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_vocabulary_repository.dart).
 
 <a id="vocabulary"></a>
 ## Vocabulary identity and content
@@ -64,7 +64,7 @@ A vocabulary entry has two learning directions. Editing words, examples, hints o
 
 Example pairs preserve order and require both sides when nonempty; each side is capped at 1,000 characters. A hint is capped at 2,000 and has `always`/`hidden` visibility. Collection Hint defaults apply to new content rather than rewriting existing entries. Added timestamps for legacy entries may be unknown; the app does not synthesize historical creation dates.
 
-Sources: [`normalization`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
+Sources: [`normalization`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
 
 <a id="queries"></a>
 ## Queries, categories and selection
@@ -83,7 +83,7 @@ Compact launch choices re-read their own mode’s counts at selection and prepar
 
 `CollectionViewPreferences` holds layout, language order, grouping and sorting. Query bindings combine search/filters with those preferences and refresh on database invalidation. Staged dialog choices are committed with Apply. `VocabularySelection` owns only transient UUIDs: Select all unions matching IDs, hidden selections remain selected, and explicit clear/page departure ends selection. It performs no persistent mutation. The separate selected-Speed launcher reads that transient membership without changing automatic launch scope.
 
-Sources: [`query service`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/sqlite_collection_query.dart), [`view model`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/collections/collection_view_preferences.dart), [`selection`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/vocabulary/vocabulary_selection.dart).
+Sources: [`query service`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_collection_query.dart), [`view model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/collections/collection_view_preferences.dart), [`selection`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/vocabulary_selection.dart).
 
 <a id="learning"></a>
 ## Learning, retry and correction
@@ -98,7 +98,7 @@ Immediate previous-grade correction is an atomic replacement guarded by the late
 
 Due-session membership and progress separate distinct words, directional work, completion and first-try correctness. Exiting does not invent completion. Readiness presentation derives from current state, not a knowledge-level model. Device timezone/DST and injected-clock host coverage remain distinct verification claims.
 
-Sources: [`LearningScheduler`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/learning/learning_scheduler.dart), [`learning repository`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/sqlite_learning_repository.dart), [`retry gap`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/learning/retry_gap.dart), [`learning day`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/core/learning_day.dart).
+Sources: [`LearningScheduler`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/learning/learning_scheduler.dart), [`learning repository`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_learning_repository.dart), [`retry gap`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/learning/retry_gap.dart), [`learning day`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/core/learning_day.dart).
 
 <a id="speed"></a>
 ## Speed state
@@ -111,7 +111,7 @@ Collection contextual artwork derives from the same resolved query and allowed d
 
 Completion artwork is presentation only. `ReviewSessionRoute` retains its existing successful-completion guard and renders the original static pose in `ReviewSummaryDialog`; the underlying Collection route is offstage. A non-null committed `SpeedSessionResult` retains the existing inline notice lifetime. `SpeedCompletionNotice` renders one decorative pose while the Collection suppresses its contextual pose. Dismissal restores current availability without writing learning or statistics. Assets are local lossless exports and excluded from semantics/focus.
 
-Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_learning_session.dart), [`current Speed completion`](../app/lib/data/local/sqlite_speed_completion.dart).
+Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/speed/speed_learning_session.dart), [`current Speed completion`](../app/lib/data/local/sqlite_speed_completion.dart).
 
 <a id="statistics"></a>
 ## Statistics
@@ -148,7 +148,7 @@ The statistics block is `null` before storage initialization. Otherwise its vers
 
 [`Full export service`](../app/lib/data/local/sqlite_full_export_service.dart) and [`Settings export control`](../app/lib/features/interchange/full_export_control.dart) separate snapshot preparation from native file saving. Pending operations are registered with the runtime drain, admit one request, reject late handoffs after route/repository replacement and distinguish saved, canceled and failed outcomes.
 
-Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/vocabulary_json.dart), [`JSON service`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/sqlite_vocabulary_json_service.dart), [`platform adapter`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/platform/vocabulary_json_platform.dart).
+Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_json.dart), [`JSON service`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_vocabulary_json_service.dart), [`platform adapter`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/platform/vocabulary_json_platform.dart).
 
 <a id="resources"></a>
 ## Shared resources
@@ -157,4 +157,4 @@ Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/0afecdbc0
 
 Lucide SVG source and notices live in `mockups/assets/icons/lucide`; the app packages generated copies under its own assets directory. Nunito Sans and Korean fallback font assets and their notices are bundled offline. Original artwork and Android system UI have their own appearance; historical mockups are not product screenshot evidence. The Android release configuration currently uses debug signing and is not a store-ready signing setup.
 
-Sources: [`generator`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/tool/generate_shared.mjs), [`dependencies and assets`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/pubspec.yaml), [`Android build configuration`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/android/app/build.gradle.kts).
+Sources: [`generator`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/tool/generate_shared.mjs), [`dependencies and assets`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/pubspec.yaml), [`Android build configuration`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/android/app/build.gradle.kts).

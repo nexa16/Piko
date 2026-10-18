@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the earlier gallery APK; its screenshots do not yet show the statistics additions. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
 
 ## Contents
 
@@ -33,9 +33,9 @@ Use the heading's rename control to change its name; save or cancel that edit ex
 
 The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
-<img src="images/06-collection-list.png" width="320" alt="French Collection with four due words, Speed action, search and independent list controls">
+<img src="images/r7-collection.png" width="320" alt="French Collection with four retained words and no currently due review">
 
-Ordinary product emulator capture · [Full image](images/06-collection-list.png) · [Capture metadata: `06-collection-list`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-collection.png) · [Capture metadata: `r7-collection`](build-manifest.json)
 
 [Technical ownership](technical.md#runtime) · [Home and Collection images](screenshots.md#collections)
 
@@ -51,9 +51,9 @@ A new draft is different from an existing saved card: completing both required f
 
 The same target/native pair cannot be saved twice in one Collection. Comparison trims outside whitespace, normalizes Unicode and ignores letter case; it does not merge all spelling variants. If a pair already exists, edit that saved entry or change the pair. Empty required fields and incomplete example pairs need correction before saving.
 
-<img src="images/03-entry-draft.png" width="320" alt="Manual-entry draft for pomme and Apfel with Not saved yet and Save & Next">
+<img src="images/r7-entry-draft.png" width="320" alt="Unsaved manually typed livre and Buch with manual examples and Hint controls">
 
-Ordinary product emulator capture · [Full image](images/03-entry-draft.png) · [Capture metadata: `03-entry-draft`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-entry-draft.png) · [Capture metadata: `r7-entry-draft`](build-manifest.json)
 
 [Editor image](screenshots.md#editors) · [Identity and validation](technical.md#vocabulary)
 
@@ -93,9 +93,9 @@ Categories feed the list's filters and grouping. If none exist, the category/fil
 
 In **Edit categories**, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
 
-<img src="images/07-categories.png" width="320" alt="Topic category editor with One value and Multiple values modes and alphabetical values">
+<img src="images/r7-categories.png" width="320" alt="Category group editor with default-off session carry-over and explicit-save explanation">
 
-Ordinary product emulator capture · [Full image](images/07-categories.png) · [Capture metadata: `07-categories`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-categories.png) · [Capture metadata: `r7-categories`](build-manifest.json)
 
 [Category image](screenshots.md#categories) · [Category ownership](technical.md#queries)
 
@@ -129,9 +129,9 @@ Changing search/filter can hide selected words without deselecting them. The sel
 
 Use **Speed · selected** in the selection controls to practice the selected active words, including hidden and previously learned words. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit/delete/export operation and does not change Active/Inactive or saved filters.
 
-<img src="images/10-hidden-selection.png" width="320" alt="Filtered Food word selected with summary showing four selected and three hidden">
+<img src="images/r7-selected-speed.png" width="320" alt="Selected Speed setup for one reviewed word, with fixed direction and hidden and inactive counts">
 
-Ordinary product emulator capture · [Full image](images/10-hidden-selection.png) · [Capture metadata: `10-hidden-selection`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-selected-speed.png) · [Capture metadata: `r7-selected-speed`](build-manifest.json)
 
 [Selection image](screenshots.md#selection) · [Selection ownership](technical.md#queries)
 
@@ -151,9 +151,6 @@ When the captured work and repetitions are complete, the existing summary shows 
 
 The Collection's information icon explains scheduling and repetitions. Readiness labels such as New, Retry pending, Due now and Next review are scheduling information. The build does not offer typed-answer assessment or automatic knowledge-level/mastery grading. Learning is independent for target → native and native → target.
 
-<img src="images/14-long-term-answer.png" width="320" alt="Long-term answer with Hard checkbox, Incorrect and Correct buttons">
-
-Ordinary product emulator capture · [Full image](images/14-long-term-answer.png) · [Capture metadata: `14-long-term-answer`](build-manifest.json)
 
 [Learning image](screenshots.md#learning) · [Scheduler, retry and correction](technical.md#learning)
 
@@ -170,9 +167,6 @@ Speed completion persists word-by-word. Completing a word preserves Long-term sc
 
 After every word has successfully saved its completion, Speed returns to the Collection with its completed-word message and one celebration Piko, temporarily replacing the contextual pose. In the compact header, the completion text and X remain visible without artwork. Dismiss the message with X; it also clears when another learning launch starts or when leaving the Collection. Exit, initially empty work, failed saves and exhaustion caused only by deactivation do not celebrate. No extra summary or timer is added.
 
-<img src="images/12-speed-setup.png" width="320" alt="Speed setup with French to German direction, four new words and pass-size field">
-
-Ordinary product emulator capture · [Full image](images/12-speed-setup.png) · [Capture metadata: `12-speed-setup`](build-manifest.json)
 
 [Speed images](screenshots.md#speed) · [Speed state and persistence](technical.md#speed)
 
@@ -217,9 +211,6 @@ Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary f
 
 Existing learning is preserved. Imported learning and statistics data are ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
 
-<img src="images/05-import-preview.png" width="320" alt="Import preview with three new words, zero errors and Import vocabulary action">
-
-Ordinary product emulator capture · [Full image](images/05-import-preview.png) · [Capture metadata: `05-import-preview`](build-manifest.json)
 
 [Import/export images](screenshots.md#transfer) · [Format and compatibility](technical.md#interchange)
 
@@ -232,9 +223,9 @@ From Home, open **Settings**. Choose **App language** → English or Deutsch. Th
 
 Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
 
-<img src="images/20-settings.png" width="320" alt="English Settings with app language, learning direction and question-example controls">
+<img src="images/r7-settings.png" width="320" alt="Global Settings with four cards, immediate preferences and full export">
 
-Ordinary product emulator capture · [Full image](images/20-settings.png) · [Capture metadata: `20-settings`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-settings.png) · [Capture metadata: `r7-settings`](build-manifest.json)
 
 [Settings image](screenshots.md#settings) · [Preference ownership](technical.md#runtime)
 
