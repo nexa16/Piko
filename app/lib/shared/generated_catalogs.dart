@@ -449,6 +449,58 @@ const copyCatalog = <String, Object?>{
 "de": "Wertesuche leeren",
 "en": "Clear value search",
 },
+"category.default.adjective": <String, Object?>{
+"de": "Adjektiv",
+"en": "Adjective",
+},
+"category.default.ai": <String, Object?>{
+"de": "AI-generiert",
+"en": "AI-generated",
+},
+"category.default.expression": <String, Object?>{
+"de": "Feste Wendung",
+"en": "Fixed expression",
+},
+"category.default.food": <String, Object?>{
+"de": "Essen",
+"en": "Food",
+},
+"category.default.home": <String, Object?>{
+"de": "Wohnen",
+"en": "Home",
+},
+"category.default.level": <String, Object?>{
+"de": "GER-Stufe",
+"en": "CEFR level",
+},
+"category.default.manual": <String, Object?>{
+"de": "Manuell erfasst",
+"en": "Manually entered",
+},
+"category.default.noun": <String, Object?>{
+"de": "Nomen",
+"en": "Noun",
+},
+"category.default.source": <String, Object?>{
+"de": "Quelle",
+"en": "Source",
+},
+"category.default.time": <String, Object?>{
+"de": "Zeit",
+"en": "Time",
+},
+"category.default.topic": <String, Object?>{
+"de": "Thema",
+"en": "Topic",
+},
+"category.default.verb": <String, Object?>{
+"de": "Verb",
+"en": "Verb",
+},
+"category.default.wordType": <String, Object?>{
+"de": "Wortart",
+"en": "Word type",
+},
 "category.deleteDimension": <String, Object?>{
 "de": "Kategoriegruppe löschen",
 "en": "Delete category group",

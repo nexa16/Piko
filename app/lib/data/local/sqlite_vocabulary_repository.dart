@@ -1,3 +1,4 @@
+import 'sqlite_category_defaults.dart';
 import 'sqlite_vocabulary_content.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
@@ -183,7 +184,9 @@ final class SqliteVocabularyRepository
         collectionId: collectionId,
         targetText: targetText,
         nativeText: nativeText,
-        assignments: requested,
+        assignments: await SqliteCategoryDefaults(
+          database,
+        ).manualAssignments(collectionId, requested),
         content: content,
         makeHintVisibilityDefault: makeHintVisibilityDefault,
         active: active,

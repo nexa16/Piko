@@ -65,7 +65,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final database =
       widget.databaseFactory?.call() ??
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
-  late final collections = SqliteCollectionsRepository(database);
+  late final collections = SqliteCollectionsRepository(
+    database,
+    interfaceLanguage: () => _language?.locale.value.languageCode ?? 'en',
+  );
   late final vocabulary = SqliteVocabularyRepository(database);
   late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
