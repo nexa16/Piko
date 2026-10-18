@@ -8,6 +8,11 @@ export const RESERVE_MICRO_USD = 263000;
 const languages = new Set(['en', 'de', 'fr', 'ko']);
 const keys = ['requestId','task','targetLanguage','nativeLanguage','targetText','nativeText'];
 const encoder = new TextEncoder();
+export function allowedIdentity(user, qualityApproved, evaluationIdentities) {
+  return user?.is_anonymous === true && typeof user.id === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(user.id) &&
+    (qualityApproved || evaluationIdentities.has(user.id)) ? user.id : null;
+}
 export function validateRequest(value, now = Date.now()) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
       Object.keys(value).length !== keys.length || keys.some(k => typeof value[k] !== 'string')) throw Error('invalid');

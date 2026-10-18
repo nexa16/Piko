@@ -7,6 +7,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
+import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/features/ai/ai_content.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/main.dart';
@@ -99,6 +100,7 @@ void main() {
         await fixture.initialize();
         await fixture.review();
         await fixture.review(reverse: true);
+        await SqliteSettingsRepository(db).write('locale', config.locale);
         final baseline = await stored(db);
         await tester.pumpWidget(
           PikoApp(

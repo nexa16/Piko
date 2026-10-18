@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {contentHandler,validateRequest,providerBody,extractSuggestion,verifiedCharge,RESERVE_MICRO_USD} from '../functions/_shared/content.mjs';
+import {allowedIdentity,contentHandler,validateRequest,providerBody,extractSuggestion,verifiedCharge,RESERVE_MICRO_USD} from '../functions/_shared/content.mjs';
 const requestData=(task='example')=>{
   const h=Date.now().toString(16).padStart(12,'0');
   return {requestId:`${h.slice(0,8)}-${h.slice(8)}-7000-8000-000000000001`,task,
@@ -10,6 +10,14 @@ const output=(value,extra={})=>({status:'completed',model:'gpt-6-luna',service_t
   output:[{type:'message',role:'assistant',content:[{type:'output_text',text:JSON.stringify(value)}]}],...extra});
 const example={targetText:'Le chat dort.',nativeText:'Die Katze schläft.'};
 const request=(data=requestData())=>new Request('https://local.test/piko-content',{method:'POST',headers:{Authorization:'Bearer synthetic'},body:JSON.stringify(data)});
+test('before quality approval only an explicitly allowed verified anonymous evaluator can spend',()=>{
+  const id='00000000-0000-4000-8000-000000000001',user={id,is_anonymous:true};
+  assert.equal(allowedIdentity(user,false,new Set()),null);
+  assert.equal(allowedIdentity(user,false,new Set([id])),id);
+  assert.equal(allowedIdentity(user,true,new Set()),id);
+  assert.equal(allowedIdentity({...user,is_anonymous:false},true,new Set([id])),null);
+  assert.equal(allowedIdentity({id:'forged',is_anonymous:true},true,new Set()),null);
+});
 test('strict six-field contract, language/type/bounds/time checks reject extras before any provider call',()=>{
   const valid=requestData(); assert.deepEqual(validateRequest(valid),valid);
   for(const extra of [{collectionId:'private'},{targetLanguage:'zz'},{nativeLanguage:'fr'},

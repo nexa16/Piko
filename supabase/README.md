@@ -24,6 +24,13 @@ server secret storage. `PIKO_AI_LIVE_APPROVED=true` is a server activation gate.
 Do not put provider, service-role or maintenance secrets in an APK, source,
 test output or client configuration.
 
+Until the synthetic language evaluation passes, leave
+`PIKO_AI_QUALITY_APPROVED` unset. Only explicitly allowed authenticated anonymous
+evaluators in server-only `PIKO_AI_EVAL_IDENTITIES` can spend during that stage;
+ordinary identities are rejected. Set the quality approval only after recording
+the review, and remove evaluator IDs when the restricted evaluation ends. They
+are private operational identifiers, not values for tracked configuration.
+
 The app accepts only the reviewed public values `PIKO_AI_SUPABASE_URL`,
 `PIKO_AI_PUBLISHABLE_KEY` and `PIKO_AI_LIVE_APPROVED=true`. Without them its
 gateway is unavailable. These define names do not themselves establish approval.

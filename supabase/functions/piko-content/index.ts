@@ -1,9 +1,11 @@
-import { boundedJson, contentHandler } from '../_shared/content.mjs';
+import { allowedIdentity, boundedJson, contentHandler } from '../_shared/content.mjs';
 
 const url=Deno.env.get('SUPABASE_URL')??'';
 const publicKey=Deno.env.get('PIKO_PUBLISHABLE_KEY')??'';
 const serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??'';
 const providerKey=Deno.env.get('OPENAI_API_KEY')??'';
+const qualityApproved=Deno.env.get('PIKO_AI_QUALITY_APPROVED')==='true';
+const evaluationIdentities=new Set((Deno.env.get('PIKO_AI_EVAL_IDENTITIES')??'').split(',').filter(Boolean));
 const enabled=Deno.env.get('PIKO_AI_LIVE_APPROVED')==='true' &&
   /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url) && !!publicKey && !!serviceKey && !!providerKey;
 const headers={'content-type':'application/json',apikey:serviceKey,Authorization:`Bearer ${serviceKey}`};
@@ -20,7 +22,7 @@ Deno.serve(contentHandler({enabled,
       redirect:'error',signal:AbortSignal.timeout(10000)});
     if(!response.ok) return null;
     const user=await response.json();
-    return user.is_anonymous===true && typeof user.id==='string'?user.id:null;
+    return allowedIdentity(user,qualityApproved,evaluationIdentities);
   },
   admit:(identity:string,id:string,reserve:number)=>rpc('piko_ai_admit',{
     p_identity:identity,p_request:id,p_reserve:reserve}),
