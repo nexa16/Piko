@@ -505,8 +505,15 @@ void main() {
             .first['categoryAssignments'] = [
           {'dimensionId': List.filled(120, 'x').join(), 'valueIds': []},
         ];
-        await reveal(input);
-        await tester.enterText(input, jsonEncode(invalidRow));
+        await File(
+          '${directory.path}/invalid-row.json',
+        ).writeAsString(jsonEncode(invalidRow), flush: true);
+        await tap(button('json.file'));
+        await native('file-invalid-row');
+        expect(
+          tester.widget<TextField>(input).controller!.text,
+          jsonEncode(invalidRow),
+        );
         await tap(button('json.analyze'));
         final rowIssue = find.textContaining(
           'collections[0].entries[0].categoryAssignments',
@@ -519,8 +526,9 @@ void main() {
         expect(rowIssue, findsOneWidget);
         await reveal(rowIssue);
         await record('json-long-row-errors');
-        await reveal(input);
-        await tester.enterText(input, validWire);
+        await tap(button('json.file'));
+        await native('file-valid-after-row');
+        expect(tester.widget<TextField>(input).controller!.text, validWire);
         await tap(button('json.analyze'));
         await review.waitUntil(
           tester,
