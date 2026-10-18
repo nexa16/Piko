@@ -59,13 +59,35 @@ void main() {
           find.widgetWithText(PikoButton, copy.text(id));
       Future<void> reveal(Finder target) async {
         await tester.pumpAndSettle();
-        await review.waitUntil(tester, () => target.evaluate().isNotEmpty);
-        if (target.hitTestable().evaluate().isNotEmpty) {
-          return;
+        if (target.evaluate().isNotEmpty) {
+          if (target.hitTestable().evaluate().isNotEmpty) return;
+          await tester.ensureVisible(target.first);
+          await tester.pumpAndSettle();
         }
-        await tester.ensureVisible(target.last);
-        await tester.pumpAndSettle();
-        expect(target.last.hitTestable(), findsOneWidget);
+        for (
+          var attempt = 0;
+          target.hitTestable().evaluate().isEmpty && attempt < 45;
+          attempt++
+        ) {
+          final dialog = key('selection-dialog-body');
+          final area = tester.getRect(
+            dialog.evaluate().isNotEmpty
+                ? dialog.last
+                : find.byType(Scrollable).first,
+          );
+          final rect = target.evaluate().isEmpty
+              ? null
+              : tester.getRect(target.first);
+          await tester.dragFrom(
+            Offset(area.left + 4, area.center.dy),
+            Offset(
+              0,
+              rect == null || rect.center.dy > area.center.dy ? -140 : 140,
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
+        expect(target.hitTestable(), findsWidgets);
       }
 
       Future<void> tap(Finder target) async {
@@ -297,6 +319,7 @@ void main() {
             .controller!
             .text;
         expect((jsonDecode(imported) as Map)['schemaVersion'], 5);
+        expect(imported, await service.exportCollection(fixture.owner.id));
         await tap(button('json.analyze'));
         await record('native-file-roundtrip');
         await close();
