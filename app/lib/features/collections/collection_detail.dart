@@ -640,6 +640,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         },
         builder: (dialogContext) => FilterSelectionDialog(
           snapshot: binding.snapshot!,
+          categories: widget.categoriesRepository,
           opening: binding.scope.filters,
           canApply: () => current() && _queryControlsAvailable,
           onPendingWrites: widget.onPendingVocabularyWrites,

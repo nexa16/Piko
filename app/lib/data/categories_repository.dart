@@ -49,6 +49,7 @@ enum CategoryValidation {
   invalidId,
   identityConflict,
   cardinalityViolation,
+  staleOrder,
 }
 
 abstract interface class CategoriesRepository {
@@ -87,6 +88,14 @@ abstract interface class CategoriesRepository {
     required String name,
   });
   Future<void> deleteValue(String id);
+
+  /// Commits a complete group permutation only if its observed sequence is still
+  /// current. Inputs are captured on admission; no-op moves keep default A–Z.
+  Future<List<CategoryValueRecord>> reorderValues({
+    required String dimensionId,
+    required List<String> expectedOrder,
+    required List<String> orderedIds,
+  });
   Future<List<CategoryAssignmentRecord>> assignments(String entryId);
   Stream<List<CategoryAssignmentRecord>> watchAssignments(String entryId);
 

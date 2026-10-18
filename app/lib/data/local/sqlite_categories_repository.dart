@@ -98,17 +98,87 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     return row == null ? null : _dimension(row);
   }
 
-  List<CategoryValueRecord> _sortedValues(List<StoredCategoryValue> rows) =>
-      rows.map(_value).toList()..sort((a, b) {
+  Selectable<QueryRow> _orderedValues(String dimensionId) =>
+      database.customSelect(
+        'SELECT v.*, COALESCE(p.custom_value_order, 0) AS custom_order '
+        'FROM category_values v LEFT JOIN category_group_preferences p '
+        'ON p.dimension_id = v.dimension_id WHERE v.dimension_id = ? '
+        'ORDER BY v.position, v.id',
+        variables: [Variable(dimensionId)],
+        readsFrom: {database.categoryValues, database.categoryGroupPreferences},
+      );
+
+  List<CategoryValueRecord> _sortedValues(List<QueryRow> rows) {
+    final values = rows
+        .map((row) => _value(database.categoryValues.map(row.data)))
+        .toList();
+    if (rows.isNotEmpty && rows.first.read<int>('custom_order') == 0) {
+      values.sort((a, b) {
         final order = compareVocabularyLabels(a.name, b.name);
         return order == 0 ? a.id.compareTo(b.id) : order;
       });
+    }
+    return values;
+  }
+
   @override
   Future<List<CategoryValueRecord>> values(String dimensionId) async =>
-      _sortedValues(await _values(dimensionId).get());
+      _sortedValues(await _orderedValues(dimensionId).get());
   @override
   Stream<List<CategoryValueRecord>> watchValues(String dimensionId) =>
-      _values(dimensionId).watch().map(_sortedValues);
+      _orderedValues(dimensionId).watch().map(_sortedValues);
+
+  @override
+  Future<List<CategoryValueRecord>> reorderValues({
+    required String dimensionId,
+    required List<String> expectedOrder,
+    required List<String> orderedIds,
+  }) {
+    final expected = List<String>.of(expectedOrder);
+    final requested = List<String>.of(orderedIds);
+    return _write(() async {
+      if (await dimensionById(dimensionId) == null) {
+        throw CategoryValidation.dimensionNotFound;
+      }
+      final current = await values(dimensionId);
+      final ids = current.map((value) => value.id).toList();
+      if (expected.length != ids.length ||
+          Iterable<int>.generate(
+            ids.length,
+          ).any((i) => expected[i] != ids[i])) {
+        throw CategoryValidation.staleOrder;
+      }
+      if (requested.length != ids.length ||
+          requested.toSet().length != ids.length ||
+          !requested.toSet().containsAll(ids)) {
+        throw CategoryValidation.invalidOwnership;
+      }
+      if (Iterable<int>.generate(
+        ids.length,
+      ).every((i) => requested[i] == ids[i])) {
+        return current;
+      }
+      await database
+          .into(database.categoryGroupPreferences)
+          .insertOnConflictUpdate(
+            CategoryGroupPreferencesCompanion.insert(
+              dimensionId: dimensionId,
+              customValueOrder: const Value(true),
+            ),
+          );
+      await _rankValues(requested);
+      return values(dimensionId);
+    });
+  }
+
+  Future<void> _rankValues(List<String> ids) async {
+    for (var index = 0; index < ids.length; index++) {
+      await (database.update(database.categoryValues)
+            ..where((row) => row.id.equals(ids[index])))
+          .write(CategoryValuesCompanion(position: Value(index)));
+    }
+  }
+
   @override
   Future<CategoryValueRecord?> valueById(String id) async {
     final row = await (database.select(
@@ -226,7 +296,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
         throw CategoryValidation.dimensionNotFound;
       }
       await _availableId(identity);
-      final existing = await values(dimensionId);
+      final existing = await _values(dimensionId).get();
       final position = existing.isEmpty ? 0 : existing.last.position + 1;
       await database
           .into(database.categoryValues)
@@ -266,10 +336,21 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
 
   @override
   Future<void> deleteValue(String id) => _write(() async {
+    final value = await valueById(id);
+    if (value == null) throw CategoryValidation.valueNotFound;
     final count = await (database.delete(
       database.categoryValues,
     )..where((row) => row.id.equals(id))).go();
     if (count != 1) throw CategoryValidation.valueNotFound;
+    final preference =
+        await (database.select(database.categoryGroupPreferences)
+              ..where((row) => row.dimensionId.equals(value.dimensionId)))
+            .getSingleOrNull();
+    if (preference?.customValueOrder == true) {
+      await _rankValues(
+        (await values(value.dimensionId)).map((value) => value.id).toList(),
+      );
+    }
     database.notifyUpdates({
       TableUpdate.onTable(
         database.vocabularyCategoryAssignments,

@@ -132,6 +132,16 @@ class CategoryValues extends Table {
   ];
 }
 
+/// Local presentation choices, deliberately absent from Collection interchange.
+class CategoryGroupPreferences extends Table {
+  TextColumn get dimensionId =>
+      text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
+  BoolColumn get customValueOrder =>
+      boolean().withDefault(const Constant(false))();
+  @override
+  Set<Column<Object>> get primaryKey => {dimensionId};
+}
+
 @DataClassName('StoredCategoryAssignment')
 class VocabularyCategoryAssignments extends Table {
   TextColumn get entryId => text()();
@@ -286,6 +296,7 @@ class VocabularyOrderSequence extends Table {
     VocabularyOrderSequence,
     CategoryDimensions,
     CategoryValues,
+    CategoryGroupPreferences,
     VocabularyCategoryAssignments,
     StatisticsOrigins,
     StatisticsActivity,
@@ -303,7 +314,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -423,6 +434,7 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createTable(speedCompletionReceipts);
           await m.createIndex(statisticsActivityDate);
         }
+        if (from < 18) await m.createTable(categoryGroupPreferences);
       });
     },
     beforeOpen: (_) async {

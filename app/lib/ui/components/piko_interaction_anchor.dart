@@ -363,6 +363,7 @@ class PikoAnchoredScrollView extends CustomScrollView {
     required super.slivers,
     super.physics,
     super.controller,
+    super.shrinkWrap,
   });
   final PikoInteractionAnchor interactionAnchor;
   @override
@@ -386,14 +387,69 @@ class PikoAnchoredScrollView extends CustomScrollView {
         }
       },
       onPointerSignal: (_) => interactionAnchor.clear(),
-      child: _AnchoredViewport(
-        interactionAnchor: interactionAnchor,
-        textScaler: MediaQuery.textScalerOf(context),
-        offset: offset,
-        slivers: slivers,
-      ),
+      child: shrinkWrap
+          ? _AnchoredShrinkViewport(
+              interactionAnchor: interactionAnchor,
+              textScaler: MediaQuery.textScalerOf(context),
+              offset: offset,
+              slivers: slivers,
+            )
+          : _AnchoredViewport(
+              interactionAnchor: interactionAnchor,
+              textScaler: MediaQuery.textScalerOf(context),
+              offset: offset,
+              slivers: slivers,
+            ),
     );
   }
+}
+
+class _AnchoredShrinkViewport extends ShrinkWrappingViewport {
+  const _AnchoredShrinkViewport({
+    required this.interactionAnchor,
+    required this.textScaler,
+    required super.offset,
+    required super.slivers,
+  });
+  final PikoInteractionAnchor interactionAnchor;
+  final TextScaler textScaler;
+  @override
+  RenderShrinkWrappingViewport createRenderObject(BuildContext context) =>
+      _AnchoredShrinkRenderViewport(
+        interactionAnchor,
+        textScaler: textScaler,
+        offset: offset,
+        crossAxisDirection: Viewport.getDefaultCrossAxisDirection(
+          context,
+          axisDirection,
+        ),
+      );
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    RenderShrinkWrappingViewport renderObject,
+  ) {
+    super.updateRenderObject(context, renderObject);
+    final viewport = renderObject as _AnchoredShrinkRenderViewport;
+    if (viewport.textScaler != textScaler) interactionAnchor.clear();
+    viewport.interactionAnchor = interactionAnchor;
+    viewport.textScaler = textScaler;
+  }
+}
+
+class _AnchoredShrinkRenderViewport extends RenderShrinkWrappingViewport
+    with _AnchorLayout {
+  _AnchoredShrinkRenderViewport(
+    this.interactionAnchor, {
+    required this.textScaler,
+    required super.offset,
+    required super.crossAxisDirection,
+  });
+  @override
+  PikoInteractionAnchor interactionAnchor;
+  TextScaler textScaler;
+  @override
+  void performLayout() => layoutAnchored(super.performLayout);
 }
 
 class _AnchoredViewport extends Viewport {

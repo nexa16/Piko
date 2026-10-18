@@ -4810,6 +4810,250 @@ class CategoryValuesCompanion extends UpdateCompanion<StoredCategoryValue> {
   }
 }
 
+class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
+    with TableInfo<$CategoryGroupPreferencesTable, CategoryGroupPreference> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryGroupPreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dimensionIdMeta = const VerificationMeta(
+    'dimensionId',
+  );
+  @override
+  late final GeneratedColumn<String> dimensionId = GeneratedColumn<String>(
+    'dimension_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES category_dimensions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _customValueOrderMeta = const VerificationMeta(
+    'customValueOrder',
+  );
+  @override
+  late final GeneratedColumn<bool> customValueOrder = GeneratedColumn<bool>(
+    'custom_value_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("custom_value_order" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [dimensionId, customValueOrder];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_group_preferences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryGroupPreference> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+        _dimensionIdMeta,
+        dimensionId.isAcceptableOrUnknown(
+          data['dimension_id']!,
+          _dimensionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('custom_value_order')) {
+      context.handle(
+        _customValueOrderMeta,
+        customValueOrder.isAcceptableOrUnknown(
+          data['custom_value_order']!,
+          _customValueOrderMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {dimensionId};
+  @override
+  CategoryGroupPreference map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryGroupPreference(
+      dimensionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dimension_id'],
+      )!,
+      customValueOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}custom_value_order'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryGroupPreferencesTable createAlias(String alias) {
+    return $CategoryGroupPreferencesTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryGroupPreference extends DataClass
+    implements Insertable<CategoryGroupPreference> {
+  final String dimensionId;
+  final bool customValueOrder;
+  const CategoryGroupPreference({
+    required this.dimensionId,
+    required this.customValueOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['dimension_id'] = Variable<String>(dimensionId);
+    map['custom_value_order'] = Variable<bool>(customValueOrder);
+    return map;
+  }
+
+  CategoryGroupPreferencesCompanion toCompanion(bool nullToAbsent) {
+    return CategoryGroupPreferencesCompanion(
+      dimensionId: Value(dimensionId),
+      customValueOrder: Value(customValueOrder),
+    );
+  }
+
+  factory CategoryGroupPreference.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryGroupPreference(
+      dimensionId: serializer.fromJson<String>(json['dimensionId']),
+      customValueOrder: serializer.fromJson<bool>(json['customValueOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'dimensionId': serializer.toJson<String>(dimensionId),
+      'customValueOrder': serializer.toJson<bool>(customValueOrder),
+    };
+  }
+
+  CategoryGroupPreference copyWith({
+    String? dimensionId,
+    bool? customValueOrder,
+  }) => CategoryGroupPreference(
+    dimensionId: dimensionId ?? this.dimensionId,
+    customValueOrder: customValueOrder ?? this.customValueOrder,
+  );
+  CategoryGroupPreference copyWithCompanion(
+    CategoryGroupPreferencesCompanion data,
+  ) {
+    return CategoryGroupPreference(
+      dimensionId: data.dimensionId.present
+          ? data.dimensionId.value
+          : this.dimensionId,
+      customValueOrder: data.customValueOrder.present
+          ? data.customValueOrder.value
+          : this.customValueOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryGroupPreference(')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('customValueOrder: $customValueOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(dimensionId, customValueOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryGroupPreference &&
+          other.dimensionId == this.dimensionId &&
+          other.customValueOrder == this.customValueOrder);
+}
+
+class CategoryGroupPreferencesCompanion
+    extends UpdateCompanion<CategoryGroupPreference> {
+  final Value<String> dimensionId;
+  final Value<bool> customValueOrder;
+  final Value<int> rowid;
+  const CategoryGroupPreferencesCompanion({
+    this.dimensionId = const Value.absent(),
+    this.customValueOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryGroupPreferencesCompanion.insert({
+    required String dimensionId,
+    this.customValueOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : dimensionId = Value(dimensionId);
+  static Insertable<CategoryGroupPreference> custom({
+    Expression<String>? dimensionId,
+    Expression<bool>? customValueOrder,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (customValueOrder != null) 'custom_value_order': customValueOrder,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryGroupPreferencesCompanion copyWith({
+    Value<String>? dimensionId,
+    Value<bool>? customValueOrder,
+    Value<int>? rowid,
+  }) {
+    return CategoryGroupPreferencesCompanion(
+      dimensionId: dimensionId ?? this.dimensionId,
+      customValueOrder: customValueOrder ?? this.customValueOrder,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<String>(dimensionId.value);
+    }
+    if (customValueOrder.present) {
+      map['custom_value_order'] = Variable<bool>(customValueOrder.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryGroupPreferencesCompanion(')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('customValueOrder: $customValueOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $VocabularyCategoryAssignmentsTable extends VocabularyCategoryAssignments
     with
         TableInfo<
@@ -6108,6 +6352,8 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $CategoryDimensionsTable categoryDimensions =
       $CategoryDimensionsTable(this);
   late final $CategoryValuesTable categoryValues = $CategoryValuesTable(this);
+  late final $CategoryGroupPreferencesTable categoryGroupPreferences =
+      $CategoryGroupPreferencesTable(this);
   late final $VocabularyCategoryAssignmentsTable vocabularyCategoryAssignments =
       $VocabularyCategoryAssignmentsTable(this);
   late final $StatisticsOriginsTable statisticsOrigins =
@@ -6141,6 +6387,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     vocabularyOrderSequence,
     categoryDimensions,
     categoryValues,
+    categoryGroupPreferences,
     vocabularyCategoryAssignments,
     statisticsOrigins,
     statisticsActivity,
@@ -6212,6 +6459,15 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('category_values', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'category_dimensions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('category_group_preferences', kind: UpdateKind.delete),
+      ],
     ),
   ]);
 }
@@ -10168,6 +10424,32 @@ final class $$CategoryDimensionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $CategoryGroupPreferencesTable,
+    List<CategoryGroupPreference>
+  >
+  _categoryGroupPreferencesRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.categoryGroupPreferences,
+        aliasName:
+            'category_dimensions__id__category_group_preferences__dimension_id',
+      );
+
+  $$CategoryGroupPreferencesTableProcessedTableManager
+  get categoryGroupPreferencesRefs {
+    final manager = $$CategoryGroupPreferencesTableTableManager(
+      $_db,
+      $_db.categoryGroupPreferences,
+    ).filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _categoryGroupPreferencesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CategoryDimensionsTableFilterComposer
@@ -10249,6 +10531,33 @@ class $$CategoryDimensionsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> categoryGroupPreferencesRefs(
+    Expression<bool> Function($$CategoryGroupPreferencesTableFilterComposer f)
+    f,
+  ) {
+    final $$CategoryGroupPreferencesTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.categoryGroupPreferences,
+          getReferencedColumn: (t) => t.dimensionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryGroupPreferencesTableFilterComposer(
+                $db: $db,
+                $table: $db.categoryGroupPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -10382,6 +10691,33 @@ class $$CategoryDimensionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> categoryGroupPreferencesRefs<T extends Object>(
+    Expression<T> Function($$CategoryGroupPreferencesTableAnnotationComposer a)
+    f,
+  ) {
+    final $$CategoryGroupPreferencesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.categoryGroupPreferences,
+          getReferencedColumn: (t) => t.dimensionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryGroupPreferencesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryGroupPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CategoryDimensionsTableTableManager
@@ -10397,7 +10733,11 @@ class $$CategoryDimensionsTableTableManager
           $$CategoryDimensionsTableUpdateCompanionBuilder,
           (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
           StoredCategoryDimension,
-          PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+          PrefetchHooks Function({
+            bool collectionId,
+            bool categoryValuesRefs,
+            bool categoryGroupPreferencesRefs,
+          })
         > {
   $$CategoryDimensionsTableTableManager(
     _$PikoDatabase db,
@@ -10463,11 +10803,17 @@ class $$CategoryDimensionsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({collectionId = false, categoryValuesRefs = false}) {
+              ({
+                collectionId = false,
+                categoryValuesRefs = false,
+                categoryGroupPreferencesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (categoryValuesRefs) db.categoryValues,
+                    if (categoryGroupPreferencesRefs)
+                      db.categoryGroupPreferences,
                   ],
                   addJoins:
                       <
@@ -10526,6 +10872,27 @@ class $$CategoryDimensionsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (categoryGroupPreferencesRefs)
+                        await $_getPrefetchedData<
+                          StoredCategoryDimension,
+                          $CategoryDimensionsTable,
+                          CategoryGroupPreference
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoryDimensionsTableReferences
+                              ._categoryGroupPreferencesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoryDimensionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).categoryGroupPreferencesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.dimensionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -10546,7 +10913,11 @@ typedef $$CategoryDimensionsTableProcessedTableManager =
       $$CategoryDimensionsTableUpdateCompanionBuilder,
       (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
       StoredCategoryDimension,
-      PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+      PrefetchHooks Function({
+        bool collectionId,
+        bool categoryValuesRefs,
+        bool categoryGroupPreferencesRefs,
+      })
     >;
 typedef $$CategoryValuesTableCreateCompanionBuilder =
     CategoryValuesCompanion Function({
@@ -10877,6 +11248,296 @@ typedef $$CategoryValuesTableProcessedTableManager =
       $$CategoryValuesTableUpdateCompanionBuilder,
       (StoredCategoryValue, $$CategoryValuesTableReferences),
       StoredCategoryValue,
+      PrefetchHooks Function({bool dimensionId})
+    >;
+typedef $$CategoryGroupPreferencesTableCreateCompanionBuilder =
+    CategoryGroupPreferencesCompanion Function({
+      required String dimensionId,
+      Value<bool> customValueOrder,
+      Value<int> rowid,
+    });
+typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
+    CategoryGroupPreferencesCompanion Function({
+      Value<String> dimensionId,
+      Value<bool> customValueOrder,
+      Value<int> rowid,
+    });
+
+final class $$CategoryGroupPreferencesTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $CategoryGroupPreferencesTable,
+          CategoryGroupPreference
+        > {
+  $$CategoryGroupPreferencesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CategoryDimensionsTable _dimensionIdTable(_$PikoDatabase db) =>
+      db.categoryDimensions.createAlias(
+        'category_group_preferences__dimension_id__category_dimensions__id',
+      );
+
+  $$CategoryDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<String>('dimension_id')!;
+
+    final manager = $$CategoryDimensionsTableTableManager(
+      $_db,
+      $_db.categoryDimensions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CategoryGroupPreferencesTableFilterComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CategoryDimensionsTableFilterComposer get dimensionId {
+    final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableFilterComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableOrderingComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CategoryDimensionsTableOrderingComposer get dimensionId {
+    final $$CategoryDimensionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => column,
+  );
+
+  $$CategoryDimensionsTableAnnotationComposer get dimensionId {
+    final $$CategoryDimensionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.dimensionId,
+          referencedTable: $db.categoryDimensions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryDimensionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryDimensions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $CategoryGroupPreferencesTable,
+          CategoryGroupPreference,
+          $$CategoryGroupPreferencesTableFilterComposer,
+          $$CategoryGroupPreferencesTableOrderingComposer,
+          $$CategoryGroupPreferencesTableAnnotationComposer,
+          $$CategoryGroupPreferencesTableCreateCompanionBuilder,
+          $$CategoryGroupPreferencesTableUpdateCompanionBuilder,
+          (CategoryGroupPreference, $$CategoryGroupPreferencesTableReferences),
+          CategoryGroupPreference,
+          PrefetchHooks Function({bool dimensionId})
+        > {
+  $$CategoryGroupPreferencesTableTableManager(
+    _$PikoDatabase db,
+    $CategoryGroupPreferencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryGroupPreferencesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CategoryGroupPreferencesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CategoryGroupPreferencesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> dimensionId = const Value.absent(),
+                Value<bool> customValueOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryGroupPreferencesCompanion(
+                dimensionId: dimensionId,
+                customValueOrder: customValueOrder,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String dimensionId,
+                Value<bool> customValueOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryGroupPreferencesCompanion.insert(
+                dimensionId: dimensionId,
+                customValueOrder: customValueOrder,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $CategoryGroupPreferencesTable,
+                    CategoryGroupPreference
+                  >(table),
+                  $$CategoryGroupPreferencesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({dimensionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (dimensionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.dimensionId,
+                                referencedTable:
+                                    $$CategoryGroupPreferencesTableReferences
+                                        ._dimensionIdTable(db),
+                                referencedColumn:
+                                    $$CategoryGroupPreferencesTableReferences
+                                        ._dimensionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CategoryGroupPreferencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $CategoryGroupPreferencesTable,
+      CategoryGroupPreference,
+      $$CategoryGroupPreferencesTableFilterComposer,
+      $$CategoryGroupPreferencesTableOrderingComposer,
+      $$CategoryGroupPreferencesTableAnnotationComposer,
+      $$CategoryGroupPreferencesTableCreateCompanionBuilder,
+      $$CategoryGroupPreferencesTableUpdateCompanionBuilder,
+      (CategoryGroupPreference, $$CategoryGroupPreferencesTableReferences),
+      CategoryGroupPreference,
       PrefetchHooks Function({bool dimensionId})
     >;
 typedef $$VocabularyCategoryAssignmentsTableCreateCompanionBuilder =
@@ -11734,6 +12395,11 @@ class $PikoDatabaseManager {
       $$CategoryDimensionsTableTableManager(_db, _db.categoryDimensions);
   $$CategoryValuesTableTableManager get categoryValues =>
       $$CategoryValuesTableTableManager(_db, _db.categoryValues);
+  $$CategoryGroupPreferencesTableTableManager get categoryGroupPreferences =>
+      $$CategoryGroupPreferencesTableTableManager(
+        _db,
+        _db.categoryGroupPreferences,
+      );
   $$VocabularyCategoryAssignmentsTableTableManager
   get vocabularyCategoryAssignments =>
       $$VocabularyCategoryAssignmentsTableTableManager(

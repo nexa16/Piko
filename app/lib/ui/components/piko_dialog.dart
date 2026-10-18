@@ -103,6 +103,7 @@ class PikoDialog extends StatelessWidget {
     this.dismissible = true,
     this.onClose,
     this.closeLabel,
+    this.bodyOwnsScroll = false,
     super.key,
   });
   final String title;
@@ -115,6 +116,9 @@ class PikoDialog extends StatelessWidget {
   final bool dismissible;
   final VoidCallback? onClose;
   final String? closeLabel;
+
+  /// For a single bounded sliver body (for example draggable grouped values).
+  final bool bodyOwnsScroll;
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +150,7 @@ class PikoDialog extends StatelessWidget {
           child: _DialogContents(
             purpose: purpose,
             body: body,
+            bodyOwnsScroll: bodyOwnsScroll,
             actions: actions,
             header: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,10 +219,12 @@ class _DialogContents extends StatelessWidget {
     required this.body,
     required this.actions,
     required this.purpose,
+    required this.bodyOwnsScroll,
   });
   final Widget header, body;
   final List<PikoDialogAction> actions;
   final PikoDialogPurpose purpose;
+  final bool bodyOwnsScroll;
 
   @override
   Widget build(BuildContext context) {
@@ -231,10 +238,12 @@ class _DialogContents extends StatelessWidget {
           header,
           SizedBox(height: d.dimension('spacing.3')),
           Flexible(
-            child: PikoAnchoredBoxScrollView(
-              key: const ValueKey('selection-dialog-body'),
-              child: body,
-            ),
+            child: bodyOwnsScroll
+                ? body
+                : PikoAnchoredBoxScrollView(
+                    key: const ValueKey('selection-dialog-body'),
+                    child: body,
+                  ),
           ),
           if (actions.isNotEmpty) ...[
             SizedBox(height: d.dimension('spacing.4')),

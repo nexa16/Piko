@@ -390,6 +390,10 @@ const copyCatalog = <String, Object?>{
 "de": "Kategoriegruppe hinzufügen",
 "en": "Add category group",
 },
+"category.clearValueSearch": <String, Object?>{
+"de": "Wertesuche leeren",
+"en": "Clear value search",
+},
 "category.deleteDimension": <String, Object?>{
 "de": "Kategoriegruppe löschen",
 "en": "Delete category group",
@@ -430,6 +434,14 @@ const copyCatalog = <String, Object?>{
 "de": "Noch keine Werte.",
 "en": "No values yet.",
 },
+"category.firstPosition": <String, Object?>{
+"de": "Bereits an erster Stelle",
+"en": "Already first",
+},
+"category.lastPosition": <String, Object?>{
+"de": "Bereits an letzter Stelle",
+"en": "Already last",
+},
 "category.loadFailed": <String, Object?>{
 "de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load category values. Try again.",
@@ -437,6 +449,34 @@ const copyCatalog = <String, Object?>{
 "category.managementLoadFailed": <String, Object?>{
 "de": "Kategorien konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load categories. Try again.",
+},
+"category.moveDown": <String, Object?>{
+"de": "Nach unten",
+"en": "Move down",
+},
+"category.moveUp": <String, Object?>{
+"de": "Nach oben",
+"en": "Move up",
+},
+"category.reorder": <String, Object?>{
+"de": "{value} verschieben",
+"en": "Reorder {value}",
+},
+"category.reorderFailed": <String, Object?>{
+"de": "Reihenfolge konnte nicht gespeichert werden. Deine Filterauswahl bleibt erhalten.",
+"en": "Order could not be saved. Your filter choices are kept.",
+},
+"category.reorderHelp": <String, Object?>{
+"de": "Wert gedrückt halten und verschieben oder sein Menü nutzen. Die Reihenfolge wird sofort für diese Sammlung gespeichert.",
+"en": "Hold and drag a value, or use its menu. Order is saved immediately for this Collection.",
+},
+"category.reorderSearch": <String, Object?>{
+"de": "Wertesuche leeren, um die ganze Gruppe umzuordnen.",
+"en": "Clear value search to reorder the whole group.",
+},
+"category.reorderStale": <String, Object?>{
+"de": "Diese Gruppe hat sich geändert. Prüfe die aktuellen Werte und verschiebe erneut.",
+"en": "This group has changed. Check its current values and move again.",
 },
 "category.saveDimension": <String, Object?>{
 "de": "Kategoriegruppe speichern",
