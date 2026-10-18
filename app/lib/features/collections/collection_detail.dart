@@ -572,7 +572,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoHeading(
+            PikoFormHeading(
               title: copy.text('settingsPreview.collectionSettings'),
               subtitle:
                   '${record.name} · ${record.targetLanguage.code.toUpperCase()} · ${record.nativeLanguage.code.toUpperCase()}',
@@ -1196,7 +1196,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  PikoHeading(
+                  PikoFormHeading(
                     title: copy.text('settingsPreview.collectionSettings'),
                     leading: PikoIconButton(
                       icon: const PikoIcon(PikoIconName.arrowLeft),

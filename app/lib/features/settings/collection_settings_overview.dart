@@ -39,7 +39,7 @@ class _CollectionSettingsOverviewState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoHeading(
+            PikoFormHeading(
               title: copy.text('settingsPreview.collections'),
               leading: PikoIconButton(
                 icon: const PikoIcon(PikoIconName.arrowLeft),

@@ -8,7 +8,6 @@ import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_icon.dart';
 import 'hint_default_offer.dart';
 import '../../ui/components/piko_field.dart';
-import '../../ui/piko_theme.dart';
 
 String? vocabularyContentErrorKey(Object? error) => switch (error) {
   VocabularyContentValidation.examplePairRequired =>

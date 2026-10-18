@@ -47,7 +47,7 @@ class _CategorySettingsPageState extends State<CategorySettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PikoHeading(
+            PikoFormHeading(
               title: copy.text('catPreview.manage'),
               subtitle: widget.collectionName,
               leading: PikoIconButton(
@@ -422,7 +422,7 @@ class _CategoryGroupSettingsPageState extends State<CategoryGroupSettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              PikoHeading(
+              PikoFormHeading(
                 title: opening.name,
                 leading: PikoIconButton(
                   icon: const PikoIcon(PikoIconName.arrowLeft),

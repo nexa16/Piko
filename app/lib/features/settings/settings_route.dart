@@ -7,7 +7,6 @@ import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_preference_picker.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_page.dart';
-import '../../ui/piko_theme.dart';
 import 'app_language_controller.dart';
 import 'preferred_direction_controller.dart';
 import 'preferred_direction_control.dart';
@@ -63,7 +62,7 @@ class SettingsRoute extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              PikoHeading(
+              PikoFormHeading(
                 title: copy.text('nav.settings'),
                 leading: PikoIconButton(
                   semanticLabel: copy.text('common.back'),
@@ -77,7 +76,6 @@ class SettingsRoute extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: pikoDesign.dimension('spacing.4')),
               PikoFormSection(
                 title: copy.text('settingsPreview.generalGroup'),
                 children: [

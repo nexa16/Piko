@@ -2,6 +2,25 @@ import 'package:flutter/material.dart';
 import '../piko_theme.dart';
 import 'piko_icon.dart';
 import 'piko_interaction_anchor.dart';
+import 'piko_page.dart';
+
+/// One heading-to-form gap, including pages with owning-object context.
+class PikoFormHeading extends StatelessWidget {
+  const PikoFormHeading({
+    required this.title,
+    this.subtitle,
+    this.leading,
+    super.key,
+  });
+  final String title;
+  final String? subtitle;
+  final Widget? leading;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.4')),
+    child: PikoHeading(title: title, subtitle: subtitle, leading: leading),
+  );
+}
 
 /// Shared input/settings roles. Feature callers supply content, not insets.
 class PikoFormSection extends StatelessWidget {

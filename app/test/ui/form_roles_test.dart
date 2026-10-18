@@ -6,9 +6,52 @@ import 'package:piko/ui/piko_theme.dart';
 import 'package:piko/main.dart';
 import 'package:piko/features/collections/create_collection.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/ui/components/piko_page.dart';
 import 'collection_home_header_test.dart' show EmptyCollections;
 
 void main() {
+  testWidgets(
+    'form headings keep the same 16px section gap with and without object context',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: PikoTheme.build(),
+          home: Scaffold(
+            body: Column(
+              children: [
+                const PikoFormHeading(title: 'General Settings'),
+                PikoFormSection(
+                  title: 'General',
+                  children: [
+                    PikoNavigationRow(title: 'Language', onTap: () {}),
+                  ],
+                ),
+                const PikoFormHeading(
+                  title: 'Collection Settings',
+                  subtitle: 'French · FR · DE',
+                ),
+                PikoFormSection(
+                  title: 'Learning',
+                  children: [
+                    PikoNavigationRow(title: 'Hint default', onTap: () {}),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 2; i++) {
+        final header = find.byType(PikoHeading).at(i);
+        final sectionTitle = find.text(i == 0 ? 'General' : 'Learning');
+        expect(
+          tester.getRect(sectionTitle).top - tester.getRect(header).bottom,
+          16,
+        );
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets(
     'Collection creation consumes the same grouped form and 16px field insets',
     (tester) async {
