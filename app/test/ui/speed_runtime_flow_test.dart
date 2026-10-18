@@ -32,8 +32,10 @@ Future<void> settle(
   fail('Runtime Speed flow did not reach the expected state');
 }
 
-Finder speedAction(LearningDirection direction) =>
-    find.byKey(ValueKey('collection-speed-${direction.name}'));
+Finder speedAction(LearningDirection direction) => find.byKey(
+  ValueKey('collection-speed-${direction.name}'),
+  skipOffstage: false,
+);
 
 void main() {
   for (final errors in [false, true]) {
@@ -90,7 +92,12 @@ void main() {
           ))!;
           final before = (await tester.runAsync(() => completeSnapshot(db)))!;
           final copy = PikoCopy('en');
-          await tester.ensureVisible(speedAction(direction));
+          // Return to the expanded directional actions after inspecting the list.
+          tester
+              .state<ScrollableState>(find.byType(Scrollable).first)
+              .position
+              .jumpTo(0);
+          await tester.pumpAndSettle();
           await tester.tap(speedAction(direction));
           await settle(
             tester,

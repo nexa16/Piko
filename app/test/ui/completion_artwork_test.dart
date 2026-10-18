@@ -46,6 +46,11 @@ void main() {
       );
       await tap(tester, dismiss);
       expect(key('piko-celebration'), findsNothing);
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
       expect(find.byType(PikoReading), findsOneWidget);
       await h.setup(tester);
       await h.start(tester);

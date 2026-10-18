@@ -79,7 +79,8 @@ void main() {
         grouped(),
         const CollectionViewPreferences(grouping: 'topic'),
       );
-      expect(groups.map((g) => g.id), ['food', 'travel', 'unassigned']);
+      // The repository projection owns category order, including custom order.
+      expect(groups.map((g) => g.id), ['travel', 'food', 'unassigned']);
       expect(groups.take(2).map((g) => g.entries.single.id), [one.id, one.id]);
       expect(groups.last.entries.single.id, two.id);
     },

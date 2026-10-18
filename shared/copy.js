@@ -3,6 +3,12 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+"collection.noLearningDirection": {"en":"No direction is available right now.","de":"Gerade ist keine Lernrichtung verfügbar."},
+"collection.compactReview": {"en":"Review, {count} directional items","de":"Wiederholen, {count} Richtungsaufgaben"},
+"collection.compactSpeed": {"en":"Speed, {count} directional items","de":"Intensiv lernen, {count} Richtungsaufgaben"},
+"collection.compactLoading": {"en":"{mode}, availability is loading","de":"{mode}, Verfügbarkeit wird geladen"},
+"collection.compactFailed": {"en":"{mode}, availability could not be loaded","de":"{mode}, Verfügbarkeit konnte nicht geladen werden"},
+"collection.compactPending": {"en":"Review, waiting for retries","de":"Wiederholen, Wartezeit für erneute Versuche"},
 "category.carryOver": {"en":"Carry over from previous word","de":"Vom vorherigen Wort übernehmen"},
 "category.carryOverHelp": {"en":"For new drafts in the same entry session, copy this group's values from the last successfully confirmed word. Save the group to apply this setting.","de":"Neue Entwürfe derselben Eingabesitzung übernehmen die Werte dieser Gruppe vom zuletzt erfolgreich bestätigten Wort. Zum Übernehmen der Einstellung die Gruppe speichern."},
 "category.reorder": {"en":"Reorder {value}","de":"{value} verschieben"},

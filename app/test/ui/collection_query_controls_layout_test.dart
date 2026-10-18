@@ -62,7 +62,11 @@ void main() {
       final search = find.byKey(const ValueKey('collection-search'));
       final filters = find.byKey(const ValueKey('collection-filters'));
       final clear = find.byKey(const ValueKey('collection-clear-search'));
-      await tester.ensureVisible(search);
+      await tester.scrollUntilVisible(
+        search,
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       expect(
         tester.getRect(search).width,
@@ -137,6 +141,16 @@ void main() {
       );
       tester.view.physicalSize = const Size(320, 1000);
       scale.value = 2;
+      await tester.pumpAndSettle();
+      final retainedSearch = find.byKey(
+        const ValueKey('collection-search'),
+        skipOffstage: false,
+      );
+      expect(
+        tester.widget<TextField>(retainedSearch).controller,
+        same(controller),
+      );
+      await tester.ensureVisible(retainedSearch);
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(search).controller, same(controller));
       expect(

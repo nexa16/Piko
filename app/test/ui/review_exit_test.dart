@@ -54,16 +54,27 @@ void main() {
         final size = tester.getSize(exit);
         expect(size.width, greaterThanOrEqualTo(44));
         expect(size.height, greaterThanOrEqualTo(44));
-        expect(size.width, greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')));
-        expect(size.height, greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')));
+        expect(
+          size.width,
+          greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')),
+        );
+        expect(
+          size.height,
+          greaterThanOrEqualTo(pikoDesign.dimension('controls.largeHeight')),
+        );
         final icon = find.descendant(of: exit, matching: find.byType(PikoIcon));
         expect(tester.widget<PikoIcon>(icon).name, PikoIconName.arrowLeft);
         // A real prior answer is now correctable, independently of Exit.
-        expect(launch.button(copy.text('learn.correctPrevious')), findsOneWidget);
+        expect(
+          launch.button(copy.text('learn.correctPrevious')),
+          findsOneWidget,
+        );
         expect(launch.button(copy.text('common.back')), findsNothing);
         final semantics = tester.ensureSemantics();
         try {
-          final node = tester.getSemantics(exit);
+          final node = tester.getSemantics(
+            find.bySemanticsLabel(copy.text('learn.exit')),
+          );
           expect(node.label, contains(copy.text('learn.exit')));
           expect(node.flagsCollection.isButton, isTrue);
         } finally {

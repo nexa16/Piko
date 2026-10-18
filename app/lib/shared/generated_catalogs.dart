@@ -44,6 +44,10 @@ const designCatalog = <String, Object?>{
 "titleSize": 15,
 "titleWeight": 700,
 },
+"collectionHeader": <String, Object?>{
+"titleLineHeight": 1.35,
+"titleSize": 15,
+},
 "collectionList": <String, Object?>{
 "dividerOpacity": 0.2,
 "outlineOpacity": 0.32,
@@ -179,6 +183,9 @@ const designCatalog = <String, Object?>{
 "size": 17,
 "topMargin": 27,
 "weight": 700,
+},
+"selectionPanel": <String, Object?>{
+"maxViewportFraction": 0.25,
 },
 "settings": <String, Object?>{
 "fieldMarginY": 17,
@@ -522,6 +529,26 @@ const copyCatalog = <String, Object?>{
 "de": "Erste Vokabel hinzufügen",
 "en": "Add first word",
 },
+"collection.compactFailed": <String, Object?>{
+"de": "{mode}, Verfügbarkeit konnte nicht geladen werden",
+"en": "{mode}, availability could not be loaded",
+},
+"collection.compactLoading": <String, Object?>{
+"de": "{mode}, Verfügbarkeit wird geladen",
+"en": "{mode}, availability is loading",
+},
+"collection.compactPending": <String, Object?>{
+"de": "Wiederholen, Wartezeit für erneute Versuche",
+"en": "Review, waiting for retries",
+},
+"collection.compactReview": <String, Object?>{
+"de": "Wiederholen, {count} Richtungsaufgaben",
+"en": "Review, {count} directional items",
+},
+"collection.compactSpeed": <String, Object?>{
+"de": "Intensiv lernen, {count} Richtungsaufgaben",
+"en": "Speed, {count} directional items",
+},
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
 "en": "Created {name}",
@@ -573,6 +600,10 @@ const copyCatalog = <String, Object?>{
 "collection.nativeLanguage": <String, Object?>{
 "de": "Muttersprache",
 "en": "Native language",
+},
+"collection.noLearningDirection": <String, Object?>{
+"de": "Gerade ist keine Lernrichtung verfügbar.",
+"en": "No direction is available right now.",
 },
 "collection.notFound": <String, Object?>{
 "de": "Diese Sammlung ist nicht mehr verfügbar.",
