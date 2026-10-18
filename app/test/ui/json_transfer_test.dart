@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_form.dart';
 import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -184,6 +185,33 @@ Future<void> mountJsonRoute(
 }
 
 void main() {
+  testWidgets(
+    'JSON input and recoverable export each have one 16px grouped field inset',
+    (tester) async {
+      final platform = JsonTestPlatform()
+        ..copyFailure = StateError('synthetic');
+      await mountJson(tester, JsonTestService(), platform);
+      void inset(Finder field) {
+        final group = find
+            .ancestor(of: field, matching: find.byType(PikoFormGroup))
+            .last;
+        expect(
+          tester.getTopLeft(field).dx - tester.getTopLeft(group).dx,
+          closeTo(16, .01),
+        );
+        expect(
+          tester.getRect(group).right - tester.getRect(field).right,
+          closeTo(16, .01),
+        );
+      }
+
+      inset(input);
+      await pressJson(tester, 'json.exportTab');
+      await pressJson(tester, 'json.copy');
+      inset(find.byKey(const ValueKey('json-fallback')));
+    },
+  );
+
   for (final language in ['en', 'de']) {
     testWidgets(
       '$language import starts with an example and preserves compact input across views',
@@ -274,8 +302,8 @@ void main() {
         expect(
           platform.copied.single,
           VocabularyJsonFormat.minimalSample(
-            targetLanguage: 'fr',
-            nativeLanguage: 'de',
+            targetLanguage: VocabularyLanguage.french,
+            nativeLanguage: VocabularyLanguage.german,
             topic: PikoCopy(language).text('template.topic'),
             food: PikoCopy(language).text('template.food'),
             difficulty: PikoCopy(language).text('template.difficulty'),

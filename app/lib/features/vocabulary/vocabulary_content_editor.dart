@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../../data/vocabulary_content.dart';
 import '../../shared/copy_scope.dart';
 import '../../data/vocabulary_repository.dart';
-import 'vocabulary_disclosure.dart';
+import '../../ui/components/piko_form.dart';
+import '../../ui/components/piko_icon.dart';
 import 'hint_default_offer.dart';
 import '../../ui/components/piko_field.dart';
-import '../../ui/piko_theme.dart';
 
 String? vocabularyContentErrorKey(Object? error) => switch (error) {
   VocabularyContentValidation.examplePairRequired =>
@@ -59,9 +59,7 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
   }
 
   void syncPairs() {
-    final values = widget.value.examples.isEmpty
-        ? [const ExamplePair(targetText: '', nativeText: '')]
-        : widget.value.examples;
+    final values = widget.value.examples;
     while (pairs.length < values.length) {
       pairs.add((TextEditingController(), TextEditingController()));
     }
@@ -85,7 +83,9 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
   @override
   void didUpdateWidget(VocabularyContentEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncPairs();
+    if (!identical(oldWidget.value.examples, widget.value.examples)) {
+      syncPairs();
+    }
     if (hint.text != (widget.value.hintText ?? '')) {
       hint.text = widget.value.hintText ?? '';
     }
@@ -113,126 +113,92 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    final gap = pikoDesign.dimension('spacing.3');
     Widget field(String key, String label, TextEditingController controller) =>
-        PikoField(
-          label: label,
-          child: Semantics(
+        PikoFormFieldRow(
+          child: PikoField(
             label: label,
-            child: TextField(
-              key: ValueKey(key),
-              controller: controller,
-              enabled: widget.enabled,
-              minLines: 1,
-              maxLines: 4,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textInputAction: TextInputAction.newline,
-              decoration: pikoInputDecoration(),
-              onTap: widget.onFocus,
-              onChanged: (_) => publish(),
+            child: Semantics(
+              label: label,
+              child: TextField(
+                key: ValueKey(key),
+                controller: controller,
+                enabled: widget.enabled,
+                minLines: 1,
+                maxLines: 4,
+                style: Theme.of(context).textTheme.bodyMedium,
+                textInputAction: TextInputAction.newline,
+                decoration: pikoInputDecoration(),
+                onTap: widget.onFocus,
+                onChanged: (_) => publish(),
+              ),
             ),
           ),
         );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: gap),
-        VocabularyDisclosure(
-          controlKey: const ValueKey('content-examples-toggle'),
-          label:
-              widget.value.examples
-                  .where(
-                    (p) => p.targetText.isNotEmpty || p.nativeText.isNotEmpty,
-                  )
-                  .isEmpty
-              ? copy.text('vocab.addExamples')
-              : copy.text(
-                  widget.value.examples.length == 1
-                      ? 'vocab.oneExample'
-                      : 'vocab.examplesCount',
-                  {'count': widget.value.examples.length},
-                ),
-          error:
-              widget.error == VocabularyContentValidation.examplePairRequired ||
-              widget.error == VocabularyContentValidation.exampleTooLong,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < pairs.length; i++) ...[
-                field(
-                  i == 0
-                      ? 'content-example-target'
-                      : 'content-example-target-$i',
-                  copy.text('vocab.exampleTarget', {
-                    'language': widget.targetLanguage,
-                  }),
-                  pairs[i].$1,
-                ),
-                SizedBox(height: gap),
-                field(
-                  i == 0
-                      ? 'content-example-native'
-                      : 'content-example-native-$i',
-                  copy.text('vocab.exampleTarget', {
-                    'language': widget.nativeLanguage,
-                  }),
-                  pairs[i].$2,
-                ),
-                PikoButton(
-                  label: copy.text('vocab.removeExample', {'number': i + 1}),
-                  variant: PikoButtonVariant.ghost,
-                  onPressed: widget.enabled
-                      ? () {
-                          final removed = pairs.removeAt(i);
-                          if (pairs.isEmpty) {
-                            pairs.add((
-                              TextEditingController(),
-                              TextEditingController(),
-                            ));
-                          }
-                          publish();
-                          setState(() {});
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            removed.$1.dispose();
-                            removed.$2.dispose();
-                          });
-                        }
-                      : null,
-                ),
-                SizedBox(height: gap),
-              ],
-              PikoButton(
-                label: copy.text('vocab.addExample'),
-                onPressed: widget.enabled
+        PikoFormSection(
+          key: const ValueKey('content-examples-section'),
+          title: copy.text('vocab.examples'),
+          children: [
+            for (var i = 0; i < pairs.length; i++) ...[
+              field(
+                i == 0 ? 'content-example-target' : 'content-example-target-$i',
+                copy.text('vocab.exampleTarget', {
+                  'language': widget.targetLanguage,
+                }),
+                pairs[i].$1,
+              ),
+              field(
+                i == 0 ? 'content-example-native' : 'content-example-native-$i',
+                copy.text('vocab.exampleTarget', {
+                  'language': widget.nativeLanguage,
+                }),
+                pairs[i].$2,
+              ),
+              PikoFormRow(
+                title: copy.text('vocab.removeExample', {'number': i + 1}),
+                trailing: const PikoIcon(PikoIconName.trash),
+                onTap: widget.enabled
                     ? () {
-                        setState(
-                          () => pairs.add((
-                            TextEditingController(),
-                            TextEditingController(),
-                          )),
-                        );
+                        final removed = pairs.removeAt(i);
                         publish();
+                        setState(() {});
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          removed.$1.dispose();
+                          removed.$2.dispose();
+                        });
                       }
                     : null,
               ),
-              SizedBox(height: gap),
             ],
-          ),
+            PikoFormRow(
+              key: const ValueKey('content-add-example'),
+              title: copy.text(
+                pairs.isEmpty ? 'vocab.addExamples' : 'vocab.addExample',
+              ),
+              trailing: const PikoIcon(PikoIconName.plus),
+              onTap: widget.enabled
+                  ? () {
+                      setState(
+                        () => pairs.add((
+                          TextEditingController(),
+                          TextEditingController(),
+                        )),
+                      );
+                    }
+                  : null,
+            ),
+          ],
         ),
-        VocabularyDisclosure(
-          controlKey: const ValueKey('content-hint-toggle'),
-          label: (widget.value.hintText?.isNotEmpty ?? false)
-              ? '${copy.text('vocab.hint')}: ${widget.value.hintText!.replaceAll('\n', ' ').characters.take(48)} · ${copy.text(widget.value.hintVisibility == HintVisibility.always ? 'vocab.hintAlways' : 'vocab.hintHidden')}'
-              : copy.text('vocab.addHint'),
-          error: widget.error == VocabularyContentValidation.hintTooLong,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              field('content-hint', copy.text('vocab.hint'), hint),
-              SizedBox(height: gap),
-              PikoSwitch(
+        PikoFormSection(
+          key: const ValueKey('content-hint-section'),
+          title: copy.text('vocab.hint'),
+          children: [
+            field('content-hint', copy.text('vocab.hint'), hint),
+            PikoFormFieldRow(
+              child: PikoSwitch(
                 key: const ValueKey('content-hint-automatic'),
-
                 title: Text(copy.text('vocab.hintAutomatic')),
                 subtitle: Text(copy.text('vocab.hintTapHelper')),
                 value: widget.value.hintVisibility == HintVisibility.always,
@@ -251,15 +217,21 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
                       }
                     : null,
               ),
-              if (offerFailed) ...[
-                Text(copy.text('vocab.hintDefaultFailed')),
-                PikoButton(
-                  label: copy.text('action.retry'),
-                  onPressed: offerPending ? null : retryDismissal,
+            ),
+            if (offerFailed)
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(copy.text('vocab.hintDefaultFailed')),
+                    PikoButton(
+                      label: copy.text('action.retry'),
+                      onPressed: offerPending ? null : retryDismissal,
+                    ),
+                  ],
                 ),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
       ],
     );

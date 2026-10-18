@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'piko_interaction_anchor.dart';
+import '../piko_theme.dart';
 
 /// A labeled switch also paints correctly inside a decorated PikoCard.
 class PikoSwitch extends StatelessWidget {
@@ -20,8 +21,18 @@ class PikoSwitch extends StatelessWidget {
       type: MaterialType.transparency,
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: title,
-        subtitle: subtitle,
+        title: DefaultTextStyle.merge(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontWeight: pikoDesign.weight('typography.controlWeight'),
+          ),
+          child: title,
+        ),
+        subtitle: subtitle == null
+            ? null
+            : DefaultTextStyle.merge(
+                style: Theme.of(context).textTheme.bodySmall,
+                child: subtitle!,
+              ),
         value: value,
         onChanged: onChanged == null
             ? null

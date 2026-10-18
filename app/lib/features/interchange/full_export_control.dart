@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../data/full_export.dart';
 import '../../platform/vocabulary_json_platform.dart';
 import '../../shared/copy_scope.dart';
-import '../../ui/components/piko_button.dart';
-import '../../ui/components/piko_card.dart';
+import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/piko_theme.dart';
 
 class FullExportControl extends StatefulWidget {
@@ -96,36 +96,32 @@ class _FullExportControlState extends State<FullExportControl> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    return Padding(
-      padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.4')),
-      child: PikoCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PikoButton(
-              key: const ValueKey('settings-full-export'),
-              focusNode: focus,
-              label: copy.text(failed ? 'action.retry' : 'fullExport.action'),
-              onPressed: request == null ? start : null,
-            ),
-            if (message case final key?) ...[
-              SizedBox(height: pikoDesign.dimension('spacing.2')),
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  copy.text(key),
-                  key: const ValueKey('full-export-status'),
-                  style: failed
-                      ? TextStyle(color: pikoDesign.color('danger'))
-                      : null,
-                ),
-              ),
-            ],
-            SizedBox(height: pikoDesign.dimension('spacing.2')),
-            Text(copy.text('fullExport.description')),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PikoFormRow(
+          key: const ValueKey('settings-full-export'),
+          focusNode: focus,
+          title: copy.text(failed ? 'action.retry' : 'fullExport.action'),
+          subtitle: copy.text('settingsPreview.globalExportSummary'),
+          trailing: const PikoIcon(PikoIconName.upload),
+          onTap: request == null ? start : null,
         ),
-      ),
+        if (message case final key?)
+          PikoFormFieldRow(
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                copy.text(key),
+                key: const ValueKey('full-export-status'),
+                style: failed
+                    ? TextStyle(color: pikoDesign.color('danger'))
+                    : null,
+              ),
+            ),
+          ),
+        PikoFormFieldRow(child: Text(copy.text('fullExport.description'))),
+      ],
     );
   }
 }

@@ -1,13 +1,5 @@
-enum VocabularyLanguage {
-  korean('ko'),
-  french('fr'),
-  english('en'),
-  german('de');
-
-  const VocabularyLanguage(this.code);
-  final String code;
-  String get copyKey => 'language.$name';
-}
+import 'vocabulary_language.dart';
+export 'vocabulary_language.dart';
 
 final class CollectionRecord {
   const CollectionRecord({

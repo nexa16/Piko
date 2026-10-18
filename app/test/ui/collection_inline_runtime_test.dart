@@ -133,11 +133,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(ValueKey('vocabulary-${entry.id}')));
       await tester.pumpAndSettle();
-      final hintToggle = find.byKey(const ValueKey('content-hint-toggle'));
-      await tester.ensureVisible(hintToggle);
-      await tester.pumpAndSettle();
-      await tester.tap(hintToggle);
-      await tester.pumpAndSettle();
       final hint = find.byKey(const ValueKey('content-hint'));
       await tester.ensureVisible(hint);
       await tester.tap(hint);
@@ -153,13 +148,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<EditableText>(edit).focusNode.hasFocus, isTrue);
       expect(tester.widget<EditableText>(edit).controller.text, 'BC');
-      final examplesToggle = find.byKey(
-        const ValueKey('content-examples-toggle'),
-      );
-      await tester.ensureVisible(examplesToggle);
-      await tester.pumpAndSettle();
-      await tester.tap(examplesToggle);
-      await tester.pumpAndSettle();
       final example = find.byKey(const ValueKey('content-example-native'));
       await tester.ensureVisible(example);
       await tester.tap(example);
@@ -250,6 +238,8 @@ void main() {
         );
       }
       expect(find.byType(EntrySessionScreen), findsNothing);
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
       final addEntry = find.byWidgetPredicate(
         (w) => w is PikoButton && w.label == 'New',
       );

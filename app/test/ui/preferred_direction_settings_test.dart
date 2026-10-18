@@ -6,7 +6,7 @@ import 'package:piko/features/settings/preferred_direction_control.dart';
 import 'package:piko/features/settings/preferred_direction_controller.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
-import 'package:piko/ui/components/piko_field.dart';
+import 'package:piko/ui/components/piko_preference_picker.dart';
 import '../features/preferred_direction_controller_test.dart'
     show HeldDirectionSettings;
 
@@ -33,24 +33,29 @@ void main() {
             home: Scaffold(body: PreferredDirectionControl(binding: binding)),
           ),
         );
-        expect(find.byType(PikoDropdown<PreferredDirection>), findsNothing);
+        expect(
+          find.byType(PikoPreferencePicker<PreferredDirection>),
+          findsNothing,
+        );
         await controller.load();
         await tester.pumpAndSettle();
         final copy = PikoCopy(language);
-        final field = find.byType(PikoDropdown<PreferredDirection>);
+        final field = find.byType(PikoPreferencePicker<PreferredDirection>);
         expect(
-          tester.widget<PikoDropdown<PreferredDirection>>(field).value,
+          tester.widget<PikoPreferencePicker<PreferredDirection>>(field).value,
           PreferredDirection.targetToNative,
         );
         repository.writeGate = Completer<void>();
         repository.failWrite = true;
         final callback = tester
-            .widget<PikoDropdown<PreferredDirection>>(field)
+            .widget<PikoPreferencePicker<PreferredDirection>>(field)
             .onChanged!;
         callback(PreferredDirection.both);
         await tester.pumpAndSettle();
         expect(
-          tester.widget<PikoDropdown<PreferredDirection>>(field).onChanged,
+          tester
+              .widget<PikoPreferencePicker<PreferredDirection>>(field)
+              .onChanged,
           isNull,
         );
         callback(PreferredDirection.nativeToTarget);
@@ -63,7 +68,7 @@ void main() {
           findsOneWidget,
         );
         expect(
-          tester.widget<PikoDropdown<PreferredDirection>>(field).value,
+          tester.widget<PikoPreferencePicker<PreferredDirection>>(field).value,
           PreferredDirection.targetToNative,
         );
         repository.failWrite = false;
@@ -103,8 +108,8 @@ void main() {
       ),
     );
     final stale = tester
-        .widget<PikoDropdown<PreferredDirection>>(
-          find.byType(PikoDropdown<PreferredDirection>),
+        .widget<PikoPreferencePicker<PreferredDirection>>(
+          find.byType(PikoPreferencePicker<PreferredDirection>),
         )
         .onChanged!;
     binding.value = second;

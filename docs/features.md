@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) preserves the earlier documented build and its source identity; its control arrangements can predate the grouped Settings and editing surfaces described here.
 
 ## Contents
 
@@ -21,7 +21,7 @@ Piko stores vocabulary on the device and offers self-assessed Long-term and Spee
 <a id="collections"></a>
 ## Collections
 
-From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. The available language choices are Korean, German, English and French; interface language is a separate setting.
+From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. Each language field opens a searchable directory with 128 choices: 120 base languages, six curated varieties and two Mandarin script options alongside generic Mandarin. Custom is available in the same picker. A custom name matching a catalog label in the current interface language after case/whitespace/punctuation normalization selects that catalog identity; otherwise the exact name is retained. Existing Collection languages and custom names remain fixed. Interface language is a separate setting.
 
 Open a Collection from **My collections**. Its heading shows the language pair and vocabulary count. The information icon beside this metadata opens **How learning works**, including an expandable technical explanation. Closing help returns to the Collection.
 
@@ -29,7 +29,7 @@ Scrolling down keeps the Collection title, total entry count, Back/menu and sepa
 
 Reading Piko appears beside the first available Review action, including when Speed is also available. Sleeping Piko accompanies the no-work message only when the current scope has no Review, new Speed words or pending repetition. Speed-only, empty, unmatched, loading and failed states show no contextual pose. These illustrations do not change learning data or indicate permanent mastery.
 
-Use the heading's rename control to change its name; save or cancel that edit explicitly. The Collection **More options** menu contains JSON import/export, Collection Settings, category editing and Collection deletion. Confirming deletion removes that Collection and its associated vocabulary/learning. Export anything you want to retain before deleting it; Collection deletion has no vocabulary-style Undo.
+Use the heading's rename control to change its name; save or cancel that edit explicitly. The gear opens **Collection Settings**, also reachable through **App Settings → Collections**. This page groups learning preferences, category management, JSON import/export and a separate deletion action. Confirming deletion removes that Collection and its associated vocabulary/learning. Export anything you want to retain before deleting it; Collection deletion has no vocabulary-style Undo.
 
 The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
@@ -47,9 +47,9 @@ Ordinary product emulator capture · [Full image](images/r7-collection.png) · [
 3. Add optional content or categories as needed, then confirm with **Save & Next**. This creates a saved word and another draft for continuing entry.
 4. Choose **Finish** to leave the session. If an unconfirmed draft remains, choose whether to continue editing or discard it. Already saved words remain saved.
 
-A new draft is different from an existing saved card: completing both required fields alone does not confirm the new word. Once a word is saved, valid edits save automatically. Watch **Saving…**, **Saved** and validation/error feedback rather than assuming an invalid edit reached storage.
+The entry session retains previously confirmed words for revisiting and editing. A new draft is different from an existing saved card: completing both required fields alone does not confirm the new word. Once a word is saved, valid edits save automatically. Watch **Saving…**, **Saved** and validation/error feedback rather than assuming an invalid edit reached storage.
 
-The same target/native pair cannot be saved twice in one Collection. Comparison trims outside whitespace, normalizes Unicode and ignores letter case; it does not merge all spelling variants. If a pair already exists, edit that saved entry or change the pair. Empty required fields and incomplete example pairs need correction before saving.
+The same target/native pair can have separate entries with different Hints. Each meaning has its own UUID and starts with fresh learning. A complete pair plus Hint must be unique within its Collection: comparison normalizes Unicode, lowercases and collapses runs of Unicode whitespace, while preserving punctuation and accents. An absent or whitespace-only Hint is the same empty key. Change the pair or Hint to resolve a duplicate. Editing the Hint on an existing entry preserves its learning. Empty required fields and incomplete example pairs need correction before saving.
 
 <img src="images/r7-entry-draft.png" width="320" alt="Unsaved manually typed livre and Buch with manual examples and Hint controls">
 
@@ -60,11 +60,11 @@ Ordinary product emulator capture · [Full image](images/r7-entry-draft.png) · 
 <a id="edit-vocabulary"></a>
 ## Edit and delete vocabulary
 
-Open a word's edit control from the Collection vocabulary list. The inline editor contains both words, optional examples/hint, categories and **Active**. Valid changes save automatically. Collapse the editor when finished. Invalid raw text remains visible for correction; collapsing is not a way to confirm an invalid value. On a storage error, retain the editor and use **Retry** where offered.
+Open a word's edit control from the Collection vocabulary list. The edit dialog groups both words, optional examples/hint, categories and **Active**. Valid changes save automatically. Close it when finished; pending writes drain before closing. Invalid raw text remains visible for correction and cannot be confirmed by closing. On a storage error, retain the editor and use **Retry** where offered.
 
 You can also edit the current word after revealing an answer in normal, retry or Speed learning. Return from the editor to the same revealed answer before grading. Editing vocabulary does not itself count as an answer or reset its scheduling. Making the current word inactive removes it from eligible learning according to the current session's refreshed state.
 
-Use **Vocabulary actions → Delete vocabulary** to remove a word immediately. Use the short-lived **Undo** promptly to restore it. Deletion removes the word's directional learning and category associations. A failed or expired Undo must not be treated as a successful restoration. Collection deletion is a separate operation with confirmation.
+Use the separate **Delete vocabulary** row at the bottom of the saved-word editor to remove a word immediately. Use the short-lived **Undo** promptly to restore it. Deletion removes the word's directional learning and category associations. A failed or expired Undo must not be treated as a successful restoration. Collection deletion is a separate operation with confirmation.
 
 [Editor image](screenshots.md#editors) · [Persistence and guarded writes](technical.md#storage)
 
@@ -72,11 +72,11 @@ Use **Vocabulary actions → Delete vocabulary** to remove a word immediately. U
 ## Examples, hints and activity
 
 - **Add examples** opens example pairs, each containing the target-language sentence and native-language sentence. Complete both sides or leave the pair empty. Use **Add example pair** for another pair; removing a pair removes that optional content.
-- **Add hint** opens a single hint. **Show hint automatically** controls whether it is visible during learning. When off, a hint can be revealed by tapping its control.
-- In **More options → Settings**, a Collection can **Show hints automatically for new vocabulary**. This changes defaults for new words; existing words retain their own setting. An editor may offer to use a changed visibility choice for new words as well.
+- **Hint** is directly visible in the editor. **Show hint automatically** controls whether it is visible during learning. When off, a hint can be revealed by tapping its control.
+- In **Collection Settings**, a Collection can **Show hints automatically for new vocabulary**. This changes defaults for new words; existing words retain their own setting. An editor may offer to use a changed visibility choice for new words as well.
 - **Active** includes a word in learning. Inactive words remain visible/editable in the Collection but are excluded from normal and Speed learning in both directions. Activity is independent of readiness and does not erase progress.
 
-Each example side permits up to 1,000 characters and a hint up to 2,000. Changing optional content preserves the word's learning identity. The app-wide **Show examples on questions** setting affects question-side examples; it does not delete saved examples or change the answer's stored content.
+With no examples, the section shows **Add examples** without empty input fields. Existing pairs appear directly; Hint and Categories remain visible sections. Each example side permits up to 1,000 characters and a hint up to 2,000. Changing optional content preserves the word's learning identity. The app-wide **Show examples on questions** setting affects question-side examples; it does not delete saved examples or change the answer's stored content.
 
 Detailed cards expose more saved content than Compact cards. During learning, content follows the question/answer language and hint visibility. A missing hint/example is simply absent, rather than a required field.
 
@@ -85,13 +85,13 @@ Detailed cards expose more saved content than Compact cards. During learning, co
 <a id="categories"></a>
 ## Categories
 
-Open **More options → Edit categories** within a Collection. Choose **Add category group** for a dimension such as “Topic”, choose **One value** or **Multiple values**, then add its values. One value permits one assignment for each word; Multiple values permits several. Names and values belong to this Collection. Expand a category group to edit its name, selection mode and values.
+Open **Collection Settings → Categories**. Choose **Add category group** for a dimension such as “Topic”, choose **One value** or **Multiple values**, then add its values. One value permits one assignment for each word; Multiple values permits several. Names and values belong to this Collection. Open a category group to edit its grouped Properties and Values. Name, selection mode and carry-over commit together with **Save group**; leaving unsaved Properties asks whether to discard them. Value creation, rename and deletion are separate explicit actions.
 
 Assign values from a vocabulary editor. Values start alphabetically. In **Filters**, hold and drag a value within its group, or use its menu's **Move up / Move down** actions. The order saves immediately and applies to this Collection's pickers, tags, category management and grouped headings. Closing without Apply keeps that order and discards unconfirmed filter choices. Clear the value search before moving values. Renaming keeps a custom position; new values append. Manage a dimension or value from the category page to rename or delete it. Deleting category metadata removes the relevant assignments rather than deleting vocabulary. Changing a Multiple dimension to Single can require resolving assignments; follow the app's conflict feedback instead of assuming a value was chosen for you.
 
 Categories feed the list's filters and grouping. If none exist, the category/filter area explains that state; create category definitions before expecting values to select.
 
-In **Edit categories**, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
+In category group Properties, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
 
 <img src="images/r7-categories.png" width="320" alt="Category group editor with default-off session carry-over and explicit-save explanation">
 
@@ -108,11 +108,11 @@ The Collection vocabulary area has a search field and separate **Filters**, **Gr
 | --- | --- |
 | Search | Match saved target/native text. Clear the query to recover words hidden by search. |
 | Filters | Stage category selections, then **Apply**. Values within one dimension are alternatives; different dimensions must all match. **Clear filters** clears the pending filter selection. Dismissing without Apply keeps the applied filters. |
-| Group | Choose one category dimension or **Ungrouped**, then Apply. Expand/collapse group headers individually or use the list menu's **Expand all / Collapse all**. A word assigned to multiple values can appear in multiple groups. |
+| Group | Choose one category dimension or **Ungrouped**, then Apply. Expand/collapse group headers individually or use the View menu's **Expand all / Collapse all**. A word assigned to multiple values can appear in multiple groups. |
 | Sort | Choose Original order, target/native A–Z or Z–A, or newest/oldest. Apply the choice. Older words without a recorded added date remain undated rather than receiving invented dates. |
-| List options | Change **Layout** between Compact and Detailed, and change **Language order** independently of the learning direction. |
+| View | Change **Layout** between Compact and Detailed, and change **Language order** independently of the learning direction. |
 
-Controls expose their current state and independent reset actions. Search and filters combine; changing Group or Sort does not clear them. An empty result is not deletion: clear search/filter restrictions to locate saved words again. View preferences are retained per Collection; temporary selection is separate.
+View opens Layout and Language order as staged child dialogs: Back returns without applying, Apply saves and returns, and Close exits. Controls expose their current state and independent reset actions. Search and filters combine; changing Group or Sort does not clear them. An empty result is not deletion: clear search/filter restrictions to locate saved words again. View preferences are retained per Collection; temporary selection is separate.
 
 Collection Detail's learning launch availability uses the matching eligible vocabulary and configured direction, so filtering/searching can change the offered actions and counts. The Home review badge counts due word directions; completing one direction can leave the opposite direction due. A grouped duplicate is still one saved word.
 
@@ -186,7 +186,7 @@ Speed shows today's successful word-direction completions, counted once per word
 <a id="transfer"></a>
 ## JSON import and export
 
-Open **More options → JSON import / export** in the destination/source Collection. The Import and Export tabs operate on that one Collection.
+Open the Collection gear → **Collection Settings → Data → JSON import / export** in the destination/source Collection. **New → Import** is an alternate entrance to the same Collection-scoped import. The Import and Export tabs operate on that one Collection.
 
 ### Export a Collection
 
@@ -203,11 +203,11 @@ This is a report, not a restore file: the Collection importer rejects it. Saving
 ### Check and apply an import
 
 1. Use **Choose JSON file**, **Paste from clipboard**, or edit **Paste or edit JSON**. **Copy example JSON** supplies synthetic structure for the Collection's language pair.
-2. Choose which content groups to import: target text, native text, category assignments, examples, hint and Activity.
-3. Choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing.
+2. Choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing.
+3. Choose which content groups to import: target text, native text, category assignments, examples, hint and Activity. Recheck after changing groups.
 4. Fix errors and check again. When valid, choose **Import vocabulary** and confirm the batch.
 
-Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Schema versions 1–4 are accepted. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word pairs block the batch.
+Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Only current schema version 5 is accepted. Both language fields contain explicit catalog/custom identity objects; custom names match across installations after the same bounded normalization, while destination labels remain unchanged. See [manual conversion examples](json-format.md) for older files. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word-pair/Hint tuples block the batch. The check uses effective content after selected groups, omissions and clears are resolved.
 
 Existing learning is preserved. Imported learning and statistics data are ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
 
@@ -217,7 +217,7 @@ Existing learning is preserved. Imported learning and statistics data are ignore
 <a id="settings"></a>
 ## Settings
 
-From Home, open **Settings**. Choose **App language** → English or Deutsch. The choice is saved and is separate from each Collection's vocabulary languages. The expandable Settings section inside a Collection's More options menu owns that Collection's Hint default instead.
+From Home, open the Settings gear. **General** contains App language, **Learning** contains direction and question examples, **Data** contains full export, and **Areas → Collections** opens the overview of Collection-specific Settings. Choose **App language** → English or Deutsch; this retained preference is separate from each Collection's vocabulary languages. The same Collection Settings page is available from its own gear and groups the Hint default, categories, import/export and deletion.
 
 **Learning direction** selects Target → Native, Native → Target, or Both directions separately. It affects eligible launch choices; it does not merge the two directions' progress. **Show examples on questions** changes question-side presentation while preserving stored examples.
 

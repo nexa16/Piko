@@ -77,7 +77,7 @@ void main() {
         PikoButtonVariant.ghost,
       );
       expect(
-        tester.getRect(find.widgetWithText(PikoButton, 'Settings')).right,
+        tester.getRect(find.byTooltip('Settings')).right,
         closeTo(
           tester.getRect(find.widgetWithText(PikoButton, 'New')).right,
           0.01,
@@ -120,7 +120,7 @@ void main() {
 
       for (final finder in [
         find.text('Piko'),
-        find.text('Einstellungen'),
+        find.byTooltip('Einstellungen'),
         find.text('Meine Sammlungen'),
         find.text('Neu'),
       ]) {

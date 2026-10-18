@@ -27,11 +27,11 @@ String input(
   Map<String, Object?>? envelope,
 }) => jsonEncode({
   'format': 'piko-vocabulary',
-  'schemaVersion': 1,
+  'schemaVersion': 5,
   'collections': [
     {
-      'targetLanguage': 'fr',
-      'nativeLanguage': 'de',
+      'targetLanguage': {'kind':'catalog','id':'fr'},
+      'nativeLanguage': {'kind':'catalog','id':'de'},
       'entries': entries,
       'categoryDimensions': ?definitions,
       ...?source,
@@ -395,7 +395,7 @@ void main() {
           VocabularyJsonIssueCode.unsupportedFormat,
         ),
         (
-          input([], envelope: {'schemaVersion': 5}),
+          input([], envelope: {'schemaVersion': 4}),
           VocabularyJsonIssueCode.unsupportedVersion,
         ),
         (

@@ -66,7 +66,7 @@ void main() {
         expect(
           find.descendant(
             of: card,
-            matching: find.text(language.code.toUpperCase()),
+            matching: find.text(language.badge),
           ),
           findsOneWidget,
         );
@@ -177,7 +177,7 @@ void main() {
         final textBox = tester.getRect(
           find.descendant(
             of: badge,
-            matching: find.text(language.code.toUpperCase()),
+            matching: find.text(language.badge),
           ),
         );
         expect(

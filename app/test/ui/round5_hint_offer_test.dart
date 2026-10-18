@@ -58,8 +58,6 @@ void main() {
             ),
           ),
         );
-        await tester.tap(find.byKey(const ValueKey('content-hint-toggle')));
-        await tester.pumpAndSettle();
         final toggle = find.byKey(const ValueKey('content-hint-automatic'));
         await tester.ensureVisible(toggle);
         await tester.tap(toggle);

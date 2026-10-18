@@ -12,6 +12,7 @@ import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/components/piko_button.dart';
 
 class ControlledRollback implements VocabularyRepository {
   ControlledRollback(this.real);
@@ -97,7 +98,10 @@ Finder field(String id, [bool target = true]) => find.descendant(
   of: find.byKey(ValueKey('inline-$id-${target ? 'target' : 'native'}')),
   matching: find.byType(TextField),
 );
-Finder finish(String id) => find.byKey(ValueKey('inline-complete-$id'));
+Finder finish(String id) => find.byWidgetPredicate(
+  (w) =>
+      w is PikoIconButton && ['Close', 'Schließen'].contains(w.semanticLabel),
+);
 Finder discard(String id) => find.byKey(ValueKey('inline-discard-$id'));
 Future<void> flush(WidgetTester tester, Fixture f) async {
   await tester.runAsync(() => f.db.customSelect('SELECT 1').get());
@@ -153,7 +157,7 @@ Future<ValueNotifier<VocabularyRepository>> mount(
 void main() {
   for (final locale in ['en', 'de']) {
     testWidgets(
-      '$locale autosave retains one accessible collapse chevron without Finish/Discard or rollback',
+      '$locale autosave retains one accessible dialog Close without Finish/Discard or rollback',
       (tester) async {
         final f = Fixture();
         await tester.runAsync(f.initialize);
@@ -181,7 +185,7 @@ void main() {
           of: control,
           matching: find.byType(PikoIcon),
         );
-        expect(tester.widget<PikoIcon>(icon).name, PikoIconName.chevronRight);
+        expect(tester.widget<PikoIcon>(icon).name, PikoIconName.x);
         Focus.of(tester.element(icon)).requestFocus();
         await tester.pump();
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);

@@ -95,8 +95,8 @@ void main() {
       });
       expect(collection['id'], f.owner.id);
       expect(collection['name'], f.owner.name);
-      expect(collection['targetLanguage'], 'fr');
-      expect(collection['nativeLanguage'], 'de');
+      expect(collection['targetLanguage'], {'kind':'catalog','id':'fr'});
+      expect(collection['nativeLanguage'], {'kind':'catalog','id':'de'});
       final scopes = await f.db.select(f.db.scopeAnswerOrdinals).get();
       expect(collection['reviewScopes'], {
         for (final scope in scopes.where(
@@ -340,45 +340,15 @@ void main() {
     },
   );
 
-  test(
-    'sample JSON is synthetic, complete and matches the canonical version-one shape',
-    () async {
-      final before = await completeSnapshot(f.db);
-      final sample = document(service.sampleJson());
-      expect(sample['format'], VocabularyJsonFormat.format);
-      expect(sample['schemaVersion'], 1);
-      expect(sample['scheduler'], {
-        'library': 'fsrs',
-        'version': '2.0.1',
-        'cardFormatVersion': 1,
-      });
-      final collection = onlyCollection(sample);
-      expect(collection['id'], '8f8ce022-4a25-47ed-8944-8955dcf353da');
-      final entry = (collection['entries'] as List).single as Map;
-      for (final direction in LearningDirection.values) {
-        final item = (entry['learning'] as Map)[direction.name] as Map;
-        final card = item['card'];
-        expect(card, isA<Map>());
-        LearningCardCodec.decode(
-          jsonEncode(card),
-          expectedId: item['id'] as int,
-          formatVersion: item['formatVersion'] as int,
-        );
-        expect(item.keys.toSet(), {
-          'id',
-          'formatVersion',
-          'generation',
-          'reviewRevision',
-          'card',
-          'reviews',
-          'retry',
-          'speedCompleted',
-        });
-      }
-      expect(service.sampleJson(), isNot(contains(f.owner.id)));
-      expect(await completeSnapshot(f.db), before);
-    },
-  );
+  test('sample is minimal current-version JSON with two category dimensions', () async {
+    final before=await completeSnapshot(f.db), sample=document(service.sampleJson());
+    expect(sample['format'],VocabularyJsonFormat.format);expect(sample['schemaVersion'],5);
+    final collection=onlyCollection(sample);expect(collection['categoryDimensions'],hasLength(2));
+    final entry=(collection['entries'] as List).single as Map;
+    expect(entry.containsKey('learning'),isFalse);expect(entry.containsKey('addedAt'),isFalse);
+    expect((await service.analyzeImport(collectionId:f.owner.id,json:service.sampleJson())).canApply,isTrue);
+    expect(await completeSnapshot(f.db),before);
+  });
 
   test(
     'an expired retry from an older generation is exported exactly as stored without cleanup',

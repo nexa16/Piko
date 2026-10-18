@@ -9,6 +9,7 @@ import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/ui/components/piko_form.dart';
 import '../support/collection_deletion_fixture.dart';
 import '../support/entry_deletion_fixture.dart' show GatedEntryRepository;
 
@@ -69,8 +70,11 @@ class ControlledVocabulary extends GatedEntryRepository {
   }
 }
 
-Finder button(String label) =>
-    find.byWidgetPredicate((w) => w is PikoButton && w.label == label);
+Finder button(String label) => find.byWidgetPredicate(
+  (w) =>
+      (w is PikoButton && w.label == label) ||
+      (w is PikoFormRow && w.title == label),
+);
 Finder deletion() => button('Delete collection');
 Finder confirm() =>
     find.descendant(of: find.byType(PikoDialog), matching: deletion());
@@ -130,54 +134,46 @@ Future<void> mount(
 Future<void> openConfirmation(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('collection-menu')));
   await tester.pumpAndSettle();
+  await tester.ensureVisible(deletion());
+  await tester.pumpAndSettle();
   await tester.tap(deletion());
   await tester.pumpAndSettle();
 }
 
 void main() {
   testWidgets(
-    'neutral Collection menu hides Delete, safely dismisses and restores keyboard focus',
+    'Settings gear opens a page; Back restores opener without deleting',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
       final repository = ControlledCollections(f.collections);
       await mount(tester, f, repository);
-      final opener = find.byKey(const ValueKey('collection-menu'));
-      expect(deletion(), findsNothing);
-      expect(find.text('Edit categories'), findsNothing);
-      expect(tester.getSize(opener).shortestSide, greaterThanOrEqualTo(48));
-      final control = tester.widget<PikoIconButton>(opener);
-      expect(control.semanticLabel, 'More options');
-      expect(control.variant, PikoButtonVariant.neutral);
-      for (final mode in ['escape', 'backdrop', 'system', 'close']) {
+      for (final system in [false, true]) {
+        final opener = find.byKey(const ValueKey('collection-menu'));
+        final control = tester.widget<PikoIconButton>(opener);
+        expect(control.semanticLabel, 'Collection settings');
+        expect(control.variant, PikoButtonVariant.ghost);
+        expect(tester.getSize(opener).shortestSide, greaterThanOrEqualTo(48));
         control.focusNode!.requestFocus();
         await tester.pump();
         control.onPressed!();
         control.onPressed!();
         await tester.pumpAndSettle();
-        expect(find.byType(PikoDialog), findsOneWidget);
+        expect(find.byType(PikoDialog), findsNothing);
         expect(deletion(), findsOneWidget);
-        if (mode == 'escape') {
-          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        } else if (mode == 'backdrop') {
-          await tester.tapAt(const Offset(1, 1));
-        } else if (mode == 'system') {
+        if (system) {
           await tester.binding.handlePopRoute();
         } else {
-          await tester.tap(find.byTooltip('Close'));
+          await tester.tap(find.byTooltip('Back'));
         }
-        await tester.pumpAndSettle();
-        expect(deletion(), findsNothing, reason: '$mode safely dismisses menu');
-        expect(
-          control.focusNode!.hasFocus,
-          isTrue,
-          reason: '$mode restores opener focus',
-        );
+        await flush(tester, f);
+        expect(deletion(), findsNothing);
+        expect(control.focusNode!.hasFocus, isTrue);
         expect(repository.deletes, 0);
       }
     },
   );
-  testWidgets('category management expands inside the owned Collection menu', (
+  testWidgets('Settings Categories opens its own page with Back', (
     tester,
   ) async {
     final f = CollectionDeletionFixture();
@@ -200,13 +196,13 @@ void main() {
     await flush(tester, f);
     await tester.tap(find.byKey(const ValueKey('collection-menu')));
     await tester.pumpAndSettle();
-    expect(find.text('Edit categories'), findsOneWidget);
-    expect(find.text('Injected category controls'), findsNothing);
-    await tester.tap(find.text('Edit categories'));
+    await tester.tap(find.text('Categories'));
     await tester.pumpAndSettle();
     expect(find.text('Injected category controls'), findsOneWidget);
-    expect(find.byType(CollectionDetail), findsOneWidget);
-    expect(find.byType(PikoDialog), findsOneWidget);
+    expect(find.byType(PikoDialog), findsNothing);
+    expect(deletion(), findsNothing);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
     expect(deletion(), findsOneWidget);
   });
   testWidgets('accepted autosave drains before confirmed Collection cascade', (
@@ -224,11 +220,15 @@ void main() {
     vocabulary.updateGates[id] = gate;
     await tester.enterText(field(id), 'Changed');
     await tester.pump();
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pump();
+    expect(repository.deletes, 0);
+    expect(field(id), findsOneWidget);
+    gate.complete();
+    await flush(tester, f);
+    expect(field(id), findsNothing);
     await openConfirmation(tester);
     await tester.tap(confirm());
-    await tester.pumpAndSettle();
-    expect(repository.deletes, 0);
-    gate.complete();
     await flush(tester, f);
     expect(repository.deletes, 1);
     expect(find.byType(CollectionDetail), findsNothing);
@@ -245,12 +245,16 @@ void main() {
       vocabulary.captureGate = gate;
       await tester.tap(find.byKey(ValueKey('vocabulary-${f.entries[0].id}')));
       await tester.pump();
-      await openConfirmation(tester);
-      await tester.tap(confirm());
+      await tester.tap(find.byKey(const ValueKey('collection-menu')));
       await tester.pumpAndSettle();
       expect(repository.deletes, 0);
       expect(find.byType(TextField), findsNothing);
       gate.complete();
+      await flush(tester, f);
+      await tester.ensureVisible(deletion());
+      await tester.tap(deletion());
+      await tester.pumpAndSettle();
+      await tester.tap(confirm());
       await flush(tester, f);
       expect(repository.deletes, 1);
       expect(find.byType(TextField), findsNothing);
@@ -404,9 +408,14 @@ void main() {
       final repository = ControlledCollections(f.collections);
       await mount(tester, f, repository);
       for (final mode in ['cancel', 'escape', 'backdrop', 'system']) {
-        await tester.tap(find.byKey(const ValueKey('collection-menu')));
-        await tester.pumpAndSettle();
-        final open = tester.widget<PikoButton>(deletion()).onPressed!;
+        if (find
+            .byKey(const ValueKey('collection-menu-delete'))
+            .evaluate()
+            .isEmpty) {
+          await tester.tap(find.byKey(const ValueKey('collection-menu')));
+          await tester.pumpAndSettle();
+        }
+        final open = tester.widget<PikoFormRow>(deletion()).onTap!;
         open();
         open();
         await tester.pumpAndSettle();
@@ -477,7 +486,7 @@ void main() {
     },
   );
   testWidgets(
-    'confirmation freezes invalid/raw fields and drains accepted A/B saves before cascade',
+    'invalid modal blocks Settings until corrected; accepted A/B saves drain before cascade',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -491,13 +500,20 @@ void main() {
       await tester.enterText(field(id), 'A');
       await tester.enterText(field(id), 'B');
       await tester.enterText(field(id), ' ');
-      await openConfirmation(tester);
-      await tester.tap(confirm());
-      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pump();
       expect(repository.deletes, 0);
       expect(tester.widget<TextField>(field(id)).enabled, isFalse);
-      expect(tester.widget<TextField>(field(id)).controller!.text, ' ');
       gate.complete();
+      await flush(tester, f);
+      expect(field(id), findsOneWidget);
+      expect(tester.widget<TextField>(field(id)).controller!.text, ' ');
+      await tester.enterText(field(id), 'Valid');
+      await flush(tester, f);
+      await tester.tap(find.byTooltip('Close'));
+      await flush(tester, f);
+      await openConfirmation(tester);
+      await tester.tap(confirm());
       await flush(tester, f);
       expect(repository.deletes, 1);
       expect(find.byType(CollectionDetail), findsNothing);
@@ -520,24 +536,26 @@ void main() {
       await flush(tester, f);
       await tester.enterText(field(id), 'Changed');
       await flush(tester, f);
+      await tester.tap(find.byTooltip('Close'));
+      await flush(tester, f);
       await tester.runAsync(() => f.mutations.delete(f.entries[2]));
       await tester.pumpAndSettle();
       final undoGate = Completer<void>();
       f.deletion.restoreGate = undoGate;
       await tester.tap(button('Undo'));
       await tester.pump();
-      await openConfirmation(tester);
-      await tester.tap(confirm());
-      await tester.pumpAndSettle();
       expect(repository.deletes, 0);
       undoGate.complete();
+      await flush(tester, f);
+      await openConfirmation(tester);
+      await tester.tap(confirm());
       await flush(tester, f);
       expect(repository.deletes, 1);
       expect(find.byType(CollectionDetail), findsNothing);
     },
   );
   testWidgets(
-    'failed delete unlocks same invalid raw selection/focus and retains Undo deadline for retry',
+    'failed Collection delete retains Undo receipt and retries from Settings',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -545,15 +563,6 @@ void main() {
       final offer = f.mutations.latest!, deadline = offer.receipt.expiresAt;
       final repository = ControlledCollections(f.collections)..fail = true;
       await mount(tester, f, repository);
-      final id = f.entries[0].id;
-      await tester.tap(find.byKey(ValueKey('vocabulary-$id')));
-      await flush(tester, f);
-      await tester.enterText(field(id), '  ');
-      final text = tester.widget<TextField>(field(id));
-      text.controller!.selection = const TextSelection(
-        baseOffset: 0,
-        extentOffset: 1,
-      );
       await openConfirmation(tester);
       await tester.tap(confirm());
       await flush(tester, f);
@@ -561,20 +570,11 @@ void main() {
         find.text("Couldn't delete this collection. Please try again."),
         findsOneWidget,
       );
-      expect(
-        tester.widget<TextField>(field(id)).controller,
-        same(text.controller),
-      );
-      expect(text.controller!.text, '  ');
-      expect(
-        text.controller!.selection,
-        const TextSelection(baseOffset: 0, extentOffset: 1),
-      );
-      expect(text.focusNode!.hasFocus, isTrue);
       expect(f.mutations.latest, same(offer));
       expect(offer.receipt.expiresAt, deadline);
       repository.fail = false;
-      await openConfirmation(tester);
+      await tester.tap(deletion());
+      await tester.pumpAndSettle();
       await tester.tap(confirm());
       await flush(tester, f);
       expect(find.byType(CollectionDetail), findsNothing);
@@ -632,6 +632,7 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('collection-menu')));
       await tester.tap(find.byKey(const ValueKey('collection-menu')));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(button('Sammlung löschen'));
       await tester.tap(button('Sammlung löschen'));
       await tester.pumpAndSettle();
       expect(

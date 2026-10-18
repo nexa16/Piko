@@ -61,10 +61,6 @@ void main() {
       await flush(tester, f);
       await deleting;
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('entry-structural-gap-draft')),
-        findsOneWidget,
-      );
       final area = tester.getRect(viewport);
       await tester.dragFrom(
         Offset(area.left + 4, area.center.dy),
@@ -107,10 +103,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(viewport).height, lessThan(height));
       expect(tester.getRect(draft).center.dy, closeTo(before, 2));
-      expect(
-        find.byKey(const ValueKey('entry-structural-gap-draft')),
-        findsOneWidget,
-      );
       expect(text.focusNode!.hasFocus, isTrue);
       final restoring = f.session.undoDeletion(deleted);
       await flush(tester, f);

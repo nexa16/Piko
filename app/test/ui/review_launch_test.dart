@@ -759,7 +759,7 @@ void main() {
   );
 
   testWidgets(
-    'accepted inline autosave drains before due preparation; invalid raw draft is retained',
+    'saved editor blocks review until corrected and accepted autosaves drain before launch',
     (tester) async {
       final f = fixture();
       await tester.runAsync(f.initialize);
@@ -783,32 +783,29 @@ void main() {
       await tester.enterText(field(true), 'Accepted word');
       await tester.pump();
       await tester.enterText(field(false), '');
-      await tester.pump();
       final raw = tester.widget<TextField>(field(false)).controller!;
-      await tester.ensureVisible(button('Review'));
-      await h.open(tester);
-      await tester.tap(button('Start review'));
-      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pump();
       expect(h.calls, 0);
       expect(stored, isEmpty);
       gated.updateGates[f.entry.id]!.complete();
       await h.flush(tester);
+      expect(field(false), findsOneWidget);
+      expect(raw.text, '');
+      await tester.enterText(field(false), 'Eins');
+      await h.flush(tester);
+      await tester.tap(find.byTooltip('Close'));
+      await h.flush(tester);
+      await h.open(tester);
+      await tester.tap(button('Start review'));
       await h.finish(tester);
       expect(stored.single.targetText, 'Accepted word');
       expect(stored.single.nativeText, 'Eins');
       expect(h.sessions.single.members.single.entryId, f.entry.id);
-      await tester.tap(button('Exit review'));
-      await h.finish(tester);
-      expect(
-        identical(tester.widget<TextField>(field(false)).controller, raw),
-        isTrue,
-      );
-      expect(raw.text, '');
       expect(
         await tester.runAsync(() => rows(f.db, 'regular_reviews')),
         isEmpty,
       );
-      expect(tester.takeException(), isNull);
     },
   );
 
@@ -905,7 +902,7 @@ void main() {
     },
   );
   testWidgets(
-    'review factory replacement preserves same-Collection raw rename and inline draft',
+    'review factory replacement preserves the active vocabulary dialog and raw invalid draft',
     (tester) async {
       final f = fixture();
       await tester.runAsync(f.initialize);
@@ -920,20 +917,12 @@ void main() {
       await tester.enterText(native, '');
       await tester.pump();
       final raw = tester.widget<TextField>(native).controller!;
-      await tester.tap(find.byKey(const ValueKey('collection-rename')));
-      await tester.pumpAndSettle();
-      final name = find.byKey(const ValueKey('collection-name'));
-      await tester.enterText(name, '  Raw name  ');
-      final rename = tester.widget<TextField>(name).controller!;
-      rename.selection = const TextSelection(baseOffset: 2, extentOffset: 5);
-      final value = rename.value;
       h.factory = (id, direction) => h.create(id, direction);
       h.revision.value++;
       await tester.pumpAndSettle();
-      expect(tester.widget<TextField>(name).controller, same(rename));
-      expect(rename.value, value);
       expect(tester.widget<TextField>(native).controller, same(raw));
       expect(raw.text, '');
+      expect(h.calls, 0);
       expect(
         await tester.runAsync(() => rows(f.db, 'regular_reviews')),
         isEmpty,

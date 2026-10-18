@@ -29,6 +29,8 @@ import 'features/vocabulary/collection_vocabulary_mutations.dart';
 import 'features/settings/app_language_controller.dart';
 import 'features/settings/preferred_direction_controller.dart';
 import 'features/settings/settings_route.dart';
+import 'features/settings/collection_settings_overview.dart';
+import 'features/collections/collection_detail.dart';
 import 'shared/interface_locale.dart';
 import 'shared/copy_scope.dart';
 import 'ui/components/piko_button.dart';
@@ -170,6 +172,18 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => SettingsRoute(
+          collectionsBuilder: (_) => CollectionSettingsOverview(
+            repository: collections,
+            settingsBuilder: (_, collection) => CollectionDetail(
+              repository: collections,
+              collectionId: collection.id,
+              settingsOnly: true,
+              vocabularyRepository: vocabulary,
+              categoriesRepository: categories,
+              interchangeBuilder: _interchange,
+              onPendingVocabularyWrites: trackWrites,
+            ),
+          ),
           binding: _languageBinding,
           directionBinding: _directionBinding,
           settingsRepository: settings,
@@ -337,6 +351,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
                 copy.text(
                   binding.error == null
                       ? 'settings.loading'
+                      : binding.error is VocabularyMigrationCollision
+                      ? 'storage.migrationCollision'
                       : 'settings.loadFailed',
                 ),
               ),

@@ -29,7 +29,7 @@ class PikoLanguageBadge extends StatelessWidget {
           widthFactor: 1,
           heightFactor: 1,
           child: Text(
-            language.code.toUpperCase(),
+            language.badge,
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: d.weight('components.languageBadge.weight'),

@@ -1,3 +1,4 @@
+import '../support/freeze_pre20.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
@@ -67,7 +68,7 @@ void main() {
       );
       final json = SqliteVocabularyJsonService(f.db);
       final exported = await json.exportCollection(f.owner.id);
-      expect((jsonDecode(exported) as Map)['schemaVersion'], 4);
+      expect((jsonDecode(exported) as Map)['schemaVersion'], 5);
       expect(exported, isNot(contains('carryOver')));
       expect(exported, isNot(contains('carry_over')));
       final preview = await json.analyzeImport(
@@ -138,6 +139,7 @@ void main() {
         raw.execute(
           'ALTER TABLE category_group_preferences DROP COLUMN carry_over',
         );
+        freezePre20(raw);
         raw.execute('PRAGMA user_version = 18');
         final before = {
           for (final row in raw.select(
@@ -157,7 +159,7 @@ void main() {
           final actual = (after[table] as List)
               .map(
                 (row) =>
-                    Map<String, Object?>.from(row as Map)..remove('carry_over'),
+                    Map<String, Object?>.from(row as Map)..remove('carry_over')..remove('target_language_name')..remove('native_language_name')..remove('hint_key'),
               )
               .toList();
           expect(actual, before[table], reason: table);

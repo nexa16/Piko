@@ -14,7 +14,7 @@ import 'package:piko/shared/catalogs.dart';
 import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
-import 'package:piko/ui/components/piko_field.dart';
+import 'package:piko/ui/components/piko_preference_picker.dart';
 import 'package:piko/ui/components/piko_page.dart';
 import 'package:piko/ui/piko_theme.dart';
 import '../data/regular_reviews_test.dart' show Fixture;
@@ -22,8 +22,10 @@ import '../features/app_language_controller_test.dart' show HeldSettings;
 import 'review_launch_test.dart' show ClosingDatabase;
 
 Finder button(String key, [String locale = 'en']) =>
-    find.widgetWithText(PikoButton, PikoCopy(locale).text(key));
-final dropdown = find.byType(PikoDropdown<Locale>);
+    key == 'nav.settings' || key == 'common.back'
+    ? find.byTooltip(PikoCopy(locale).text(key))
+    : find.widgetWithText(PikoButton, PikoCopy(locale).text(key));
+final dropdown = find.byType(PikoPreferencePicker<Locale>);
 
 class Harness {
   final db = ClosingDatabase();
@@ -136,12 +138,11 @@ void main() {
           closeTo(392 - pikoDesign.dimension('layout.mobilePadding'), .01),
         );
         final controller = await h.open(tester);
-        expect(find.byType(PikoDropdown<Locale>), findsOneWidget);
-        final options = tester.widget<PikoDropdown<Locale>>(dropdown).items;
-        expect(options.map((option) => (option.child as Text).data), [
-          'English',
-          'Deutsch',
-        ]);
+        expect(find.byType(PikoPreferencePicker<Locale>), findsOneWidget);
+        final options = tester
+            .widget<PikoPreferencePicker<Locale>>(dropdown)
+            .choices;
+        expect(options.map((option) => option.$2), ['English', 'Deutsch']);
         expect(find.byType(PikoHeading), findsOneWidget);
         await h.choose(tester, 'English');
         await h.drain(tester, controller);
@@ -240,7 +241,7 @@ void main() {
             find.byType(Navigator),
           );
           final oldCallback = tester
-              .widget<PikoDropdown<Locale>>(dropdown)
+              .widget<PikoPreferencePicker<Locale>>(dropdown)
               .onChanged!;
           h.repository.writeGate = Completer<void>();
           h.repository.failWrite = fails;
@@ -248,7 +249,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(h.repository.writes, 1);
           expect(
-            tester.widget<PikoDropdown<Locale>>(dropdown).onChanged,
+            tester.widget<PikoPreferencePicker<Locale>>(dropdown).onChanged,
             isNull,
           );
           oldCallback(const Locale('en'));
@@ -327,7 +328,7 @@ void main() {
         await h.mount(tester);
         final controller = await h.open(tester);
         h.repository.writeGate = Completer<void>();
-        tester.widget<PikoDropdown<Locale>>(dropdown).onChanged!(
+        tester.widget<PikoPreferencePicker<Locale>>(dropdown).onChanged!(
           const Locale('de'),
         );
         await tester.pump();
@@ -361,7 +362,7 @@ void main() {
         await h.mount(tester);
         final original = await h.open(tester);
         h.repository.writeGate = Completer<void>();
-        tester.widget<PikoDropdown<Locale>>(dropdown).onChanged!(
+        tester.widget<PikoPreferencePicker<Locale>>(dropdown).onChanged!(
           const Locale('de'),
         );
         await tester.pump();

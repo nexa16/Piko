@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../../data/settings_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
-import '../../ui/components/piko_card.dart';
-import '../../ui/components/piko_checkbox.dart';
-import '../../ui/piko_theme.dart';
+import '../../ui/components/piko_form.dart';
+import '../../ui/components/piko_switch.dart';
 
 class QuestionExamplesControl extends StatefulWidget {
   const QuestionExamplesControl({
@@ -73,35 +72,30 @@ class _QuestionExamplesControlState extends State<QuestionExamplesControl> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    return Padding(
-      padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.4')),
-      child: PikoCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (ready)
-              PikoCheckbox(
-                key: const ValueKey('settings-question-examples'),
-                label: copy.text('settings.questionExamples'),
-                value: value,
-                onChanged: pending ? null : select,
+    return PikoFormFieldRow(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (ready)
+            PikoSwitch(
+              key: const ValueKey('settings-question-examples'),
+              title: Text(copy.text('settings.questionExamples')),
+              value: value,
+              onChanged: pending ? null : select,
+            ),
+          if (pending)
+            Text(copy.text(ready ? 'settings.saving' : 'settings.loading')),
+          if (error != null) ...[
+            Text(
+              copy.text(ready ? 'settings.saveFailed' : 'settings.loadFailed'),
+            ),
+            if (!ready)
+              PikoButton(
+                label: copy.text('action.retry'),
+                onPressed: pending ? null : load,
               ),
-            if (pending)
-              Text(copy.text(ready ? 'settings.saving' : 'settings.loading')),
-            if (error != null) ...[
-              Text(
-                copy.text(
-                  ready ? 'settings.saveFailed' : 'settings.loadFailed',
-                ),
-              ),
-              if (!ready)
-                PikoButton(
-                  label: copy.text('action.retry'),
-                  onPressed: pending ? null : load,
-                ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }

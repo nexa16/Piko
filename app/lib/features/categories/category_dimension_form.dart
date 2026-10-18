@@ -3,6 +3,7 @@ import '../../data/categories_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 
@@ -115,63 +116,77 @@ class _CategoryDimensionFormState extends State<CategoryDimensionForm> {
         !pending &&
         ModalRoute.of(context)?.isCurrent == true;
     return PikoDialog(
+      presentation: PikoDialogPresentation.groupedForm,
       title: copy.text('dialog.newDimension'),
       purpose: PikoDialogPurpose.form,
       dismissible: !pending,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PikoTextField(
-            key: const ValueKey('category-dimension-name'),
-            label: copy.text('r2.name'),
-            controller: name,
-            enabled: !pending,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            onChanged: (_) {
-              if (editable()) {
-                setState(() {
-                  error = null;
-                });
-              }
-            },
-          ),
-          SizedBox(height: design.dimension('spacing.4')),
-          Text(copy.text('r2.mode')),
-          RadioGroup<CategoryMode>(
-            groupValue: mode,
-            onChanged: (selected) {
-              if (!editable() || selected == null) return;
-              setState(() {
-                mode = selected;
-                error = null;
-              });
-            },
-            child: Column(
-              children: [
-                for (final choice in CategoryMode.values)
-                  RadioListTile<CategoryMode>(
-                    key: ValueKey('category-dimension-mode-${choice.name}'),
-                    value: choice,
-                    enabled: !pending,
-                    contentPadding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        design.dimension('components.buttons.radius'),
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PikoTextField(
+                      key: const ValueKey('category-dimension-name'),
+                      label: copy.text('r2.name'),
+                      controller: name,
+                      enabled: !pending,
+                      autofocus: true,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) {
+                        if (editable()) {
+                          setState(() {
+                            error = null;
+                          });
+                        }
+                      },
+                    ),
+                    SizedBox(height: design.dimension('spacing.4')),
+                    Text(copy.text('r2.mode')),
+                    RadioGroup<CategoryMode>(
+                      groupValue: mode,
+                      onChanged: (selected) {
+                        if (!editable() || selected == null) return;
+                        setState(() {
+                          mode = selected;
+                          error = null;
+                        });
+                      },
+                      child: Column(
+                        children: [
+                          for (final choice in CategoryMode.values)
+                            RadioListTile<CategoryMode>(
+                              key: ValueKey(
+                                'category-dimension-mode-${choice.name}',
+                              ),
+                              value: choice,
+                              enabled: !pending,
+                              contentPadding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  design.dimension('components.buttons.radius'),
+                                ),
+                              ),
+                              selected: mode == choice,
+                              selectedTileColor: design.color('tint'),
+                              title: Text(
+                                copy.text(
+                                  choice == CategoryMode.single
+                                      ? 'r2.single'
+                                      : 'r2.multiple',
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    selected: mode == choice,
-                    selectedTileColor: design.color('tint'),
-                    title: Text(
-                      copy.text(
-                        choice == CategoryMode.single
-                            ? 'r2.single'
-                            : 'r2.multiple',
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
           if (error != null) ...[
             SizedBox(height: design.dimension('spacing.3')),

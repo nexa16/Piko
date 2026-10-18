@@ -10,6 +10,8 @@ import 'piko_interaction_anchor.dart';
 
 enum PikoDialogPurpose { form, confirmation, selection, directChoice, summary }
 
+enum PikoDialogPresentation { standard, groupedForm }
+
 enum PikoDialogActionRole { primary, safe, destructive }
 
 /// Explicit outcomes, in safe-then-affirmative order. The shared footer adapts
@@ -102,10 +104,13 @@ class PikoDialog extends StatelessWidget {
     this.purpose = PikoDialogPurpose.form,
     this.dismissible = true,
     this.onClose,
+    this.onBack,
     this.closeLabel,
     this.bodyOwnsScroll = false,
+    this.presentation = PikoDialogPresentation.standard,
     super.key,
   });
+  final PikoDialogPresentation presentation;
   final String title;
 
   /// Optional icon/title composition; [title] remains the route's spoken name.
@@ -115,6 +120,7 @@ class PikoDialog extends StatelessWidget {
   final PikoDialogPurpose purpose;
   final bool dismissible;
   final VoidCallback? onClose;
+  final VoidCallback? onBack;
   final String? closeLabel;
 
   /// For a single bounded sliver body (for example draggable grouped values).
@@ -138,7 +144,9 @@ class PikoDialog extends StatelessWidget {
           maxWidth: d.dimension('components.dialogs.maxWidth'),
         ),
         insetAnimationDuration: PikoTheme.motion(context),
-        backgroundColor: d.color('surface'),
+        backgroundColor: d.color(
+          presentation == PikoDialogPresentation.groupedForm ? 'bg' : 'surface',
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(d.dimension('radii.dialog')),
         ),
@@ -155,6 +163,19 @@ class PikoDialog extends StatelessWidget {
             header: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (onBack != null) ...[
+                  SizedBox.square(
+                    dimension: d.dimension('controls.largeHeight'),
+                    child: PikoIconButton(
+                      icon: const PikoIcon(PikoIconName.arrowLeft),
+                      semanticLabel: PikoCopyScope.of(
+                        context,
+                      ).text('common.back'),
+                      onPressed: dismissible ? onBack : null,
+                    ),
+                  ),
+                  SizedBox(width: d.dimension('spacing.2')),
+                ],
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(

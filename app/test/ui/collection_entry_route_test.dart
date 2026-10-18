@@ -138,7 +138,7 @@ void main() {
       await tester.tap(find.text('New'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Owned words');
-      await tester.tap(find.byType(DropdownButton<VocabularyLanguage>).first);
+      await tester.tap(find.byKey(const ValueKey('collection.targetLanguage')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('French').last);
       await tester.pumpAndSettle();

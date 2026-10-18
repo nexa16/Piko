@@ -167,8 +167,8 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                 ),
                 action: widget.onOpenSettings == null
                     ? const SizedBox.shrink()
-                    : PikoButton(
-                        label: copy.text('nav.settings'),
+                    : PikoIconButton(
+                        semanticLabel: copy.text('nav.settings'),
                         icon: const PikoIcon(PikoIconName.settings),
                         variant: PikoButtonVariant.ghost,
                         onPressed: widget.onOpenSettings,

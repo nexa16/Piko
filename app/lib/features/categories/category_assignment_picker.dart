@@ -389,14 +389,12 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
         );
     return PikoDialog(
       title: dimension.name,
-      titleContent: Row(
-        children: [
-          const PikoIcon(PikoIconName.layers),
-          SizedBox(width: design.dimension('spacing.2')),
-          Expanded(child: Text(dimension.name)),
-        ],
-      ),
       purpose: PikoDialogPurpose.selection,
+      onBack: () {
+        if (!pending && ModalRoute.of(context)?.isCurrent == true) {
+          Navigator.of(context).pop();
+        }
+      },
       dismissible: !pending,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

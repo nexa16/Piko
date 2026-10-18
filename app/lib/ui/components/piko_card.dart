@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import '../piko_theme.dart';
 import 'piko_focus_highlight.dart';
 
+enum PikoCardRole { standard, input }
+
 class PikoCard extends StatelessWidget {
   const PikoCard({
     super.key,
     required this.child,
     this.padding,
+    this.role = PikoCardRole.standard,
     this.selected = false,
     this.selectable = false,
     this.focused = false,
@@ -14,6 +17,7 @@ class PikoCard extends StatelessWidget {
     this.constraints,
   });
   final Widget child;
+  final PikoCardRole role;
   final EdgeInsetsGeometry? padding;
   final bool selected;
   final bool selectable;
@@ -29,7 +33,13 @@ class PikoCard extends StatelessWidget {
       builder: (context, showFocus) {
         final visibleFocus = focused && showFocus;
         final decoration = BoxDecoration(
-          color: pikoDesign.color(selectable && selected ? 'tint' : 'surface'),
+          color: pikoDesign.color(
+            role == PikoCardRole.input
+                ? 'bg'
+                : selectable && selected
+                ? 'tint'
+                : 'surface',
+          ),
           borderRadius: BorderRadius.circular(
             pikoDesign.dimension('radii.card'),
           ),

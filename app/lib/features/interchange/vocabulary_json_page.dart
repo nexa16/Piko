@@ -1,3 +1,4 @@
+import '../../ui/components/piko_form.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class VocabularyJsonDraft {
   TextEditingValue input = TextEditingValue.empty;
   Set<VocabularyJsonGroup> groups = Set.unmodifiable(VocabularyJsonGroup.all);
   bool expanded = false;
+  bool analyzed = false;
 }
 
 enum VocabularyJsonReturn { collection }
@@ -70,8 +72,20 @@ class VocabularyJsonPage extends StatefulWidget {
     this.onPendingWrites,
     this.onImported,
     this.asDialog = false,
+    this.initialExport = false,
     this.draft,
   });
+  final bool initialExport;
+  VocabularyJsonPage withExportView(bool export) => VocabularyJsonPage(
+    collection: collection,
+    service: service,
+    platform: platform,
+    onPendingWrites: onPendingWrites,
+    onImported: onImported,
+    asDialog: asDialog,
+    draft: draft,
+    initialExport: export,
+  );
   final bool asDialog;
   final VocabularyJsonDraft? draft;
   final CollectionRecord collection;
@@ -91,8 +105,11 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   Set<VocabularyJsonGroup> groups = Set.unmodifiable(VocabularyJsonGroup.all);
   _ImportReview? review;
   bool confirming = false, applying = false;
+  bool analyzed = false;
   bool expandedInput = false, returning = false;
-  _JsonView view = _JsonView.importJson;
+  late _JsonView view = widget.initialExport
+      ? _JsonView.exportJson
+      : _JsonView.importJson;
   _TransferSection transferSection = _TransferSection.input;
   ModalRoute<dynamic>? confirmationRoute;
 
@@ -104,6 +121,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       input.value = draft.input;
       groups = draft.groups;
       expandedInput = draft.expanded;
+      analyzed = draft.analyzed;
     }
   }
 
@@ -219,6 +237,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   }
 
   Future<void> analyze() async {
+    analyzed = true;
     final token = begin(_TransferSection.review);
     final revision = inputRevision;
     final selected = Set<VocabularyJsonGroup>.unmodifiable(groups);
@@ -401,8 +420,8 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       if (example) {
         final copy = PikoCopyScope.of(context);
         text = VocabularyJsonFormat.minimalSample(
-          targetLanguage: widget.collection.targetLanguage.code,
-          nativeLanguage: widget.collection.nativeLanguage.code,
+          targetLanguage: widget.collection.targetLanguage,
+          nativeLanguage: widget.collection.nativeLanguage,
           topic: copy.text('template.topic'),
           food: copy.text('template.food'),
           difficulty: copy.text('template.difficulty'),
@@ -521,18 +540,24 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
           ),
         if (transfer.fallback != null) ...[
           SizedBox(height: d.dimension('spacing.2')),
-          PikoField(
-            label: copy.text(
-              transfer.example ? 'json.exampleNotice' : 'json.export',
-            ),
-            child: TextField(
-              key: const ValueKey('json-fallback'),
-              controller: fallback,
-              readOnly: true,
-              minLines: 4,
-              maxLines: 8,
-              decoration: pikoInputDecoration(),
-            ),
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: PikoField(
+                  label: copy.text(
+                    transfer.example ? 'json.exampleNotice' : 'json.export',
+                  ),
+                  child: TextField(
+                    key: const ValueKey('json-fallback'),
+                    controller: fallback,
+                    readOnly: true,
+                    minLines: 4,
+                    maxLines: 8,
+                    decoration: pikoInputDecoration(),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],
@@ -670,17 +695,23 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
             ],
           ),
           SizedBox(height: d.dimension('spacing.2')),
-          PikoField(
-            label: copy.text('json.input'),
-            child: TextField(
-              key: const ValueKey('json-input'),
-              controller: input,
-              enabled: !confirming && !applying && !returning,
-              minLines: expandedInput ? 6 : 2,
-              maxLines: expandedInput ? 12 : 4,
-              decoration: pikoInputDecoration(),
-              onChanged: (_) => setState(invalidateInput),
-            ),
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: PikoField(
+                  label: copy.text('json.input'),
+                  child: TextField(
+                    key: const ValueKey('json-input'),
+                    controller: input,
+                    enabled: !confirming && !applying && !returning,
+                    minLines: expandedInput ? 6 : 2,
+                    maxLines: expandedInput ? 12 : 4,
+                    decoration: pikoInputDecoration(),
+                    onChanged: (_) => setState(invalidateInput),
+                  ),
+                ),
+              ),
+            ],
           ),
           Align(
             alignment: AlignmentDirectional.centerStart,
@@ -695,41 +726,6 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
           SizedBox(height: d.dimension('spacing.2')),
           Text(copy.text('r2.jsonMetadata')),
           SizedBox(height: gap),
-          Text(copy.text('r2.jsonGroups')),
-          for (final group in VocabularyJsonGroup.values)
-            CheckboxListTile(
-              key: ValueKey('json-group-${group.name}'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                copy.text(switch (group) {
-                  VocabularyJsonGroup.targetText => 'r2.targetText',
-                  VocabularyJsonGroup.nativeText => 'r2.nativeText',
-                  VocabularyJsonGroup.categoryAssignments =>
-                    'r2.categoryAssignments',
-                  VocabularyJsonGroup.example => 'vocab.examples',
-                  VocabularyJsonGroup.hint => 'vocab.hint',
-                  VocabularyJsonGroup.activity => 'vocab.activity',
-                }),
-              ),
-              value: groups.contains(group),
-              subtitle: group == VocabularyJsonGroup.activity
-                  ? Text(copy.text('json.activityHelp'))
-                  : null,
-              onChanged: transfer.busy || returning
-                  ? null
-                  : (selected) {
-                      setState(() {
-                        final next = {...groups};
-                        if (selected == true) {
-                          next.add(group);
-                        } else {
-                          next.remove(group);
-                        }
-                        groups = Set.unmodifiable(next);
-                        invalidateInput();
-                      });
-                    },
-            ),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: action(
@@ -738,6 +734,52 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
               variant: PikoButtonVariant.primary,
             ),
           ),
+          if (analyzed)
+            PikoFormSection(
+              title: copy.text('r2.jsonGroups'),
+              children: [
+                PikoFormFieldRow(
+                  child: Column(
+                    children: [
+                      for (final group in VocabularyJsonGroup.values)
+                        CheckboxListTile(
+                          key: ValueKey('json-group-${group.name}'),
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            copy.text(switch (group) {
+                              VocabularyJsonGroup.targetText => 'r2.targetText',
+                              VocabularyJsonGroup.nativeText => 'r2.nativeText',
+                              VocabularyJsonGroup.categoryAssignments =>
+                                'r2.categoryAssignments',
+                              VocabularyJsonGroup.example => 'vocab.examples',
+                              VocabularyJsonGroup.hint => 'vocab.hint',
+                              VocabularyJsonGroup.activity => 'vocab.activity',
+                            }),
+                          ),
+                          value: groups.contains(group),
+                          subtitle: group == VocabularyJsonGroup.activity
+                              ? Text(copy.text('json.activityHelp'))
+                              : null,
+                          onChanged: transfer.busy || returning
+                              ? null
+                              : (selected) {
+                                  setState(() {
+                                    final next = {...groups};
+                                    if (selected == true) {
+                                      next.add(group);
+                                    } else {
+                                      next.remove(group);
+                                    }
+                                    groups = Set.unmodifiable(next);
+                                    invalidateInput();
+                                  });
+                                },
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           if (review case final result?) ...[
             SizedBox(height: gap),
             Text(copy.text('r2.jsonSummary', result.counts)),
@@ -791,6 +833,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       child: widget.asDialog
           ? PikoDialog(
               title: copy.text('json.title'),
+              presentation: PikoDialogPresentation.groupedForm,
               dismissible: !transfer.busy && !confirming && !applying,
               onClose: returnToCollection,
               body: content,
@@ -808,6 +851,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
       draft.input = input.value;
       draft.groups = Set.unmodifiable(groups);
       draft.expanded = expandedInput;
+      draft.analyzed = analyzed;
     }
     input.dispose();
     fallback.dispose();

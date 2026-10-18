@@ -1,3 +1,4 @@
+import '../collections_repository.dart';
 import 'sqlite_vocabulary_content.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
@@ -251,8 +252,14 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         {
           'id': collection.id,
           'name': collection.name,
-          'targetLanguage': collection.targetLanguage,
-          'nativeLanguage': collection.nativeLanguage,
+          'targetLanguage': VocabularyLanguage.stored(
+            collection.targetLanguage,
+            collection.targetLanguageName,
+          ).toJson(),
+          'nativeLanguage': VocabularyLanguage.stored(
+            collection.nativeLanguage,
+            collection.nativeLanguageName,
+          ).toJson(),
           'reviewScopes': {
             for (final direction in LearningDirection.values)
               direction.name: switch (scopes

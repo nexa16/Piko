@@ -1,8 +1,10 @@
+import 'language_picker.dart';
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/piko_theme.dart';
 
 class CreateCollectionDialog extends StatefulWidget {
@@ -25,7 +27,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!nameInitialized) {
-      name.text = PikoCopyScope.of(context).text(target.copyKey);
+      name.text = target.label(PikoCopyScope.of(context).locale);
       nameInitialized = true;
     }
   }
@@ -68,57 +70,51 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    Widget language(
-      String key,
-      VocabularyLanguage value,
-      ValueChanged<VocabularyLanguage> changed, {
-      List<VocabularyLanguage> options = VocabularyLanguage.values,
-    }) => PikoDropdown<VocabularyLanguage>(
-      label: copy.text(key),
-      value: value,
-      items: options
-          .map(
-            (language) => DropdownMenuItem(
-              value: language,
-              child: Text(copy.text(language.copyKey)),
-            ),
-          )
-          .toList(),
-      onChanged: submitting
-          ? null
-          : (value) {
-              if (value != null) setState(() => changed(value));
-            },
-    );
+    Widget language(String key, VocabularyLanguage value, bool isTarget) =>
+        PikoNavigationRow(
+          key: ValueKey(key),
+          title: copy.text(key),
+          subtitle: value.label(copy.locale),
+          onTap: submitting
+              ? null
+              : () async {
+                  final selected = await showPikoDialog<VocabularyLanguage>(
+                    context,
+                    builder: (_) => LanguagePickerDialog(target: isTarget),
+                  );
+                  if (!mounted || selected == null || submitting) return;
+                  setState(() {
+                    if (isTarget) {
+                      if (target == selected) return;
+                      target = selected;
+                      if (automaticName) name.text = target.label(copy.locale);
+                    } else {
+                      native = selected;
+                    }
+                    error = null;
+                  });
+                },
+        );
     return PikoDialog(
+      presentation: PikoDialogPresentation.groupedForm,
       title: copy.text('dialog.newCollection'),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          language('collection.targetLanguage', target, (value) {
-            if (value == target) return;
-            target = value;
-            if (automaticName) name.text = copy.text(target.copyKey);
-          }),
-          SizedBox(height: pikoDesign.dimension('spacing.4')),
-          language(
-            'collection.nativeLanguage',
-            native,
-            (value) => native = value,
-            options: const [
-              VocabularyLanguage.german,
-              VocabularyLanguage.english,
-              VocabularyLanguage.french,
-              VocabularyLanguage.korean,
+          PikoFormGroup(
+            children: [
+              language('collection.targetLanguage', target, true),
+              language('collection.nativeLanguage', native, false),
+              PikoFormFieldRow(
+                child: PikoTextField(
+                  label: copy.text('collection.name'),
+                  controller: name,
+                  onChanged: (_) => automaticName = false,
+                  enabled: !submitting,
+                ),
+              ),
             ],
-          ),
-          SizedBox(height: pikoDesign.dimension('spacing.4')),
-          PikoTextField(
-            label: copy.text('collection.name'),
-            controller: name,
-            onChanged: (_) => automaticName = false,
-            enabled: !submitting,
           ),
           if (error != null)
             Semantics(

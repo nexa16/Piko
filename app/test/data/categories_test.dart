@@ -415,9 +415,10 @@ void main() {
               if (table.key == 'collections') {
                 row.remove('automatic_hint_default');
                 row.remove('hint_default_offer_handled');
+                row.remove('target_language_name');row.remove('native_language_name');
               }
               if (table.key == 'vocabulary_entries') {
-                row.remove('active');
+                row.remove('active');row.remove('hint_key');
                 row.removeWhere(
                   (key, _) => const {
                     'added_at',

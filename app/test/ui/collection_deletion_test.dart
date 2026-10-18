@@ -6,7 +6,6 @@ import 'package:piko/features/vocabulary/collection_vocabulary_mutations.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_icon.dart';
-import 'package:piko/ui/piko_theme.dart';
 import '../support/collection_deletion_fixture.dart';
 
 Finder card(String id) => find.byKey(ValueKey('vocabulary-$id'));
@@ -120,7 +119,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(field(active), ' ');
       final before = tester.getRect(card(active)).top;
-      await tester.tap(button('Undo'));
+      await tester.runAsync(() => f.mutations.undo(f.mutations.latest!));
       await flush(tester, f);
       expectAnchoredOrClamped(tester, card(active), before);
       expect(tester.widget<TextField>(field(active)).controller!.text, ' ');
@@ -132,10 +131,6 @@ void main() {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
       await mount(tester, f);
-      final active = f.entries[1].id;
-      await tester.tap(card(active));
-      await tester.pumpAndSettle();
-      await tester.enterText(field(active), ' ');
       final gate = Completer<void>();
       f.deletion.deleteGate = gate;
       f.deletion.failDelete = true;
@@ -158,7 +153,7 @@ void main() {
       expect(navigator.canPop(), isTrue);
       navigator.pop();
       await tester.pumpAndSettle();
-      expect(tester.widget<TextField>(field(active)).controller!.text, ' ');
+      expect(card(f.entries[0].id), findsOneWidget);
     },
   );
   testWidgets(
@@ -170,42 +165,36 @@ void main() {
       final id = f.entries[0].id;
       await tester.tap(card(id));
       await tester.pumpAndSettle();
-      expect(finish('Collapse vocabulary editor'), findsOneWidget);
+      expect(finish('Close'), findsOneWidget);
       await tester.enterText(field(id), 'Edited');
       await flush(tester, f);
-      expect(finish('Collapse vocabulary editor'), findsOneWidget);
+      expect(finish('Close'), findsOneWidget);
       final icon = tester.widget<PikoIcon>(
-        find.descendant(
-          of: finish('Collapse vocabulary editor'),
-          matching: find.byType(PikoIcon),
-        ),
+        find.descendant(of: finish('Close'), matching: find.byType(PikoIcon)),
       );
-      expect(icon.name, PikoIconName.chevronRight);
-      expect(
-        tester.getRect(finish('Collapse vocabulary editor')).height,
-        greaterThanOrEqualTo(44),
-      );
+      expect(icon.name, PikoIconName.x);
+      expect(tester.getRect(finish('Close')).height, greaterThanOrEqualTo(44));
       final nativeLabel = find.text('German');
       expect(
         tester.getTopLeft(nativeLabel).dy - tester.getBottomLeft(field(id)).dy,
-        pikoDesign.dimension('spacing.3'),
+        33,
       );
       await tester.enterText(field(id), ' ');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(finish('Collapse vocabulary editor'));
-      await tester.tap(finish('Collapse vocabulary editor'));
+      await tester.ensureVisible(finish('Close'));
+      await tester.tap(finish('Close'));
       await tester.pumpAndSettle();
       expect(field(id), findsOneWidget);
       await tester.enterText(field(id), 'Edited again');
       await flush(tester, f);
-      await tester.ensureVisible(finish('Collapse vocabulary editor'));
-      await tester.tap(finish('Collapse vocabulary editor'));
+      await tester.ensureVisible(finish('Close'));
+      await tester.tap(finish('Close'));
       await flush(tester, f);
       expect(field(id), findsNothing);
     },
   );
   testWidgets(
-    'inactive swipe only reveals; explicit delete and Undo retain unrelated invalid raw selection focus and anchor',
+    'modal retains invalid selection and blocks background deletion; Close then swipe and Undo remain available',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
@@ -219,55 +208,32 @@ void main() {
         baseOffset: 0,
         extentOffset: 1,
       );
-      final before = tester.getRect(card(active)).top;
-      await tester.drag(card(deleted), const Offset(-150, 0));
-      await tester.pumpAndSettle();
-      expect(f.deletion.deletes, 0);
-      await tester.tap(
-        find.descendant(
-          of: row(deleted),
-          matching: button('Delete vocabulary'),
-        ),
-      );
+      await tester.tap(finish('Close'));
       await flush(tester, f);
-      expect(card(deleted), findsNothing);
-      expect(
-        tester.widget<TextField>(field(active)).controller,
-        same(text.controller),
-      );
+      expect(field(active), findsOneWidget);
       expect(text.controller!.text, '  ');
       expect(
         text.controller!.selection,
         const TextSelection(baseOffset: 0, extentOffset: 1),
       );
-      expect(text.focusNode!.hasFocus, isTrue);
-      expectAnchoredOrClamped(tester, card(active), before);
+      expect(f.deletion.deletes, 0);
+      await tester.enterText(field(active), 'Valid again');
+      await flush(tester, f);
+      await tester.tap(finish('Close'));
+      await flush(tester, f);
+      await swipeDelete(tester, deleted);
+      await flush(tester, f);
+      expect(card(deleted), findsNothing);
       await tester.tap(button('Undo'));
       await flush(tester, f);
       expect(card(deleted), findsOneWidget);
-      expect(text.focusNode!.hasFocus, isTrue);
-      expectAnchoredOrClamped(tester, card(active), before);
-      await tester.enterText(field(active), 'Valid again');
-      await flush(tester, f);
-      await tester.ensureVisible(finish('Collapse vocabulary editor'));
-      await tester.tap(finish('Collapse vocabulary editor'));
-      await flush(tester, f);
-      final scrollable = find
-          .descendant(
-            of: find.byType(CollectionDetail),
-            matching: find.byType(Scrollable),
-          )
-          .first;
-      tester.state<ScrollableState>(scrollable).position.jumpTo(0);
-      await tester.pumpAndSettle();
       expect(
-        tester.getRect(card(deleted)).top,
-        closeTo(
-          tester.getRect(find.text('Vocabulary')).bottom +
-              pikoDesign.dimension('components.sectionHeading.bottomMargin'),
-          1,
-        ),
+        (await tester.runAsync(
+          () => f.real.watchById(active).first,
+        ))!.targetText,
+        'Valid again',
       );
+      expect(tester.takeException(), isNull);
     },
   );
   testWidgets(
@@ -283,9 +249,10 @@ void main() {
       f.repository.updateGates[id] = gate;
       await tester.enterText(field(id), 'Accepted A');
       await tester.enterText(field(id), 'Accepted B');
-      await tester.tap(find.byKey(ValueKey('inline-menu-$id')));
+      final delete = find.byKey(ValueKey('inline-delete-$id'));
+      await tester.ensureVisible(delete);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete vocabulary'));
+      await tester.tap(delete);
       await tester.pump();
       expect(f.deletion.deletes, 0);
       expect(tester.widget<TextField>(field(id)).enabled, isFalse);

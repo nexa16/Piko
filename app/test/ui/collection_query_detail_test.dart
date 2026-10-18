@@ -266,7 +266,7 @@ void main() {
       service.value = projection(visible: [two]);
       binding.scope.setSearch('school');
       await tester.pumpAndSettle();
-      expect(field, findsNothing);
+      expect(field, findsOneWidget);
       service.value = projection(visible: [two, one]);
       binding.scope.setSearch('');
       await tester.pumpAndSettle();

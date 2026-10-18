@@ -3,6 +3,8 @@ import 'collection_compact_action.dart';
 import '../../ui/components/piko_collapsing_header.dart';
 import 'collection_view_controls.dart';
 import 'collection_hint_settings.dart';
+import '../../ui/components/piko_form.dart';
+import '../interchange/vocabulary_json_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -45,6 +47,7 @@ import '../speed/selected_speed_launch.dart';
 import '../speed/speed_setup_dialog.dart'
     show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import '../categories/category_management.dart';
+import '../categories/category_settings_page.dart';
 import '../settings/preferred_direction_controller.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
@@ -81,8 +84,10 @@ class CollectionDetail extends StatefulWidget {
     this.selectedSpeedSessionFactory,
     this.categoriesRepository,
     this.directionBinding,
+    this.settingsOnly = false,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
+  final bool settingsOnly;
   final CollectionsRepository repository;
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
@@ -477,166 +482,215 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
+  bool _settingsBusy = false;
+
   Future<void> _openMenu() async {
     final record = _currentCollection;
-    final route = ModalRoute.of(context);
     if (record == null ||
         _menuRequest != null ||
-        _deleteRequest != null ||
-        _renameRequest != null ||
-        _openingEntry ||
-        _learningBusy ||
-        route?.isCurrent != true) {
+        !_queryControlsAvailable ||
+        ModalRoute.of(context)?.isCurrent != true) {
       return;
     }
-    final identity = _identity;
-    final request = Object();
-    final repository = widget.repository;
-    final categoryBuilder = widget.categoryManagementBuilder;
-    final categories = widget.categoriesRepository;
-    final register = widget.onPendingVocabularyWrites;
-    final pending = ValueNotifier(false);
-    bool current() =>
-        mounted &&
-        identity == _identity &&
-        identical(_menuRequest, request) &&
-        identical(widget.repository, repository) &&
-        widget.collectionId == record.id;
+    final request = Object(), identity = _identity;
+    final opener = FocusManager.instance.primaryFocus;
     setState(() => _menuRequest = request);
-    var consumed = false;
-    bool consume() {
-      if (!current() ||
-          consumed ||
-          pending.value ||
-          _menuDialog?.isCurrent != true) {
-        return false;
-      }
-      consumed = true;
-      return true;
-    }
-
+    _writeBarrier.freeze();
     try {
-      final delete = await showPikoDialog<bool>(
-        context,
-        canRestoreFocus: () => current() && route?.isCurrent == true,
-        canDismiss: consume,
-        onRouteCreated: (owned) {
-          if (current()) {
-            _menuDialog = owned;
-          } else {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (owned.isActive) owned.navigator?.removeRoute(owned);
-            });
-          }
-        },
-        builder: (menuContext) {
-          final copy = PikoCopyScope.of(menuContext);
-          return ValueListenableBuilder<bool>(
-            valueListenable: pending,
-            builder: (_, writing, _) => Focus(
-              autofocus: true,
-              child: PikoDialog(
-                purpose: PikoDialogPurpose.directChoice,
-                dismissible: !writing,
-                title: copy.text('r2.more'),
-                onClose: () {
-                  if (consume()) Navigator.of(menuContext).pop();
-                },
-                body: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (widget.interchangeBuilder != null)
-                      PikoButton(
-                        label: copy.text('json.title'),
-                        onPressed: writing
-                            ? null
-                            : () {
-                                if (consume()) {
-                                  Navigator.of(menuContext).pop();
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    if (mounted) _openInterchange();
-                                  });
-                                }
-                              },
-                      ),
-                    if (widget.vocabularyRepository
-                            is VocabularyContentRepository &&
-                        widget.vocabularyRepository
-                            is CollectionHintPreferences)
-                      ExpansionTile(
-                        key: const ValueKey('collection-menu-settings'),
-                        leading: const PikoIcon(PikoIconName.settings),
-                        title: Text(copy.text('nav.settings')),
-                        enabled: !writing,
-                        maintainState: true,
-                        children: [
-                          CollectionHintSettings(
-                            collectionId: record.id,
-                            repository:
-                                widget.vocabularyRepository!
-                                    as VocabularyContentRepository,
-                            onPendingWrites: register,
-                            onBusyChanged: (busy) {
-                              if (current()) pending.value = busy;
-                            },
-                          ),
-                        ],
-                      ),
-                    if (categoryBuilder != null || categories != null)
-                      ExpansionTile(
-                        key: const ValueKey('collection-menu-categories'),
-                        leading: const PikoIcon(PikoIconName.layers),
-                        title: Text(copy.text('r2.editCategories')),
-                        enabled: !writing,
-                        maintainState: true,
-                        children: [
-                          if (categoryBuilder != null)
-                            Builder(builder: categoryBuilder)
-                          else
-                            CategoryManagement(
-                              collectionId: record.id,
-                              repository: categories!,
-                              onPendingWrites: register,
-                              onPendingChanged: (busy) {
-                                if (current()) pending.value = busy;
-                              },
-                            ),
-                        ],
-                      ),
-                    PikoButton(
-                      key: const ValueKey('collection-menu-delete'),
-                      label: copy.text('collection.delete'),
-                      icon: const PikoIcon(PikoIconName.trash),
-                      variant: PikoButtonVariant.dangerGhost,
-                      onPressed: writing
-                          ? null
-                          : () {
-                              if (consume()) {
-                                Navigator.of(menuContext).pop(true);
-                              }
-                            },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+      await _writeBarrier.drain();
+      await _mutations?.awaitPending();
+      if (!mounted ||
+          identity != _identity ||
+          !identical(_menuRequest, request)) {
+        return;
+      }
+      final owned = MaterialPageRoute<bool>(
+        builder: (_) => CollectionDetail(
+          repository: widget.repository,
+          collectionId: record.id,
+          vocabularyRepository: widget.vocabularyRepository,
+          onPendingVocabularyWrites: widget.onPendingVocabularyWrites,
+          interchangeBuilder: widget.interchangeBuilder,
+          categoriesRepository: widget.categoriesRepository,
+          categoryManagementBuilder: widget.categoryManagementBuilder,
+          settingsOnly: true,
+        ),
       );
-      if (!current()) return;
-      _menuDialog = null;
-      setState(() => _menuRequest = null);
-      if (delete == true &&
-          route?.isCurrent == true &&
-          _currentCollection?.id == record.id) {
-        await _deleteCollection();
+      _menuDialog = owned;
+      final deleted = await Navigator.of(context).push(owned);
+      if (!mounted ||
+          identity != _identity ||
+          ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
+      final remaining = deleted == true
+          ? null
+          : await widget.repository.watchById(record.id).first;
+      if (mounted &&
+          identity == _identity &&
+          remaining == null &&
+          ModalRoute.of(context)?.isCurrent == true) {
+        Navigator.of(context).pop();
       }
     } finally {
-      if (current()) setState(() => _menuRequest = null);
-      pending.dispose();
+      if (mounted &&
+          identity == _identity &&
+          identical(_menuRequest, request)) {
+        _menuDialog = null;
+        _writeBarrier.release();
+        setState(() => _menuRequest = null);
+        if (ModalRoute.of(context)?.isCurrent == true) {
+          if (opener?.context?.mounted == true && opener!.canRequestFocus) {
+            opener.requestFocus();
+          } else if (_menuFocus.context != null) {
+            _menuFocus.requestFocus();
+          } else {
+            _compactMenuFocus.requestFocus();
+          }
+        }
+      }
     }
+  }
+
+  Widget _settingsContent(
+    CollectionRecord record, {
+    bool ready = true,
+    Object? loadError,
+  }) {
+    final copy = PikoCopyScope.of(context);
+    final owner = _identity;
+    bool available() =>
+        mounted &&
+        owner == _identity &&
+        ready &&
+        !_settingsBusy &&
+        _currentCollection?.id == record.id &&
+        ModalRoute.of(context)?.isCurrent == true;
+    return PopScope(
+      canPop: !_settingsBusy && !_deleting,
+      child: PikoPage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PikoFormHeading(
+              title: copy.text('settingsPreview.collectionSettings'),
+              subtitle:
+                  '${record.name} · ${record.targetLanguage.directionLabel} · ${record.nativeLanguage.directionLabel}',
+              leading: PikoIconButton(
+                icon: const PikoIcon(PikoIconName.arrowLeft),
+                semanticLabel: copy.text('common.back'),
+                onPressed: _settingsBusy || _deleting
+                    ? null
+                    : () => Navigator.of(context).maybePop(),
+              ),
+            ),
+            if (loadError != null)
+              CollectionLoadFailure(onRetry: () => setState(_watch)),
+            if (widget.vocabularyRepository is VocabularyContentRepository &&
+                widget.vocabularyRepository is CollectionHintPreferences)
+              PikoFormSection(
+                title: copy.text('settingsPreview.learning'),
+                children: [
+                  PikoFormFieldRow(
+                    child: CollectionHintSettings(
+                      collectionId: record.id,
+                      enabled: ready,
+                      repository:
+                          widget.vocabularyRepository!
+                              as VocabularyContentRepository,
+                      onPendingWrites: widget.onPendingVocabularyWrites,
+                      onBusyChanged: (busy) {
+                        if (mounted && owner == _identity) {
+                          setState(() => _settingsBusy = busy);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            if (widget.categoriesRepository != null ||
+                widget.categoryManagementBuilder != null)
+              PikoFormSection(
+                title: copy.text('settingsPreview.management'),
+                children: [
+                  PikoNavigationRow(
+                    title: copy.text('catPreview.categories'),
+                    onTap: _settingsBusy || !ready
+                        ? null
+                        : () {
+                            if (!available()) return;
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (context) =>
+                                    widget.categoryManagementBuilder != null
+                                    ? CategoryManagementPage(
+                                        collectionId: record.id,
+                                        collectionName: record.name,
+                                        managementBuilder:
+                                            widget.categoryManagementBuilder,
+                                      )
+                                    : CategorySettingsPage(
+                                        collectionId: record.id,
+                                        collectionName: record.name,
+                                        repository:
+                                            widget.categoriesRepository!,
+                                        onPendingWrites:
+                                            widget.onPendingVocabularyWrites,
+                                      ),
+                              ),
+                            );
+                          },
+                  ),
+                ],
+              ),
+            if (widget.interchangeBuilder != null)
+              PikoFormSection(
+                title: copy.text('settingsPreview.data'),
+                children: [
+                  PikoNavigationRow(
+                    title: copy.text('json.importTab'),
+                    onTap: available()
+                        ? () {
+                            if (available()) _openInterchange();
+                          }
+                        : null,
+                  ),
+                  PikoFormRow(
+                    title: copy.text('json.exportTab'),
+                    trailing: const PikoIcon(PikoIconName.upload),
+                    onTap: available()
+                        ? () {
+                            if (available()) _openInterchange(export: true);
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            PikoFormGroup(
+              children: [
+                PikoFormRow(
+                  key: const ValueKey('collection-menu-delete'),
+                  title: copy.text('collection.delete'),
+                  danger: true,
+                  trailing: const PikoIcon(PikoIconName.trash),
+                  onTap: !available() || _deleting
+                      ? null
+                      : () {
+                          if (available()) _deleteCollection();
+                        },
+                ),
+              ],
+            ),
+            if (_deleting) Text(copy.text('collection.deleting')),
+            if (_deleteError != null)
+              Text(
+                copy.text('collection.deleteFailed'),
+                style: TextStyle(color: pikoDesign.color('danger')),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   bool get _queryControlsAvailable =>
@@ -833,7 +887,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       await operation;
       if (!current()) return;
       _endMutations(register);
-      if (mounted && route?.isCurrent == true) Navigator.of(context).pop();
+      if (mounted && route?.isCurrent == true) Navigator.of(context).pop(true);
     } catch (error) {
       if (current()) setState(() => _deleteError = error);
     } finally {
@@ -876,7 +930,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
-  Future<void> _openInterchange() async {
+  Future<void> _openInterchange({bool export = false}) async {
     final record = _currentCollection, builder = widget.interchangeBuilder;
     if (record == null || builder == null || _openingEntry || _learningBusy) {
       return;
@@ -885,7 +939,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     try {
       await showPikoDialog<Object?>(
         context,
-        builder: (context) => builder(context, record),
+        builder: (context) {
+          final page = builder(context, record);
+          return page is VocabularyJsonPage
+              ? page.withExportView(export)
+              : page;
+        },
       );
     } finally {
       if (mounted) {
@@ -912,14 +971,14 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              PikoButton(
-                label: copy.text('entry.manualMethod'),
-                onPressed: () => Navigator.of(context).pop('manual'),
+              PikoNavigationRow(
+                title: copy.text('entry.manualMethod'),
+                onTap: () => Navigator.of(context).pop('manual'),
               ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
-              PikoButton(
-                label: copy.text('json.importTab'),
-                onPressed: () => Navigator.of(context).pop('import'),
+              PikoNavigationRow(
+                title: copy.text('json.importTab'),
+                onTap: () => Navigator.of(context).pop('import'),
               ),
             ],
           ),
@@ -988,6 +1047,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         oldWidget.vocabularyMutationsFactory !=
             widget.vocabularyMutationsFactory) {
       _identity++;
+      _settingsBusy = false;
       _speedCompletedCount = null;
       _openingReview = false;
       _openingSpeed = false;
@@ -1123,6 +1183,42 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               snapshot.connectionState != ConnectionState.none &&
               record == null) {
             _lastReadyCollection = null;
+          }
+          if (widget.settingsOnly) {
+            if (_lastReadyCollection != null) {
+              return _settingsContent(
+                _lastReadyCollection!,
+                ready: ready,
+                loadError: snapshot.error,
+              );
+            }
+            return PikoPage(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PikoFormHeading(
+                    title: copy.text('settingsPreview.collectionSettings'),
+                    leading: PikoIconButton(
+                      icon: const PikoIcon(PikoIconName.arrowLeft),
+                      semanticLabel: copy.text('common.back'),
+                      onPressed: _settingsBusy
+                          ? null
+                          : () => Navigator.of(context).maybePop(),
+                    ),
+                  ),
+                  if (snapshot.hasError)
+                    CollectionLoadFailure(onRetry: () => setState(_watch))
+                  else
+                    Text(
+                      copy.text(
+                        snapshot.connectionState == ConnectionState.waiting
+                            ? 'collection.loading'
+                            : 'collection.notFound',
+                      ),
+                    ),
+                ],
+              ),
+            );
           }
           final expandedHeader = Focus(
             focusNode: _expandedHeaderFocus,
@@ -1362,8 +1458,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               gap: pikoDesign.dimension(
                                 'components.sectionHeading.gap',
                               ),
-                              action: Row(
-                                mainAxisSize: MainAxisSize.min,
+                              action: Wrap(
+                                alignment: WrapAlignment.end,
                                 children: [
                                   if (widget.queryBinding != null)
                                     CollectionListMenu(
@@ -1458,6 +1554,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   key: ValueKey('collection-vocabulary-${widget.collectionId}'),
                   collection: _lastReadyCollection!,
                   repository: widget.vocabularyRepository!,
+                  metadataError: snapshot.hasError ? snapshot.error : null,
+                  onRetryMetadata: () => setState(_watch),
                   queryBinding: widget.queryBinding,
                   preferredDirections: _directions,
                   categoriesRepository: widget.categoriesRepository,
@@ -1815,9 +1913,11 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 PikoIconButton(
                   key: const ValueKey('collection-compact-menu'),
                   focusNode: _compactMenuFocus,
-                  semanticLabel: copy.text('r2.more'),
-                  icon: const PikoIcon(PikoIconName.ellipsis),
-                  variant: PikoButtonVariant.neutral,
+                  semanticLabel: copy.text(
+                    'settingsPreview.collectionSettings',
+                  ),
+                  icon: const PikoIcon(PikoIconName.settings),
+                  variant: PikoButtonVariant.ghost,
                   large: true,
                   onPressed:
                       ready &&
@@ -1977,9 +2077,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         if (ready)
           PikoIconButton(
             key: const ValueKey('collection-menu'),
-            semanticLabel: copy.text('r2.more'),
-            icon: const PikoIcon(PikoIconName.ellipsis),
-            variant: PikoButtonVariant.neutral,
+            semanticLabel: copy.text('settingsPreview.collectionSettings'),
+            icon: const PikoIcon(PikoIconName.settings),
+            variant: PikoButtonVariant.ghost,
             large: true,
             focusNode: _menuFocus,
             onPressed:

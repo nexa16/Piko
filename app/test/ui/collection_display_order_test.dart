@@ -151,11 +151,11 @@ void main() {
             );
             expect(
               tester.getRect(target).center.dx,
-              lessThan(tester.getRect(native).center.dx),
+              closeTo(tester.getRect(native).center.dx, 0.1),
             );
             expect(
               tester.getRect(target).top,
-              closeTo(tester.getRect(native).top, 0.1),
+              lessThan(tester.getRect(native).top),
             );
             for (final language in ['en', 'de']) {
               locale.value = Locale(language);
@@ -202,7 +202,7 @@ void main() {
                     w.semanticLabel ==
                         PikoCopy(
                           locale.value.languageCode,
-                        ).text('vocab.inlineCollapse'),
+                        ).text('common.close'),
               ),
             );
             await tester.pumpAndSettle();
