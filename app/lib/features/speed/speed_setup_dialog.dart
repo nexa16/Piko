@@ -5,6 +5,7 @@ import '../../data/learning_item.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
 import 'speed_learning_session.dart';
@@ -111,9 +112,10 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
     final valid = !widget.busy && _poolSize != null && widget.eligibleCount > 0;
-    final gap = d.dimension('spacing.3');
+    final gap = d.dimension('spacing.6');
     return PikoDialog(
       purpose: PikoDialogPurpose.form,
+      presentation: PikoDialogPresentation.groupedForm,
       title: copy.text('learn.speedTitle'),
       actions: [
         PikoDialogAction(
@@ -125,61 +127,73 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            reviewDirectionLabel(widget.collection, widget.direction),
-            key: const ValueKey('speed-fixed-direction'),
-            style: TextStyle(color: d.color('muted')),
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      reviewDirectionLabel(widget.collection, widget.direction),
+                      key: const ValueKey('speed-fixed-direction'),
+                      style: TextStyle(color: d.color('muted')),
+                    ),
+                    SizedBox(height: gap),
+                    if (widget.selectionDetails != null)
+                      widget.selectionDetails!
+                    else
+                      Text(
+                        widget.eligibleCount == 1
+                            ? copy.text('r2.speedNewOne')
+                            : copy.text('r2.speedNewCount', {
+                                'count': widget.eligibleCount,
+                              }),
+                        key: const ValueKey('speed-new-count'),
+                        style: TextStyle(
+                          fontWeight: d.weight('components.buttons.weight'),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
           SizedBox(height: gap),
-          if (widget.selectionDetails != null)
-            widget.selectionDetails!
-          else
-            Text(
-              widget.eligibleCount == 1
-                  ? copy.text('r2.speedNewOne')
-                  : copy.text('r2.speedNewCount', {
-                      'count': widget.eligibleCount,
-                    }),
-              key: const ValueKey('speed-new-count'),
-              style: TextStyle(
-                fontWeight: d.weight('components.buttons.weight'),
-              ),
-            ),
-          SizedBox(height: gap),
-          PikoField(
-            label: copy.text('r2.pool'),
-            child: Semantics(
-              label: copy.text('r2.pool'),
-              child: TextField(
-                key: const ValueKey('speed-pool-size'),
-                readOnly: widget.busy,
-                controller: _pool,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                decoration: pikoInputDecoration(
-                  error: _edited && _poolSize == null
-                      ? copy.text('r2.poolInvalid')
-                      : null,
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: PikoField(
+                  label: copy.text('r2.pool'),
+                  child: Semantics(
+                    label: copy.text('r2.pool'),
+                    child: TextField(
+                      key: const ValueKey('speed-pool-size'),
+                      readOnly: widget.busy,
+                      controller: _pool,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      decoration: pikoInputDecoration(
+                        error: _edited && _poolSize == null
+                            ? copy.text('r2.poolInvalid')
+                            : null,
+                      ),
+                      onChanged: (_) => setState(() => _edited = true),
+                      onSubmitted: (_) => _start(),
+                    ),
+                  ),
                 ),
-                onChanged: (_) => setState(() => _edited = true),
-                onSubmitted: (_) => _start(),
               ),
-            ),
+            ],
           ),
           SizedBox(height: gap),
           for (final section in [
             ('speed.rulesTitle', 'speed.rulesExplanation'),
             ('speed.leavingTitle', 'speed.exitExplanation'),
           ]) ...[
-            Text(
-              copy.text(section.$1),
-              style: TextStyle(
-                fontWeight: d.weight('components.buttons.weight'),
-              ),
+            PikoFormSection(
+              title: copy.text(section.$1),
+              children: [PikoFormFieldRow(child: Text(copy.text(section.$2)))],
             ),
-            SizedBox(height: d.dimension('spacing.2')),
-            Text(copy.text(section.$2)),
-            SizedBox(height: gap),
           ],
         ],
       ),

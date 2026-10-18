@@ -88,6 +88,8 @@ abstract final class PikoTheme {
     final control = role('control', 'controlWeight', 'controlLineHeight');
     return ThemeData(
       colorScheme: scheme,
+      iconTheme: IconThemeData(color: d.color('ink')),
+      primaryIconTheme: IconThemeData(color: d.color('onPrimary')),
       fontFamily: d.text('typography.family'),
       fontFamilyFallback: [d.text('typography.fallback')],
       scaffoldBackgroundColor: d.color('bg'),
