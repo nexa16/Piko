@@ -66,10 +66,18 @@ void main() {
           target.hitTestable().evaluate().isEmpty && i < 45;
           i++
         ) {
-          final area = tester.getRect(body()), rect = tester.getRect(target);
+          final area = tester.getRect(body());
+          // The next draft is lazy at 200% text; scroll it into the viewport
+          // before asking for its bounds.
+          final rect = target.evaluate().isEmpty
+              ? null
+              : tester.getRect(target);
           await tester.dragFrom(
             Offset(area.left + 4, area.center.dy),
-            Offset(0, rect.center.dy > area.center.dy ? -160 : 160),
+            Offset(
+              0,
+              rect == null || rect.center.dy > area.center.dy ? -160 : 160,
+            ),
           );
           await tester.pumpAndSettle();
         }
@@ -307,6 +315,10 @@ void main() {
           "CREATE TRIGGER fail_word BEFORE INSERT ON vocabulary_entries BEGIN SELECT RAISE(ABORT,'synthetic failure'); END",
         );
         await tap(button('action.saveNext'));
+        await review.waitUntil(
+          tester,
+          () => !session.isConfirming && session.draftError != null,
+        );
         expect(session.confirmedEntries.length, 1);
         expect(session.draft, same(rawDraft));
         expect(session.draft.targetText, ' raw B ');
