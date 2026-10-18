@@ -323,6 +323,8 @@ void main() {
         await tap(button('json.analyze'));
         await record('native-file-roundtrip');
         await close();
+        // Settings is the real origin of this import surface.
+        await tap(find.byTooltip(copy.text('common.back')));
         await tap(find.byTooltip(copy.text('action.addEntry')));
         await tap(
           find.widgetWithText(PikoNavigationRow, copy.text('json.importTab')),
