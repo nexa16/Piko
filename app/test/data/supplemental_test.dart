@@ -96,6 +96,7 @@ void main() {
         isNot(vocabularyIdentityKey('cafe')),
       );
       expect(normalizeVocabularyText(' a  b '), 'a  b');
+      expect(normalizeVocabularyText('\u0085 a  b\u0085'), 'a  b');
       expect(
         vocabularyComparisonKey('a  b'),
         isNot(vocabularyComparisonKey('a b')),

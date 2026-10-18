@@ -490,8 +490,8 @@ globalThis.PIKO_COPY = {
       "de": "Wiederholung fortsetzen"
     },
     "r2.jsonInvalid": {
-      "en": "Invalid JSON envelope. Use one collection and schema version 1.",
-      "de": "Ungültiges JSON-Format. Verwende eine Sammlung und Schema-Version 1."
+      "en": "Invalid JSON envelope. Use one Collection and schema version 5.",
+      "de": "Ungültiges JSON-Format. Verwende eine Sammlung und Schema-Version 5."
     },
     "r2.jsonGroupsRequired": {
       "en": "Select at least one content group.",
@@ -795,8 +795,8 @@ globalThis.PIKO_COPY = {
       "de": "JSON konnte nicht gelesen werden. Prüfe Kommas, Anführungszeichen und Klammern."
     },
     "json.unsupportedVersion": {
-      "en": "Use schemaVersion 1, 2 or 3.",
-      "de": "Verwende schemaVersion 1, 2 oder 3."
+      "en": "Use schemaVersion 5 and explicit catalog/custom language objects. Adapt older files using the current example.",
+      "de": "Verwende schemaVersion 5 und explizite Katalog-/Custom-Sprachobjekte. Passe ältere Dateien anhand des aktuellen Beispiels an."
     },
     "json.oneCollection": {
       "en": "Include exactly one collection.",
@@ -859,8 +859,8 @@ globalThis.PIKO_COPY = {
       "de": "Zwischenablage nicht verfügbar. JSON unten markieren und kopieren oder manuell einfügen."
     },
     "json.invalid": {
-      "en": "Use version 1 Piko JSON with one collection and 1–1,000 nonempty word pairs (maximum 1 MB).",
-      "de": "Piko-JSON Version 1 mit einer Sammlung und 1–1.000 vollständigen Wortpaaren verwenden (maximal 1 MB)."
+      "en": "Use version 5 Piko JSON with one Collection and complete word pairs (maximum 1 MB).",
+      "de": "Piko-JSON Version 5 mit einer Sammlung und vollständigen Wortpaaren verwenden (maximal 1 MB)."
     },
     "json.languages": {
       "en": "The language pair must match this collection.",

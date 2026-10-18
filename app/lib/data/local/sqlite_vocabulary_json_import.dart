@@ -501,7 +501,8 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           return previous ?? '';
         }
         final normalized = normalizeVocabularyText(raw);
-        if (normalized.isEmpty) issue(required, '$path.$field', rowNumber);
+        if (vocabularyIdentityKey(normalized).isEmpty)
+          issue(required, '$path.$field', rowNumber);
         return normalized;
       }
 
