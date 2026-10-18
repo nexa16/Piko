@@ -6,6 +6,79 @@ import 'package:piko/features/speed/speed_session.dart';
 import 'speed_session_test.dart' show start;
 
 void main() {
+  test(
+    'SPEED-014 letters share deterministic order and reject wrong ordinals',
+    () {
+      var game = SpeedNumbersGame.start(
+        random: Random(42),
+        kind: SpeedBreakKind.letters,
+      );
+      expect(
+        game.positions,
+        SpeedNumbersGame.start(random: Random(42)).positions,
+      );
+      expect(game.positions.map(game.label).toSet(), {
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+      });
+      for (var ordinal = 1; ordinal <= 10; ordinal++) {
+        expect(game.tap(ordinal + 1), same(game));
+        expect(game.label(game.nextNumber!), String.fromCharCode(64 + ordinal));
+        game = game.tap(ordinal);
+        expect(game.kind, SpeedBreakKind.letters);
+      }
+      expect(game.isComplete, isTrue);
+    },
+  );
+
+  test(
+    'SPEED-014 completed breaks alternate, survive exclusion and reset per launch',
+    () {
+      var session = start(['a', 'b']);
+      for (var round = 0; round < 3; round++) {
+        for (final id in ['a', 'b']) {
+          session = session.answer(entryId: id, answer: SpeedAnswer.incorrect);
+        }
+        final progress = session.itemProgress;
+        session = session.beginBreak(random: Random(42));
+        expect(
+          session.numberGame!.kind,
+          round.isEven ? SpeedBreakKind.numbers : SpeedBreakKind.letters,
+        );
+        expect(session.completedBreaks, round);
+        expect(session.excluding({'unrelated'}), same(session));
+        expect(session.beginBreak(), same(session));
+        for (var ordinal = 1; ordinal <= 10; ordinal++) {
+          session = session.tapNumber(ordinal);
+        }
+        expect(session.itemProgress, progress);
+        expect(session.completion, isNull);
+        expect(session.completedBreaks, round + 1);
+      }
+      final fresh = start([
+        'c',
+      ]).answer(entryId: 'c', answer: SpeedAnswer.incorrect).beginBreak();
+      expect(fresh.numberGame!.kind, SpeedBreakKind.numbers);
+      session = session.answer(entryId: 'a', answer: SpeedAnswer.incorrect);
+      session = session
+          .answer(entryId: 'b', answer: SpeedAnswer.incorrect)
+          .beginBreak();
+      final game = session.numberGame;
+      session = session.excluding({'a'});
+      expect(session.numberGame, same(game));
+      expect(session.completedBreaks, 3);
+      expect(session.excluding({'b'}).numberGame, isNull);
+    },
+  );
+
   group('SPEED-012 shuffled ascending numbers game', () {
     test('captures exactly 1–10 in stable shuffled, immutable positions', () {
       final game = SpeedNumbersGame.start(random: Random(42));

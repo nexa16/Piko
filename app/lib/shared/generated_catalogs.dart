@@ -1877,6 +1877,10 @@ const copyCatalog = <String, Object?>{
 "de": "Beide Vokabeltexte müssen ausgefüllt sein.",
 "en": "Both vocabulary texts must be nonempty.",
 },
+"r2.letterGameHint": <String, Object?>{
+"de": "Tippe A bis J der Reihe nach an, um den nächsten Durchgang zu starten. Ohne Zeitlimit.",
+"en": "Tap A to J in order to start the next pass. No time limit.",
+},
 "r2.menu": <String, Object?>{
 "de": "Sammlungsaktionen",
 "en": "Collection actions",
@@ -1934,8 +1938,8 @@ const copyCatalog = <String, Object?>{
 "en": "Maximum words per pass",
 },
 "r2.poolHint": <String, Object?>{
-"de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, liegt zwischen den Durchgängen ein Zahlenspiel. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen.",
-"en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, a number game separates passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
+"de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen.",
+"en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, numbers and A–J games alternate between passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
 },
 "r2.poolInvalid": <String, Object?>{
 "de": "Wähle eine positive ganze Poolgröße und mindestens ein Wort.",
@@ -2262,8 +2266,8 @@ const copyCatalog = <String, Object?>{
 "en": "Leaving this round",
 },
 "speed.rulesExplanation": <String, Object?>{
-"de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, trennt ein Zahlenspiel die Durchgänge. Bei Poolgröße 1 gibt es kein Spiel.",
-"en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, a number game separates complete passes. Pool size 1 needs no game.",
+"de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es kein Spiel.",
+"en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, numbers and A–J games alternate between complete passes. Pool size 1 needs no game.",
 },
 "speed.rulesTitle": <String, Object?>{
 "de": "Regeln",

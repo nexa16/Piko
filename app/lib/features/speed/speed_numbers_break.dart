@@ -7,8 +7,9 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/piko_theme.dart';
 import 'speed_learning_session.dart';
+import 'speed_numbers_game.dart';
 
-/// Untimed numbers break using the exact game/identity owned by the live round.
+/// Untimed ordering break using the exact game/identity owned by the live round.
 class SpeedNumbersBreak extends StatelessWidget {
   const SpeedNumbersBreak({required this.session, super.key});
 
@@ -38,13 +39,19 @@ class SpeedNumbersBreak extends StatelessWidget {
                 ),
               ),
               SizedBox(height: d.dimension('spacing.3')),
-              Text(copy.text('r2.gameHint')),
+              Text(
+                copy.text(
+                  game?.kind == SpeedBreakKind.letters
+                      ? 'r2.letterGameHint'
+                      : 'r2.gameHint',
+                ),
+              ),
               if (expected != null) ...[
                 SizedBox(height: d.dimension('spacing.3')),
                 Semantics(
                   liveRegion: true,
                   child: Text(
-                    copy.text('r2.gameNext', {'number': expected}),
+                    copy.text('r2.gameNext', {'number': game!.label(expected)}),
                     key: const ValueKey('speed-number-next'),
                   ),
                 ),
@@ -89,8 +96,12 @@ class SpeedNumbersBreak extends StatelessWidget {
                           SizedBox(
                             width: width,
                             child: PikoButton(
-                              key: ValueKey('speed-number-$number'),
-                              label: '$number',
+                              key: ValueKey(
+                                game.kind == SpeedBreakKind.letters
+                                    ? 'speed-letter-${game.label(number)}'
+                                    : 'speed-number-$number',
+                              ),
+                              label: game.label(number),
                               padding: EdgeInsets.all(padding),
                               minimumSize: Size(
                                 minimumWidth,

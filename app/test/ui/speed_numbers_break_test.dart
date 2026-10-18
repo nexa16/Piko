@@ -21,9 +21,18 @@ Future<void> enterBreak(WidgetTester tester, SpeedHarness h) async {
 }
 
 Future<void> finishGame(WidgetTester tester) async {
+  final letters = find
+      .byKey(const ValueKey('speed-letter-A'))
+      .evaluate()
+      .isNotEmpty;
   for (var number = 1; number <= 10; number++) {
-    await tester.ensureVisible(numberButton(number));
-    await tester.tap(numberButton(number));
+    final button = letters
+        ? find.byKey(
+            ValueKey('speed-letter-${String.fromCharCode(64 + number)}'),
+          )
+        : numberButton(number);
+    await tester.ensureVisible(button);
+    await tester.tap(button);
     await tester.pumpAndSettle();
   }
 }
@@ -99,6 +108,8 @@ void main() {
           if (id == 'a') expect(find.byType(SpeedNumbersBreak), findsNothing);
         }
         expect(find.byType(SpeedNumbersBreak), findsOneWidget);
+        expect(find.text(copy.text('r2.letterGameHint')), findsOneWidget);
+        expect(find.byKey(const ValueKey('speed-letter-A')), findsOneWidget);
         await finishGame(tester);
         for (final id in ['a', 'b']) {
           expect(h.session.current!.entryId, id);
@@ -155,6 +166,34 @@ void main() {
       await tester.pumpAndSettle();
       expect(h.session.current!.entryId, 'a');
       expect(h.commitCalls, 0);
+      await enterBreak(tester, h);
+      final semantic = tester.ensureSemantics();
+      for (var ordinal = 1; ordinal <= 10; ordinal++) {
+        final label = String.fromCharCode(64 + ordinal);
+        final button = find.byKey(ValueKey('speed-letter-$label'));
+        await tester.ensureVisible(button);
+        Focus.of(
+          tester.element(
+            find.descendant(of: button, matching: find.text(label)),
+          ),
+        ).requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(
+          ordinal.isOdd ? LogicalKeyboardKey.enter : LogicalKeyboardKey.space,
+        );
+        await tester.pumpAndSettle();
+        if (ordinal < 10) {
+          expect(tester.widget<PikoButton>(button).onPressed, isNull);
+          expect(
+            h.session.state!.numberGame!.label(
+              h.session.state!.numberGame!.nextNumber!,
+            ),
+            String.fromCharCode(65 + ordinal),
+          );
+        }
+        expect(h.commitCalls, 0);
+      }
+      semantic.dispose();
       await h.exit(tester);
     },
   );
