@@ -511,12 +511,22 @@ void main() {
         final rowIssue = find.textContaining(
           'collections[0].entries[0].categoryAssignments',
         );
+        await review.waitUntil(
+          tester,
+          () => rowIssue.evaluate().isNotEmpty,
+          description: 'actual invalid category-assignment preview',
+        );
         expect(rowIssue, findsOneWidget);
         await reveal(rowIssue);
         await record('json-long-row-errors');
         await reveal(input);
         await tester.enterText(input, validWire);
         await tap(button('json.analyze'));
+        await review.waitUntil(
+          tester,
+          () => button('json.apply').evaluate().isNotEmpty,
+          description: 'actual valid JSON preview',
+        );
         await reveal(button('json.apply'));
         await record('json-review');
         await tap(button('json.apply'));
@@ -529,6 +539,11 @@ void main() {
             of: find.byType(PikoDialog).last,
             matching: button('json.apply'),
           ),
+        );
+        await review.waitUntil(
+          tester,
+          () => button('json.returnToCollection').evaluate().isNotEmpty,
+          description: 'committed unchanged JSON result',
         );
         await reveal(button('json.returnToCollection'));
         await record('json-applied-result');
