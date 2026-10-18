@@ -27,6 +27,8 @@ Open a Collection from **My collections**. Its heading shows the language pair a
 
 Scrolling down keeps the Collection title, total entry count, Back/menu and separate compact Review and Speed actions available. Each action counts eligible word directions in the current search/filter scope; a word available in both directions counts twice. Zero stays visible and disabled; loading and errors remain distinct. One eligible direction starts directly (Speed still opens its setup); two directions offer a choice. Dismissing the choice/setup retains the list and selection. Return to the top to see the expanded direction cards and rename control. The compact header has no mascot. In an exceptionally short viewport, the header scrolls normally to keep content reachable.
 
+Reading Piko appears beside the first available Review action, including when Speed is also available. Sleeping Piko accompanies the no-work message only when the current scope has no Review, new Speed words or pending repetition. Speed-only, empty, unmatched, loading and failed states show no contextual pose. These illustrations do not change learning data or indicate permanent mastery.
+
 Use the heading's rename control to change its name; save or cancel that edit explicitly. The Collection **More options** menu contains JSON import/export, Collection Settings, category editing and Collection deletion. Confirming deletion removes that Collection and its associated vocabulary/learning. Export anything you want to retain before deleting it; Collection deletion has no vocabulary-style Undo.
 
 The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for the narrower Collection JSON operation.
@@ -166,7 +168,7 @@ Reveal each answer and choose Correct or Incorrect. A word finishes after a cons
 
 Speed completion persists word-by-word. Completing a word preserves Long-term scheduling, history and pending repetitions in both directions, including after errors. Each completed word direction contributes at most once to that learning day's Speed statistics. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
 
-After every word has successfully saved its completion, Speed returns to the Collection with its completed-word message and one celebration Piko, temporarily replacing the reading pose. In the compact header, the completion text and X remain visible without artwork. Dismiss the message with X; it also clears when another learning launch starts or when leaving the Collection. Exit, initially empty work, failed saves and exhaustion caused only by deactivation do not celebrate. No extra summary or timer is added.
+After every word has successfully saved its completion, Speed returns to the Collection with its completed-word message and one celebration Piko, temporarily replacing the contextual pose. In the compact header, the completion text and X remain visible without artwork. Dismiss the message with X; it also clears when another learning launch starts or when leaving the Collection. Exit, initially empty work, failed saves and exhaustion caused only by deactivation do not celebrate. No extra summary or timer is added.
 
 <img src="images/12-speed-setup.png" width="320" alt="Speed setup with French to German direction, four new words and pass-size field">
 

@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:piko/data/local/piko_database.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/preferred_direction.dart';
+import 'package:piko/data/learning_item.dart';
 import 'package:piko/features/collections/collection_compact_action.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/learning/learning_direction_choice.dart';
@@ -471,6 +472,20 @@ void main() {
       expect(key('speed-completion-notice'), findsOneWidget);
       expect(key('piko-celebration'), findsOneWidget);
       expect(key('piko-reading'), findsNothing);
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=0 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
+      detail().queryBinding!.refresh();
+      await settle();
+      expect(key('piko-celebration'), findsOneWidget);
+      expect(key('piko-sleeping'), findsNothing);
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=1 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
+      detail().queryBinding!.refresh();
+      await settle();
       await collapse();
       expect(key('speed-completion-notice'), findsOneWidget);
       expect(key('piko-celebration'), findsNothing);
@@ -486,6 +501,67 @@ void main() {
       expect(key('piko-reading'), findsOneWidget);
       expect(await longTerm(), beforeCompletion);
       expect(await review.rows(db, 'statistics_activity'), completionCredits);
+      step('contextual poses use independent resolved availability');
+      Future<void> verifyPose(String? pose) async {
+        final unchanged = await stored(db);
+        detail().queryBinding!.refresh();
+        await settle();
+        await top();
+        for (final name in ['reading', 'sleeping', 'celebration']) {
+          expect(
+            key('piko-$name'),
+            name == pose ? findsOneWidget : findsNothing,
+          );
+        }
+        expect(await stored(db), unchanged);
+      }
+
+      await db.customStatement('UPDATE learning_items SET speed_completed=1');
+      await verifyPose('reading');
+      final ownerWords = detail().queryBinding!.snapshot!.allEntries;
+      for (final word in ownerWords) {
+        await fixture.review(word: word, at: clock.now());
+        await fixture.review(word: word, reverse: true, at: clock.now());
+      }
+      await db.customStatement('UPDATE learning_items SET speed_completed=0');
+      await verifyPose(null); // Speed only, despite future regular reviews.
+      await db.customStatement('UPDATE learning_items SET speed_completed=1');
+      await verifyPose('sleeping');
+      await capture('contextual-sleeping');
+      final sleepingData = await stored(db);
+      await collapse();
+      expect(key('piko-sleeping'), findsNothing);
+      expect(key('piko-reading'), findsNothing);
+      await top();
+      expect(key('piko-sleeping'), findsOneWidget);
+      expect(await stored(db), sleepingData);
+      detail().queryBinding!.scope.setSearch('no matching word');
+      await verifyPose(null);
+      detail().queryBinding!.scope.setSearch('');
+      await verifyPose('sleeping');
+      final sleepingGate = db.queryGate = Completer<void>();
+      detail().queryBinding!.refresh();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(key('piko-sleeping'), findsNothing);
+      db.failQuery = true;
+      sleepingGate.complete();
+      await review.waitUntil(
+        tester,
+        () => detail().queryBinding!.error != null,
+      );
+      expect(key('piko-sleeping'), findsNothing);
+      db.queryGate = null;
+      db.failQuery = false;
+      await verifyPose('sleeping');
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=0 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
+      await verifyPose('sleeping');
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=1 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
       step('real pending retry distinguishes settled zero');
       await fixture.review(rating: LearningRating.again, at: clock.now());
       await fixture.review(
@@ -499,10 +575,28 @@ void main() {
       );
       detail().queryBinding!.refresh();
       await settle();
+      await top();
+      expect(key('piko-sleeping'), findsNothing);
+      expect(key('piko-reading'), findsNothing);
       await collapse();
       expect(action('review').count, '0');
       expect(action('review').label, copy.text('collection.compactPending'));
       expect(action('speed').count, '0');
+      step('ready retry restores reading without a sleep transition');
+      for (final direction in LearningDirection.values) {
+        final gateway = await fixture.learning.forCollection(
+          collectionId: fixture.owner.id,
+          direction: direction,
+        );
+        final retries = await gateway.retryState(at: clock.now());
+        await gateway.armBlockedWaits(
+          expectedRounds: retries.rounds,
+          remainingRegular: const [],
+          at: clock.now(),
+        );
+      }
+      clock.set(clock.now().add(const Duration(seconds: 11)));
+      await verifyPose('reading');
       final after = await stored(db);
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
@@ -522,6 +616,7 @@ void main() {
         'real keyboard retains raw text and cursor',
         'one committed Speed notice survives compact transition without art or duplicate credit',
         'pending retry is not settled no-work',
+        'reading/Speed-only/sleeping matrix, no-match, inactive, loading/error and compact poses without data writes',
         'reopened database exact',
       ];
       passed = true;

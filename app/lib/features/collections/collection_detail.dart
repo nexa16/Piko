@@ -17,6 +17,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_sleeping.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
@@ -1606,17 +1607,39 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             _directions.contains(direction.key) &&
             direction.value.pendingRetryCount > 0,
       );
+      final message = Text(
+        copy.text(
+          pending
+              ? 'r2.pending'
+              : binding.scope.restricted
+              ? 'collection.filteredNoReview'
+              : 'r2.caughtUp',
+        ),
+      );
+      final sleeping =
+          binding.ready &&
+          !pending &&
+          !_learningBusy &&
+          _speedCompletedCount == null &&
+          _directions.every(
+            (direction) =>
+                snapshot.directions[direction]!.newSpeedItems.isEmpty,
+          );
       normal = !_directionReady
           ? const SizedBox.shrink()
-          : Text(
-              copy.text(
-                pending
-                    ? 'r2.pending'
-                    : binding.scope.restricted
-                    ? 'collection.filteredNoReview'
-                    : 'r2.caughtUp',
-              ),
-            );
+          : sleeping
+          ? Row(
+              children: [
+                Expanded(child: message),
+                SizedBox(
+                  width: pikoDesign.dimension(
+                    'components.collectionReview.mascotGap',
+                  ),
+                ),
+                const PikoSleeping(),
+              ],
+            )
+          : message;
     } else if (widget.reviewSessionFactory != null) {
       normal = ReviewLaunch(
         key: _reviewLaunchKey,
@@ -1633,7 +1656,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             !_openingSpeed &&
             (binding.ready || _openingReview),
         presentation: ReviewLaunchPresentation.collectionCard,
-        showMascot: _speedCompletedCount == null,
+        showMascot:
+            _speedCompletedCount == null && _directionReady && binding.ready,
         dueCount: total,
         directionCounts: counts,
         availabilityChanges: binding,
