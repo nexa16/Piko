@@ -108,15 +108,16 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       setState(() => _orders[group] = saved);
     } catch (error) {
       if (!mounted) return;
+      final stale =
+          error == CategoryValidation.staleOrder ||
+          error == CategoryValidation.dimensionNotFound;
       setState(() {
         _orders[group] = previous;
         _orderErrorValue = moved.id;
-        _error = error == CategoryValidation.staleOrder
-            ? 'category.reorderStale'
-            : 'category.reorderFailed';
+        _error = stale ? 'category.reorderStale' : 'category.reorderFailed';
         _retryOrder = () => _move(group, from, retryTo);
       });
-      if (error == CategoryValidation.staleOrder && widget.canApply()) {
+      if (stale && widget.canApply()) {
         try {
           final fresh = await widget.reloadDefinitions();
           if (!mounted ||
@@ -354,6 +355,7 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
                       bottom: pikoDesign.dimension('spacing.2'),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Expanded(
                           child: PikoTextField(
@@ -506,6 +508,7 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
                       tooltip: copy.text('category.reorder', {
                         'value': value.name,
                       }),
+                      iconColor: pikoDesign.color('primary'),
                       icon: const PikoIcon(PikoIconName.ellipsis),
                       itemBuilder: (_) => [
                         PopupMenuItem(

@@ -233,8 +233,11 @@ void main() {
       await tester.enterText(search, 'Value 2');
       await tester.pumpAndSettle();
       expect(find.text(copy.text('category.reorderSearch')), findsOneWidget);
+      final searchedValue = (await categories.values(
+        group.id,
+      )).firstWhere((value) => value.name == 'Value 20');
       await tap(
-        find.byType(PopupMenuButton<int>).first,
+        key('filter-value-menu-${searchedValue.id}'),
         scroll: filterScroll(),
       );
       expect(

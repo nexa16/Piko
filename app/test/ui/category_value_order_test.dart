@@ -332,6 +332,19 @@ void main() {
         expect(await h.order(tester), expected);
         expect(focus.hasFocus, isTrue);
         expect(tester.widget<CheckboxListTile>(h.row(0)).value, isTrue);
+        await tester.runAsync(
+          () => h.fixture.repository.deleteDimension(h.fixture.dimension.id),
+        );
+        await h.move(tester, 2, 'Move up');
+        expect(
+          find.text(PikoCopy('en').text('category.reorderStale')),
+          findsOneWidget,
+        );
+        expect(
+          find.text(PikoCopy('en').text('r2.noCategories')),
+          findsOneWidget,
+        );
+        expect(find.byType(CheckboxListTile), findsNothing);
       } finally {
         await h.fixture.cleanup(tester);
       }
