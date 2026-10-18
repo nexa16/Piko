@@ -32,18 +32,27 @@ CollectionQuerySnapshot snapshot({
       id: id == 'a' ? 1 : 2,
       entryId: id,
       direction: direction,
-      cardJson: LearningCardCodec.encode(scheduler.initialCard(
-        itemId: id == 'a' ? 1 : 2,
-        at: DateTime.utc(2026, 10, 16),
-      )),
+      cardJson: LearningCardCodec.encode(
+        scheduler.initialCard(
+          itemId: id == 'a' ? 1 : 2,
+          at: DateTime.utc(2026, 10, 16),
+        ),
+      ),
       formatVersion: LearningCardCodec.version,
       generation: generation,
       speedCompleted: speedMarker,
     );
     return progress.contains((id, direction))
-        ? scheduler.review(record, rating: LearningRating.good, reviewedAt: DateTime.utc(2026, 10, 16)).next
+        ? scheduler
+              .review(
+                record,
+                rating: LearningRating.good,
+                reviewedAt: DateTime.utc(2026, 10, 16),
+              )
+              .next
         : record;
   }
+
   return CollectionQuerySnapshot(
     collection: owner,
     allEntries: words.values,
@@ -64,9 +73,7 @@ CollectionQuerySnapshot snapshot({
                     ? forward
                     : reverse,
               )
-              .map(
-                (id) => item(id, direction),
-              ),
+              .map((id) => item(id, direction)),
         ),
     },
   );
@@ -222,7 +229,10 @@ void main() {
           closeTo((row.width - pikoDesign.dimension('spacing.2')) / 2, .01),
         );
         for (final finder in [first, second]) {
-          expect(tester.widget<PikoButton>(finder).labelAlignment, TextAlign.left);
+          expect(
+            tester.widget<PikoButton>(finder).labelAlignment,
+            TextAlign.left,
+          );
           expect(tester.widget<PikoButton>(finder).expandLabel, isTrue);
           expect(
             tester.widget<PikoButton>(finder).variant,
@@ -272,56 +282,64 @@ void main() {
   }
 
   for (final direction in LearningDirection.values) {
-    testWidgets('warning uses only included $direction card progress from the fresh snapshot', (tester) async {
-      final opposite = LearningDirection.values.firstWhere((value) => value != direction);
-      final h = LaunchHarness();
-      await h.mount(tester);
-      h.loaded = snapshot(progress: {('a', opposite)});
-      await h.open(tester, direction);
-      expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
-      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
-      await tester.pumpAndSettle();
-      h.loaded = snapshot(visible: ['b'], progress: {('a', direction)});
-      await h.open(tester, direction);
-      expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
-      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
-      await tester.pumpAndSettle();
-      h.loaded = snapshot(generation: 3, speedMarker: true);
-      await h.open(tester, direction);
-      expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
-      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
-      await tester.pumpAndSettle();
-      h.loaded = snapshot(progress: {('a', direction)});
-      await h.open(tester, direction);
-      expect(find.byKey(const ValueKey('speed-reset-warning')), findsOneWidget);
-      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
-      await tester.pumpAndSettle();
-      expect(h.requests, isEmpty);
-      expect(h.completedCounts, isEmpty);
-    });
+    testWidgets(
+      'setup never promises a Long-term reset for $direction progress',
+      (tester) async {
+        final opposite = LearningDirection.values.firstWhere(
+          (value) => value != direction,
+        );
+        final h = LaunchHarness();
+        await h.mount(tester);
+        h.loaded = snapshot(progress: {('a', opposite)});
+        await h.open(tester, direction);
+        expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+        await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
+        await tester.pumpAndSettle();
+        h.loaded = snapshot(visible: ['b'], progress: {('a', direction)});
+        await h.open(tester, direction);
+        expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+        await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
+        await tester.pumpAndSettle();
+        h.loaded = snapshot(generation: 3, speedMarker: true);
+        await h.open(tester, direction);
+        expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+        await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
+        await tester.pumpAndSettle();
+        h.loaded = snapshot(progress: {('a', direction)});
+        await h.open(tester, direction);
+        expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+        await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
+        await tester.pumpAndSettle();
+        expect(h.requests, isEmpty);
+        expect(h.completedCounts, isEmpty);
+      },
+    );
   }
 
-  testWidgets('completion callback returns the committed round count exactly once', (tester) async {
-    final h = LaunchHarness();
-    await h.mount(tester);
-    await h.open(tester, LearningDirection.targetToNative);
-    expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
-    await h.start(tester);
-    for (var index = 0; index < 2; index++) {
-      await tester.ensureVisible(find.byKey(const ValueKey('review-prompt')));
-      await tester.tap(find.byKey(const ValueKey('review-prompt')));
+  testWidgets(
+    'completion callback returns the committed round count exactly once',
+    (tester) async {
+      final h = LaunchHarness();
+      await h.mount(tester);
+      await h.open(tester, LearningDirection.targetToNative);
+      expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+      await h.start(tester);
+      for (var index = 0; index < 2; index++) {
+        await tester.ensureVisible(find.byKey(const ValueKey('review-prompt')));
+        await tester.tap(find.byKey(const ValueKey('review-prompt')));
+        await tester.pumpAndSettle();
+        final grade = find.byKey(const ValueKey('speed-grade-correct'));
+        await tester.ensureVisible(grade);
+        await tester.tap(grade);
+        await tester.pumpAndSettle();
+      }
+      expect(find.byType(SpeedSessionRoute), findsNothing);
+      expect(h.completedCounts, [2]);
+      expect(h.returned, 1);
       await tester.pumpAndSettle();
-      final grade = find.byKey(const ValueKey('speed-grade-correct'));
-      await tester.ensureVisible(grade);
-      await tester.tap(grade);
-      await tester.pumpAndSettle();
-    }
-    expect(find.byType(SpeedSessionRoute), findsNothing);
-    expect(h.completedCounts, [2]);
-    expect(h.returned, 1);
-    await tester.pumpAndSettle();
-    expect(h.completedCounts, [2]);
-  });
+      expect(h.completedCounts, [2]);
+    },
+  );
 
   testWidgets(
     'a lone reverse action stays left half-width and zero counts disappear',

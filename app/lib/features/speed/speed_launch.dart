@@ -10,8 +10,10 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_dialog.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
+import '../learning/learning_direction_choice.dart';
 import 'speed_learning_session.dart';
 import 'speed_session_route.dart';
 import 'speed_setup_dialog.dart';
@@ -31,6 +33,7 @@ class SpeedLaunch extends StatefulWidget {
     this.onCompleted,
     this.enabled = true,
     this.scopeIdentity,
+    this.availabilityChanges,
     this.allowedDirections = const {
       LearningDirection.targetToNative,
       LearningDirection.nativeToTarget,
@@ -55,16 +58,20 @@ class SpeedLaunch extends StatefulWidget {
   /// owner can pass (binding, search, immutableFilters) even while holding its
   /// admitted launch snapshot. Without this token, snapshot identity is used.
   final Object? scopeIdentity;
+  final Listenable? availabilityChanges;
 
   @override
-  State<SpeedLaunch> createState() => _SpeedLaunchState();
+  SpeedLaunchState createState() => SpeedLaunchState();
 }
 
-class _SpeedLaunchState extends State<SpeedLaunch> {
+class SpeedLaunchState extends State<SpeedLaunch> {
+  /// Resolve only Speed's eligible directions; retain this launch/setup owner.
+  void openMerged() => unawaited(_open(null));
+  bool get hasLaunchError => _error != null;
   bool _opening = false;
   bool _launched = false;
   int _identity = 0;
-  ModalRoute<int>? _setup;
+  ModalRoute<dynamic>? _setup;
   Object? _error;
   LearningDirection? _failedDirection;
   int? _failedPoolSize;
@@ -124,14 +131,16 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
     }
   }
 
-  Future<void> _open(LearningDirection direction, {int? retryPoolSize}) async {
+  Future<void> _open(LearningDirection? direction, {int? retryPoolSize}) async {
     final ownerRoute = ModalRoute.of(context);
     if (_opening ||
-        !widget.allowedDirections.contains(direction) ||
+        (direction != null && !widget.allowedDirections.contains(direction)) ||
         !widget.enabled ||
         ownerRoute?.isCurrent != true ||
-        (widget.snapshot.directions[direction]?.newSpeedItems.length ?? 0) ==
-            0) {
+        (direction != null &&
+            (widget.snapshot.directions[direction]?.newSpeedItems.length ??
+                    0) ==
+                0)) {
       return;
     }
     final identity = _identity;
@@ -151,7 +160,7 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
     bool canLaunch() =>
         current() &&
         widget.enabled &&
-        widget.allowedDirections.contains(direction) &&
+        (direction == null || widget.allowedDirections.contains(direction)) &&
         ownerRoute?.isCurrent == true;
     setState(() {
       _opening = true;
@@ -161,7 +170,7 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
     SpeedLearningSession? prepared;
     int? poolSize = retryPoolSize;
     try {
-      final initialSnapshot = await _prepare(() async {
+      var initialSnapshot = await _prepare(() async {
         await beforeLaunch();
         if (!canLaunch()) return null;
         return await loader?.call() ?? widget.snapshot;
@@ -172,6 +181,78 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
           initialSnapshot.collection.id != collectionId) {
         return;
       }
+      if (direction == null) {
+        final available = LearningDirection.values
+            .where(
+              (value) =>
+                  widget.allowedDirections.contains(value) &&
+                  (initialSnapshot!.directions[value]?.newSpeedItems.length ??
+                          0) >
+                      0,
+            )
+            .toList();
+        if (available.isEmpty) return;
+        direction = available.length == 1
+            ? available.single
+            : await showPikoDialog<LearningDirection>(
+                context,
+                canRestoreFocus: canLaunch,
+                onRouteCreated: (route) => _setup = route,
+                builder: (dialogContext) => LearningDirectionChoice(
+                  title: PikoCopyScope.of(
+                    dialogContext,
+                  ).text('selectedSpeed.direction'),
+                  initial: {
+                    for (final value in available)
+                      value: initialSnapshot!
+                          .directions[value]!
+                          .newSpeedItems
+                          .length,
+                  },
+                  changes: widget.availabilityChanges,
+                  canChoose: () => current() && widget.enabled,
+                  load: () => _prepare(() async {
+                    await beforeLaunch();
+                    if (!current() || !widget.enabled) {
+                      return <LearningDirection, int>{};
+                    }
+                    final fresh = await loader?.call() ?? widget.snapshot;
+                    if (fresh.collection.id != collectionId) {
+                      return <LearningDirection, int>{};
+                    }
+                    return {
+                      for (final value in widget.allowedDirections)
+                        value:
+                            fresh.directions[value]?.newSpeedItems.length ?? 0,
+                    };
+                  }, register),
+                  label: (value, count) => PikoCopyScope.of(dialogContext)
+                      .text('r2.speedDirectionCount', {
+                        'direction': reviewDirectionLabel(
+                          widget.snapshot.collection,
+                          value,
+                        ),
+                        'count': count,
+                      }),
+                ),
+              );
+        _setup = null;
+        if (direction == null || !canLaunch()) return;
+        final rechecked = await _prepare<CollectionQuerySnapshot?>(() async {
+          await beforeLaunch();
+          if (!canLaunch()) return null;
+          return await loader?.call() ?? widget.snapshot;
+        }, register);
+        if (!mounted ||
+            !canLaunch() ||
+            rechecked == null ||
+            rechecked.collection.id != collectionId) {
+          return;
+        }
+        initialSnapshot = rechecked;
+      }
+      if (!mounted || !canLaunch()) return;
+      final chosenDirection = direction;
       final count =
           initialSnapshot.directions[direction]?.newSpeedItems.length ?? 0;
       if (count == 0) return;
@@ -179,12 +260,8 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
       poolSize ??= await showSpeedSetup(
         context,
         collection: initialSnapshot.collection,
-        direction: direction,
+        direction: chosenDirection,
         eligibleCount: count,
-        hasLearningProgress: initialSnapshot
-            .directions[direction]!
-            .newSpeedItems
-            .any((item) => item.card.lastReview != null),
         canRestoreFocus: canLaunch,
         onRouteCreated: (route) {
           openedSetup = route;
@@ -210,7 +287,7 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         );
         final result = await factory(
           collectionId: collectionId,
-          direction: direction,
+          direction: chosenDirection,
           visibleEntryIds: visible,
           poolSize: configuredPool,
         );

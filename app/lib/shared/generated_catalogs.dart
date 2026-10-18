@@ -44,6 +44,10 @@ const designCatalog = <String, Object?>{
 "titleSize": 15,
 "titleWeight": 700,
 },
+"collectionHeader": <String, Object?>{
+"titleLineHeight": 1.35,
+"titleSize": 15,
+},
 "collectionList": <String, Object?>{
 "dividerOpacity": 0.2,
 "outlineOpacity": 0.32,
@@ -180,11 +184,29 @@ const designCatalog = <String, Object?>{
 "topMargin": 27,
 "weight": 700,
 },
+"selectionPanel": <String, Object?>{
+"maxViewportFraction": 0.25,
+},
 "settings": <String, Object?>{
 "fieldMarginY": 17,
 },
 "speedGame": <String, Object?>{
 "columns": 5,
+},
+"statistics": <String, Object?>{
+"averageSize": 36.4,
+"badgeSize": 20.8,
+"barHeight": 8,
+"calendarCountSize": 14,
+"calendarDaySize": 12,
+"calendarGap": 4,
+"calendarWeekdaySize": 10,
+"contentWidth": 480,
+"gap": 12,
+"mascotSize": 64,
+"padding": 20,
+"todayLineHeight": 1.15,
+"todaySize": 52,
 },
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
@@ -375,6 +397,18 @@ const copyCatalog = <String, Object?>{
 "de": "Kategoriegruppe hinzufügen",
 "en": "Add category group",
 },
+"category.carryOver": <String, Object?>{
+"de": "Vom vorherigen Wort übernehmen",
+"en": "Carry over from previous word",
+},
+"category.carryOverHelp": <String, Object?>{
+"de": "Neue Entwürfe derselben Eingabesitzung übernehmen die Werte dieser Gruppe vom zuletzt erfolgreich bestätigten Wort. Zum Übernehmen der Einstellung die Gruppe speichern.",
+"en": "For new drafts in the same entry session, copy this group's values from the last successfully confirmed word. Save the group to apply this setting.",
+},
+"category.clearValueSearch": <String, Object?>{
+"de": "Wertesuche leeren",
+"en": "Clear value search",
+},
 "category.deleteDimension": <String, Object?>{
 "de": "Kategoriegruppe löschen",
 "en": "Delete category group",
@@ -415,6 +449,14 @@ const copyCatalog = <String, Object?>{
 "de": "Noch keine Werte.",
 "en": "No values yet.",
 },
+"category.firstPosition": <String, Object?>{
+"de": "Bereits an erster Stelle",
+"en": "Already first",
+},
+"category.lastPosition": <String, Object?>{
+"de": "Bereits an letzter Stelle",
+"en": "Already last",
+},
 "category.loadFailed": <String, Object?>{
 "de": "Kategoriewerte konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load category values. Try again.",
@@ -422,6 +464,34 @@ const copyCatalog = <String, Object?>{
 "category.managementLoadFailed": <String, Object?>{
 "de": "Kategorien konnten nicht geladen werden. Versuche es erneut.",
 "en": "Couldn't load categories. Try again.",
+},
+"category.moveDown": <String, Object?>{
+"de": "Nach unten",
+"en": "Move down",
+},
+"category.moveUp": <String, Object?>{
+"de": "Nach oben",
+"en": "Move up",
+},
+"category.reorder": <String, Object?>{
+"de": "{value} verschieben",
+"en": "Reorder {value}",
+},
+"category.reorderFailed": <String, Object?>{
+"de": "Reihenfolge konnte nicht gespeichert werden. Deine Filterauswahl bleibt erhalten.",
+"en": "Order could not be saved. Your filter choices are kept.",
+},
+"category.reorderHelp": <String, Object?>{
+"de": "Wert gedrückt halten und verschieben oder sein Menü nutzen. Die Reihenfolge wird sofort für diese Sammlung gespeichert.",
+"en": "Hold and drag a value, or use its menu. Order is saved immediately for this Collection.",
+},
+"category.reorderSearch": <String, Object?>{
+"de": "Wertesuche leeren, um die ganze Gruppe umzuordnen.",
+"en": "Clear value search to reorder the whole group.",
+},
+"category.reorderStale": <String, Object?>{
+"de": "Diese Gruppe hat sich geändert. Prüfe die aktuellen Werte und verschiebe erneut.",
+"en": "This group has changed. Check its current values and move again.",
 },
 "category.saveDimension": <String, Object?>{
 "de": "Kategoriegruppe speichern",
@@ -458,6 +528,26 @@ const copyCatalog = <String, Object?>{
 "collection.addFirstWord": <String, Object?>{
 "de": "Erste Vokabel hinzufügen",
 "en": "Add first word",
+},
+"collection.compactFailed": <String, Object?>{
+"de": "{mode}, Verfügbarkeit konnte nicht geladen werden",
+"en": "{mode}, availability could not be loaded",
+},
+"collection.compactLoading": <String, Object?>{
+"de": "{mode}, Verfügbarkeit wird geladen",
+"en": "{mode}, availability is loading",
+},
+"collection.compactPending": <String, Object?>{
+"de": "Wiederholen, Wartezeit für erneute Versuche",
+"en": "Review, waiting for retries",
+},
+"collection.compactReview": <String, Object?>{
+"de": "Wiederholen, {count} Richtungsaufgaben",
+"en": "Review, {count} directional items",
+},
+"collection.compactSpeed": <String, Object?>{
+"de": "Intensiv lernen, {count} Richtungsaufgaben",
+"en": "Speed, {count} directional items",
 },
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
@@ -510,6 +600,10 @@ const copyCatalog = <String, Object?>{
 "collection.nativeLanguage": <String, Object?>{
 "de": "Muttersprache",
 "en": "Native language",
+},
+"collection.noLearningDirection": <String, Object?>{
+"de": "Gerade ist keine Lernrichtung verfügbar.",
+"en": "No direction is available right now.",
 },
 "collection.notFound": <String, Object?>{
 "de": "Diese Sammlung ist nicht mehr verfügbar.",
@@ -746,6 +840,26 @@ const copyCatalog = <String, Object?>{
 "entry.unsaved": <String, Object?>{
 "de": "Änderungen nicht gespeichert",
 "en": "Changes not saved",
+},
+"fullExport.action": <String, Object?>{
+"de": "Alle Sammlungen exportieren",
+"en": "Export all Collections",
+},
+"fullExport.cancelled": <String, Object?>{
+"de": "Export abgebrochen. Es wurde keine Datei gespeichert.",
+"en": "Export cancelled. No file was saved.",
+},
+"fullExport.description": <String, Object?>{
+"de": "Alle Sammlungen und die vollständige aufgezeichnete Statistik in einer JSON-Datei speichern. Der Sammlungsimport kann diesen Bericht nicht wiederherstellen. Globale Einstellungen sind nicht enthalten.",
+"en": "Save all Collections and the complete recorded statistics in one JSON file. The Collection importer cannot restore this report. Global settings are not included.",
+},
+"fullExport.failed": <String, Object?>{
+"de": "Export fehlgeschlagen. Bitte erneut versuchen.",
+"en": "Export failed. Try again.",
+},
+"fullExport.preparing": <String, Object?>{
+"de": "Export wird vorbereitet…",
+"en": "Preparing export…",
 },
 "header.choose": <String, Object?>{
 "de": "Lernrichtung wählen",
@@ -1675,6 +1789,10 @@ const copyCatalog = <String, Object?>{
 "de": "Beide Vokabeltexte müssen ausgefüllt sein.",
 "en": "Both vocabulary texts must be nonempty.",
 },
+"r2.letterGameHint": <String, Object?>{
+"de": "Tippe A bis J der Reihe nach an, um den nächsten Durchgang zu starten. Ohne Zeitlimit.",
+"en": "Tap A to J in order to start the next pass. No time limit.",
+},
 "r2.menu": <String, Object?>{
 "de": "Sammlungsaktionen",
 "en": "Collection actions",
@@ -1732,8 +1850,8 @@ const copyCatalog = <String, Object?>{
 "en": "Maximum words per pass",
 },
 "r2.poolHint": <String, Object?>{
-"de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, liegt zwischen den Durchgängen ein Zahlenspiel. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen.",
-"en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, a number game separates passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
+"de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen.",
+"en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, numbers and A–J games alternate between passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
 },
 "r2.poolInvalid": <String, Object?>{
 "de": "Wähle eine positive ganze Poolgröße und mindestens ein Wort.",
@@ -1866,6 +1984,46 @@ const copyCatalog = <String, Object?>{
 "r2.waitDemo": <String, Object?>{
 "de": "Wiederholungs-Countdown",
 "en": "Retry countdown",
+},
+"selectedSpeed.action": <String, Object?>{
+"de": "Intensiv · {count} ausgewählt",
+"en": "Speed · {count} selected",
+},
+"selectedSpeed.changed": <String, Object?>{
+"de": "Die Auswahl hat sich geändert. Prüfe die aktualisierten Zahlen vor dem Start.",
+"en": "The selection has changed. Check the updated counts before starting.",
+},
+"selectedSpeed.checking": <String, Object?>{
+"de": "Auswahl wird geprüft …",
+"en": "Checking selection…",
+},
+"selectedSpeed.direction": <String, Object?>{
+"de": "Richtung fürs Intensivlernen",
+"en": "Speed direction",
+},
+"selectedSpeed.failed": <String, Object?>{
+"de": "Diese Auswahl konnte nicht vorbereitet werden. Auswahl und Poolgröße bleiben erhalten. Versuche es erneut.",
+"en": "Could not prepare this selection. Your selection and pool size are retained. Try again.",
+},
+"selectedSpeed.hidden": <String, Object?>{
+"de": "Enthalten, aber in der Liste ausgeblendet: {count}",
+"en": "Included but hidden in the list: {count}",
+},
+"selectedSpeed.inactive": <String, Object?>{
+"de": "Ausgeschlossene inaktive Vokabeln: {count}",
+"en": "Excluded inactive words: {count}",
+},
+"selectedSpeed.included": <String, Object?>{
+"de": "Ausgewählte aktive Vokabeln: {count}",
+"en": "Selected active words: {count}",
+},
+"selectedSpeed.independent": <String, Object?>{
+"de": "Übe ausgewählte Vokabeln, auch bereits gelernte. Der Langzeit-Lernfortschritt bleibt unverändert.",
+"en": "Practice selected words, including previously learned words. Long-term progress stays unchanged.",
+},
+"selectedSpeed.missing": <String, Object?>{
+"de": "Nicht mehr verfügbar: {count}",
+"en": "No longer available: {count}",
 },
 "selection.all": <String, Object?>{
 "de": "Alle auswählen",
@@ -2020,12 +2178,200 @@ const copyCatalog = <String, Object?>{
 "en": "Leaving this round",
 },
 "speed.rulesExplanation": <String, Object?>{
-"de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, trennt ein Zahlenspiel die Durchgänge. Bei Poolgröße 1 gibt es kein Spiel.",
-"en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, a number game separates complete passes. Pool size 1 needs no game.",
+"de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es kein Spiel.",
+"en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, numbers and A–J games alternate between complete passes. Pool size 1 needs no game.",
 },
 "speed.rulesTitle": <String, Object?>{
 "de": "Regeln",
 "en": "Rules",
+},
+"statistics.activity": <String, Object?>{
+"de": "Lernaktivität",
+"en": "Activity",
+},
+"statistics.average": <String, Object?>{
+"de": "Durchschnittlich gelernte Vokabeln pro aktivem Lerntag",
+"en": "Average vocabulary learned per active day",
+},
+"statistics.boundary": <String, Object?>{
+"de": "Ein Lerntag dauert von 04:00 bis 04:00 Uhr Ortszeit.",
+"en": "A learning day runs from 04:00 to 04:00 local time.",
+},
+"statistics.calendar": <String, Object?>{
+"de": "Kalender anzeigen",
+"en": "Show calendar",
+},
+"statistics.calendarNote": <String, Object?>{
+"de": "Zahlen zeigen gelernte Vokabeln. Ein Strich bedeutet: nicht erfasst; zukünftige Tage bleiben leer. Ein Stern kennzeichnet einen teilweise erfassten Tag.",
+"en": "Numbers show vocabulary learned. A dash means not recorded; future days are blank. An asterisk marks a partially recorded day.",
+},
+"statistics.completed": <String, Object?>{
+"de": "Heute abgeschlossene Vokabeln",
+"en": "Completed words today",
+},
+"statistics.count": <String, Object?>{
+"de": "{count} gelernte Vokabeln",
+"en": "{count} vocabulary learned",
+},
+"statistics.coverage": <String, Object?>{
+"de": "Statistik erfasst seit {date}",
+"en": "Statistics recorded since {date}",
+},
+"statistics.coverageHelp": <String, Object?>{
+"de": "Der Verlauf beginnt mit der ersten Einrichtung der Statistik. Der erste Tag ist nur teilweise erfasst. Frühere Lernaktivität und importierte Lernstände werden nicht nachträglich gezählt. Historische Datumszuordnungen bleiben bei Uhrzeit- oder Zeitzonenänderungen erhalten. Speed zählt jede erfolgreich abgeschlossene Vokabelrichtung einmal pro Lerntag.",
+"en": "History starts when statistics are first initialized. The first day is only partially recorded. Earlier activity and imported learning are not reconstructed. Historical dates stay fixed when your clock or timezone changes. Speed counts each successfully completed vocabulary direction once per learning day.",
+},
+"statistics.day": <String, Object?>{
+"de": "{count} Tag",
+"en": "{count} day",
+},
+"statistics.dayLabel": <String, Object?>{
+"de": "{date}: {value}. {coverage}",
+"en": "{date}: {value}. {coverage}",
+},
+"statistics.days": <String, Object?>{
+"de": "{count} Tage",
+"en": "{count} days",
+},
+"statistics.error": <String, Object?>{
+"de": "Die Statistik konnte nicht geladen werden. Bitte versuche es erneut.",
+"en": "Statistics could not be loaded. Please try again.",
+},
+"statistics.future": <String, Object?>{
+"de": "Zukünftiger Tag",
+"en": "Future day",
+},
+"statistics.history": <String, Object?>{
+"de": "Tägliche Lernaktivität",
+"en": "Daily activity",
+},
+"statistics.invalidMonth": <String, Object?>{
+"de": "Wähle einen gültigen Monat zwischen dem Jahr 1 und dem aktuellen Monat.",
+"en": "Choose an existing month between year 1 and the current month.",
+},
+"statistics.jump": <String, Object?>{
+"de": "Monat und Jahr wählen",
+"en": "Choose month and year",
+},
+"statistics.loading": <String, Object?>{
+"de": "Statistik wird geladen…",
+"en": "Loading statistics…",
+},
+"statistics.month": <String, Object?>{
+"de": "Monat",
+"en": "Month",
+},
+"statistics.next": <String, Object?>{
+"de": "Nächster Monat",
+"en": "Next month",
+},
+"statistics.noAverage": <String, Object?>{
+"de": "Noch keine aktiven Lerntage",
+"en": "No active learning days yet",
+},
+"statistics.normal": <String, Object?>{
+"de": "Langzeitlernen",
+"en": "Long-term",
+},
+"statistics.nothing": <String, Object?>{
+"de": "Hier beginnt deine Lernaktivität",
+"en": "Your activity starts here",
+},
+"statistics.nothingBody": <String, Object?>{
+"de": "Mit einer regulären Langzeitwiederholung beginnst du deinen Verlauf und deine Lernserie.",
+"en": "Complete a regular Long-term review to start your history and streak.",
+},
+"statistics.open": <String, Object?>{
+"de": "Halte deine Lernserie aufrecht",
+"en": "Keep your streak going",
+},
+"statistics.openBody": <String, Object?>{
+"de": "Wiederhole heute, um deine Lernserie zu behalten.",
+"en": "Review today to keep your streak.",
+},
+"statistics.openStats": <String, Object?>{
+"de": "Statistik öffnen",
+"en": "Open statistics",
+},
+"statistics.partial": <String, Object?>{
+"de": "Teilweise erfasst",
+"en": "Partially recorded",
+},
+"statistics.previous": <String, Object?>{
+"de": "Vorheriger Monat",
+"en": "Previous month",
+},
+"statistics.recent": <String, Object?>{
+"de": "Zurück zu den letzten Tagen",
+"en": "Back to recent days",
+},
+"statistics.recorded": <String, Object?>{
+"de": "Erfasst",
+"en": "Recorded",
+},
+"statistics.refreshing": <String, Object?>{
+"de": "Statistik wird aktualisiert. Die angezeigten Werte stammen aus der letzten erfolgreichen Aktualisierung.",
+"en": "Updating statistics. The values shown are from the last successful update.",
+},
+"statistics.reviews": <String, Object?>{
+"de": "Gelernte Vokabeln",
+"en": "Vocabulary learned",
+},
+"statistics.rules": <String, Object?>{
+"de": "So entstehen diese Zahlen",
+"en": "How these numbers work",
+},
+"statistics.rulesBody": <String, Object?>{
+"de": "Gelernte Vokabeln zählt reguläre Langzeitantworten, auch dieselbe Vokabel mehrfach und beide Richtungen. Gemeint sind weder unterschiedliche Vokabeln noch dauerhaftes Beherrschen. Wiederholungsversuche und Speed zählen nicht für Durchschnitt und Lernserie. Ein Lerntag dauert von 04:00 bis 04:00 Uhr; bei 0 Antworten heute bleibt die gestrige Serie bis zum Tagesende bestehen.",
+"en": "Vocabulary learned counts regular Long-term review answers, including repeated vocabulary and both directions. It does not mean distinct words or permanent mastery. Retries and Speed are excluded from the average and streak. A day runs from 04:00 to 04:00; a zero-review today keeps yesterday’s streak until that day ends.",
+},
+"statistics.speed": <String, Object?>{
+"de": "Speed",
+"en": "Speed",
+},
+"statistics.speedBody": <String, Object?>{
+"de": "Speed verlängert deine Langzeitlernserie nicht und verändert deren Durchschnitt nicht.",
+"en": "Speed activity does not extend your Long-term streak or change its average.",
+},
+"statistics.speedTitle": <String, Object?>{
+"de": "Speed-Lernaktivität",
+"en": "Speed activity",
+},
+"statistics.stale": <String, Object?>{
+"de": "Die Statistik konnte nicht aktualisiert werden. Die angezeigten Werte sind möglicherweise veraltet.",
+"en": "Statistics could not be updated. The values shown may be out of date.",
+},
+"statistics.streak": <String, Object?>{
+"de": "Lernserie",
+"en": "Learning streak",
+},
+"statistics.subtitle": <String, Object?>{
+"de": "Dein Lernen, Tag für Tag.",
+"en": "Your learning, day by day.",
+},
+"statistics.title": <String, Object?>{
+"de": "Statistik",
+"en": "Statistics",
+},
+"statistics.today": <String, Object?>{
+"de": "Heute",
+"en": "Today",
+},
+"statistics.unavailable": <String, Object?>{
+"de": "Nicht erfasst",
+"en": "Not recorded",
+},
+"statistics.window": <String, Object?>{
+"de": "Letzte 30 Tage",
+"en": "Past 30 days",
+},
+"statistics.year": <String, Object?>{
+"de": "Jahr",
+"en": "Year",
+},
+"statistics.yesterday": <String, Object?>{
+"de": "Gestern",
+"en": "Yesterday",
 },
 "stats.activity": <String, Object?>{
 "de": "Lernaktivität",

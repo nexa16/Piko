@@ -5,7 +5,6 @@ import '../../data/learning_item.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
-import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
 import 'speed_learning_session.dart';
@@ -21,13 +20,20 @@ typedef SpeedSessionFactory =
       required int poolSize,
     });
 
+typedef SelectedSpeedSessionFactory =
+    Future<SpeedLearningSession> Function({
+      required String collectionId,
+      required LearningDirection direction,
+      required List<String> orderedEntryIds,
+      required int poolSize,
+    });
+
 /// Setup returns only the configured pool size; dismissal returns no launch.
 Future<int?> showSpeedSetup(
   BuildContext context, {
   required CollectionRecord collection,
   required LearningDirection direction,
   required int eligibleCount,
-  bool hasLearningProgress = false,
   bool Function()? canRestoreFocus,
   ValueChanged<ModalRoute<int>>? onRouteCreated,
 }) {
@@ -40,7 +46,6 @@ Future<int?> showSpeedSetup(
       collection: collection,
       direction: direction,
       eligibleCount: eligibleCount,
-      hasLearningProgress: hasLearningProgress,
     ),
   );
 }
@@ -50,14 +55,18 @@ class SpeedSetupDialog extends StatefulWidget {
     required this.collection,
     required this.direction,
     required this.eligibleCount,
-    this.hasLearningProgress = false,
+    this.selectionDetails,
+    this.onStart,
+    this.busy = false,
     super.key,
   }) : assert(eligibleCount >= 0);
 
   final CollectionRecord collection;
   final LearningDirection direction;
   final int eligibleCount;
-  final bool hasLearningProgress;
+  final Widget? selectionDetails;
+  final ValueChanged<int>? onStart;
+  final bool busy;
 
   @override
   State<SpeedSetupDialog> createState() => _SpeedSetupDialogState();
@@ -77,13 +86,19 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
   }
 
   void _start() {
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (!mounted || widget.busy || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     final size = _poolSize;
     if (size == null || widget.eligibleCount == 0) {
       setState(() => _edited = true);
       return;
     }
-    Navigator.of(context).pop(size);
+    if (widget.onStart != null) {
+      widget.onStart!(size);
+    } else {
+      Navigator.of(context).pop(size);
+    }
   }
 
   @override
@@ -95,7 +110,7 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
-    final valid = _poolSize != null && widget.eligibleCount > 0;
+    final valid = !widget.busy && _poolSize != null && widget.eligibleCount > 0;
     final gap = d.dimension('spacing.3');
     return PikoDialog(
       purpose: PikoDialogPurpose.form,
@@ -116,80 +131,35 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
             style: TextStyle(color: d.color('muted')),
           ),
           SizedBox(height: gap),
-          Text(
-            widget.eligibleCount == 1
-                ? copy.text('r2.speedNewOne')
-                : copy.text('r2.speedNewCount', {
-                    'count': widget.eligibleCount,
-                  }),
-            key: const ValueKey('speed-new-count'),
-            style: TextStyle(fontWeight: d.weight('components.buttons.weight')),
-          ),
-          SizedBox(height: gap),
-          if (widget.hasLearningProgress) ...[
-            Container(
-              key: const ValueKey('speed-reset-warning'),
-              padding: EdgeInsets.all(gap),
-              decoration: BoxDecoration(
-                color: PikoTheme.warningBackground,
-                border: Border.all(
-                  color: d.color('danger'),
-                  width: d.dimension('states.borderWidth'),
-                ),
-                borderRadius: BorderRadius.circular(
-                  d.dimension('components.fields.radius'),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      IconTheme(
-                        data: IconThemeData(color: d.color('danger')),
-                        child: const PikoIcon(PikoIconName.alertTriangle),
-                      ),
-                      SizedBox(width: d.dimension('spacing.2')),
-                      Expanded(
-                        child: Text(
-                          copy.text('r2.speedResetWarningTitle'),
-                          style: TextStyle(
-                            color: d.color('danger'),
-                            fontWeight: d.weight('components.buttons.weight'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: d.dimension('spacing.2')),
-                  Text(
-                    copy.text('r2.speedResetWarning'),
-                    style: TextStyle(
-                      color: d.color('ink'),
-                      fontSize: d.dimension('typography.small'),
-                      height: d.dimension(
-                        'components.collectionReview.titleLineHeight',
-                      ),
-                    ),
-                  ),
-                ],
+          if (widget.selectionDetails != null)
+            widget.selectionDetails!
+          else
+            Text(
+              widget.eligibleCount == 1
+                  ? copy.text('r2.speedNewOne')
+                  : copy.text('r2.speedNewCount', {
+                      'count': widget.eligibleCount,
+                    }),
+              key: const ValueKey('speed-new-count'),
+              style: TextStyle(
+                fontWeight: d.weight('components.buttons.weight'),
               ),
             ),
-            SizedBox(height: gap),
-          ],
+          SizedBox(height: gap),
           PikoField(
             label: copy.text('r2.pool'),
             child: Semantics(
               label: copy.text('r2.pool'),
               child: TextField(
                 key: const ValueKey('speed-pool-size'),
+                readOnly: widget.busy,
                 controller: _pool,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 decoration: pikoInputDecoration(
-                  error: _edited && !valid ? copy.text('r2.poolInvalid') : null,
+                  error: _edited && _poolSize == null
+                      ? copy.text('r2.poolInvalid')
+                      : null,
                 ),
                 onChanged: (_) => setState(() => _edited = true),
                 onSubmitted: (_) => _start(),

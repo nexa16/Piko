@@ -70,11 +70,13 @@ void main() {
             await h.flush(tester);
             final copy = PikoCopy(language);
             expect(find.byType(PikoHeading), findsOneWidget);
-            expect(find.byType(PikoCard), findsNWidgets(3));
+            expect(find.byType(PikoCard), findsNWidgets(4));
             expect(settings.dropdown, findsOneWidget);
             final direction = find.byType(DropdownButton<PreferredDirection>);
             expect(direction, findsOneWidget);
-            expect(find.byType(PikoButton), findsOneWidget);
+            expect(find.byType(PikoButton), findsNWidgets(2));
+            expect(find.byKey(const ValueKey('settings-full-export')), findsOneWidget);
+            expect(find.byKey(const ValueKey('ai-connection')), findsNothing);
             final title = find.text(copy.text('nav.settings'));
             expect(title, findsOneWidget);
             expect(
@@ -107,6 +109,8 @@ void main() {
               copy.text('settings.directionNativeToTarget'),
               copy.text('settings.directionBoth'),
               copy.text('common.back'),
+              copy.text('fullExport.action'),
+              copy.text('fullExport.description'),
               'English',
               'Deutsch',
             };
@@ -129,7 +133,10 @@ void main() {
             await tester.ensureVisible(back);
             await tester.pumpAndSettle();
             expect(
-              tester.getSemantics(back),
+              // The passive geometry wrapper owns no accessibility node.
+              tester.getSemantics(
+                find.descendant(of: back, matching: find.byType(TextButton)),
+              ),
               matchesSemantics(
                 label: copy.text('common.back'),
                 isButton: true,
@@ -191,7 +198,12 @@ void main() {
               await tester.pumpAndSettle();
               backFocused =
                   tester
-                      .getSemantics(settings.button('common.back', next))
+                      .getSemantics(
+                        find.descendant(
+                          of: settings.button('common.back', next),
+                          matching: find.byType(TextButton),
+                        ),
+                      )
                       .getSemanticsData()
                       .flagsCollection
                       .isFocused ==

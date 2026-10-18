@@ -1,4 +1,6 @@
 import 'learning_help.dart';
+import 'collection_compact_action.dart';
+import '../../ui/components/piko_collapsing_header.dart';
 import 'collection_view_controls.dart';
 import 'collection_hint_settings.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_sleeping.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
@@ -37,7 +40,10 @@ import 'collection_search_field.dart';
 import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
-import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import '../speed/speed_completion_notice.dart';
+import '../speed/selected_speed_launch.dart';
+import '../speed/speed_setup_dialog.dart'
+    show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import '../categories/category_management.dart';
 import '../settings/preferred_direction_controller.dart';
 
@@ -72,6 +78,7 @@ class CollectionDetail extends StatefulWidget {
     this.categoryManagementBuilder,
     this.queryBinding,
     this.speedSessionFactory,
+    this.selectedSpeedSessionFactory,
     this.categoriesRepository,
     this.directionBinding,
     super.key,
@@ -94,6 +101,7 @@ class CollectionDetail extends StatefulWidget {
   /// Runtime-owned; this route listens but never disposes the shared projection.
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
+  final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
@@ -102,6 +110,64 @@ class CollectionDetail extends StatefulWidget {
 
 class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   final _interactionAnchor = PikoInteractionAnchor();
+  final _expandedHeaderFocus = FocusNode();
+  final _expandedReviewFocus = FocusNode();
+  final _expandedSpeedFocus = FocusNode();
+  final _backFocus = FocusNode();
+  final _compactBackFocus = FocusNode();
+  final _compactMenuFocus = FocusNode();
+  final _compactReviewFocus = FocusNode();
+  final _compactSpeedFocus = FocusNode();
+  final _expandedNoticeFocus = FocusNode();
+  final _compactNoticeFocus = FocusNode();
+  var _reviewLaunchKey = GlobalKey<ReviewLaunchState>();
+  var _speedLaunchKey = GlobalKey<SpeedLaunchState>();
+  Object? _launchKeysIdentity;
+  bool _headerCompact = false;
+
+  void _headerChanged(bool compact) {
+    if (_headerCompact == compact) return;
+    FocusNode? next;
+    FocusNode? nextGroup;
+    if (compact) {
+      if (_expandedReviewFocus.hasFocus) {
+        next = _compactReviewFocus;
+      } else if (_expandedSpeedFocus.hasFocus) {
+        next = _compactSpeedFocus;
+      } else if (_menuFocus.hasFocus) {
+        next = _compactMenuFocus;
+      } else if (_expandedNoticeFocus.hasFocus) {
+        next = _compactNoticeFocus;
+      } else if (_expandedHeaderFocus.hasFocus) {
+        next = _compactBackFocus;
+      }
+    } else if (_compactMenuFocus.hasFocus) {
+      next = _menuFocus;
+    } else if (_compactNoticeFocus.hasFocus) {
+      next = _expandedNoticeFocus;
+    } else if (_compactBackFocus.hasFocus ||
+        _compactReviewFocus.hasFocus ||
+        _compactSpeedFocus.hasFocus) {
+      // The expanded launch may have disappeared after a count refresh.
+      nextGroup = _compactReviewFocus.hasFocus
+          ? _expandedReviewFocus
+          : _compactSpeedFocus.hasFocus
+          ? _expandedSpeedFocus
+          : null;
+      next = _backFocus;
+    }
+    setState(() => _headerCompact = compact);
+    if (next != null) {
+      final target = next;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          (nextGroup?.traversalDescendants.firstOrNull ?? target)
+              .requestFocus();
+        }
+      });
+    }
+  }
+
   final _selection = VocabularySelection();
   RouteObserver<PageRoute<dynamic>>? _pageObserver;
   PageRoute<dynamic>? _pageRoute;
@@ -635,6 +701,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         },
         builder: (dialogContext) => FilterSelectionDialog(
           snapshot: binding.snapshot!,
+          categories: widget.categoriesRepository,
           opening: binding.scope.filters,
           canApply: () => current() && _queryControlsAvailable,
           onPendingWrites: widget.onPendingVocabularyWrites,
@@ -942,6 +1009,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
     if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory ||
         oldWidget.speedSessionFactory != widget.speedSessionFactory ||
+        oldWidget.selectedSpeedSessionFactory !=
+            widget.selectedSpeedSessionFactory ||
         oldWidget.queryBinding != widget.queryBinding ||
         oldWidget.reviewMembershipLoader != widget.reviewMembershipLoader ||
         oldWidget.reviewCountPolicy != widget.reviewCountPolicy ||
@@ -970,6 +1039,20 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     _nameFocus.dispose();
     _renameFocus.dispose();
     _menuFocus.dispose();
+    for (final focus in [
+      _expandedHeaderFocus,
+      _expandedReviewFocus,
+      _expandedSpeedFocus,
+      _backFocus,
+      _compactBackFocus,
+      _compactMenuFocus,
+      _compactReviewFocus,
+      _compactSpeedFocus,
+      _expandedNoticeFocus,
+      _compactNoticeFocus,
+    ]) {
+      focus.dispose();
+    }
     _closeDeleteDialog();
     _closeMenu();
     _closeFilters();
@@ -1011,6 +1094,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
 
   Widget _build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final launchIdentity = (widget.collectionId, _identity, _reviewIdentity);
+    if (_launchKeysIdentity != launchIdentity) {
+      _launchKeysIdentity = launchIdentity;
+      _reviewLaunchKey = GlobalKey<ReviewLaunchState>();
+      _speedLaunchKey = GlobalKey<SpeedLaunchState>();
+    }
     final barrierForBuild = _writeBarrier;
     final registerForBuild = widget.onPendingVocabularyWrites;
     final identityForBuild = _identity;
@@ -1035,190 +1124,197 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               record == null) {
             _lastReadyCollection = null;
           }
+          final expandedHeader = Focus(
+            focusNode: _expandedHeaderFocus,
+            canRequestFocus: false,
+            child: ColoredBox(
+              color: pikoDesign.color('bg'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _detailHeading(record, ready),
+                  if (_speedCompletedCount != null && ready)
+                    SpeedCompletionNotice(
+                      count: _speedCompletedCount!,
+                      dismissFocusNode: _expandedNoticeFocus,
+                      onDismiss: () =>
+                          setState(() => _speedCompletedCount = null),
+                    ),
+                  if (_deleting) Text(copy.text('collection.deleting')),
+                  if (_deleteError != null)
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        copy.text('collection.deleteFailed'),
+                        style: TextStyle(color: pikoDesign.color('danger')),
+                      ),
+                    ),
+                  if (snapshot.hasError)
+                    CollectionLoadFailure(onRetry: () => setState(_watch))
+                  else if (snapshot.connectionState == ConnectionState.waiting)
+                    Text(copy.text('collection.loading'))
+                  else if (record == null)
+                    Text(copy.text('collection.notFound')),
+                  if (_lastReadyCollection != null &&
+                      widget.queryBinding != null &&
+                      (widget.reviewSessionFactory != null ||
+                          widget.speedSessionFactory != null) &&
+                      widget.vocabularyRepository != null)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: pikoDesign.dimension('spacing.2'),
+                      ),
+                      child: _projectedLearning(
+                        enabled:
+                            ready &&
+                            _deleteRequest == null &&
+                            _renameRequest == null &&
+                            !_openingEntry &&
+                            (_mutations?.isBusy != true || _learningBusy),
+                        beforeLaunch: () async {
+                          barrierForBuild.freeze();
+                          await barrierForBuild.drain();
+                          await mutationsForBuild?.awaitPending();
+                        },
+                        onBusyChanged: (speed, busy) {
+                          if (mounted &&
+                              identityForBuild == _identity &&
+                              reviewIdentityForBuild == _reviewIdentity) {
+                            setState(() {
+                              if (busy) {
+                                _speedCompletedCount = null;
+                                _heldLearningSnapshot ??=
+                                    widget.queryBinding!.snapshot;
+                              }
+                              if (speed) {
+                                _openingSpeed = busy;
+                              } else {
+                                _openingReview = busy;
+                              }
+                              if (!_learningBusy) {
+                                _heldLearningSnapshot = null;
+                              }
+                            });
+                            if (!_learningBusy) barrierForBuild.release();
+                          }
+                        },
+                      ),
+                    ),
+                  if (_lastReadyCollection != null &&
+                      widget.queryBinding == null &&
+                      widget.reviewSessionFactory != null &&
+                      widget.vocabularyRepository != null)
+                    Padding(
+                      key: ValueKey(
+                        'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
+                      ),
+                      padding: EdgeInsets.only(
+                        top: pikoDesign.dimension(
+                          widget.reviewMembershipLoader == null
+                              ? 'spacing.3'
+                              : 'spacing.5',
+                        ),
+                      ),
+                      child: widget.reviewMembershipLoader == null
+                          ? ReviewLaunch(
+                              key: ValueKey(
+                                'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                              ),
+                              collection: _lastReadyCollection!,
+                              factory: widget.reviewSessionFactory!,
+                              vocabularyRepository:
+                                  widget.vocabularyRepository!,
+                              categoriesRepository: widget.categoriesRepository,
+                              enabled:
+                                  ready &&
+                                  _deleteRequest == null &&
+                                  _renameRequest == null &&
+                                  !_openingEntry &&
+                                  _mutations?.isBusy != true,
+                              beforeLaunch: () async {
+                                barrierForBuild.freeze();
+                                await barrierForBuild.drain();
+                                await mutationsForBuild?.awaitPending();
+                              },
+                              onPendingWrites: registerForBuild,
+                              onBusyChanged: (busy) {
+                                if (mounted &&
+                                    identityForBuild == _identity &&
+                                    reviewIdentityForBuild == _reviewIdentity) {
+                                  if (!busy) barrierForBuild.release();
+                                  setState(() => _openingReview = busy);
+                                }
+                              },
+                            )
+                          : CollectionReviewEntryPoint(
+                              key: ValueKey(
+                                'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
+                              ),
+                              collection: _lastReadyCollection!,
+                              loader: widget.reviewMembershipLoader!,
+                              policy: widget.reviewCountPolicy!,
+                              clock: widget.reviewCountClock,
+                              factory: widget.reviewSessionFactory!,
+                              categoriesRepository: widget.categoriesRepository,
+                              vocabularyRepository:
+                                  widget.vocabularyRepository!,
+                              enabled:
+                                  ready &&
+                                  _deleteRequest == null &&
+                                  _renameRequest == null &&
+                                  !_openingEntry &&
+                                  _mutations?.isBusy != true,
+                              beforeLaunch: () async {
+                                barrierForBuild.freeze();
+                                await barrierForBuild.drain();
+                                await mutationsForBuild?.awaitPending();
+                              },
+                              onPendingWrites: registerForBuild,
+                              onBusyChanged: (busy) {
+                                if (mounted &&
+                                    identityForBuild == _identity &&
+                                    reviewIdentityForBuild == _reviewIdentity) {
+                                  if (!busy) barrierForBuild.release();
+                                  setState(() => _openingReview = busy);
+                                }
+                              },
+                              presentation:
+                                  ReviewLaunchPresentation.collectionCard,
+                            ),
+                    ),
+                ],
+              ),
+            ),
+          );
           final page = PikoPage.slivers(
+            hasPinnedHeader: widget.queryBinding != null,
             safeAreaBottom: widget.queryBinding == null,
             key: ValueKey('collection-page-${widget.collectionId}'),
             interactionAnchor: _interactionAnchor,
             physics: const CollectionScrollPhysics(),
             slivers: [
+              if (widget.queryBinding != null)
+                PikoCollapsingHeader(
+                  key: ValueKey('collection-header-${widget.collectionId}'),
+                  expanded: expandedHeader,
+                  compact: _compactHeading(
+                    record,
+                    ready,
+                    collectionFailed: snapshot.hasError,
+                    collectionMissing:
+                        !snapshot.hasError &&
+                        snapshot.connectionState == ConnectionState.active &&
+                        record == null,
+                  ),
+                  keepExpanded: _renaming,
+                  onCompactChanged: _headerChanged,
+                )
+              else
+                SliverToBoxAdapter(child: expandedHeader),
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _detailHeading(record, ready),
-                    if (_speedCompletedCount != null && ready)
-                      Semantics(
-                        liveRegion: true,
-                        child: Row(
-                          key: const ValueKey('speed-completion-notice'),
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _speedCompletedCount == 1
-                                    ? copy.text('speed.completionNoticeOne')
-                                    : copy.text('speed.completionNotice', {
-                                        'count': _speedCompletedCount!,
-                                      }),
-                              ),
-                            ),
-                            PikoIconButton(
-                              semanticLabel: copy.text(
-                                'speed.dismissCompletion',
-                              ),
-                              icon: const PikoIcon(PikoIconName.x),
-                              onPressed: () =>
-                                  setState(() => _speedCompletedCount = null),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (_deleting) Text(copy.text('collection.deleting')),
-                    if (_deleteError != null)
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          copy.text('collection.deleteFailed'),
-                          style: TextStyle(color: pikoDesign.color('danger')),
-                        ),
-                      ),
-                    if (snapshot.hasError)
-                      CollectionLoadFailure(onRetry: () => setState(_watch))
-                    else if (snapshot.connectionState ==
-                        ConnectionState.waiting)
-                      Text(copy.text('collection.loading'))
-                    else if (record == null)
-                      Text(copy.text('collection.notFound')),
-                    if (_lastReadyCollection != null &&
-                        widget.queryBinding != null &&
-                        (widget.reviewSessionFactory != null ||
-                            widget.speedSessionFactory != null) &&
-                        widget.vocabularyRepository != null)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: pikoDesign.dimension('spacing.2'),
-                        ),
-                        child: _projectedLearning(
-                          enabled:
-                              ready &&
-                              _deleteRequest == null &&
-                              _renameRequest == null &&
-                              !_openingEntry &&
-                              (_mutations?.isBusy != true || _learningBusy),
-                          beforeLaunch: () async {
-                            barrierForBuild.freeze();
-                            await barrierForBuild.drain();
-                            await mutationsForBuild?.awaitPending();
-                          },
-                          onBusyChanged: (speed, busy) {
-                            if (mounted &&
-                                identityForBuild == _identity &&
-                                reviewIdentityForBuild == _reviewIdentity) {
-                              setState(() {
-                                if (busy) {
-                                  _speedCompletedCount = null;
-                                  _heldLearningSnapshot ??=
-                                      widget.queryBinding!.snapshot;
-                                }
-                                if (speed) {
-                                  _openingSpeed = busy;
-                                } else {
-                                  _openingReview = busy;
-                                }
-                                if (!_learningBusy) {
-                                  _heldLearningSnapshot = null;
-                                }
-                              });
-                              if (!_learningBusy) barrierForBuild.release();
-                            }
-                          },
-                        ),
-                      ),
-                    if (_lastReadyCollection != null &&
-                        widget.queryBinding == null &&
-                        widget.reviewSessionFactory != null &&
-                        widget.vocabularyRepository != null)
-                      Padding(
-                        key: ValueKey(
-                          'review-launch-slot-${widget.collectionId}-$_identity-$_reviewIdentity',
-                        ),
-                        padding: EdgeInsets.only(
-                          top: pikoDesign.dimension(
-                            widget.reviewMembershipLoader == null
-                                ? 'spacing.3'
-                                : 'spacing.5',
-                          ),
-                        ),
-                        child: widget.reviewMembershipLoader == null
-                            ? ReviewLaunch(
-                                key: ValueKey(
-                                  'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
-                                ),
-                                collection: _lastReadyCollection!,
-                                factory: widget.reviewSessionFactory!,
-                                vocabularyRepository:
-                                    widget.vocabularyRepository!,
-                                categoriesRepository:
-                                    widget.categoriesRepository,
-                                enabled:
-                                    ready &&
-                                    _deleteRequest == null &&
-                                    _renameRequest == null &&
-                                    !_openingEntry &&
-                                    _mutations?.isBusy != true,
-                                beforeLaunch: () async {
-                                  barrierForBuild.freeze();
-                                  await barrierForBuild.drain();
-                                  await mutationsForBuild?.awaitPending();
-                                },
-                                onPendingWrites: registerForBuild,
-                                onBusyChanged: (busy) {
-                                  if (mounted &&
-                                      identityForBuild == _identity &&
-                                      reviewIdentityForBuild ==
-                                          _reviewIdentity) {
-                                    if (!busy) barrierForBuild.release();
-                                    setState(() => _openingReview = busy);
-                                  }
-                                },
-                              )
-                            : CollectionReviewEntryPoint(
-                                key: ValueKey(
-                                  'review-launch-${widget.collectionId}-$_identity-$_reviewIdentity',
-                                ),
-                                collection: _lastReadyCollection!,
-                                loader: widget.reviewMembershipLoader!,
-                                policy: widget.reviewCountPolicy!,
-                                clock: widget.reviewCountClock,
-                                factory: widget.reviewSessionFactory!,
-                                categoriesRepository:
-                                    widget.categoriesRepository,
-                                vocabularyRepository:
-                                    widget.vocabularyRepository!,
-                                enabled:
-                                    ready &&
-                                    _deleteRequest == null &&
-                                    _renameRequest == null &&
-                                    !_openingEntry &&
-                                    _mutations?.isBusy != true,
-                                beforeLaunch: () async {
-                                  barrierForBuild.freeze();
-                                  await barrierForBuild.drain();
-                                  await mutationsForBuild?.awaitPending();
-                                },
-                                onPendingWrites: registerForBuild,
-                                onBusyChanged: (busy) {
-                                  if (mounted &&
-                                      identityForBuild == _identity &&
-                                      reviewIdentityForBuild ==
-                                          _reviewIdentity) {
-                                    if (!busy) barrierForBuild.release();
-                                    setState(() => _openingReview = busy);
-                                  }
-                                },
-                                presentation:
-                                    ReviewLaunchPresentation.collectionCard,
-                              ),
-                      ),
                     if (ready &&
                         (widget.entrySessionFactory != null ||
                             widget.vocabularyRepository != null))
@@ -1382,6 +1478,77 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             children: [
               Expanded(child: page),
               VocabularySelectionPanel(
+                speedAction:
+                    widget.selectedSpeedSessionFactory == null ||
+                        widget.vocabularyRepository == null ||
+                        _lastReadyCollection == null
+                    ? null
+                    : SelectedSpeedLaunch(
+                        key: ValueKey(
+                          'selected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
+                        ),
+                        collection: _lastReadyCollection!,
+                        selection: _selection,
+                        directions: _directions,
+                        factory: widget.selectedSpeedSessionFactory!,
+                        vocabularyRepository: widget.vocabularyRepository!,
+                        categoriesRepository: widget.categoriesRepository,
+                        enabled:
+                            ready &&
+                            _directionReady &&
+                            !_openingReview &&
+                            !_openingEntry &&
+                            _deleteRequest == null &&
+                            _renameRequest == null &&
+                            (_mutations?.isBusy != true || _openingSpeed) &&
+                            (widget.queryBinding!.ready || _openingSpeed) &&
+                            widget.queryBinding!.scope.viewReady &&
+                            !widget.queryBinding!.scope.viewPending,
+                        beforeLaunch: () async {
+                          barrierForBuild.freeze();
+                          await barrierForBuild.drain();
+                          await mutationsForBuild?.awaitPending();
+                        },
+                        loadScope: (selected) async {
+                          final binding = widget.queryBinding!;
+                          final snapshot = await binding.service.query(
+                            collectionId: binding.collectionId,
+                            at: binding.clock.now().toUtc(),
+                            search: binding.scope.search,
+                            filters: binding.scope.filters,
+                          );
+                          return SelectedSpeedScope(
+                            snapshot,
+                            selected,
+                            binding.scope.view.sort,
+                          );
+                        },
+                        onBusyChanged: (busy) {
+                          if (!mounted ||
+                              identityForBuild != _identity ||
+                              reviewIdentityForBuild != _reviewIdentity) {
+                            return;
+                          }
+                          setState(() {
+                            _openingSpeed = busy;
+                            if (busy) {
+                              _speedCompletedCount = null;
+                              _heldLearningSnapshot ??=
+                                  widget.queryBinding!.snapshot;
+                            } else {
+                              _heldLearningSnapshot = null;
+                            }
+                          });
+                          if (!busy) barrierForBuild.release();
+                        },
+                        onPendingWrites: registerForBuild,
+                        onSessionClosed: widget.queryBinding!.refresh,
+                        onCompleted: (count) {
+                          if (mounted) {
+                            setState(() => _speedCompletedCount = count);
+                          }
+                        },
+                      ),
                 selection: _selection,
                 matchingIds:
                     widget.queryBinding!.snapshot?.entries
@@ -1440,22 +1607,42 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             _directions.contains(direction.key) &&
             direction.value.pendingRetryCount > 0,
       );
+      final message = Text(
+        copy.text(
+          pending
+              ? 'r2.pending'
+              : binding.scope.restricted
+              ? 'collection.filteredNoReview'
+              : 'r2.caughtUp',
+        ),
+      );
+      final sleeping =
+          binding.ready &&
+          !pending &&
+          !_learningBusy &&
+          _speedCompletedCount == null &&
+          _directions.every(
+            (direction) =>
+                snapshot.directions[direction]!.newSpeedItems.isEmpty,
+          );
       normal = !_directionReady
           ? const SizedBox.shrink()
-          : Text(
-              copy.text(
-                pending
-                    ? 'r2.pending'
-                    : binding.scope.restricted
-                    ? 'collection.filteredNoReview'
-                    : 'r2.caughtUp',
-              ),
-            );
+          : sleeping
+          ? Row(
+              children: [
+                Expanded(child: message),
+                SizedBox(
+                  width: pikoDesign.dimension(
+                    'components.collectionReview.mascotGap',
+                  ),
+                ),
+                const PikoSleeping(),
+              ],
+            )
+          : message;
     } else if (widget.reviewSessionFactory != null) {
       normal = ReviewLaunch(
-        key: ValueKey(
-          'projected-review-${widget.collectionId}-$_identity-$_reviewIdentity',
-        ),
+        key: _reviewLaunchKey,
         collection: snapshot.collection,
         factory: widget.reviewSessionFactory!,
         vocabularyRepository: widget.vocabularyRepository!,
@@ -1469,8 +1656,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             !_openingSpeed &&
             (binding.ready || _openingReview),
         presentation: ReviewLaunchPresentation.collectionCard,
+        showMascot:
+            _speedCompletedCount == null && _directionReady && binding.ready,
         dueCount: total,
         directionCounts: counts,
+        availabilityChanges: binding,
+        scopeIdentity: (binding, binding.scope.search, binding.scope.filters),
         allowedDirections: _directions,
         directionCountsLoader: () async {
           final fresh = await binding.service.query(
@@ -1493,45 +1684,268 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        normal,
+        Focus(
+          focusNode: _expandedReviewFocus,
+          canRequestFocus: false,
+          child: normal,
+        ),
         if (widget.speedSessionFactory != null)
           Padding(
             padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
-            child: SpeedLaunch(
-              key: ValueKey(
-                'projected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
-              ),
-              snapshot: snapshot,
-              allowedDirections: _directions,
-              scopeIdentity: (
-                binding,
-                binding.scope.search,
-                binding.scope.filters,
-              ),
-              factory: widget.speedSessionFactory!,
-              vocabularyRepository: widget.vocabularyRepository!,
-              categoriesRepository: widget.categoriesRepository,
-              beforeLaunch: beforeLaunch,
-              onBusyChanged: (busy) => onBusyChanged(true, busy),
-              onPendingWrites: widget.onPendingVocabularyWrites,
-              onSessionClosed: binding.refresh,
-              onCompleted: (count) {
-                if (mounted) setState(() => _speedCompletedCount = count);
-              },
-              enabled:
-                  enabled &&
-                  _directionReady &&
-                  !_openingReview &&
-                  (binding.ready || _openingSpeed),
-              snapshotLoader: () => binding.service.query(
-                collectionId: binding.collectionId,
-                at: binding.clock.now().toUtc(),
-                search: binding.scope.search,
-                filters: binding.scope.filters,
+            child: Focus(
+              focusNode: _expandedSpeedFocus,
+              canRequestFocus: false,
+              child: SpeedLaunch(
+                key: _speedLaunchKey,
+                snapshot: snapshot,
+                availabilityChanges: binding,
+                allowedDirections: _directions,
+                scopeIdentity: (
+                  binding,
+                  binding.scope.search,
+                  binding.scope.filters,
+                ),
+                factory: widget.speedSessionFactory!,
+                vocabularyRepository: widget.vocabularyRepository!,
+                categoriesRepository: widget.categoriesRepository,
+                beforeLaunch: beforeLaunch,
+                onBusyChanged: (busy) => onBusyChanged(true, busy),
+                onPendingWrites: widget.onPendingVocabularyWrites,
+                onSessionClosed: binding.refresh,
+                onCompleted: (count) {
+                  if (mounted) setState(() => _speedCompletedCount = count);
+                },
+                enabled:
+                    enabled &&
+                    _directionReady &&
+                    !_openingReview &&
+                    (binding.ready || _openingSpeed),
+                snapshotLoader: () => binding.service.query(
+                  collectionId: binding.collectionId,
+                  at: binding.clock.now().toUtc(),
+                  search: binding.scope.search,
+                  filters: binding.scope.filters,
+                ),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _compactHeading(
+    CollectionRecord? record,
+    bool ready, {
+    required bool collectionFailed,
+    required bool collectionMissing,
+  }) {
+    final copy = PikoCopyScope.of(context), d = pikoDesign;
+    final binding = widget.queryBinding!;
+    final snapshot = _heldLearningSnapshot ?? binding.snapshot;
+    final resolved =
+        ready && _directionReady && (binding.ready || _learningBusy);
+    final directionError =
+        !_directionReady && widget.directionBinding?.value?.error != null;
+    final failed =
+        collectionFailed ||
+        collectionMissing ||
+        binding.error != null ||
+        directionError;
+    final reviewCount = resolved
+        ? _directions.fold<int>(
+            0,
+            (sum, direction) =>
+                sum + (snapshot?.directions[direction]?.dueCount ?? 0),
+          )
+        : null;
+    final speedCount = resolved
+        ? _directions.fold<int>(
+            0,
+            (sum, direction) =>
+                sum +
+                (snapshot?.directions[direction]?.newSpeedItems.length ?? 0),
+          )
+        : null;
+    final waiting =
+        resolved &&
+        reviewCount == 0 &&
+        _directions.any(
+          (direction) =>
+              (snapshot?.directions[direction]?.pendingRetryCount ?? 0) > 0,
+        );
+    final enabled =
+        resolved &&
+        !_learningBusy &&
+        !_openingEntry &&
+        _deleteRequest == null &&
+        _renameRequest == null &&
+        _mutations?.isBusy != true;
+    String label(bool speed, int? count) => count == null
+        ? copy.text(
+            failed ? 'collection.compactFailed' : 'collection.compactLoading',
+            {'mode': copy.text(speed ? 'action.speed' : 'action.review')},
+          )
+        : !speed && waiting
+        ? copy.text('collection.compactPending')
+        : copy.text(
+            speed ? 'collection.compactSpeed' : 'collection.compactReview',
+            {'count': count},
+          );
+    final total = snapshot?.allEntries.length;
+    return ColoredBox(
+      color: d.color('bg'),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: d.dimension('spacing.2')),
+        child: Column(
+          key: const ValueKey('collection-compact-header'),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                PikoIconButton(
+                  key: const ValueKey('collection-compact-back'),
+                  focusNode: _compactBackFocus,
+                  semanticLabel: copy.text('common.back'),
+                  icon: const PikoIcon(PikoIconName.arrowLeft),
+                  variant: PikoButtonVariant.ghost,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+                const Spacer(),
+                PikoIconButton(
+                  key: const ValueKey('collection-compact-menu'),
+                  focusNode: _compactMenuFocus,
+                  semanticLabel: copy.text('r2.more'),
+                  icon: const PikoIcon(PikoIconName.ellipsis),
+                  variant: PikoButtonVariant.neutral,
+                  large: true,
+                  onPressed:
+                      ready &&
+                          !_learningBusy &&
+                          !_openingEntry &&
+                          _deleteRequest == null &&
+                          _renameRequest == null
+                      ? _openMenu
+                      : null,
+                ),
+              ],
+            ),
+            SizedBox(height: d.dimension('spacing.1')),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Semantics(
+                    header: true,
+                    headingLevel: 1,
+                    child: Text(
+                      record?.name ??
+                          _lastReadyCollection?.name ??
+                          copy.text('collection.title'),
+                      style: TextStyle(
+                        fontSize: d.dimension(
+                          'components.collectionHeader.titleSize',
+                        ),
+                        fontWeight: d.weight('typography.titleWeight'),
+                        height: d.dimension(
+                          'components.collectionHeader.titleLineHeight',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: d.dimension('spacing.2')),
+                Expanded(
+                  child: CollectionCompactAction(
+                    key: const ValueKey('collection-review-compact'),
+                    label: label(false, reviewCount),
+                    count: reviewCount?.toString() ?? (failed ? '!' : '…'),
+                    focusNode: _compactReviewFocus,
+                    onPressed:
+                        enabled &&
+                            (reviewCount ?? 0) > 0 &&
+                            widget.reviewSessionFactory != null
+                        ? () => _reviewLaunchKey.currentState?.openMerged()
+                        : null,
+                  ),
+                ),
+                SizedBox(width: d.dimension('spacing.2')),
+                Expanded(
+                  child: CollectionCompactAction(
+                    key: const ValueKey('collection-speed-compact'),
+                    speed: true,
+                    label: label(true, speedCount),
+                    count: speedCount?.toString() ?? (failed ? '!' : '…'),
+                    focusNode: _compactSpeedFocus,
+                    onPressed:
+                        enabled &&
+                            (speedCount ?? 0) > 0 &&
+                            widget.speedSessionFactory != null
+                        ? () => _speedLaunchKey.currentState?.openMerged()
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: d.dimension('spacing.1')),
+            Text(
+              total == null
+                  ? copy.text('collection.loading')
+                  : copy.text(total == 1 ? 'common.entry' : 'common.entries', {
+                      'count': total,
+                    }),
+              style: TextStyle(
+                fontSize: d.dimension('typography.small'),
+                color: d.color('muted'),
+              ),
+            ),
+            if (_speedCompletedCount != null && ready)
+              SpeedCompletionNotice(
+                count: _speedCompletedCount!,
+                showArtwork: false,
+                dismissFocusNode: _compactNoticeFocus,
+                onDismiss: () => setState(() => _speedCompletedCount = null),
+              ),
+            if (!resolved)
+              Text(
+                copy.text(
+                  collectionMissing
+                      ? 'collection.notFound'
+                      : collectionFailed
+                      ? 'collection.loadFailed'
+                      : failed
+                      ? 'collection.reviewLoadFailed'
+                      : 'collection.reviewLoading',
+                ),
+              ),
+            if (failed && !collectionMissing)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: PikoButton(
+                  label: copy.text('action.retry'),
+                  variant: PikoButtonVariant.ghost,
+                  onPressed: binding.loading
+                      ? null
+                      : () {
+                          if (collectionFailed) setState(_watch);
+                          if (directionError) {
+                            widget.directionBinding?.value?.retry();
+                          }
+                          if (binding.error != null) binding.refresh();
+                        },
+                ),
+              ),
+            if (waiting) Text(copy.text('r2.pending')),
+            if (_reviewLaunchKey.currentState?.hasLaunchError == true ||
+                _speedLaunchKey.currentState?.hasLaunchError == true)
+              Text(
+                copy.text('learn.prepareFailed'),
+                style: TextStyle(color: d.color('danger')),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1549,6 +1963,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           ? null
           : collectionEntryMetadata(context, record, entryCount),
       leading: PikoIconButton(
+        focusNode: _backFocus,
         semanticLabel: copy.text('common.back'),
         icon: const PikoIcon(PikoIconName.arrowLeft),
         variant: PikoButtonVariant.ghost,

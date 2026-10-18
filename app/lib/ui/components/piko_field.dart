@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
+import 'piko_interaction_anchor.dart';
 
 InputDecoration pikoInputDecoration({String? error}) {
   final d = pikoDesign;
@@ -33,20 +34,22 @@ class PikoField extends StatelessWidget {
   final String label;
   final Widget child;
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge!.copyWith(
-          color: pikoDesign.color('muted'),
-          fontSize: pikoDesign.dimension('components.fields.labelSize'),
-          fontWeight: pikoDesign.weight('components.fields.labelWeight'),
+  Widget build(BuildContext context) => PikoAnchorAction(
+    builder: (context) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge!.copyWith(
+            color: pikoDesign.color('muted'),
+            fontSize: pikoDesign.dimension('components.fields.labelSize'),
+            fontWeight: pikoDesign.weight('components.fields.labelWeight'),
+          ),
         ),
-      ),
-      SizedBox(height: pikoDesign.dimension('components.dropdowns.gap')),
-      child,
-    ],
+        SizedBox(height: pikoDesign.dimension('components.dropdowns.gap')),
+        child,
+      ],
+    ),
   );
 }
 

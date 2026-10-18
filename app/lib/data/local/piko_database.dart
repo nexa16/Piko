@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import '../../core/clock.dart';
+import '../../core/learning_day.dart';
+import 'statistics_tables.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
 import '../preferred_direction.dart';
@@ -128,6 +130,17 @@ class CategoryValues extends Table {
     'UNIQUE(dimension_id, name_key)',
     'UNIQUE(id, dimension_id)',
   ];
+}
+
+/// Local presentation choices, deliberately absent from Collection interchange.
+class CategoryGroupPreferences extends Table {
+  TextColumn get dimensionId =>
+      text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
+  BoolColumn get customValueOrder =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get carryOver => boolean().withDefault(const Constant(false))();
+  @override
+  Set<Column<Object>> get primaryKey => {dimensionId};
 }
 
 @DataClassName('StoredCategoryAssignment')
@@ -284,16 +297,25 @@ class VocabularyOrderSequence extends Table {
     VocabularyOrderSequence,
     CategoryDimensions,
     CategoryValues,
+    CategoryGroupPreferences,
     VocabularyCategoryAssignments,
+    StatisticsOrigins,
+    StatisticsActivity,
+    SpeedCompletionReceipts,
   ],
 )
 class PikoDatabase extends _$PikoDatabase {
-  PikoDatabase(super.executor, {this.clock = const SystemPikoClock()});
+  PikoDatabase(
+    super.executor, {
+    this.clock = const SystemPikoClock(),
+    this.learningDayCalendar = const DeviceLearningDayCalendar(),
+  });
   final PikoClock clock;
+  final LearningDayCalendar learningDayCalendar;
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -406,6 +428,19 @@ class PikoDatabase extends _$PikoDatabase {
             await m.addColumn(collections, collections.automaticHintDefault);
             await m.addColumn(collections, collections.hintDefaultOfferHandled);
           }
+        }
+        if (from < 17) {
+          await m.createTable(statisticsOrigins);
+          await m.createTable(statisticsActivity);
+          await m.createTable(speedCompletionReceipts);
+          await m.createIndex(statisticsActivityDate);
+        }
+        if (from < 18) await m.createTable(categoryGroupPreferences);
+        if (from == 18) {
+          await m.addColumn(
+            categoryGroupPreferences,
+            categoryGroupPreferences.carryOver,
+          );
         }
       });
     },

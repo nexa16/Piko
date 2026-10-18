@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/entry/entry_session_controller.dart';
@@ -86,7 +87,7 @@ void main() {
         final inset = await keyboardHost(tester, session, language, 2);
         final viewport = find.byKey(const ValueKey('entry-stack'));
         final scroll = tester
-            .widget<SingleChildScrollView>(viewport)
+            .widget<PikoAnchoredBoxScrollView>(viewport)
             .controller!;
         expect(scroll.offset, 0);
         expect(
@@ -166,7 +167,7 @@ void main() {
         await scrollActionIntoView(tester, save);
         // A subsequent IME reflow must not undo the deliberate action scroll.
         final scroll = tester
-            .widget<SingleChildScrollView>(
+            .widget<PikoAnchoredBoxScrollView>(
               find.byKey(const ValueKey('entry-stack')),
             )
             .controller!;
@@ -205,7 +206,9 @@ void main() {
       await seed(session, 4);
       final inset = await keyboardHost(tester, session, 'en', 1);
       final viewport = find.byKey(const ValueKey('entry-stack'));
-      final scroll = tester.widget<SingleChildScrollView>(viewport).controller!;
+      final scroll = tester
+          .widget<PikoAnchoredBoxScrollView>(viewport)
+          .controller!;
       final area = tester.getRect(viewport);
       await tester.dragFrom(
         Offset(area.left + 4, area.center.dy),
@@ -227,8 +230,8 @@ void main() {
       );
       expect(
         tester
-            .widget<SingleChildScrollView>(viewport)
-            .padding!
+            .widget<PikoAnchoredBoxScrollView>(viewport)
+            .padding
             .resolve(TextDirection.ltr)
             .top,
         0,

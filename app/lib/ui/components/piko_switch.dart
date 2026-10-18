@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'piko_interaction_anchor.dart';
 
 /// A labeled switch also paints correctly inside a decorated PikoCard.
 class PikoSwitch extends StatelessWidget {
@@ -14,14 +15,21 @@ class PikoSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
   @override
-  Widget build(BuildContext context) => Material(
-    type: MaterialType.transparency,
-    child: SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: title,
-      subtitle: subtitle,
-      value: value,
-      onChanged: onChanged,
+  Widget build(BuildContext context) => PikoAnchorAction(
+    builder: (context) => Material(
+      type: MaterialType.transparency,
+      child: SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: title,
+        subtitle: subtitle,
+        value: value,
+        onChanged: onChanged == null
+            ? null
+            : (value) {
+                PikoAnchorRegion.capture(context);
+                onChanged!(value);
+              },
+      ),
     ),
   );
 }

@@ -3,6 +3,76 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+"fullExport.action": {"en":"Export all Collections","de":"Alle Sammlungen exportieren"},
+"fullExport.description": {"en":"Save all Collections and the complete recorded statistics in one JSON file. The Collection importer cannot restore this report. Global settings are not included.","de":"Alle Sammlungen und die vollständige aufgezeichnete Statistik in einer JSON-Datei speichern. Der Sammlungsimport kann diesen Bericht nicht wiederherstellen. Globale Einstellungen sind nicht enthalten."},
+"fullExport.preparing": {"en":"Preparing export…","de":"Export wird vorbereitet…"},
+"fullExport.cancelled": {"en":"Export cancelled. No file was saved.","de":"Export abgebrochen. Es wurde keine Datei gespeichert."},
+"fullExport.failed": {"en":"Export failed. Try again.","de":"Export fehlgeschlagen. Bitte erneut versuchen."},
+"collection.noLearningDirection": {"en":"No direction is available right now.","de":"Gerade ist keine Lernrichtung verfügbar."},
+"collection.compactReview": {"en":"Review, {count} directional items","de":"Wiederholen, {count} Richtungsaufgaben"},
+"collection.compactSpeed": {"en":"Speed, {count} directional items","de":"Intensiv lernen, {count} Richtungsaufgaben"},
+"collection.compactLoading": {"en":"{mode}, availability is loading","de":"{mode}, Verfügbarkeit wird geladen"},
+"collection.compactFailed": {"en":"{mode}, availability could not be loaded","de":"{mode}, Verfügbarkeit konnte nicht geladen werden"},
+"collection.compactPending": {"en":"Review, waiting for retries","de":"Wiederholen, Wartezeit für erneute Versuche"},
+"category.carryOver": {"en":"Carry over from previous word","de":"Vom vorherigen Wort übernehmen"},
+"category.carryOverHelp": {"en":"For new drafts in the same entry session, copy this group's values from the last successfully confirmed word. Save the group to apply this setting.","de":"Neue Entwürfe derselben Eingabesitzung übernehmen die Werte dieser Gruppe vom zuletzt erfolgreich bestätigten Wort. Zum Übernehmen der Einstellung die Gruppe speichern."},
+"category.reorder": {"en":"Reorder {value}","de":"{value} verschieben"},
+"category.moveUp": {"en":"Move up","de":"Nach oben"},
+"category.moveDown": {"en":"Move down","de":"Nach unten"},
+"category.firstPosition": {"en":"Already first","de":"Bereits an erster Stelle"},
+"category.lastPosition": {"en":"Already last","de":"Bereits an letzter Stelle"},
+"category.reorderHelp": {"en":"Hold and drag a value, or use its menu. Order is saved immediately for this Collection.","de":"Wert gedrückt halten und verschieben oder sein Menü nutzen. Die Reihenfolge wird sofort für diese Sammlung gespeichert."},
+"category.reorderSearch": {"en":"Clear value search to reorder the whole group.","de":"Wertesuche leeren, um die ganze Gruppe umzuordnen."},
+"category.reorderFailed": {"en":"Order could not be saved. Your filter choices are kept.","de":"Reihenfolge konnte nicht gespeichert werden. Deine Filterauswahl bleibt erhalten."},
+"category.reorderStale": {"en":"This group has changed. Check its current values and move again.","de":"Diese Gruppe hat sich geändert. Prüfe die aktuellen Werte und verschiebe erneut."},
+"category.clearValueSearch": {"en":"Clear value search","de":"Wertesuche leeren"},
+"statistics.openStats": {"en":"Open statistics","de":"Statistik öffnen"},
+"statistics.month": {"en":"Month","de":"Monat"},
+"statistics.next": {"en":"Next month","de":"Nächster Monat"},
+"statistics.previous": {"en":"Previous month","de":"Vorheriger Monat"},
+"statistics.recent": {"en":"Back to recent days","de":"Zurück zu den letzten Tagen"},
+"statistics.calendar": {"en":"Show calendar","de":"Kalender anzeigen"},
+"statistics.activity": {"en":"Activity","de":"Lernaktivität"},
+"statistics.title": {"en":"Statistics","de":"Statistik"},
+"statistics.subtitle": {"en":"Your learning, day by day.","de":"Dein Lernen, Tag für Tag."},
+"statistics.normal": {"en":"Long-term","de":"Langzeitlernen"},
+"statistics.speed": {"en":"Speed","de":"Speed"},
+"statistics.today": {"en":"Today","de":"Heute"},
+"statistics.yesterday": {"en":"Yesterday","de":"Gestern"},
+"statistics.reviews": {"en":"Vocabulary learned","de":"Gelernte Vokabeln"},
+"statistics.streak": {"en":"Learning streak","de":"Lernserie"},
+"statistics.days": {"en":"{count} days","de":"{count} Tage"},
+"statistics.day": {"en":"{count} day","de":"{count} Tag"},
+"statistics.average": {"en":"Average vocabulary learned per active day","de":"Durchschnittlich gelernte Vokabeln pro aktivem Lerntag"},
+"statistics.window": {"en":"Past 30 days","de":"Letzte 30 Tage"},
+"statistics.history": {"en":"Daily activity","de":"Tägliche Lernaktivität"},
+"statistics.boundary": {"en":"A learning day runs from 04:00 to 04:00 local time.","de":"Ein Lerntag dauert von 04:00 bis 04:00 Uhr Ortszeit."},
+"statistics.rules": {"en":"How these numbers work","de":"So entstehen diese Zahlen"},
+"statistics.rulesBody": {"en":"Vocabulary learned counts regular Long-term review answers, including repeated vocabulary and both directions. It does not mean distinct words or permanent mastery. Retries and Speed are excluded from the average and streak. A day runs from 04:00 to 04:00; a zero-review today keeps yesterday’s streak until that day ends.","de":"Gelernte Vokabeln zählt reguläre Langzeitantworten, auch dieselbe Vokabel mehrfach und beide Richtungen. Gemeint sind weder unterschiedliche Vokabeln noch dauerhaftes Beherrschen. Wiederholungsversuche und Speed zählen nicht für Durchschnitt und Lernserie. Ein Lerntag dauert von 04:00 bis 04:00 Uhr; bei 0 Antworten heute bleibt die gestrige Serie bis zum Tagesende bestehen."},
+"statistics.nothing": {"en":"Your activity starts here","de":"Hier beginnt deine Lernaktivität"},
+"statistics.nothingBody": {"en":"Complete a regular Long-term review to start your history and streak.","de":"Mit einer regulären Langzeitwiederholung beginnst du deinen Verlauf und deine Lernserie."},
+"statistics.noAverage": {"en":"No active learning days yet","de":"Noch keine aktiven Lerntage"},
+"statistics.open": {"en":"Keep your streak going","de":"Halte deine Lernserie aufrecht"},
+"statistics.openBody": {"en":"Review today to keep your streak.","de":"Wiederhole heute, um deine Lernserie zu behalten."},
+"statistics.speedTitle": {"en":"Speed activity","de":"Speed-Lernaktivität"},
+"statistics.completed": {"en":"Completed words today","de":"Heute abgeschlossene Vokabeln"},
+"statistics.speedBody": {"en":"Speed activity does not extend your Long-term streak or change its average.","de":"Speed verlängert deine Langzeitlernserie nicht und verändert deren Durchschnitt nicht."},
+"statistics.count": {"en":"{count} vocabulary learned","de":"{count} gelernte Vokabeln"},
+"statistics.loading": {"en":"Loading statistics…","de":"Statistik wird geladen…"},
+"statistics.refreshing": {"en":"Updating statistics. The values shown are from the last successful update.","de":"Statistik wird aktualisiert. Die angezeigten Werte stammen aus der letzten erfolgreichen Aktualisierung."},
+"statistics.error": {"en":"Statistics could not be loaded. Please try again.","de":"Die Statistik konnte nicht geladen werden. Bitte versuche es erneut."},
+"statistics.stale": {"en":"Statistics could not be updated. The values shown may be out of date.","de":"Die Statistik konnte nicht aktualisiert werden. Die angezeigten Werte sind möglicherweise veraltet."},
+"statistics.coverage": {"en":"Statistics recorded since {date}","de":"Statistik erfasst seit {date}"},
+"statistics.partial": {"en":"Partially recorded","de":"Teilweise erfasst"},
+"statistics.unavailable": {"en":"Not recorded","de":"Nicht erfasst"},
+"statistics.future": {"en":"Future day","de":"Zukünftiger Tag"},
+"statistics.calendarNote": {"en":"Numbers show vocabulary learned. A dash means not recorded; future days are blank. An asterisk marks a partially recorded day.","de":"Zahlen zeigen gelernte Vokabeln. Ein Strich bedeutet: nicht erfasst; zukünftige Tage bleiben leer. Ein Stern kennzeichnet einen teilweise erfassten Tag."},
+"statistics.dayLabel": {"en":"{date}: {value}. {coverage}","de":"{date}: {value}. {coverage}"},
+"statistics.recorded": {"en":"Recorded","de":"Erfasst"},
+"statistics.jump": {"en":"Choose month and year","de":"Monat und Jahr wählen"},
+"statistics.year": {"en":"Year","de":"Jahr"},
+"statistics.invalidMonth": {"en":"Choose an existing month between year 1 and the current month.","de":"Wähle einen gültigen Monat zwischen dem Jahr 1 und dem aktuellen Monat."},
+"statistics.coverageHelp": {"en":"History starts when statistics are first initialized. The first day is only partially recorded. Earlier activity and imported learning are not reconstructed. Historical dates stay fixed when your clock or timezone changes. Speed counts each successfully completed vocabulary direction once per learning day.","de":"Der Verlauf beginnt mit der ersten Einrichtung der Statistik. Der erste Tag ist nur teilweise erfasst. Frühere Lernaktivität und importierte Lernstände werden nicht nachträglich gezählt. Historische Datumszuordnungen bleiben bei Uhrzeit- oder Zeitzonenänderungen erhalten. Speed zählt jede erfolgreich abgeschlossene Vokabelrichtung einmal pro Lerntag."},
 "header.reviewCount": {"en": "Review · {count} repetitions", "de": "Wiederholen · {count} Wiederholungen"},
 "header.speedCount": {"en": "Speed · {count} new words", "de": "Intensiv · {count} neue Vokabeln"},
 
@@ -448,8 +518,8 @@ globalThis.PIKO_COPY = {
       "de": "Übernehmen"
     },
     "r2.poolHint": {
-      "en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, a number game separates passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
-      "de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, liegt zwischen den Durchgängen ein Zahlenspiel. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen."
+      "en": "Each pass asks every word in the pool once. When the pool shrinks and cannot be refilled, numbers and A–J games alternate between passes. Pool size 1 needs no games. Leaving discards the unfinished round.",
+      "de": "Jeder Durchgang fragt alle Vokabeln im Pool einmal ab. Wird der Pool kleiner und kann nicht mehr aufgefüllt werden, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es keine Spiele. Beim Verlassen wird die unfertige Runde verworfen."
     },
     "r2.poolInvalid": {
       "en": "Choose a positive whole-number pool size and at least one word.",
@@ -462,6 +532,10 @@ globalThis.PIKO_COPY = {
     "r2.gameHint": {
       "en": "Tap 1 to 10 in order to start the next pass. No time limit.",
       "de": "Tippe 1 bis 10 der Reihe nach an, um den nächsten Durchgang zu starten. Ohne Zeitlimit."
+    },
+    "r2.letterGameHint": {
+      "en": "Tap A to J in order to start the next pass. No time limit.",
+      "de": "Tippe A bis J der Reihe nach an, um den nächsten Durchgang zu starten. Ohne Zeitlimit."
     },
     "r2.gameNext": {
       "en": "Next: {number}",
@@ -1609,6 +1683,16 @@ globalThis.PIKO_COPY = {
       "en": "Speed complete · 1 word",
       "de": "Intensivlernen abgeschlossen · 1 Vokabel"
     },
+    "selectedSpeed.action": { "en": "Speed · {count} selected", "de": "Intensiv · {count} ausgewählt" },
+    "selectedSpeed.direction": { "en": "Speed direction", "de": "Richtung fürs Intensivlernen" },
+    "selectedSpeed.included": { "en": "Selected active words: {count}", "de": "Ausgewählte aktive Vokabeln: {count}" },
+    "selectedSpeed.hidden": { "en": "Included but hidden in the list: {count}", "de": "Enthalten, aber in der Liste ausgeblendet: {count}" },
+    "selectedSpeed.inactive": { "en": "Excluded inactive words: {count}", "de": "Ausgeschlossene inaktive Vokabeln: {count}" },
+    "selectedSpeed.missing": { "en": "No longer available: {count}", "de": "Nicht mehr verfügbar: {count}" },
+    "selectedSpeed.checking": { "en": "Checking selection…", "de": "Auswahl wird geprüft …" },
+    "selectedSpeed.changed": { "en": "The selection has changed. Check the updated counts before starting.", "de": "Die Auswahl hat sich geändert. Prüfe die aktualisierten Zahlen vor dem Start." },
+    "selectedSpeed.failed": { "en": "Could not prepare this selection. Your selection and pool size are retained. Try again.", "de": "Diese Auswahl konnte nicht vorbereitet werden. Auswahl und Poolgröße bleiben erhalten. Versuche es erneut." },
+    "selectedSpeed.independent": { "en": "Practice selected words, including previously learned words. Long-term progress stays unchanged.", "de": "Übe ausgewählte Vokabeln, auch bereits gelernte. Der Langzeit-Lernfortschritt bleibt unverändert." },
     "speed.dismissCompletion": {
       "en": "Dismiss completion message",
       "de": "Abschlussmeldung schließen"
@@ -1645,8 +1729,8 @@ globalThis.PIKO_COPY = {
       "de": "Runde verlassen"
     },
     "speed.rulesExplanation": {
-      "en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, a number game separates complete passes. Pool size 1 needs no game.",
-      "de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, trennt ein Zahlenspiel die Durchgänge. Bei Poolgröße 1 gibt es kein Spiel."
+      "en": "Words rotate in passes. Complete each word with its required correct streak. When fewer words remain, numbers and A–J games alternate between complete passes. Pool size 1 needs no game.",
+      "de": "Die Vokabeln wechseln sich in Durchgängen ab. Schließe jede mit der nötigen Folge richtiger Antworten ab. Bleiben weniger Vokabeln übrig, wechseln sich Zahlen- und A–J-Spiele zwischen den Durchgängen ab. Bei Poolgröße 1 gibt es kein Spiel."
     }
   }
 };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../piko_theme.dart';
 import 'piko_focus_highlight.dart';
+import 'piko_interaction_anchor.dart';
 
 enum PikoButtonVariant {
   primary,
@@ -102,125 +103,136 @@ class PikoButton extends StatelessWidget {
                 : 'tint',
           )
         : Colors.transparent;
-    return PikoFocusHighlight(
-      builder: (context, showFocus) => TextButton(
-        onPressed: onPressed,
-        autofocus: autofocus,
-        focusNode: focusNode,
-        style: ButtonStyle(
-          animationDuration: PikoTheme.motion(context),
-          minimumSize: WidgetStatePropertyAll(
-            minimumSize == null
-                ? Size(
-                    d.dimension('components.buttons.height'),
-                    d.dimension(
-                      grade
-                          ? 'controls.largeHeight'
-                          : 'components.buttons.height',
+    return PikoAnchorAction(
+      builder: (anchorContext) => PikoFocusHighlight(
+        builder: (context, showFocus) => TextButton(
+          onPressed: onPressed == null
+              ? null
+              : () {
+                  PikoAnchorRegion.capture(anchorContext);
+                  onPressed!();
+                },
+          autofocus: autofocus,
+          focusNode: focusNode,
+          style: ButtonStyle(
+            animationDuration: PikoTheme.motion(context),
+            minimumSize: WidgetStatePropertyAll(
+              minimumSize == null
+                  ? Size(
+                      d.dimension('components.buttons.height'),
+                      d.dimension(
+                        grade
+                            ? 'controls.largeHeight'
+                            : 'components.buttons.height',
+                      ),
+                    )
+                  : Size(
+                      minimumSize!.width
+                          .clamp(
+                            d.dimension('controls.largeHeight'),
+                            double.infinity,
+                          )
+                          .toDouble(),
+                      minimumSize!.height
+                          .clamp(
+                            d.dimension('controls.largeHeight'),
+                            double.infinity,
+                          )
+                          .toDouble(),
                     ),
-                  )
-                : Size(
-                    minimumSize!.width
-                        .clamp(
-                          d.dimension('controls.largeHeight'),
-                          double.infinity,
-                        )
-                        .toDouble(),
-                    minimumSize!.height
-                        .clamp(
-                          d.dimension('controls.largeHeight'),
-                          double.infinity,
-                        )
-                        .toDouble(),
+            ),
+            padding: WidgetStatePropertyAll(
+              padding ??
+                  EdgeInsets.symmetric(
+                    horizontal: d.dimension('components.buttons.padding'),
+                    vertical: d.dimension('spacing.2'),
                   ),
-          ),
-          padding: WidgetStatePropertyAll(
-            padding ??
-                EdgeInsets.symmetric(
-                  horizontal: d.dimension('components.buttons.padding'),
-                  vertical: d.dimension('spacing.2'),
-                ),
-          ),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                d.dimension('components.buttons.radius'),
-              ),
             ),
-          ),
-          textStyle: WidgetStatePropertyAll(
-            Theme.of(context).textTheme.labelLarge!.copyWith(
-              fontSize: labelSize ?? d.dimension('typography.label'),
-              fontWeight: labelWeight ?? d.weight('components.buttons.weight'),
-            ),
-          ),
-          // State layers are palette alpha blends; disabled actions have no
-          // interactive layer. Keyboard focus also retains its explicit border.
-          overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.disabled)) {
-              return Colors.transparent;
-            }
-            final opacity = states.contains(WidgetState.pressed)
-                ? d.dimension('states.pressedOpacity')
-                : states.contains(WidgetState.focused)
-                ? d.dimension('states.focusOpacity')
-                : states.contains(WidgetState.hovered)
-                ? d.dimension('states.hoverOpacity')
-                : 0.0;
-            return color.withValues(alpha: opacity);
-          }),
-          foregroundColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.disabled)
-                ? color.withValues(alpha: d.dimension('states.disabledOpacity'))
-                : color,
-          ),
-          backgroundColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.disabled)
-                ? background.withValues(
-                    alpha: background.a * d.dimension('states.disabledOpacity'),
-                  )
-                : background,
-          ),
-          side: WidgetStateProperty.resolveWith(
-            (s) => BorderSide(
-              color: showFocus && s.contains(WidgetState.focused)
-                  ? d.color('primary')
-                  : variant == PikoButtonVariant.dangerOutline ||
-                        variant == PikoButtonVariant.primaryOutline ||
-                        (primary && primaryStyle == 'outline')
-                  ? color
-                  : Colors.transparent,
-              width: d.dimension(
-                showFocus && s.contains(WidgetState.focused)
-                    ? 'states.focusWidth'
-                    : 'states.borderWidth',
-              ),
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null)
-              ExcludeSemantics(
-                child: IconTheme.merge(
-                  data: IconThemeData(
-                    size: d.dimension('components.icons.size'),
-                  ),
-                  child: icon!,
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  d.dimension('components.buttons.radius'),
                 ),
               ),
-            if (icon != null && label.isNotEmpty)
-              SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
-            if (label.isNotEmpty)
-              Flexible(
-                fit: expandLabel ? FlexFit.tight : FlexFit.loose,
-                child: Text(label, textAlign: labelAlignment),
+            ),
+            textStyle: WidgetStatePropertyAll(
+              Theme.of(context).textTheme.labelLarge!.copyWith(
+                fontSize: labelSize ?? d.dimension('typography.label'),
+                fontWeight:
+                    labelWeight ?? d.weight('components.buttons.weight'),
               ),
-            if (trailing != null)
-              SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
-            ?trailing,
-          ],
+            ),
+            // State layers are palette alpha blends; disabled actions have no
+            // interactive layer. Keyboard focus also retains its explicit border.
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.disabled)) {
+                return Colors.transparent;
+              }
+              final opacity = states.contains(WidgetState.pressed)
+                  ? d.dimension('states.pressedOpacity')
+                  : states.contains(WidgetState.focused)
+                  ? d.dimension('states.focusOpacity')
+                  : states.contains(WidgetState.hovered)
+                  ? d.dimension('states.hoverOpacity')
+                  : 0.0;
+              return color.withValues(alpha: opacity);
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.disabled)
+                  ? color.withValues(
+                      alpha: d.dimension('states.disabledOpacity'),
+                    )
+                  : color,
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (s) => s.contains(WidgetState.disabled)
+                  ? background.withValues(
+                      alpha:
+                          background.a * d.dimension('states.disabledOpacity'),
+                    )
+                  : background,
+            ),
+            side: WidgetStateProperty.resolveWith(
+              (s) => BorderSide(
+                color: showFocus && s.contains(WidgetState.focused)
+                    ? d.color('primary')
+                    : variant == PikoButtonVariant.dangerOutline ||
+                          variant == PikoButtonVariant.primaryOutline ||
+                          (primary && primaryStyle == 'outline')
+                    ? color
+                    : Colors.transparent,
+                width: d.dimension(
+                  showFocus && s.contains(WidgetState.focused)
+                      ? 'states.focusWidth'
+                      : 'states.borderWidth',
+                ),
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null)
+                ExcludeSemantics(
+                  child: IconTheme.merge(
+                    data: IconThemeData(
+                      size: d.dimension('components.icons.size'),
+                    ),
+                    child: icon!,
+                  ),
+                ),
+              if (icon != null && label.isNotEmpty)
+                SizedBox(width: iconLabelSpacing ?? d.dimension('spacing.2')),
+              if (label.isNotEmpty)
+                Flexible(
+                  fit: expandLabel ? FlexFit.tight : FlexFit.loose,
+                  child: Text(label, textAlign: labelAlignment),
+                ),
+              if (trailing != null)
+                SizedBox(width: trailingSpacing ?? d.dimension('spacing.2')),
+              ?trailing,
+            ],
+          ),
         ),
       ),
     );
@@ -246,25 +258,32 @@ class PikoIconButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final FocusNode? focusNode;
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: semanticLabel,
-    button: true,
-    enabled: onPressed != null,
-    onTap: onPressed,
-    child: Tooltip(
-      message: semanticLabel,
-      excludeFromSemantics: true,
-      child: ExcludeSemantics(
-        child: PikoButton(
-          label: '',
-          icon: icon,
-          onPressed: onPressed,
-          focusNode: focusNode,
-          variant: variant,
-          padding: padding,
-          minimumSize: large
-              ? Size.square(pikoDesign.dimension('controls.largeHeight'))
-              : null,
+  Widget build(BuildContext context) => PikoAnchorAction(
+    builder: (context) => Semantics(
+      label: semanticLabel,
+      button: true,
+      enabled: onPressed != null,
+      onTap: onPressed == null
+          ? null
+          : () {
+              PikoAnchorRegion.capture(context);
+              onPressed!();
+            },
+      child: Tooltip(
+        message: semanticLabel,
+        excludeFromSemantics: true,
+        child: ExcludeSemantics(
+          child: PikoButton(
+            label: '',
+            icon: icon,
+            onPressed: onPressed,
+            focusNode: focusNode,
+            variant: variant,
+            padding: padding,
+            minimumSize: large
+                ? Size.square(pikoDesign.dimension('controls.largeHeight'))
+                : null,
+          ),
         ),
       ),
     ),

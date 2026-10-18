@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -117,7 +118,7 @@ Future<void> pressJson(
   await tester.pumpAndSettle();
   await tester.ensureVisible(button);
   await tester.pumpAndSettle();
-  final page = find.byType(SingleChildScrollView).first;
+  final page = find.byType(PikoAnchoredBoxScrollView).first;
   for (var attempt = 0; attempt < 12; attempt++) {
     final area = tester.getRect(page);
     final target = tester.getRect(button);

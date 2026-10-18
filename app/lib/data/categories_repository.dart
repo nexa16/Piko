@@ -7,12 +7,14 @@ final class CategoryDimensionRecord {
     required this.name,
     required this.mode,
     required this.position,
+    this.carryOver = false,
   });
   final String id;
   final String collectionId;
   final String name;
   final CategoryMode mode;
   final int position;
+  final bool carryOver;
 }
 
 final class CategoryValueRecord {
@@ -49,6 +51,7 @@ enum CategoryValidation {
   invalidId,
   identityConflict,
   cardinalityViolation,
+  staleOrder,
 }
 
 abstract interface class CategoriesRepository {
@@ -62,6 +65,7 @@ abstract interface class CategoriesRepository {
     required String collectionId,
     required String name,
     required CategoryMode mode,
+    bool carryOver = false,
     String? id,
   });
   Future<CategoryDimensionRecord> renameDimension({
@@ -69,12 +73,14 @@ abstract interface class CategoriesRepository {
     required String name,
   });
 
-  /// Confirms both editable fields together. Switching to Single never drops
+  /// Confirms group fields together; omitted preferences remain unchanged.
+  /// Switching to Single never drops
   /// existing assignments; conflicting entries must be resolved first.
   Future<CategoryDimensionRecord> updateDimension({
     required String id,
     required String name,
     required CategoryMode mode,
+    bool? carryOver,
   });
   Future<void> deleteDimension(String id);
   Future<CategoryValueRecord> createValue({
@@ -87,6 +93,14 @@ abstract interface class CategoriesRepository {
     required String name,
   });
   Future<void> deleteValue(String id);
+
+  /// Commits a complete group permutation only if its observed sequence is still
+  /// current. Inputs are captured on admission; no-op moves keep default A–Z.
+  Future<List<CategoryValueRecord>> reorderValues({
+    required String dimensionId,
+    required List<String> expectedOrder,
+    required List<String> orderedIds,
+  });
   Future<List<CategoryAssignmentRecord>> assignments(String entryId);
   Stream<List<CategoryAssignmentRecord>> watchAssignments(String entryId);
 

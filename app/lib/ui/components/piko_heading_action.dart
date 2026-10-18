@@ -9,13 +9,18 @@ class PikoHeadingAction extends MultiChildRenderObjectWidget {
     required Widget heading,
     required Widget action,
     required this.gap,
+    this.stackedActionAtStart = false,
   }) : super(children: [heading, action]);
 
   final double gap;
+  final bool stackedActionAtStart;
 
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _HeadingActionLayout(gap, Directionality.of(context));
+  RenderObject createRenderObject(BuildContext context) => _HeadingActionLayout(
+    gap,
+    Directionality.of(context),
+    stackedActionAtStart,
+  );
 
   @override
   void updateRenderObject(
@@ -25,6 +30,7 @@ class PikoHeadingAction extends MultiChildRenderObjectWidget {
     (renderObject as _HeadingActionLayout).configure(
       gap,
       Directionality.of(context),
+      stackedActionAtStart,
     );
   }
 }
@@ -41,14 +47,24 @@ class _HeadingActionLayout extends RenderBox
           RenderBox,
           ContainerBoxParentData<RenderBox>
         > {
-  _HeadingActionLayout(this.gap, this.direction);
+  _HeadingActionLayout(this.gap, this.direction, this.stackedActionAtStart);
   double gap;
   TextDirection direction;
+  bool stackedActionAtStart;
 
-  void configure(double nextGap, TextDirection nextDirection) {
-    if (gap == nextGap && direction == nextDirection) return;
+  void configure(
+    double nextGap,
+    TextDirection nextDirection,
+    bool nextStackedAtStart,
+  ) {
+    if (gap == nextGap &&
+        direction == nextDirection &&
+        stackedActionAtStart == nextStackedAtStart) {
+      return;
+    }
     gap = nextGap;
     direction = nextDirection;
+    stackedActionAtStart = nextStackedAtStart;
     markNeedsLayout();
   }
 
@@ -95,7 +111,9 @@ class _HeadingActionLayout extends RenderBox
       stacked ? 0 : (size.height - heading.size.height) / 2,
     );
     (action.parentData! as ContainerBoxParentData<RenderBox>).offset = Offset(
-      rtl ? 0 : size.width - action.size.width,
+      stacked && stackedActionAtStart
+          ? (rtl ? size.width - action.size.width : 0)
+          : (rtl ? 0 : size.width - action.size.width),
       stacked
           ? heading.size.height + spacing
           : (size.height - action.size.height) / 2,

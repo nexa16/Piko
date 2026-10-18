@@ -74,7 +74,7 @@ void main() {
 
   for (final reverse in [false, true]) {
     test(
-      'errored completion resets only the ${reverse ? 'nativeToTarget' : 'targetToNative'} generation and its obsolete retry, preserving history, opposite and all scopes',
+      'errored ${reverse ? 'nativeToTarget' : 'targetToNative'} completion preserves both full Long-term states and all retries',
       () async {
         final f = await fixture();
         await f.review(
@@ -95,23 +95,15 @@ void main() {
         );
         expect(result.alreadyApplied, isFalse);
         expect(result.next.id, expected.id);
-        expect(result.next.generation, expected.generation + 1);
-        expect(result.next.reviewRevision, 0);
+        expect(result.next.generation, expected.generation);
+        expect(result.next.reviewRevision, expected.reviewRevision);
         expect(result.next.speedCompleted, isTrue);
-        expect(
-          result.next.cardJson,
-          LearningCardCodec.encode(
-            LearningScheduler().initialCard(
-              itemId: expected.id,
-              at: completedAt,
-            ),
-          ),
-        );
-        expect(result.next.card.lastReview, isNull);
-        expect(result.next.card.due, completedAt);
+        expect(result.next.cardJson, expected.cardJson);
+        expect(result.next.card.lastReview, expected.card.lastReview);
+        expect(result.next.card.due, expected.card.due);
         final after = await completeSnapshot(f.db);
         for (final table in before.keys.where(
-          (table) => table != 'learning_items' && table != 'retry_obligations',
+          (table) => table != 'learning_items',
         )) {
           expect(after[table], before[table], reason: '$table remains exact');
         }
@@ -125,13 +117,7 @@ void main() {
               .where((row) => row['id'] != expected.id)
               .toList(),
         );
-        expect(
-          after['retry_obligations'],
-          (before['retry_obligations'] as List)
-              .cast<Map>()
-              .where((row) => row['item_id'] != expected.id)
-              .toList(),
-        );
+        expect(after['retry_obligations'], before['retry_obligations']);
         final export =
             jsonDecode(
                   await SqliteVocabularyJsonService(
@@ -145,9 +131,9 @@ void main() {
                 as Map;
         final exported =
             (learning['learning'] as Map)[expected.direction.name] as Map;
-        expect(exported['generation'], expected.generation + 1);
+        expect(exported['generation'], expected.generation);
         expect(exported['speedCompleted'], isTrue);
-        expect(exported['retry'], isNull);
+        expect(exported['retry'], isNotNull);
         expect(exported['reviews'], isNotEmpty);
         expect(await writer.newSpeedItems(), isEmpty);
       },
@@ -202,7 +188,7 @@ void main() {
         throwsA(SpeedCompletionFailure.staleState),
       );
       expect(await completeSnapshot(f.db), studiedChanged);
-      expect((await f.current()).generation, expected.generation + 1);
+      expect((await f.current()).generation, expected.generation);
     },
   );
 
@@ -283,7 +269,7 @@ void main() {
   );
 
   test(
-    'failure after retry deletion rolls back marker/card/generation and keeps the same completion retryable',
+    'failure after statistics admission rolls back marker and keeps all Long-term state and completion retryable',
     () async {
       final f = await fixture();
       await f.review(rating: LearningRating.again);
@@ -309,8 +295,8 @@ void main() {
         completedAt: instant,
       );
       expect(completed.alreadyApplied, isFalse);
-      expect(completed.next.generation, expected.generation + 1);
-      expect(await f.db.select(f.db.retryObligations).get(), isEmpty);
+      expect(completed.next.generation, expected.generation);
+      expect(await f.db.select(f.db.retryObligations).get(), isNotEmpty);
     },
   );
 
@@ -374,7 +360,7 @@ void main() {
           completedAt: completedAt,
         );
         expect(repeated.alreadyApplied, isTrue);
-        expect(repeated.next.generation, expected.generation + 1);
+        expect(repeated.next.generation, expected.generation);
         expect(await completeSnapshot(db), before);
       } finally {
         await db.close();

@@ -14,6 +14,7 @@ import '../../ui/components/piko_reading.dart';
 import '../../ui/piko_theme.dart';
 import 'due_learning_session.dart';
 import 'review_session_route.dart';
+import 'learning_direction_choice.dart';
 
 typedef ReviewSessionFactory =
     Future<DueLearningSession> Function(
@@ -46,12 +47,15 @@ class ReviewLaunch extends StatefulWidget {
     required this.onPendingWrites,
     required this.onBusyChanged,
     this.enabled = true,
+    this.showMascot = true,
     this.presentation = ReviewLaunchPresentation.plain,
     this.dueCount,
     this.onSessionClosed,
     this.fixedDirection,
     this.directionCounts,
     this.directionCountsLoader,
+    this.availabilityChanges,
+    this.scopeIdentity,
     this.allowedDirections = const {
       LearningDirection.targetToNative,
       LearningDirection.nativeToTarget,
@@ -67,23 +71,30 @@ class ReviewLaunch extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
   final bool enabled;
+  final bool showMascot;
   final ReviewLaunchPresentation presentation;
   final int? dueCount;
   final VoidCallback? onSessionClosed;
   final LearningDirection? fixedDirection;
   final Map<LearningDirection, int>? directionCounts;
   final Future<Map<LearningDirection, int>> Function()? directionCountsLoader;
+  final Listenable? availabilityChanges;
+  final Object? scopeIdentity;
   final Set<LearningDirection> allowedDirections;
   @override
-  State<ReviewLaunch> createState() => _ReviewLaunchState();
+  ReviewLaunchState createState() => ReviewLaunchState();
 }
 
-class _ReviewLaunchState extends State<ReviewLaunch> {
+class ReviewLaunchState extends State<ReviewLaunch> {
+  /// The compact header delegates to this same mounted launch owner.
+  void openMerged() => unawaited(_open(null, true));
+  bool get hasLaunchError => _launchError != null;
   bool _opening = false;
+  bool _launched = false;
   Object? _launchError;
   int _identity = 0;
   late final _eligibility = ValueNotifier(widget.enabled);
-  ModalRoute<DueLearningSession>? _dialog;
+  ModalRoute<dynamic>? _dialog;
   void _closeDialog() {
     final old = _dialog;
     _dialog = null;
@@ -105,10 +116,17 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
     }
     if (oldWidget.collection.id != widget.collection.id ||
         oldWidget.factory != widget.factory ||
-        oldWidget.vocabularyRepository != widget.vocabularyRepository) {
+        oldWidget.vocabularyRepository != widget.vocabularyRepository ||
+        (!_launched && oldWidget.scopeIdentity != widget.scopeIdentity)) {
+      final wasOpening = _opening;
       _identity++;
       _opening = false;
+      _launched = false;
       _closeDialog();
+      if (wasOpening) {
+        final busy = oldWidget.onBusyChanged;
+        WidgetsBinding.instance.addPostFrameCallback((_) => busy(false));
+      }
     }
   }
 
@@ -122,7 +140,10 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
     super.dispose();
   }
 
-  Future<void> _open([LearningDirection? chosenDirection]) async {
+  Future<void> _open([
+    LearningDirection? chosenDirection,
+    bool liveChoice = false,
+  ]) async {
     final route = ModalRoute.of(context);
     if (_opening || !widget.enabled || route?.isCurrent != true) return;
     final requestedDirection = chosenDirection ?? widget.fixedDirection;
@@ -169,6 +190,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
             if (!widget.allowedDirections.contains(direction)) return;
             session = await factory(collection.id, direction);
           } else if (available?.isEmpty == true) {
+            if (liveChoice) return;
             // The launch was valid when offered. Let authoritative preparation
             // resolve this race into its existing no-due / retry-wait state.
             final original = widget.directionCounts?.entries
@@ -177,6 +199,61 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
             if (original == null) return;
             session = await factory(collection.id, original.key);
           }
+        } finally {
+          done.complete();
+        }
+      }
+      if (!mounted || !current()) return;
+      if (session == null && liveChoice && counts != null) {
+        final selected = await showPikoDialog<LearningDirection>(
+          context,
+          canRestoreFocus: () => current() && route?.isCurrent == true,
+          onRouteCreated: (owned) {
+            if (current()) _dialog = owned;
+          },
+          builder: (dialogContext) => LearningDirectionChoice(
+            title: PikoCopyScope.of(dialogContext).text('learn.setup'),
+            initial: counts!,
+            changes: widget.availabilityChanges,
+            canChoose: () => current() && widget.enabled,
+            load: () async {
+              final done = Completer<void>();
+              register?.call(done.future);
+              try {
+                await beforeLaunch();
+                if (!current() || !widget.enabled) return {};
+                return await widget.directionCountsLoader?.call() ?? counts!;
+              } finally {
+                done.complete();
+              }
+            },
+            label: (direction, count) =>
+                PikoCopyScope.of(dialogContext).text('r2.due', {
+                  'direction': reviewDirectionLabel(collection, direction),
+                  'count': count,
+                }),
+          ),
+        );
+        _dialog = null;
+        if (selected == null ||
+            !current() ||
+            !widget.enabled ||
+            route?.isCurrent != true) {
+          return;
+        }
+        final done = Completer<void>();
+        register?.call(done.future);
+        try {
+          await beforeLaunch();
+          final fresh = await widget.directionCountsLoader?.call() ?? counts;
+          if (!current() ||
+              !widget.enabled ||
+              route?.isCurrent != true ||
+              !widget.allowedDirections.contains(selected) ||
+              (fresh[selected] ?? 0) <= 0) {
+            return;
+          }
+          session = await factory(collection.id, selected);
         } finally {
           done.complete();
         }
@@ -206,6 +283,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
       }
       final launched = session;
       session = null; // The pushed route now owns the already prepared session.
+      _launched = true;
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (_) => ReviewSessionRoute(
@@ -228,7 +306,10 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
         session.dispose();
       }
       if (current()) {
-        setState(() => _opening = false);
+        setState(() {
+          _opening = false;
+          _launched = false;
+        });
         busy(false);
       }
     }
@@ -275,7 +356,7 @@ class _ReviewLaunchState extends State<ReviewLaunch> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (direction == available.first) ...[
+                    if (widget.showMascot && direction == available.first) ...[
                       const PikoReading(),
                       SizedBox(
                         width: pikoDesign.dimension(

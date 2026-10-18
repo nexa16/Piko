@@ -62,6 +62,8 @@ class DetailSpeedHarness {
   final requests =
       <({LearningDirection direction, Set<String> visible, int pool})>[];
   Completer<void>? factoryGate;
+  Completer<void>? completionGate;
+  bool failCompletion = false;
   late final binding = CollectionQueryBinding(
     collectionId: owner.id,
     service: service,
@@ -87,7 +89,10 @@ class DetailSpeedHarness {
         eligibleEntryIds: visibleEntryIds,
         poolSize: poolSize,
       ),
-      commitCompletion: (_) async {},
+      commitCompletion: (_) async {
+        await completionGate?.future;
+        if (failCompletion) throw StateError('Synthetic completion failure');
+      },
       presentationActive: false,
     );
   }
@@ -128,8 +133,20 @@ class DetailSpeedHarness {
   }
 
   Future<void> setup(WidgetTester tester) async {
+    final compact = find.byKey(const ValueKey('collection-speed-compact'));
+    final expanded = find.byKey(
+      const ValueKey('collection-speed-nativeToTarget'),
+    );
+    if (compact.hitTestable().evaluate().isEmpty &&
+        expanded.hitTestable().evaluate().isEmpty) {
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+    }
     await tester.tap(
-      find.byKey(const ValueKey('collection-speed-nativeToTarget')),
+      compact.hitTestable().evaluate().isNotEmpty ? compact : expanded,
     );
     await tester.pumpAndSettle();
   }
@@ -254,7 +271,10 @@ void main() {
       expect(
         tester
             .widget<PikoButton>(
-              find.byKey(const ValueKey('collection-review-targetToNative')),
+              find.byKey(
+                const ValueKey('collection-review-targetToNative'),
+                skipOffstage: false,
+              ),
             )
             .onPressed,
         isNotNull,

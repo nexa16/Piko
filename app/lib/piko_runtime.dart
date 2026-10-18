@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
+import 'data/local/sqlite_full_export_service.dart';
 import 'data/collections_repository.dart';
 import 'data/local/database_connection.dart';
 import 'data/local/piko_database.dart';
@@ -34,6 +35,10 @@ import 'ui/components/piko_button.dart';
 import 'ui/components/piko_page.dart';
 import 'ui/piko_theme.dart';
 import 'speed_runtime.dart';
+import 'data/local/sqlite_statistics_repository.dart';
+import 'features/statistics/statistics_binding.dart';
+import 'features/statistics/statistics_page.dart';
+import 'platform/device_clock_changes.dart';
 
 /// Owns private runtime storage. Injected feature repositories remain caller-owned.
 class PikoRuntime extends StatefulWidget {
@@ -63,7 +68,9 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
+  late final fullExportService = SqliteFullExportService(database);
   late final collectionQuery = SqliteCollectionQueryService(database);
+  StatisticsBinding? _statistics;
   late final speedRuntime = PikoSpeedRuntime(
     learning: learning,
     clock: database.clock,
@@ -112,6 +119,15 @@ class _PikoRuntimeState extends State<PikoRuntime> {
         if (!mounted) return;
         _directionBinding.value = _direction;
         _direction.load();
+        setState(() {
+          _statistics = StatisticsBinding(
+            repository: SqliteStatisticsRepository(database),
+            clock: database.clock,
+            calendar: database.learningDayCalendar,
+            clockChanges: deviceClockChanges(),
+            onPendingWrites: trackWrites,
+          );
+        });
       });
     }
     final locale = InterfaceLocaleScope.of(context);
@@ -158,7 +174,22 @@ class _PikoRuntimeState extends State<PikoRuntime> {
           directionBinding: _directionBinding,
           settingsRepository: settings,
           registerPending: trackWrites,
+          fullExportService: fullExportService,
+          fullExportPlatform: widget.jsonPlatform,
         ),
+      ),
+    );
+  }
+
+  void _openStatistics() {
+    if (!mounted ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        _statistics == null) {
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StatisticsPage(binding: _statistics!),
       ),
     );
   }
@@ -278,6 +309,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
+    _statistics?.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();
     }
@@ -346,12 +378,15 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             reviewSessionFactory: _reviewSession,
             detailReviewSessionFactory: _detailReviewSession,
             speedSessionFactory: speedRuntime.prepare,
+            selectedSpeedSessionFactory: speedRuntime.prepareSelected,
             queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,
             reviewCountClock: database.clock,
             onOpenSettings: _openSettings,
             directionBinding: _directionBinding,
+            statisticsBinding: _statistics,
+            onOpenStatistics: _openStatistics,
           ),
         ),
       ],

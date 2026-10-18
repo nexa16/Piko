@@ -21,9 +21,12 @@ import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_entry_count.dart';
 import 'collection_query_binding.dart';
-import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import '../speed/speed_setup_dialog.dart'
+    show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import 'package:flutter/foundation.dart';
 import '../settings/preferred_direction_controller.dart';
+import '../statistics/statistics_binding.dart';
+import '../statistics/statistics_widgets.dart';
 
 class CollectionsHome extends StatefulWidget {
   const CollectionsHome({
@@ -40,9 +43,12 @@ class CollectionsHome extends StatefulWidget {
     this.queryBindingFactory,
     this.detailReviewSessionFactory,
     this.speedSessionFactory,
+    this.selectedSpeedSessionFactory,
     this.categoriesRepository,
     this.onOpenSettings,
     this.directionBinding,
+    this.statisticsBinding,
+    this.onOpenStatistics,
     super.key,
   }) : assert((reviewMembershipLoader == null) == (reviewCountPolicy == null));
   final CollectionsRepository repository;
@@ -59,9 +65,12 @@ class CollectionsHome extends StatefulWidget {
   queryBindingFactory;
   final ReviewSessionFactory? detailReviewSessionFactory;
   final SpeedSessionFactory? speedSessionFactory;
+  final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
+  final StatisticsBinding? statisticsBinding;
+  final VoidCallback? onOpenStatistics;
   @override
   State<CollectionsHome> createState() => _CollectionsHomeState();
 }
@@ -114,6 +123,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
+          selectedSpeedSessionFactory: widget.selectedSpeedSessionFactory,
           categoriesRepository: widget.categoriesRepository,
           directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,
@@ -132,160 +142,167 @@ class _CollectionsHomeState extends State<CollectionsHome> {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     return Scaffold(
-      body: PikoPage(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PikoHeadingAction(
-              heading: Text(
-                copy.text('app.name'),
-                key: const ValueKey('home-brand'),
-                style: TextStyle(
-                  fontSize: pikoDesign.dimension(
-                    'components.homeHeader.brandSize',
-                  ),
-                  fontWeight: pikoDesign.weight(
-                    'components.homeHeader.brandWeight',
-                  ),
-                  letterSpacing: pikoDesign.dimension(
-                    'components.homeHeader.brandLetterSpacing',
-                  ),
-                  color: pikoDesign.color('ink'),
-                ),
-              ),
-              action: widget.onOpenSettings == null
-                  ? const SizedBox.shrink()
-                  : PikoButton(
-                      label: copy.text('nav.settings'),
-                      icon: const PikoIcon(PikoIconName.settings),
-                      variant: PikoButtonVariant.ghost,
-                      onPressed: widget.onOpenSettings,
-                    ),
-              gap: pikoDesign.dimension('spacing.3'),
-            ),
-            SizedBox(
-              height: pikoDesign.dimension('components.homeHeader.sectionGap'),
-            ),
-            PikoHeadingAction(
-              heading: Semantics(
-                header: true,
-                headingLevel: 1,
-                child: Text(
-                  copy.text('home.collections'),
-                  key: const ValueKey('home-collections-heading'),
+      body: StreamBuilder<List<CollectionRecord>>(
+        stream: _collections,
+        builder: (context, snapshot) => PikoPage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PikoHeadingAction(
+                heading: Text(
+                  copy.text('app.name'),
+                  key: const ValueKey('home-brand'),
                   style: TextStyle(
                     fontSize: pikoDesign.dimension(
-                      'components.sectionHeading.size',
+                      'components.homeHeader.brandSize',
                     ),
                     fontWeight: pikoDesign.weight(
-                      'components.sectionHeading.weight',
+                      'components.homeHeader.brandWeight',
+                    ),
+                    letterSpacing: pikoDesign.dimension(
+                      'components.homeHeader.brandLetterSpacing',
                     ),
                     color: pikoDesign.color('ink'),
                   ),
                 ),
-              ),
-              action: PikoButton(
-                label: copy.text('action.new'),
-                icon: const PikoIcon(PikoIconName.plus),
-                variant: PikoButtonVariant.ghost,
-                onPressed: _createCollection,
-              ),
-              gap: pikoDesign.dimension('components.sectionHeading.gap'),
-            ),
-            StreamBuilder<List<CollectionRecord>>(
-              stream: _collections,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return CollectionLoadFailure(
-                    onRetry: () => setState(() {
-                      _collections = widget.repository.watchAll();
-                    }),
-                  );
-                }
-                if (!snapshot.hasData ||
-                    snapshot.connectionState == ConnectionState.waiting ||
-                    snapshot.connectionState == ConnectionState.none) {
-                  return Text(copy.text('collection.loading'));
-                }
-                if (snapshot.data!.isEmpty) {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      top: pikoDesign.dimension('spacing.3'),
-                    ),
-                    child: PikoCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            copy.text('home.emptyDescription'),
-                            style: TextStyle(
-                              fontSize: pikoDesign.dimension('typography.body'),
-                              height: pikoDesign.dimension(
-                                'components.emptyState.descriptionLineHeight',
-                              ),
-                              color: pikoDesign.color('muted'),
-                            ),
-                          ),
-                          SizedBox(height: pikoDesign.dimension('spacing.5')),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: PikoButton(
-                              label: copy.text('action.firstCollection'),
-                              onPressed: _createCollection,
-                            ),
-                          ),
-                        ],
+                action: widget.onOpenSettings == null
+                    ? const SizedBox.shrink()
+                    : PikoButton(
+                        label: copy.text('nav.settings'),
+                        icon: const PikoIcon(PikoIconName.settings),
+                        variant: PikoButtonVariant.ghost,
+                        onPressed: widget.onOpenSettings,
                       ),
-                    ),
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final collection in snapshot.data!)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: pikoDesign.dimension('spacing.3'),
-                        ),
-                        child: _CollectionTile(
-                          collection: collection,
-                          key: ValueKey('collection-${collection.id}'),
-                          vocabularyRepository: widget.vocabularyRepository,
-                          reviewAction:
-                              widget.reviewSessionFactory != null &&
-                                  widget.vocabularyRepository != null &&
-                                  widget.reviewMembershipLoader != null
-                              ? CollectionReviewEntryPoint(
-                                  key: ValueKey(
-                                    'collection-review-home-${collection.id}-$_reviewIdentity',
-                                  ),
-                                  collection: collection,
-                                  loader: widget.reviewMembershipLoader!,
-                                  policy: widget.reviewCountPolicy!,
-                                  clock: widget.reviewCountClock,
-                                  factory: widget.reviewSessionFactory!,
-                                  categoriesRepository:
-                                      widget.categoriesRepository,
-                                  vocabularyRepository:
-                                      widget.vocabularyRepository!,
-                                  beforeLaunch: () async {},
-                                  onPendingWrites:
-                                      widget.onPendingVocabularyWrites,
-                                  onBusyChanged: (_) {},
-                                  presentation:
-                                      ReviewLaunchPresentation.collectionQuick,
-                                )
-                              : null,
-                          onTap: () => _openCollection(collection),
-                        ),
+                gap: pikoDesign.dimension('spacing.3'),
+              ),
+              SizedBox(
+                height: pikoDesign.dimension(
+                  'components.homeHeader.sectionGap',
+                ),
+              ),
+              if (widget.statisticsBinding != null &&
+                  widget.onOpenStatistics != null)
+                StatisticsActivity(
+                  binding: widget.statisticsBinding!,
+                  hasCollections: snapshot.hasData && snapshot.data!.isNotEmpty,
+                  onOpen: widget.onOpenStatistics!,
+                ),
+              PikoHeadingAction(
+                heading: Semantics(
+                  header: true,
+                  headingLevel: 1,
+                  child: Text(
+                    copy.text('home.collections'),
+                    key: const ValueKey('home-collections-heading'),
+                    style: TextStyle(
+                      fontSize: pikoDesign.dimension(
+                        'components.sectionHeading.size',
                       ),
-                  ],
-                );
-              },
-            ),
-          ],
+                      fontWeight: pikoDesign.weight(
+                        'components.sectionHeading.weight',
+                      ),
+                      color: pikoDesign.color('ink'),
+                    ),
+                  ),
+                ),
+                action: PikoButton(
+                  label: copy.text('action.new'),
+                  icon: const PikoIcon(PikoIconName.plus),
+                  variant: PikoButtonVariant.ghost,
+                  onPressed: _createCollection,
+                ),
+                gap: pikoDesign.dimension('components.sectionHeading.gap'),
+              ),
+              _collectionContents(context, snapshot),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _collectionContents(
+    BuildContext context,
+    AsyncSnapshot<List<CollectionRecord>> snapshot,
+  ) {
+    final copy = PikoCopyScope.of(context);
+    if (snapshot.hasError) {
+      return CollectionLoadFailure(
+        onRetry: () => setState(() {
+          _collections = widget.repository.watchAll();
+        }),
+      );
+    }
+    if (!snapshot.hasData ||
+        snapshot.connectionState == ConnectionState.waiting ||
+        snapshot.connectionState == ConnectionState.none) {
+      return Text(copy.text('collection.loading'));
+    }
+    if (snapshot.data!.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+        child: PikoCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                copy.text('home.emptyDescription'),
+                style: TextStyle(
+                  fontSize: pikoDesign.dimension('typography.body'),
+                  height: pikoDesign.dimension(
+                    'components.emptyState.descriptionLineHeight',
+                  ),
+                  color: pikoDesign.color('muted'),
+                ),
+              ),
+              SizedBox(height: pikoDesign.dimension('spacing.5')),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: PikoButton(
+                  label: copy.text('action.firstCollection'),
+                  onPressed: _createCollection,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final collection in snapshot.data!)
+          Padding(
+            padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+            child: _CollectionTile(
+              collection: collection,
+              key: ValueKey('collection-${collection.id}'),
+              vocabularyRepository: widget.vocabularyRepository,
+              reviewAction:
+                  widget.reviewSessionFactory != null &&
+                      widget.vocabularyRepository != null &&
+                      widget.reviewMembershipLoader != null
+                  ? CollectionReviewEntryPoint(
+                      key: ValueKey(
+                        'collection-review-home-${collection.id}-$_reviewIdentity',
+                      ),
+                      collection: collection,
+                      loader: widget.reviewMembershipLoader!,
+                      policy: widget.reviewCountPolicy!,
+                      clock: widget.reviewCountClock,
+                      factory: widget.reviewSessionFactory!,
+                      categoriesRepository: widget.categoriesRepository,
+                      vocabularyRepository: widget.vocabularyRepository!,
+                      beforeLaunch: () async {},
+                      onPendingWrites: widget.onPendingVocabularyWrites,
+                      onBusyChanged: (_) {},
+                      presentation: ReviewLaunchPresentation.collectionQuick,
+                    )
+                  : null,
+              onTap: () => _openCollection(collection),
+            ),
+          ),
+      ],
     );
   }
 }

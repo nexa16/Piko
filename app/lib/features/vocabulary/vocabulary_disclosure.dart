@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 
 /// Independent optional editor section. Hidden fields retain raw input/state.
 class VocabularyDisclosure extends StatefulWidget {
@@ -37,35 +38,42 @@ class _VocabularyDisclosureState extends State<VocabularyDisclosure> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Semantics(
-        expanded: expanded,
-        button: true,
-        child: InkWell(
-          key: widget.controlKey,
-          onTap: () => setState(() => expanded = !expanded),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: pikoDesign.dimension('spacing.2'),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.label,
-                      style: TextStyle(
-                        color: widget.error
-                            ? pikoDesign.color('danger')
-                            : pikoDesign.color('ink'),
+      PikoAnchorRegion(
+        child: Builder(
+          builder: (context) => Semantics(
+            expanded: expanded,
+            button: true,
+            child: InkWell(
+              key: widget.controlKey,
+              onTap: () {
+                PikoAnchorRegion.capture(context);
+                setState(() => expanded = !expanded);
+              },
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: pikoDesign.dimension('spacing.2'),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.label,
+                          style: TextStyle(
+                            color: widget.error
+                                ? pikoDesign.color('danger')
+                                : pikoDesign.color('ink'),
+                          ),
+                        ),
                       ),
-                    ),
+                      RotatedBox(
+                        quarterTurns: expanded ? 3 : 1,
+                        child: const PikoIcon(PikoIconName.chevronRight),
+                      ),
+                    ],
                   ),
-                  RotatedBox(
-                    quarterTurns: expanded ? 3 : 1,
-                    child: const PikoIcon(PikoIconName.chevronRight),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

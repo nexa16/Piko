@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:drift/drift.dart' show Value;
@@ -185,7 +186,7 @@ void main() {
             ids.indexOf(id) > ids.indexOf(session.activeEntryId ?? 'draft');
         var distance = viewport.center.dy - card.center.dy;
         final position = tester
-            .widget<SingleChildScrollView>(_key('entry-stack'))
+            .widget<PikoAnchoredBoxScrollView>(_key('entry-stack'))
             .controller!
             .position;
         if (position.maxScrollExtent - position.minScrollExtent <= .5) {

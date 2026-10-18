@@ -214,7 +214,11 @@ void main() {
               'vocabulary_order_sequence',
               'category_dimensions',
               'category_values',
+              'category_group_preferences',
               'vocabulary_category_assignments',
+              'statistics_origins',
+              'statistics_activity',
+              'speed_completion_receipts',
             },
           ); // Only current retry state exists, never an attempt-history table.
           await exit();

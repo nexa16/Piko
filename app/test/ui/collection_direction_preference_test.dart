@@ -5,6 +5,7 @@ import 'package:piko/data/learning_item.dart';
 import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/data/vocabulary_learning_status.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/collection_compact_action.dart';
 import 'package:piko/features/collections/collection_query_binding.dart';
 import 'package:piko/features/collections/collection_view_scope.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
@@ -19,8 +20,10 @@ import 'collection_query_detail_test.dart' show ProjectionService, projection;
 import 'collection_review_entry_points_test.dart' show Collections;
 import 'collection_speed_launch_test.dart' show DetailSpeedHarness;
 
-Finder action(String mode, LearningDirection direction) =>
-    find.byKey(ValueKey('collection-$mode-${direction.name}'));
+Finder action(String mode, LearningDirection direction) => find.byKey(
+  ValueKey('collection-$mode-${direction.name}'),
+  skipOffstage: false,
+);
 
 CollectionQuerySnapshot bothDirections() {
   final base = projection(forward: 1, reverse: 1);
@@ -61,7 +64,7 @@ CollectionQuerySnapshot bothDirections() {
 
 void main() {
   testWidgets(
-    'Detail changes visible Review, Speed and statuses live without altering snapshot',
+    'Detail changes directional launch owners, compact counts and statuses live without altering snapshot',
     (tester) async {
       final repository = HeldDirectionSettings('both');
       final preference = PreferredDirectionController(
@@ -150,7 +153,10 @@ void main() {
         action('speed', LearningDirection.nativeToTarget),
       );
       final speedRow = tester.getRect(
-        find.byKey(const ValueKey('collection-speed-actions')),
+        find.byKey(
+          const ValueKey('collection-speed-actions'),
+          skipOffstage: false,
+        ),
       );
       expect(speedRect.left, speedRow.left);
       expect(speedRect.width, closeTo((speedRow.width - 8) / 2, .01));
@@ -168,10 +174,12 @@ void main() {
         1,
         1,
       ]);
-      await tester.ensureVisible(
-        action('speed', LearningDirection.nativeToTarget),
-      );
-      await tester.tap(action('speed', LearningDirection.nativeToTarget));
+      for (final mode in ['review', 'speed']) {
+        final compact = find.byKey(ValueKey('collection-$mode-compact'));
+        expect(compact.hitTestable(), findsOneWidget);
+        expect(tester.widget<CollectionCompactAction>(compact).count, '1');
+      }
+      await tester.tap(find.byKey(const ValueKey('collection-speed-compact')));
       await tester.pumpAndSettle();
       expect(find.byType(SpeedSetupDialog), findsOneWidget);
       await preference.select(PreferredDirection.targetToNative);

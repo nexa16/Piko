@@ -14,6 +14,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 
 /// One current stored card; reveal is presentation only, never a grade/write.
 class LearningPromptCard extends StatefulWidget {
@@ -230,7 +231,12 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PikoAnchorRegion(
+    key: ValueKey(widget.presentation),
+    child: Builder(builder: _buildContent),
+  );
+
+  Widget _buildContent(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     final edits = _edits;
     if (edits != null && widget.collection != null) {
@@ -344,6 +350,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
             return;
           }
           if (!(widget.onReveal?.call() ?? true)) return;
+          PikoAnchorRegion.capture(context);
           setState(() => _revealed = true);
         }
 

@@ -171,7 +171,11 @@ void main() {
         await h.mount(tester);
         final semantics = tester.ensureSemantics();
         expect(
-          tester.getSemantics(rename),
+          tester.getSemantics(
+            find.bySemanticsLabel(
+              language == 'en' ? 'Rename collection' : 'Sammlung umbenennen',
+            ),
+          ),
           matchesSemantics(
             label: language == 'en'
                 ? 'Rename collection'

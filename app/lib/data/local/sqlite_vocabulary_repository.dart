@@ -21,6 +21,7 @@ final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
 final class SqliteVocabularyRepository
     implements
         VocabularyContentRepository,
+        EntryConfirmationRepository,
         QuestionExamplesRepository,
         CollectionHintPreferences {
   SqliteVocabularyRepository(this.database);
@@ -150,6 +151,44 @@ final class SqliteVocabularyRepository
         addedAt: saved.addedAt,
         active: active,
       );
+    });
+  }
+
+  @override
+  Future<EntryConfirmation> confirmNewEntry({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+    bool active = true,
+  }) {
+    final requested = {
+      for (final group in assignments.entries)
+        group.key: Set<String>.of(group.value),
+    };
+    return _write(() async {
+      final saved = await createWithContent(
+        collectionId: collectionId,
+        targetText: targetText,
+        nativeText: nativeText,
+        assignments: requested,
+        content: content,
+        makeHintVisibilityDefault: makeHintVisibilityDefault,
+        active: active,
+      );
+      // Read the committed assignments and current preferences inside the same
+      // transaction. A failed read cannot leave an entry saved but unadvanced.
+      final committed = await categorizedAssignments(saved.id);
+      final groups = await SqliteCategoriesRepository(
+        database,
+      ).dimensions(collectionId);
+      return EntryConfirmation(saved, {
+        for (final group in groups)
+          if (group.carryOver && committed.containsKey(group.id))
+            group.id: committed[group.id]!,
+      });
     });
   }
 
@@ -344,9 +383,7 @@ final class SqliteVocabularyRepository
     });
   }
 
-  Future<VocabularyRecord> _write(
-    Future<VocabularyRecord> Function() action,
-  ) async {
+  Future<T> _write<T>(Future<T> Function() action) async {
     try {
       return await database.transaction(action);
     } on SqliteException catch (error) {

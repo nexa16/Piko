@@ -51,6 +51,7 @@ final class SpeedSession {
     this.completion,
     this.needsBreak = false,
     this.numberGame,
+    this.completedBreaks = 0,
   }) : entryIds = List.unmodifiable(entryIds),
        pool = List.unmodifiable(pool),
        waiting = List.unmodifiable(waiting),
@@ -129,6 +130,7 @@ final class SpeedSession {
   /// A short pool has exhausted its pass and needs one completed minigame.
   final bool needsBreak;
   final SpeedNumbersGame? numberGame;
+  final int completedBreaks;
 
   String? get currentEntryId =>
       turnIndex < pass.length ? pass[turnIndex] : null;
@@ -140,7 +142,14 @@ final class SpeedSession {
       throw StateError('No Speed break is awaiting a numbers game');
     }
     if (numberGame != null) return this;
-    return _withGame(SpeedNumbersGame.start(random: random));
+    return _withGame(
+      SpeedNumbersGame.start(
+        random: random,
+        kind: completedBreaks.isEven
+            ? SpeedBreakKind.numbers
+            : SpeedBreakKind.letters,
+      ),
+    );
   }
 
   /// Finishing 10 automatically unlocks every remaining word's next pass.
@@ -168,6 +177,7 @@ final class SpeedSession {
     itemProgress: itemProgress,
     needsBreak: true,
     numberGame: game,
+    completedBreaks: completedBreaks,
   );
 
   SpeedSession _completeBreak() {
@@ -181,6 +191,7 @@ final class SpeedSession {
       pass: pool,
       turnIndex: 0,
       rotation: rotation + 1,
+      completedBreaks: completedBreaks + 1,
       completedEntryIds: completedEntryIds,
       itemProgress: itemProgress,
     );
@@ -228,6 +239,7 @@ final class SpeedSession {
       },
       needsBreak: keepBreak,
       numberGame: keepBreak ? numberGame : null,
+      completedBreaks: completedBreaks,
     );
   }
 
@@ -287,6 +299,7 @@ final class SpeedSession {
           ? SpeedCompletion(entryId: entryId, errors: progress.errors)
           : null,
       needsBreak: needsBreak,
+      completedBreaks: completedBreaks,
     );
   }
 }

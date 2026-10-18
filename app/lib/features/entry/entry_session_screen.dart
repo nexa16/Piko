@@ -2,6 +2,7 @@ import '../../ui/components/piko_switch.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../data/collections_repository.dart';
@@ -73,6 +74,15 @@ class _Editors {
 class _EntrySessionScreenState extends State<EntrySessionScreen> {
   static const draftId = 'draft';
   final scroll = ScrollController();
+  late final interactionAnchor = PikoInteractionAnchor(
+    onCapture: () {
+      // Same-surface controls own their top edge. Explicit item navigation and
+      // IME/caret reveal below still take precedence when requested.
+      anchorId = null;
+      anchorCenter = null;
+      structuralAnchoring = false;
+    },
+  );
   final stackFocus = FocusNode();
   final viewport = GlobalKey();
   final cards = <String, GlobalKey>{};
@@ -199,6 +209,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     final structuralChange =
         previousIds.join('|') != ids.join('|') || previousUndo != nextUndo;
     if (structuralChange &&
+        !interactionAnchor.hasTarget &&
         !advanced &&
         activeId == previousActiveId &&
         !structuralAnchoring) {
@@ -207,10 +218,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       structuralAnchoring = true;
     }
     if (advanced || (activeId != previousActiveId && !adjusting)) {
+      interactionAnchor.clear();
       advancementRevision = session.advancementRevision;
       centerRequested = true;
       structuralAnchoring = false;
-    } else if (!adjusting && !structuralAnchoring) {
+    } else if (!adjusting &&
+        !structuralAnchoring &&
+        !interactionAnchor.hasTarget) {
       anchorId = activeId;
       anchorCenter = center(activeId);
     }
@@ -820,7 +834,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       if (!initiatingSession.isCompleted &&
           (draft.targetText.trim().isNotEmpty ||
               draft.nativeText.trim().isNotEmpty ||
-              draft.assignments.isNotEmpty ||
+              initiatingSession.hasDraftCategoryEdits ||
               draft.hasOptionalText ||
               draft.makeHintVisibilityDefault)) {
         final discard = await showPikoDialog<bool>(
@@ -997,6 +1011,9 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
             },
             child: SizeChangedLayoutNotifier(
               child: AnimatedSize(
+                // Explicit stack navigation retains its centered transition.
+                // Same-card optional content grows from the retained header.
+                alignment: adjusting ? Alignment.center : Alignment.topCenter,
                 duration: PikoTheme.motion(context),
                 onEnd: () {
                   if (id == anchorId) releaseAnchor = true;
@@ -1529,7 +1546,8 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                       label: copy.text('entry.stackLabel'),
                                       child: NotificationListener<ScrollNotification>(
                                         onNotification: notification,
-                                        child: SingleChildScrollView(
+                                        child: PikoAnchoredBoxScrollView(
+                                          interactionAnchor: interactionAnchor,
                                           key: const ValueKey('entry-stack'),
                                           controller: scroll,
                                           physics:

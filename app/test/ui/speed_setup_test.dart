@@ -23,12 +23,10 @@ class SetupHarness {
     this.language = 'en',
     this.direction = LearningDirection.targetToNative,
     this.count = 3,
-    this.hasLearningProgress = false,
   });
   final String language;
   final LearningDirection direction;
   final int count;
-  final bool hasLearningProgress;
   final opener = FocusNode();
   int? result;
   bool closed = false;
@@ -57,7 +55,6 @@ class SetupHarness {
                     collection: collection,
                     direction: direction,
                     eligibleCount: count,
-                    hasLearningProgress: hasLearningProgress,
                   );
                   closed = true;
                 },
@@ -83,17 +80,13 @@ void main() {
   for (final language in ['en', 'de']) {
     for (final direction in LearningDirection.values) {
       testWidgets(
-        'UX-SETUP-002 $language $direction fixed context and warning at320px/200%',
+        'UX-SETUP-002 $language $direction fixed context and preserved-progress rules at320px/200%',
         (tester) async {
           tester.view.devicePixelRatio = 1;
           tester.view.physicalSize = const Size(320, 900);
           addTearDown(tester.view.resetDevicePixelRatio);
           addTearDown(tester.view.resetPhysicalSize);
-          final h = SetupHarness(
-            language: language,
-            direction: direction,
-            hasLearningProgress: true,
-          );
+          final h = SetupHarness(language: language, direction: direction);
           await h.mount(tester, scale: 2);
           final copy = PikoCopy(language);
           expect(
@@ -120,19 +113,11 @@ void main() {
             tester.widget<TextField>(field).keyboardType,
             TextInputType.number,
           );
-          final warning = tester.widget<Container>(
-            find.byKey(const ValueKey('speed-reset-warning')),
-          );
-          final decoration = warning.decoration! as BoxDecoration;
-          expect(decoration.color, PikoTheme.warningBackground);
           expect(
-            (decoration.border! as Border).top.color,
-            pikoDesign.color('danger'),
+            find.byKey(const ValueKey('speed-reset-warning')),
+            findsNothing,
           );
-          expect(find.text(copy.text('r2.speedResetWarning')), findsOneWidget);
-          expect(find.text(copy.text('r2.speedResetWarningTitle')), findsOneWidget);
-          final body = tester.widget<Text>(find.text(copy.text('r2.speedResetWarning')));
-          expect(body.style!.color, pikoDesign.color('ink'));
+          expect(find.text(copy.text('r2.speedResetWarning')), findsNothing);
           for (final key in [
             'speed.rulesTitle',
             'speed.rulesExplanation',
@@ -162,17 +147,20 @@ void main() {
     }
   }
 
-  testWidgets('39 new words omit the warning and keep both explanations visible', (tester) async {
-    final h = SetupHarness(count: 39);
-    await h.mount(tester);
-    final copy = PikoCopy('en');
-    expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
-    expect(find.text(copy.text('r2.speedResetWarningTitle')), findsNothing);
-    expect(find.text(copy.text('r2.speedResetWarning')), findsNothing);
-    expect(find.text(copy.text('speed.rulesExplanation')), findsOneWidget);
-    expect(find.text(copy.text('speed.exitExplanation')), findsOneWidget);
-    expect(find.byType(ExpansionTile), findsNothing);
-  });
+  testWidgets(
+    '39 new words omit the warning and keep both explanations visible',
+    (tester) async {
+      final h = SetupHarness(count: 39);
+      await h.mount(tester);
+      final copy = PikoCopy('en');
+      expect(find.byKey(const ValueKey('speed-reset-warning')), findsNothing);
+      expect(find.text(copy.text('r2.speedResetWarningTitle')), findsNothing);
+      expect(find.text(copy.text('r2.speedResetWarning')), findsNothing);
+      expect(find.text(copy.text('speed.rulesExplanation')), findsOneWidget);
+      expect(find.text(copy.text('speed.exitExplanation')), findsOneWidget);
+      expect(find.byType(ExpansionTile), findsNothing);
+    },
+  );
 
   testWidgets(
     'pool accepts1 and safe maximum; invalid decimal, zero, exponent and overflow cannot start',

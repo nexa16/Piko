@@ -111,8 +111,7 @@ List<VocabularyViewGroup> groupVocabulary(
   if (dimension == null || !snapshot.categoryValues.containsKey(dimension)) {
     return [VocabularyViewGroup(null, null, entries)];
   }
-  final values = List.of(snapshot.categoryValues[dimension]!)
-    ..sort((a, b) => compareVocabularyLabels(a.name, b.name));
+  final values = snapshot.categoryValues[dimension]!;
   final grouped = <VocabularyViewGroup>[];
   for (final value in values) {
     final members = entries

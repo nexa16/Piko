@@ -185,7 +185,7 @@ void main() {
         final semantics = tester.ensureSemantics();
         try {
           expect(
-            tester.getSemantics(find.byType(PikoCheckbox)),
+            tester.getSemantics(find.bySemanticsLabel(label)),
             matchesSemantics(
               label: label,
               hasCheckedState: true,

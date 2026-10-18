@@ -61,11 +61,17 @@ class MenuFixture {
   }
 
   Future<void> open(WidgetTester tester) async {
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('collection-menu'), skipOffstage: false),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('collection-menu')));
+    final compact = find.byKey(const ValueKey('collection-compact-menu'));
+    if (compact.hitTestable().evaluate().isNotEmpty) {
+      await tester.tap(compact);
+    } else {
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('collection-menu')));
+    }
     await tester.pumpAndSettle();
     await tester.tap(find.text('Edit categories'));
     await f.flush(tester);

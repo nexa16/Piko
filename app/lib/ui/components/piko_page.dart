@@ -7,19 +7,25 @@ class PikoPage extends StatelessWidget {
     : slivers = null,
       physics = null,
       interactionAnchor = null,
-      safeAreaBottom = true;
+      safeAreaBottom = true,
+      hasPinnedHeader = false;
   const PikoPage.slivers({
     super.key,
     required this.slivers,
     this.physics,
     this.interactionAnchor,
     this.safeAreaBottom = true,
+    this.hasPinnedHeader = false,
   }) : child = null;
   final Widget? child;
   final List<Widget>? slivers;
   final ScrollPhysics? physics;
   final PikoInteractionAnchor? interactionAnchor;
   final bool safeAreaBottom;
+
+  /// Keep pinned slivers directly under the viewport so accessibility/caret
+  /// reveal requests account for their obstruction above the target.
+  final bool hasPinnedHeader;
   @override
   Widget build(BuildContext context) => SafeArea(
     bottom: safeAreaBottom,
@@ -37,6 +43,38 @@ class PikoPage extends StatelessWidget {
           horizontal,
           d.dimension('spacing.6'),
         );
+        final pageSlivers = slivers == null
+            ? <Widget>[]
+            : hasPinnedHeader
+            ? <Widget>[
+                SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+                ...slivers!,
+                SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+              ]
+            : <Widget>[
+                SliverPadding(
+                  padding: padding,
+                  sliver: SliverMainAxisGroup(slivers: slivers!),
+                ),
+              ];
+        Widget scrollPage() {
+          final page = interactionAnchor != null
+              ? interactionAnchor!.scope(
+                  child: PikoAnchoredScrollView(
+                    interactionAnchor: interactionAnchor!,
+                    physics: physics,
+                    slivers: pageSlivers,
+                  ),
+                )
+              : CustomScrollView(physics: physics, slivers: pageSlivers);
+          return hasPinnedHeader
+              ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontal),
+                  child: page,
+                )
+              : page;
+        }
+
         return Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
@@ -44,29 +82,8 @@ class PikoPage extends StatelessWidget {
               maxWidth: d.dimension('controls.contentWidth'),
             ),
             child: slivers == null
-                ? SingleChildScrollView(padding: padding, child: child)
-                : interactionAnchor != null
-                ? interactionAnchor!.scope(
-                    child: PikoAnchoredScrollView(
-                      interactionAnchor: interactionAnchor!,
-                      physics: physics,
-                      slivers: [
-                        SliverPadding(
-                          padding: padding,
-                          sliver: SliverMainAxisGroup(slivers: slivers!),
-                        ),
-                      ],
-                    ),
-                  )
-                : CustomScrollView(
-                    physics: physics,
-                    slivers: [
-                      SliverPadding(
-                        padding: padding,
-                        sliver: SliverMainAxisGroup(slivers: slivers!),
-                      ),
-                    ],
-                  ),
+                ? PikoAnchoredBoxScrollView(padding: padding, child: child!)
+                : scrollPage(),
           ),
         );
       },

@@ -13,6 +13,9 @@ import 'preferred_direction_controller.dart';
 import 'preferred_direction_control.dart';
 import '../../data/settings_repository.dart';
 import 'question_examples_control.dart';
+import '../../data/full_export.dart';
+import '../../platform/vocabulary_json_platform.dart';
+import '../interchange/full_export_control.dart';
 
 class SettingsRoute extends StatelessWidget {
   const SettingsRoute({
@@ -20,12 +23,16 @@ class SettingsRoute extends StatelessWidget {
     this.directionBinding,
     this.settingsRepository,
     this.registerPending,
+    this.fullExportService,
+    this.fullExportPlatform,
     super.key,
   });
   final ValueListenable<AppLanguageController?> binding;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   final SettingsRepository? settingsRepository;
   final ValueChanged<Future<void>>? registerPending;
+  final FullExportService? fullExportService;
+  final VocabularyJsonPlatform? fullExportPlatform;
 
   @override
   Widget build(BuildContext context) =>
@@ -132,6 +139,14 @@ class SettingsRoute extends StatelessWidget {
                   if (settingsRepository case final repository?)
                     QuestionExamplesControl(
                       repository: repository,
+                      registerPending: registerPending ?? (_) {},
+                    ),
+                  if (fullExportService case final service?)
+                    FullExportControl(
+                      service: service,
+                      platform:
+                          fullExportPlatform ??
+                          const SystemVocabularyJsonPlatform.fullExport(),
                       registerPending: registerPending ?? (_) {},
                     ),
                 ],

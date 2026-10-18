@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes the APK selected in the [build manifest](build-manifest.json). [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
 
 ## Contents
 
@@ -13,6 +13,7 @@ Piko stores vocabulary on the device and offers self-assessed Long-term and Spee
 - [Temporary selection](#selection)
 - [Long-term learning](#long-term)
 - [Speed learning](#speed)
+- [Statistics](#statistics)
 - [JSON import and export](#transfer)
 - [Settings](#settings)
 - [Glossary](#glossary)
@@ -24,13 +25,17 @@ From Home, choose **New** or **Create first collection**. Select the target lang
 
 Open a Collection from **My collections**. Its heading shows the language pair and vocabulary count. The information icon beside this metadata opens **How learning works**, including an expandable technical explanation. Closing help returns to the Collection.
 
+Scrolling down keeps the Collection title, total entry count, Back/menu and separate compact Review and Speed actions available. Each action counts eligible word directions in the current search/filter scope; a word available in both directions counts twice. Zero stays visible and disabled; loading and errors remain distinct. One eligible direction starts directly (Speed still opens its setup); two directions offer a choice. Dismissing the choice/setup retains the list and selection. Return to the top to see the expanded direction cards and rename control. The compact header has no mascot. In an exceptionally short viewport, the header scrolls normally to keep content reachable.
+
+Reading Piko appears beside the first available Review action, including when Speed is also available. Sleeping Piko accompanies the no-work message only when the current scope has no Review, new Speed words or pending repetition. Speed-only, empty, unmatched, loading and failed states show no contextual pose. These illustrations do not change learning data or indicate permanent mastery.
+
 Use the heading's rename control to change its name; save or cancel that edit explicitly. The Collection **More options** menu contains JSON import/export, Collection Settings, category editing and Collection deletion. Confirming deletion removes that Collection and its associated vocabulary/learning. Export anything you want to retain before deleting it; Collection deletion has no vocabulary-style Undo.
 
-The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for the narrower Collection JSON operation.
+The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
-<img src="images/06-collection-list.png" width="320" alt="French Collection with four due words, Speed action, search and independent list controls">
+<img src="images/r7-collection.png" width="320" alt="French Collection with four retained words and no currently due review">
 
-Ordinary product emulator capture · [Full image](images/06-collection-list.png) · [Capture metadata: `06-collection-list`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-collection.png) · [Capture metadata: `r7-collection`](build-manifest.json)
 
 [Technical ownership](technical.md#runtime) · [Home and Collection images](screenshots.md#collections)
 
@@ -46,9 +51,9 @@ A new draft is different from an existing saved card: completing both required f
 
 The same target/native pair cannot be saved twice in one Collection. Comparison trims outside whitespace, normalizes Unicode and ignores letter case; it does not merge all spelling variants. If a pair already exists, edit that saved entry or change the pair. Empty required fields and incomplete example pairs need correction before saving.
 
-<img src="images/03-entry-draft.png" width="320" alt="Manual-entry draft for pomme and Apfel with Not saved yet and Save & Next">
+<img src="images/r7-entry-draft.png" width="320" alt="Unsaved manually typed livre and Buch with manual examples and Hint controls">
 
-Ordinary product emulator capture · [Full image](images/03-entry-draft.png) · [Capture metadata: `03-entry-draft`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-entry-draft.png) · [Capture metadata: `r7-entry-draft`](build-manifest.json)
 
 [Editor image](screenshots.md#editors) · [Identity and validation](technical.md#vocabulary)
 
@@ -82,13 +87,15 @@ Detailed cards expose more saved content than Compact cards. During learning, co
 
 Open **More options → Edit categories** within a Collection. Choose **Add category group** for a dimension such as “Topic”, choose **One value** or **Multiple values**, then add its values. One value permits one assignment for each word; Multiple values permits several. Names and values belong to this Collection. Expand a category group to edit its name, selection mode and values.
 
-Assign values from a vocabulary editor. Values are shown alphabetically. Manage a dimension or value from the category page to rename or delete it. Deleting category metadata removes the relevant assignments rather than deleting vocabulary. Changing a Multiple dimension to Single can require resolving assignments; follow the app's conflict feedback instead of assuming a value was chosen for you.
+Assign values from a vocabulary editor. Values start alphabetically. In **Filters**, hold and drag a value within its group, or use its menu's **Move up / Move down** actions. The order saves immediately and applies to this Collection's pickers, tags, category management and grouped headings. Closing without Apply keeps that order and discards unconfirmed filter choices. Clear the value search before moving values. Renaming keeps a custom position; new values append. Manage a dimension or value from the category page to rename or delete it. Deleting category metadata removes the relevant assignments rather than deleting vocabulary. Changing a Multiple dimension to Single can require resolving assignments; follow the app's conflict feedback instead of assuming a value was chosen for you.
 
 Categories feed the list's filters and grouping. If none exist, the category/filter area explains that state; create category definitions before expecting values to select.
 
-<img src="images/07-categories.png" width="320" alt="Topic category editor with One value and Multiple values modes and alphabetical values">
+In **Edit categories**, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
 
-Ordinary product emulator capture · [Full image](images/07-categories.png) · [Capture metadata: `07-categories`](build-manifest.json)
+<img src="images/r7-categories.png" width="320" alt="Category group editor with default-off session carry-over and explicit-save explanation">
+
+Ordinary product emulator capture · [Full image](images/r7-categories.png) · [Capture metadata: `r7-categories`](build-manifest.json)
 
 [Category image](screenshots.md#categories) · [Category ownership](technical.md#queries)
 
@@ -107,7 +114,7 @@ The Collection vocabulary area has a search field and separate **Filters**, **Gr
 
 Controls expose their current state and independent reset actions. Search and filters combine; changing Group or Sort does not clear them. An empty result is not deletion: clear search/filter restrictions to locate saved words again. View preferences are retained per Collection; temporary selection is separate.
 
-Collection Detail's learning launch availability uses the matching eligible vocabulary and configured direction, so filtering/searching can change the offered actions and counts. The Home review badge counts distinct due vocabulary across directions; completing one direction can leave the opposite direction due. A grouped duplicate is still one saved word.
+Collection Detail's learning launch availability uses the matching eligible vocabulary and configured direction, so filtering/searching can change the offered actions and counts. The Home review badge counts due word directions; completing one direction can leave the opposite direction due. A grouped duplicate is still one saved word.
 
 [List image](screenshots.md#collections) · [Query and ordering details](technical.md#queries)
 
@@ -116,13 +123,15 @@ Collection Detail's learning launch availability uses the matching eligible voca
 
 Hold a collapsed vocabulary card to start selection, then tap cards to toggle them. **Select all** includes the current search/filter matches, including words inside collapsed groups. A grouped word is selected once by identity even when displayed in several places.
 
+The selection controls reserve their space so selection does not move vocabulary. At large text sizes or above the keyboard, their height is bounded and their contents can scroll, keeping the word list accessible.
+
 Changing search/filter can hide selected words without deselecting them. The selection summary reports hidden selections. Use **Clear selection** to end selection explicitly; leaving the Collection also clears it.
 
-Selection in this build only selects words. It has no bulk edit/delete/export operation and does not launch learning from the selected set. It does not change Active/Inactive, saved filters or learning progress.
+Use **Speed · selected** in the selection controls to practice the selected active words, including hidden and previously learned words. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit/delete/export operation and does not change Active/Inactive or saved filters.
 
-<img src="images/10-hidden-selection.png" width="320" alt="Filtered Food word selected with summary showing four selected and three hidden">
+<img src="images/r7-selected-speed.png" width="320" alt="Selected Speed setup for one reviewed word, with fixed direction and hidden and inactive counts">
 
-Ordinary product emulator capture · [Full image](images/10-hidden-selection.png) · [Capture metadata: `10-hidden-selection`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-selected-speed.png) · [Capture metadata: `r7-selected-speed`](build-manifest.json)
 
 [Selection image](screenshots.md#selection) · [Selection ownership](technical.md#queries)
 
@@ -138,30 +147,41 @@ Correct schedules a later review. Hard plus Correct uses the scheduler's Hard ra
 
 **Correct previous review** lets you replace the immediately previous grade while its correction control is available. Choose the corrected grade for that answer. This replaces its effect rather than adding an extra ordinary review. It is not a general learning-history editor.
 
-When the captured work and repetitions are complete, dismiss the summary to return to the Collection. **Exit review** leaves earlier saved answers intact. A save error keeps the operation unresolved; retry the grade instead of counting it as saved. **Nothing due right now** means the current scope has no eligible scheduled work, not that the vocabulary is mastered.
+When the captured work and repetitions are complete, the existing summary shows the completed counts and a decorative celebration Piko. Dismiss it to return to the Collection. **Exit review** leaves earlier saved answers intact. A save error keeps the operation unresolved; retry the grade instead of counting it as saved. **Nothing due right now** means the current scope has no eligible scheduled work, not that the vocabulary is mastered.
 
 The Collection's information icon explains scheduling and repetitions. Readiness labels such as New, Retry pending, Due now and Next review are scheduling information. The build does not offer typed-answer assessment or automatic knowledge-level/mastery grading. Learning is independent for target → native and native → target.
 
-<img src="images/14-long-term-answer.png" width="320" alt="Long-term answer with Hard checkbox, Incorrect and Correct buttons">
-
-Ordinary product emulator capture · [Full image](images/14-long-term-answer.png) · [Capture metadata: `14-long-term-answer`](build-manifest.json)
 
 [Learning image](screenshots.md#learning) · [Scheduler, retry and correction](technical.md#learning)
 
 <a id="speed"></a>
 ## Speed learning
 
-Use a Collection's directional **Speed** action when eligible active words are available. The default pool comes from new words matching the current scope; temporary selection does not replace it. Read the setup's word count, direction and rules, plus its progress-reset warning when shown. Set **Maximum words per pass** and choose **Start Speed**.
+Use a Collection's directional **Speed** action when eligible active words are available. The default pool comes from new words matching the current scope; temporary selection does not replace it. Read the setup's word count, direction and rules. Set **Maximum words per pass** and choose **Start Speed**.
 
-Reveal each answer and choose Correct or Incorrect. A word finishes after a consecutive correct streak: one correct with no errors, two after one error, three after two, and four after three or more. An error resets that word's streak. Completed words leave the pool; waiting words enter as space becomes available. A short numbers game can interrupt unfinished work between passes. The session ends without an extra game once all work is complete.
+For selected practice, use the separate selection action. A single preferred direction opens setup directly; when both directions are enabled, choose one. Start rechecks the whole selected set in the current Collection sort order, including hidden words. Inactive or deleted words are excluded. Changed counts remain visible for review before starting; failures retain setup and pool size for retry. No eligible words means no start. Previously reviewed or Speed-completed words remain eligible for this explicit practice.
 
-Speed completion persists word-by-word. Completing without errors preserves the direction's long-term progress. Completing after an error resets long-term progress in that direction, as the setup warns; the opposite direction remains unchanged. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
+Reveal each answer and choose Correct or Incorrect. A word finishes after a consecutive correct streak: one correct with no errors, two after one error, three after two, and four after three or more. An error resets that word's streak. Completed words leave the pool; waiting words enter as space becomes available. Short ordering games alternate between 1–10 and A–J at eligible breaks, starting with numbers in each session. There is no timer or score; touch and keyboard use the same shuffled positions. The session ends without an extra game once all work is complete.
 
-<img src="images/12-speed-setup.png" width="320" alt="Speed setup with French to German direction, four new words and pass-size field">
+Speed completion persists word-by-word. Completing a word preserves Long-term scheduling, history and pending repetitions in both directions, including after errors. Each completed word direction contributes at most once to that learning day's Speed statistics. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
 
-Ordinary product emulator capture · [Full image](images/12-speed-setup.png) · [Capture metadata: `12-speed-setup`](build-manifest.json)
+After every word has successfully saved its completion, Speed returns to the Collection with its completed-word message and one celebration Piko, temporarily replacing the contextual pose. In the compact header, the completion text and X remain visible without artwork. Dismiss the message with X; it also clears when another learning launch starts or when leaving the Collection. Exit, initially empty work, failed saves and exhaustion caused only by deactivation do not celebrate. No extra summary or timer is added.
+
 
 [Speed images](screenshots.md#speed) · [Speed state and persistence](technical.md#speed)
+
+<a id="statistics"></a>
+## Statistics
+
+Home shows **Activity** above Collections. Open its card for **Statistics**, with Long-term selected initially and a separate Speed view. Activity remains accessible after deleting all Collections if recorded learning remains. A new installation with no Collections or activity keeps the ordinary empty Home.
+
+**Vocabulary learned** counts successfully saved regular Long-term answers, including repeated words and both directions. It does not measure distinct words or mastery. Grade correction keeps the original credit; retry answers do not add another regular answer. The streak counts consecutive learning days with at least one regular answer. With no answer today, yesterday's streak remains open and a reminder appears. The average uses positive-count active days within the last 30 learning days, including today; it is absent when there are none.
+
+Daily activity starts with seven recent days. **Show calendar** opens a Monday-first month calendar; browse previous months or choose a month and year. Future months are unavailable. A dash means unrecorded history, zero means a recorded idle day, and an asterisk marks partial coverage. **Statistics recorded since** identifies the start; earlier activity is not reconstructed from old or imported learning.
+
+A learning day changes at local **04:00**. Saved activity retains its assigned date through later timezone changes. A backwards clock change temporarily hides future-dated activity. Statistics refresh after learning, opening, resuming, system clock changes and the day boundary. Loading and errors have explicit status; a failed refresh labels retained values as potentially out of date and offers retry.
+
+Speed shows today's successful word-direction completions, counted once per word, direction and learning day. Repeated completion can count on another day. Unfinished words contribute nothing; completed words keep their credit when a session is abandoned. Speed does not change the Long-term average or streak. Deleting vocabulary or Collections does not delete already recorded statistics.
 
 <a id="transfer"></a>
 ## JSON import and export
@@ -174,6 +194,12 @@ On the Export tab, use **Copy JSON** or **Save JSON file** to generate and keep 
 
 Export includes vocabulary, categories, optional content, activity and associated directional learning. It is not an app-wide backup. In particular, importing this export does not restore learning progress; keep that distinction in mind before deleting anything or moving devices.
 
+### Export all Collections and statistics
+
+From global **Settings**, choose **Export all Collections**. Choose a destination in Android's save dialog for `piko-full-export.json`. The file includes every Collection and the complete recorded daily statistics, including counts retained after Collection deletion. It uses a consistent snapshot; global settings and unfinished drafts are excluded.
+
+This is a report, not a restore file: the Collection importer rejects it. Saving can be retried after an error; canceling the system dialog does not report success or change local data. The existing single-Collection export remains separate and contains no statistics.
+
 ### Check and apply an import
 
 1. Use **Choose JSON file**, **Paste from clipboard**, or edit **Paste or edit JSON**. **Copy example JSON** supplies synthetic structure for the Collection's language pair.
@@ -183,11 +209,8 @@ Export includes vocabulary, categories, optional content, activity and associate
 
 Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Schema versions 1–4 are accepted. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word pairs block the batch.
 
-Existing learning is preserved. Imported learning data is ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
+Existing learning is preserved. Imported learning and statistics data are ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
 
-<img src="images/05-import-preview.png" width="320" alt="Import preview with three new words, zero errors and Import vocabulary action">
-
-Ordinary product emulator capture · [Full image](images/05-import-preview.png) · [Capture metadata: `05-import-preview`](build-manifest.json)
 
 [Import/export images](screenshots.md#transfer) · [Format and compatibility](technical.md#interchange)
 
@@ -198,11 +221,11 @@ From Home, open **Settings**. Choose **App language** → English or Deutsch. Th
 
 **Learning direction** selects Target → Native, Native → Target, or Both directions separately. It affects eligible launch choices; it does not merge the two directions' progress. **Show examples on questions** changes question-side presentation while preserving stored examples.
 
-Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Detailed statistics, account/sync controls and a developer-settings interface are not available tasks in this build.
+Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
 
-<img src="images/20-settings.png" width="320" alt="English Settings with app language, learning direction and question-example controls">
+<img src="images/r7-settings.png" width="320" alt="Global Settings with four cards, immediate preferences and full export">
 
-Ordinary product emulator capture · [Full image](images/20-settings.png) · [Capture metadata: `20-settings`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r7-settings.png) · [Capture metadata: `r7-settings`](build-manifest.json)
 
 [Settings image](screenshots.md#settings) · [Preference ownership](technical.md#runtime)
 

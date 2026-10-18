@@ -4810,6 +4810,301 @@ class CategoryValuesCompanion extends UpdateCompanion<StoredCategoryValue> {
   }
 }
 
+class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
+    with TableInfo<$CategoryGroupPreferencesTable, CategoryGroupPreference> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryGroupPreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dimensionIdMeta = const VerificationMeta(
+    'dimensionId',
+  );
+  @override
+  late final GeneratedColumn<String> dimensionId = GeneratedColumn<String>(
+    'dimension_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES category_dimensions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _customValueOrderMeta = const VerificationMeta(
+    'customValueOrder',
+  );
+  @override
+  late final GeneratedColumn<bool> customValueOrder = GeneratedColumn<bool>(
+    'custom_value_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("custom_value_order" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _carryOverMeta = const VerificationMeta(
+    'carryOver',
+  );
+  @override
+  late final GeneratedColumn<bool> carryOver = GeneratedColumn<bool>(
+    'carry_over',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("carry_over" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    dimensionId,
+    customValueOrder,
+    carryOver,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_group_preferences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryGroupPreference> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('dimension_id')) {
+      context.handle(
+        _dimensionIdMeta,
+        dimensionId.isAcceptableOrUnknown(
+          data['dimension_id']!,
+          _dimensionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dimensionIdMeta);
+    }
+    if (data.containsKey('custom_value_order')) {
+      context.handle(
+        _customValueOrderMeta,
+        customValueOrder.isAcceptableOrUnknown(
+          data['custom_value_order']!,
+          _customValueOrderMeta,
+        ),
+      );
+    }
+    if (data.containsKey('carry_over')) {
+      context.handle(
+        _carryOverMeta,
+        carryOver.isAcceptableOrUnknown(data['carry_over']!, _carryOverMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {dimensionId};
+  @override
+  CategoryGroupPreference map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryGroupPreference(
+      dimensionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dimension_id'],
+      )!,
+      customValueOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}custom_value_order'],
+      )!,
+      carryOver: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}carry_over'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryGroupPreferencesTable createAlias(String alias) {
+    return $CategoryGroupPreferencesTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryGroupPreference extends DataClass
+    implements Insertable<CategoryGroupPreference> {
+  final String dimensionId;
+  final bool customValueOrder;
+  final bool carryOver;
+  const CategoryGroupPreference({
+    required this.dimensionId,
+    required this.customValueOrder,
+    required this.carryOver,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['dimension_id'] = Variable<String>(dimensionId);
+    map['custom_value_order'] = Variable<bool>(customValueOrder);
+    map['carry_over'] = Variable<bool>(carryOver);
+    return map;
+  }
+
+  CategoryGroupPreferencesCompanion toCompanion(bool nullToAbsent) {
+    return CategoryGroupPreferencesCompanion(
+      dimensionId: Value(dimensionId),
+      customValueOrder: Value(customValueOrder),
+      carryOver: Value(carryOver),
+    );
+  }
+
+  factory CategoryGroupPreference.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryGroupPreference(
+      dimensionId: serializer.fromJson<String>(json['dimensionId']),
+      customValueOrder: serializer.fromJson<bool>(json['customValueOrder']),
+      carryOver: serializer.fromJson<bool>(json['carryOver']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'dimensionId': serializer.toJson<String>(dimensionId),
+      'customValueOrder': serializer.toJson<bool>(customValueOrder),
+      'carryOver': serializer.toJson<bool>(carryOver),
+    };
+  }
+
+  CategoryGroupPreference copyWith({
+    String? dimensionId,
+    bool? customValueOrder,
+    bool? carryOver,
+  }) => CategoryGroupPreference(
+    dimensionId: dimensionId ?? this.dimensionId,
+    customValueOrder: customValueOrder ?? this.customValueOrder,
+    carryOver: carryOver ?? this.carryOver,
+  );
+  CategoryGroupPreference copyWithCompanion(
+    CategoryGroupPreferencesCompanion data,
+  ) {
+    return CategoryGroupPreference(
+      dimensionId: data.dimensionId.present
+          ? data.dimensionId.value
+          : this.dimensionId,
+      customValueOrder: data.customValueOrder.present
+          ? data.customValueOrder.value
+          : this.customValueOrder,
+      carryOver: data.carryOver.present ? data.carryOver.value : this.carryOver,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryGroupPreference(')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('customValueOrder: $customValueOrder, ')
+          ..write('carryOver: $carryOver')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(dimensionId, customValueOrder, carryOver);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryGroupPreference &&
+          other.dimensionId == this.dimensionId &&
+          other.customValueOrder == this.customValueOrder &&
+          other.carryOver == this.carryOver);
+}
+
+class CategoryGroupPreferencesCompanion
+    extends UpdateCompanion<CategoryGroupPreference> {
+  final Value<String> dimensionId;
+  final Value<bool> customValueOrder;
+  final Value<bool> carryOver;
+  final Value<int> rowid;
+  const CategoryGroupPreferencesCompanion({
+    this.dimensionId = const Value.absent(),
+    this.customValueOrder = const Value.absent(),
+    this.carryOver = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryGroupPreferencesCompanion.insert({
+    required String dimensionId,
+    this.customValueOrder = const Value.absent(),
+    this.carryOver = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : dimensionId = Value(dimensionId);
+  static Insertable<CategoryGroupPreference> custom({
+    Expression<String>? dimensionId,
+    Expression<bool>? customValueOrder,
+    Expression<bool>? carryOver,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (dimensionId != null) 'dimension_id': dimensionId,
+      if (customValueOrder != null) 'custom_value_order': customValueOrder,
+      if (carryOver != null) 'carry_over': carryOver,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryGroupPreferencesCompanion copyWith({
+    Value<String>? dimensionId,
+    Value<bool>? customValueOrder,
+    Value<bool>? carryOver,
+    Value<int>? rowid,
+  }) {
+    return CategoryGroupPreferencesCompanion(
+      dimensionId: dimensionId ?? this.dimensionId,
+      customValueOrder: customValueOrder ?? this.customValueOrder,
+      carryOver: carryOver ?? this.carryOver,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (dimensionId.present) {
+      map['dimension_id'] = Variable<String>(dimensionId.value);
+    }
+    if (customValueOrder.present) {
+      map['custom_value_order'] = Variable<bool>(customValueOrder.value);
+    }
+    if (carryOver.present) {
+      map['carry_over'] = Variable<bool>(carryOver.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryGroupPreferencesCompanion(')
+          ..write('dimensionId: $dimensionId, ')
+          ..write('customValueOrder: $customValueOrder, ')
+          ..write('carryOver: $carryOver, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $VocabularyCategoryAssignmentsTable extends VocabularyCategoryAssignments
     with
         TableInfo<
@@ -5151,6 +5446,940 @@ class VocabularyCategoryAssignmentsCompanion
   }
 }
 
+class $StatisticsOriginsTable extends StatisticsOrigins
+    with TableInfo<$StatisticsOriginsTable, StatisticsOrigin> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StatisticsOriginsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _singletonMeta = const VerificationMeta(
+    'singleton',
+  );
+  @override
+  late final GeneratedColumn<int> singleton = GeneratedColumn<int>(
+    'singleton',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('singleton = 1'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<String> startedAt = GeneratedColumn<String>(
+    'started_at',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>("substr(started_at, -1) = 'Z'"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _learningDateMeta = const VerificationMeta(
+    'learningDate',
+  );
+  @override
+  late final GeneratedColumn<String> learningDate = GeneratedColumn<String>(
+    'learning_date',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('length(learning_date) = 10'),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [singleton, startedAt, learningDate];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'statistics_origins';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StatisticsOrigin> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('singleton')) {
+      context.handle(
+        _singletonMeta,
+        singleton.isAcceptableOrUnknown(data['singleton']!, _singletonMeta),
+      );
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('learning_date')) {
+      context.handle(
+        _learningDateMeta,
+        learningDate.isAcceptableOrUnknown(
+          data['learning_date']!,
+          _learningDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_learningDateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {singleton};
+  @override
+  StatisticsOrigin map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StatisticsOrigin(
+      singleton: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}singleton'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}started_at'],
+      )!,
+      learningDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}learning_date'],
+      )!,
+    );
+  }
+
+  @override
+  $StatisticsOriginsTable createAlias(String alias) {
+    return $StatisticsOriginsTable(attachedDatabase, alias);
+  }
+}
+
+class StatisticsOrigin extends DataClass
+    implements Insertable<StatisticsOrigin> {
+  final int singleton;
+  final String startedAt;
+  final String learningDate;
+  const StatisticsOrigin({
+    required this.singleton,
+    required this.startedAt,
+    required this.learningDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['singleton'] = Variable<int>(singleton);
+    map['started_at'] = Variable<String>(startedAt);
+    map['learning_date'] = Variable<String>(learningDate);
+    return map;
+  }
+
+  StatisticsOriginsCompanion toCompanion(bool nullToAbsent) {
+    return StatisticsOriginsCompanion(
+      singleton: Value(singleton),
+      startedAt: Value(startedAt),
+      learningDate: Value(learningDate),
+    );
+  }
+
+  factory StatisticsOrigin.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StatisticsOrigin(
+      singleton: serializer.fromJson<int>(json['singleton']),
+      startedAt: serializer.fromJson<String>(json['startedAt']),
+      learningDate: serializer.fromJson<String>(json['learningDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'singleton': serializer.toJson<int>(singleton),
+      'startedAt': serializer.toJson<String>(startedAt),
+      'learningDate': serializer.toJson<String>(learningDate),
+    };
+  }
+
+  StatisticsOrigin copyWith({
+    int? singleton,
+    String? startedAt,
+    String? learningDate,
+  }) => StatisticsOrigin(
+    singleton: singleton ?? this.singleton,
+    startedAt: startedAt ?? this.startedAt,
+    learningDate: learningDate ?? this.learningDate,
+  );
+  StatisticsOrigin copyWithCompanion(StatisticsOriginsCompanion data) {
+    return StatisticsOrigin(
+      singleton: data.singleton.present ? data.singleton.value : this.singleton,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      learningDate: data.learningDate.present
+          ? data.learningDate.value
+          : this.learningDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StatisticsOrigin(')
+          ..write('singleton: $singleton, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('learningDate: $learningDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(singleton, startedAt, learningDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StatisticsOrigin &&
+          other.singleton == this.singleton &&
+          other.startedAt == this.startedAt &&
+          other.learningDate == this.learningDate);
+}
+
+class StatisticsOriginsCompanion extends UpdateCompanion<StatisticsOrigin> {
+  final Value<int> singleton;
+  final Value<String> startedAt;
+  final Value<String> learningDate;
+  const StatisticsOriginsCompanion({
+    this.singleton = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.learningDate = const Value.absent(),
+  });
+  StatisticsOriginsCompanion.insert({
+    this.singleton = const Value.absent(),
+    required String startedAt,
+    required String learningDate,
+  }) : startedAt = Value(startedAt),
+       learningDate = Value(learningDate);
+  static Insertable<StatisticsOrigin> custom({
+    Expression<int>? singleton,
+    Expression<String>? startedAt,
+    Expression<String>? learningDate,
+  }) {
+    return RawValuesInsertable({
+      if (singleton != null) 'singleton': singleton,
+      if (startedAt != null) 'started_at': startedAt,
+      if (learningDate != null) 'learning_date': learningDate,
+    });
+  }
+
+  StatisticsOriginsCompanion copyWith({
+    Value<int>? singleton,
+    Value<String>? startedAt,
+    Value<String>? learningDate,
+  }) {
+    return StatisticsOriginsCompanion(
+      singleton: singleton ?? this.singleton,
+      startedAt: startedAt ?? this.startedAt,
+      learningDate: learningDate ?? this.learningDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (singleton.present) {
+      map['singleton'] = Variable<int>(singleton.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<String>(startedAt.value);
+    }
+    if (learningDate.present) {
+      map['learning_date'] = Variable<String>(learningDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StatisticsOriginsCompanion(')
+          ..write('singleton: $singleton, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('learningDate: $learningDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StatisticsActivityTable extends StatisticsActivity
+    with TableInfo<$StatisticsActivityTable, StatisticsActivityData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StatisticsActivityTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _creditKeyMeta = const VerificationMeta(
+    'creditKey',
+  );
+  @override
+  late final GeneratedColumn<String> creditKey = GeneratedColumn<String>(
+    'credit_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>("mode IN ('regular', 'speed')"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<String> occurredAt = GeneratedColumn<String>(
+    'occurred_at',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>("substr(occurred_at, -1) = 'Z'"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _learningDateMeta = const VerificationMeta(
+    'learningDate',
+  );
+  @override
+  late final GeneratedColumn<String> learningDate = GeneratedColumn<String>(
+    'learning_date',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('length(learning_date) = 10'),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    creditKey,
+    mode,
+    occurredAt,
+    learningDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'statistics_activity';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StatisticsActivityData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('credit_key')) {
+      context.handle(
+        _creditKeyMeta,
+        creditKey.isAcceptableOrUnknown(data['credit_key']!, _creditKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_creditKeyMeta);
+    }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_modeMeta);
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtMeta);
+    }
+    if (data.containsKey('learning_date')) {
+      context.handle(
+        _learningDateMeta,
+        learningDate.isAcceptableOrUnknown(
+          data['learning_date']!,
+          _learningDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_learningDateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {creditKey};
+  @override
+  StatisticsActivityData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StatisticsActivityData(
+      creditKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}credit_key'],
+      )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
+      occurredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}occurred_at'],
+      )!,
+      learningDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}learning_date'],
+      )!,
+    );
+  }
+
+  @override
+  $StatisticsActivityTable createAlias(String alias) {
+    return $StatisticsActivityTable(attachedDatabase, alias);
+  }
+}
+
+class StatisticsActivityData extends DataClass
+    implements Insertable<StatisticsActivityData> {
+  final String creditKey;
+  final String mode;
+  final String occurredAt;
+  final String learningDate;
+  const StatisticsActivityData({
+    required this.creditKey,
+    required this.mode,
+    required this.occurredAt,
+    required this.learningDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['credit_key'] = Variable<String>(creditKey);
+    map['mode'] = Variable<String>(mode);
+    map['occurred_at'] = Variable<String>(occurredAt);
+    map['learning_date'] = Variable<String>(learningDate);
+    return map;
+  }
+
+  StatisticsActivityCompanion toCompanion(bool nullToAbsent) {
+    return StatisticsActivityCompanion(
+      creditKey: Value(creditKey),
+      mode: Value(mode),
+      occurredAt: Value(occurredAt),
+      learningDate: Value(learningDate),
+    );
+  }
+
+  factory StatisticsActivityData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StatisticsActivityData(
+      creditKey: serializer.fromJson<String>(json['creditKey']),
+      mode: serializer.fromJson<String>(json['mode']),
+      occurredAt: serializer.fromJson<String>(json['occurredAt']),
+      learningDate: serializer.fromJson<String>(json['learningDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'creditKey': serializer.toJson<String>(creditKey),
+      'mode': serializer.toJson<String>(mode),
+      'occurredAt': serializer.toJson<String>(occurredAt),
+      'learningDate': serializer.toJson<String>(learningDate),
+    };
+  }
+
+  StatisticsActivityData copyWith({
+    String? creditKey,
+    String? mode,
+    String? occurredAt,
+    String? learningDate,
+  }) => StatisticsActivityData(
+    creditKey: creditKey ?? this.creditKey,
+    mode: mode ?? this.mode,
+    occurredAt: occurredAt ?? this.occurredAt,
+    learningDate: learningDate ?? this.learningDate,
+  );
+  StatisticsActivityData copyWithCompanion(StatisticsActivityCompanion data) {
+    return StatisticsActivityData(
+      creditKey: data.creditKey.present ? data.creditKey.value : this.creditKey,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      learningDate: data.learningDate.present
+          ? data.learningDate.value
+          : this.learningDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StatisticsActivityData(')
+          ..write('creditKey: $creditKey, ')
+          ..write('mode: $mode, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('learningDate: $learningDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(creditKey, mode, occurredAt, learningDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StatisticsActivityData &&
+          other.creditKey == this.creditKey &&
+          other.mode == this.mode &&
+          other.occurredAt == this.occurredAt &&
+          other.learningDate == this.learningDate);
+}
+
+class StatisticsActivityCompanion
+    extends UpdateCompanion<StatisticsActivityData> {
+  final Value<String> creditKey;
+  final Value<String> mode;
+  final Value<String> occurredAt;
+  final Value<String> learningDate;
+  final Value<int> rowid;
+  const StatisticsActivityCompanion({
+    this.creditKey = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.learningDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StatisticsActivityCompanion.insert({
+    required String creditKey,
+    required String mode,
+    required String occurredAt,
+    required String learningDate,
+    this.rowid = const Value.absent(),
+  }) : creditKey = Value(creditKey),
+       mode = Value(mode),
+       occurredAt = Value(occurredAt),
+       learningDate = Value(learningDate);
+  static Insertable<StatisticsActivityData> custom({
+    Expression<String>? creditKey,
+    Expression<String>? mode,
+    Expression<String>? occurredAt,
+    Expression<String>? learningDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (creditKey != null) 'credit_key': creditKey,
+      if (mode != null) 'mode': mode,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (learningDate != null) 'learning_date': learningDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StatisticsActivityCompanion copyWith({
+    Value<String>? creditKey,
+    Value<String>? mode,
+    Value<String>? occurredAt,
+    Value<String>? learningDate,
+    Value<int>? rowid,
+  }) {
+    return StatisticsActivityCompanion(
+      creditKey: creditKey ?? this.creditKey,
+      mode: mode ?? this.mode,
+      occurredAt: occurredAt ?? this.occurredAt,
+      learningDate: learningDate ?? this.learningDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (creditKey.present) {
+      map['credit_key'] = Variable<String>(creditKey.value);
+    }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<String>(occurredAt.value);
+    }
+    if (learningDate.present) {
+      map['learning_date'] = Variable<String>(learningDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StatisticsActivityCompanion(')
+          ..write('creditKey: $creditKey, ')
+          ..write('mode: $mode, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('learningDate: $learningDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SpeedCompletionReceiptsTable extends SpeedCompletionReceipts
+    with TableInfo<$SpeedCompletionReceiptsTable, SpeedCompletionReceipt> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SpeedCompletionReceiptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "direction IN ('targetToNative', 'nativeToTarget')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<String> completedAt = GeneratedColumn<String>(
+    'completed_at',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>("substr(completed_at, -1) = 'Z'"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _learningDateMeta = const VerificationMeta(
+    'learningDate',
+  );
+  @override
+  late final GeneratedColumn<String> learningDate = GeneratedColumn<String>(
+    'learning_date',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('length(learning_date) = 10'),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    entryId,
+    direction,
+    completedAt,
+    learningDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'speed_completion_receipts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SpeedCompletionReceipt> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_completedAtMeta);
+    }
+    if (data.containsKey('learning_date')) {
+      context.handle(
+        _learningDateMeta,
+        learningDate.isAcceptableOrUnknown(
+          data['learning_date']!,
+          _learningDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_learningDateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entryId, direction, completedAt};
+  @override
+  SpeedCompletionReceipt map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SpeedCompletionReceipt(
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}completed_at'],
+      )!,
+      learningDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}learning_date'],
+      )!,
+    );
+  }
+
+  @override
+  $SpeedCompletionReceiptsTable createAlias(String alias) {
+    return $SpeedCompletionReceiptsTable(attachedDatabase, alias);
+  }
+}
+
+class SpeedCompletionReceipt extends DataClass
+    implements Insertable<SpeedCompletionReceipt> {
+  final String entryId;
+  final String direction;
+  final String completedAt;
+  final String learningDate;
+  const SpeedCompletionReceipt({
+    required this.entryId,
+    required this.direction,
+    required this.completedAt,
+    required this.learningDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entry_id'] = Variable<String>(entryId);
+    map['direction'] = Variable<String>(direction);
+    map['completed_at'] = Variable<String>(completedAt);
+    map['learning_date'] = Variable<String>(learningDate);
+    return map;
+  }
+
+  SpeedCompletionReceiptsCompanion toCompanion(bool nullToAbsent) {
+    return SpeedCompletionReceiptsCompanion(
+      entryId: Value(entryId),
+      direction: Value(direction),
+      completedAt: Value(completedAt),
+      learningDate: Value(learningDate),
+    );
+  }
+
+  factory SpeedCompletionReceipt.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SpeedCompletionReceipt(
+      entryId: serializer.fromJson<String>(json['entryId']),
+      direction: serializer.fromJson<String>(json['direction']),
+      completedAt: serializer.fromJson<String>(json['completedAt']),
+      learningDate: serializer.fromJson<String>(json['learningDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entryId': serializer.toJson<String>(entryId),
+      'direction': serializer.toJson<String>(direction),
+      'completedAt': serializer.toJson<String>(completedAt),
+      'learningDate': serializer.toJson<String>(learningDate),
+    };
+  }
+
+  SpeedCompletionReceipt copyWith({
+    String? entryId,
+    String? direction,
+    String? completedAt,
+    String? learningDate,
+  }) => SpeedCompletionReceipt(
+    entryId: entryId ?? this.entryId,
+    direction: direction ?? this.direction,
+    completedAt: completedAt ?? this.completedAt,
+    learningDate: learningDate ?? this.learningDate,
+  );
+  SpeedCompletionReceipt copyWithCompanion(
+    SpeedCompletionReceiptsCompanion data,
+  ) {
+    return SpeedCompletionReceipt(
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      learningDate: data.learningDate.present
+          ? data.learningDate.value
+          : this.learningDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SpeedCompletionReceipt(')
+          ..write('entryId: $entryId, ')
+          ..write('direction: $direction, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('learningDate: $learningDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(entryId, direction, completedAt, learningDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SpeedCompletionReceipt &&
+          other.entryId == this.entryId &&
+          other.direction == this.direction &&
+          other.completedAt == this.completedAt &&
+          other.learningDate == this.learningDate);
+}
+
+class SpeedCompletionReceiptsCompanion
+    extends UpdateCompanion<SpeedCompletionReceipt> {
+  final Value<String> entryId;
+  final Value<String> direction;
+  final Value<String> completedAt;
+  final Value<String> learningDate;
+  final Value<int> rowid;
+  const SpeedCompletionReceiptsCompanion({
+    this.entryId = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.learningDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SpeedCompletionReceiptsCompanion.insert({
+    required String entryId,
+    required String direction,
+    required String completedAt,
+    required String learningDate,
+    this.rowid = const Value.absent(),
+  }) : entryId = Value(entryId),
+       direction = Value(direction),
+       completedAt = Value(completedAt),
+       learningDate = Value(learningDate);
+  static Insertable<SpeedCompletionReceipt> custom({
+    Expression<String>? entryId,
+    Expression<String>? direction,
+    Expression<String>? completedAt,
+    Expression<String>? learningDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entryId != null) 'entry_id': entryId,
+      if (direction != null) 'direction': direction,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (learningDate != null) 'learning_date': learningDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SpeedCompletionReceiptsCompanion copyWith({
+    Value<String>? entryId,
+    Value<String>? direction,
+    Value<String>? completedAt,
+    Value<String>? learningDate,
+    Value<int>? rowid,
+  }) {
+    return SpeedCompletionReceiptsCompanion(
+      entryId: entryId ?? this.entryId,
+      direction: direction ?? this.direction,
+      completedAt: completedAt ?? this.completedAt,
+      learningDate: learningDate ?? this.learningDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<String>(completedAt.value);
+    }
+    if (learningDate.present) {
+      map['learning_date'] = Variable<String>(learningDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SpeedCompletionReceiptsCompanion(')
+          ..write('entryId: $entryId, ')
+          ..write('direction: $direction, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('learningDate: $learningDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PikoDatabase extends GeneratedDatabase {
   _$PikoDatabase(QueryExecutor e) : super(e);
   $PikoDatabaseManager get managers => $PikoDatabaseManager(this);
@@ -5174,11 +6403,23 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $CategoryDimensionsTable categoryDimensions =
       $CategoryDimensionsTable(this);
   late final $CategoryValuesTable categoryValues = $CategoryValuesTable(this);
+  late final $CategoryGroupPreferencesTable categoryGroupPreferences =
+      $CategoryGroupPreferencesTable(this);
   late final $VocabularyCategoryAssignmentsTable vocabularyCategoryAssignments =
       $VocabularyCategoryAssignmentsTable(this);
+  late final $StatisticsOriginsTable statisticsOrigins =
+      $StatisticsOriginsTable(this);
+  late final $StatisticsActivityTable statisticsActivity =
+      $StatisticsActivityTable(this);
+  late final $SpeedCompletionReceiptsTable speedCompletionReceipts =
+      $SpeedCompletionReceiptsTable(this);
   late final Index vocabularyEntryOwnership = Index(
     'vocabulary_entry_ownership',
     'CREATE UNIQUE INDEX vocabulary_entry_ownership ON vocabulary_entries (id, collection_id)',
+  );
+  late final Index statisticsActivityDate = Index(
+    'statistics_activity_date',
+    'CREATE INDEX statistics_activity_date ON statistics_activity (learning_date, mode)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5197,8 +6438,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     vocabularyOrderSequence,
     categoryDimensions,
     categoryValues,
+    categoryGroupPreferences,
     vocabularyCategoryAssignments,
+    statisticsOrigins,
+    statisticsActivity,
+    speedCompletionReceipts,
     vocabularyEntryOwnership,
+    statisticsActivityDate,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5264,6 +6510,15 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('category_values', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'category_dimensions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('category_group_preferences', kind: UpdateKind.delete),
+      ],
     ),
   ]);
 }
@@ -9220,6 +10475,32 @@ final class $$CategoryDimensionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $CategoryGroupPreferencesTable,
+    List<CategoryGroupPreference>
+  >
+  _categoryGroupPreferencesRefsTable(_$PikoDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.categoryGroupPreferences,
+        aliasName:
+            'category_dimensions__id__category_group_preferences__dimension_id',
+      );
+
+  $$CategoryGroupPreferencesTableProcessedTableManager
+  get categoryGroupPreferencesRefs {
+    final manager = $$CategoryGroupPreferencesTableTableManager(
+      $_db,
+      $_db.categoryGroupPreferences,
+    ).filter((f) => f.dimensionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _categoryGroupPreferencesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CategoryDimensionsTableFilterComposer
@@ -9301,6 +10582,33 @@ class $$CategoryDimensionsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> categoryGroupPreferencesRefs(
+    Expression<bool> Function($$CategoryGroupPreferencesTableFilterComposer f)
+    f,
+  ) {
+    final $$CategoryGroupPreferencesTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.categoryGroupPreferences,
+          getReferencedColumn: (t) => t.dimensionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryGroupPreferencesTableFilterComposer(
+                $db: $db,
+                $table: $db.categoryGroupPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -9434,6 +10742,33 @@ class $$CategoryDimensionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> categoryGroupPreferencesRefs<T extends Object>(
+    Expression<T> Function($$CategoryGroupPreferencesTableAnnotationComposer a)
+    f,
+  ) {
+    final $$CategoryGroupPreferencesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.categoryGroupPreferences,
+          getReferencedColumn: (t) => t.dimensionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryGroupPreferencesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryGroupPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CategoryDimensionsTableTableManager
@@ -9449,7 +10784,11 @@ class $$CategoryDimensionsTableTableManager
           $$CategoryDimensionsTableUpdateCompanionBuilder,
           (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
           StoredCategoryDimension,
-          PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+          PrefetchHooks Function({
+            bool collectionId,
+            bool categoryValuesRefs,
+            bool categoryGroupPreferencesRefs,
+          })
         > {
   $$CategoryDimensionsTableTableManager(
     _$PikoDatabase db,
@@ -9515,11 +10854,17 @@ class $$CategoryDimensionsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({collectionId = false, categoryValuesRefs = false}) {
+              ({
+                collectionId = false,
+                categoryValuesRefs = false,
+                categoryGroupPreferencesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (categoryValuesRefs) db.categoryValues,
+                    if (categoryGroupPreferencesRefs)
+                      db.categoryGroupPreferences,
                   ],
                   addJoins:
                       <
@@ -9578,6 +10923,27 @@ class $$CategoryDimensionsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (categoryGroupPreferencesRefs)
+                        await $_getPrefetchedData<
+                          StoredCategoryDimension,
+                          $CategoryDimensionsTable,
+                          CategoryGroupPreference
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoryDimensionsTableReferences
+                              ._categoryGroupPreferencesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoryDimensionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).categoryGroupPreferencesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.dimensionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9598,7 +10964,11 @@ typedef $$CategoryDimensionsTableProcessedTableManager =
       $$CategoryDimensionsTableUpdateCompanionBuilder,
       (StoredCategoryDimension, $$CategoryDimensionsTableReferences),
       StoredCategoryDimension,
-      PrefetchHooks Function({bool collectionId, bool categoryValuesRefs})
+      PrefetchHooks Function({
+        bool collectionId,
+        bool categoryValuesRefs,
+        bool categoryGroupPreferencesRefs,
+      })
     >;
 typedef $$CategoryValuesTableCreateCompanionBuilder =
     CategoryValuesCompanion Function({
@@ -9931,6 +11301,315 @@ typedef $$CategoryValuesTableProcessedTableManager =
       StoredCategoryValue,
       PrefetchHooks Function({bool dimensionId})
     >;
+typedef $$CategoryGroupPreferencesTableCreateCompanionBuilder =
+    CategoryGroupPreferencesCompanion Function({
+      required String dimensionId,
+      Value<bool> customValueOrder,
+      Value<bool> carryOver,
+      Value<int> rowid,
+    });
+typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
+    CategoryGroupPreferencesCompanion Function({
+      Value<String> dimensionId,
+      Value<bool> customValueOrder,
+      Value<bool> carryOver,
+      Value<int> rowid,
+    });
+
+final class $$CategoryGroupPreferencesTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $CategoryGroupPreferencesTable,
+          CategoryGroupPreference
+        > {
+  $$CategoryGroupPreferencesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CategoryDimensionsTable _dimensionIdTable(_$PikoDatabase db) =>
+      db.categoryDimensions.createAlias(
+        'category_group_preferences__dimension_id__category_dimensions__id',
+      );
+
+  $$CategoryDimensionsTableProcessedTableManager get dimensionId {
+    final $_column = $_itemColumn<String>('dimension_id')!;
+
+    final manager = $$CategoryDimensionsTableTableManager(
+      $_db,
+      $_db.categoryDimensions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_dimensionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CategoryGroupPreferencesTableFilterComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get carryOver => $composableBuilder(
+    column: $table.carryOver,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CategoryDimensionsTableFilterComposer get dimensionId {
+    final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableFilterComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableOrderingComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get carryOver => $composableBuilder(
+    column: $table.carryOver,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CategoryDimensionsTableOrderingComposer get dimensionId {
+    final $$CategoryDimensionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dimensionId,
+      referencedTable: $db.categoryDimensions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoryDimensionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.categoryDimensions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $CategoryGroupPreferencesTable> {
+  $$CategoryGroupPreferencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get customValueOrder => $composableBuilder(
+    column: $table.customValueOrder,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get carryOver =>
+      $composableBuilder(column: $table.carryOver, builder: (column) => column);
+
+  $$CategoryDimensionsTableAnnotationComposer get dimensionId {
+    final $$CategoryDimensionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.dimensionId,
+          referencedTable: $db.categoryDimensions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CategoryDimensionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.categoryDimensions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$CategoryGroupPreferencesTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $CategoryGroupPreferencesTable,
+          CategoryGroupPreference,
+          $$CategoryGroupPreferencesTableFilterComposer,
+          $$CategoryGroupPreferencesTableOrderingComposer,
+          $$CategoryGroupPreferencesTableAnnotationComposer,
+          $$CategoryGroupPreferencesTableCreateCompanionBuilder,
+          $$CategoryGroupPreferencesTableUpdateCompanionBuilder,
+          (CategoryGroupPreference, $$CategoryGroupPreferencesTableReferences),
+          CategoryGroupPreference,
+          PrefetchHooks Function({bool dimensionId})
+        > {
+  $$CategoryGroupPreferencesTableTableManager(
+    _$PikoDatabase db,
+    $CategoryGroupPreferencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryGroupPreferencesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CategoryGroupPreferencesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CategoryGroupPreferencesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> dimensionId = const Value.absent(),
+                Value<bool> customValueOrder = const Value.absent(),
+                Value<bool> carryOver = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryGroupPreferencesCompanion(
+                dimensionId: dimensionId,
+                customValueOrder: customValueOrder,
+                carryOver: carryOver,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String dimensionId,
+                Value<bool> customValueOrder = const Value.absent(),
+                Value<bool> carryOver = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryGroupPreferencesCompanion.insert(
+                dimensionId: dimensionId,
+                customValueOrder: customValueOrder,
+                carryOver: carryOver,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $CategoryGroupPreferencesTable,
+                    CategoryGroupPreference
+                  >(table),
+                  $$CategoryGroupPreferencesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({dimensionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (dimensionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.dimensionId,
+                                referencedTable:
+                                    $$CategoryGroupPreferencesTableReferences
+                                        ._dimensionIdTable(db),
+                                referencedColumn:
+                                    $$CategoryGroupPreferencesTableReferences
+                                        ._dimensionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CategoryGroupPreferencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $CategoryGroupPreferencesTable,
+      CategoryGroupPreference,
+      $$CategoryGroupPreferencesTableFilterComposer,
+      $$CategoryGroupPreferencesTableOrderingComposer,
+      $$CategoryGroupPreferencesTableAnnotationComposer,
+      $$CategoryGroupPreferencesTableCreateCompanionBuilder,
+      $$CategoryGroupPreferencesTableUpdateCompanionBuilder,
+      (CategoryGroupPreference, $$CategoryGroupPreferencesTableReferences),
+      CategoryGroupPreference,
+      PrefetchHooks Function({bool dimensionId})
+    >;
 typedef $$VocabularyCategoryAssignmentsTableCreateCompanionBuilder =
     VocabularyCategoryAssignmentsCompanion Function({
       required String entryId,
@@ -10147,6 +11826,611 @@ typedef $$VocabularyCategoryAssignmentsTableProcessedTableManager =
       StoredCategoryAssignment,
       PrefetchHooks Function()
     >;
+typedef $$StatisticsOriginsTableCreateCompanionBuilder =
+    StatisticsOriginsCompanion Function({
+      Value<int> singleton,
+      required String startedAt,
+      required String learningDate,
+    });
+typedef $$StatisticsOriginsTableUpdateCompanionBuilder =
+    StatisticsOriginsCompanion Function({
+      Value<int> singleton,
+      Value<String> startedAt,
+      Value<String> learningDate,
+    });
+
+class $$StatisticsOriginsTableFilterComposer
+    extends Composer<_$PikoDatabase, $StatisticsOriginsTable> {
+  $$StatisticsOriginsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StatisticsOriginsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $StatisticsOriginsTable> {
+  $$StatisticsOriginsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get singleton => $composableBuilder(
+    column: $table.singleton,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StatisticsOriginsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $StatisticsOriginsTable> {
+  $$StatisticsOriginsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get singleton =>
+      $composableBuilder(column: $table.singleton, builder: (column) => column);
+
+  GeneratedColumn<String> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => column,
+  );
+}
+
+class $$StatisticsOriginsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $StatisticsOriginsTable,
+          StatisticsOrigin,
+          $$StatisticsOriginsTableFilterComposer,
+          $$StatisticsOriginsTableOrderingComposer,
+          $$StatisticsOriginsTableAnnotationComposer,
+          $$StatisticsOriginsTableCreateCompanionBuilder,
+          $$StatisticsOriginsTableUpdateCompanionBuilder,
+          (
+            StatisticsOrigin,
+            BaseReferences<
+              _$PikoDatabase,
+              $StatisticsOriginsTable,
+              StatisticsOrigin
+            >,
+          ),
+          StatisticsOrigin,
+          PrefetchHooks Function()
+        > {
+  $$StatisticsOriginsTableTableManager(
+    _$PikoDatabase db,
+    $StatisticsOriginsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StatisticsOriginsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StatisticsOriginsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StatisticsOriginsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                Value<String> startedAt = const Value.absent(),
+                Value<String> learningDate = const Value.absent(),
+              }) => StatisticsOriginsCompanion(
+                singleton: singleton,
+                startedAt: startedAt,
+                learningDate: learningDate,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> singleton = const Value.absent(),
+                required String startedAt,
+                required String learningDate,
+              }) => StatisticsOriginsCompanion.insert(
+                singleton: singleton,
+                startedAt: startedAt,
+                learningDate: learningDate,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StatisticsOriginsTable, StatisticsOrigin>(table),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $StatisticsOriginsTable,
+                    StatisticsOrigin
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StatisticsOriginsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $StatisticsOriginsTable,
+      StatisticsOrigin,
+      $$StatisticsOriginsTableFilterComposer,
+      $$StatisticsOriginsTableOrderingComposer,
+      $$StatisticsOriginsTableAnnotationComposer,
+      $$StatisticsOriginsTableCreateCompanionBuilder,
+      $$StatisticsOriginsTableUpdateCompanionBuilder,
+      (
+        StatisticsOrigin,
+        BaseReferences<
+          _$PikoDatabase,
+          $StatisticsOriginsTable,
+          StatisticsOrigin
+        >,
+      ),
+      StatisticsOrigin,
+      PrefetchHooks Function()
+    >;
+typedef $$StatisticsActivityTableCreateCompanionBuilder =
+    StatisticsActivityCompanion Function({
+      required String creditKey,
+      required String mode,
+      required String occurredAt,
+      required String learningDate,
+      Value<int> rowid,
+    });
+typedef $$StatisticsActivityTableUpdateCompanionBuilder =
+    StatisticsActivityCompanion Function({
+      Value<String> creditKey,
+      Value<String> mode,
+      Value<String> occurredAt,
+      Value<String> learningDate,
+      Value<int> rowid,
+    });
+
+class $$StatisticsActivityTableFilterComposer
+    extends Composer<_$PikoDatabase, $StatisticsActivityTable> {
+  $$StatisticsActivityTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get creditKey => $composableBuilder(
+    column: $table.creditKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StatisticsActivityTableOrderingComposer
+    extends Composer<_$PikoDatabase, $StatisticsActivityTable> {
+  $$StatisticsActivityTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get creditKey => $composableBuilder(
+    column: $table.creditKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StatisticsActivityTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $StatisticsActivityTable> {
+  $$StatisticsActivityTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get creditKey =>
+      $composableBuilder(column: $table.creditKey, builder: (column) => column);
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<String> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => column,
+  );
+}
+
+class $$StatisticsActivityTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $StatisticsActivityTable,
+          StatisticsActivityData,
+          $$StatisticsActivityTableFilterComposer,
+          $$StatisticsActivityTableOrderingComposer,
+          $$StatisticsActivityTableAnnotationComposer,
+          $$StatisticsActivityTableCreateCompanionBuilder,
+          $$StatisticsActivityTableUpdateCompanionBuilder,
+          (
+            StatisticsActivityData,
+            BaseReferences<
+              _$PikoDatabase,
+              $StatisticsActivityTable,
+              StatisticsActivityData
+            >,
+          ),
+          StatisticsActivityData,
+          PrefetchHooks Function()
+        > {
+  $$StatisticsActivityTableTableManager(
+    _$PikoDatabase db,
+    $StatisticsActivityTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StatisticsActivityTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StatisticsActivityTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StatisticsActivityTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> creditKey = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<String> occurredAt = const Value.absent(),
+                Value<String> learningDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StatisticsActivityCompanion(
+                creditKey: creditKey,
+                mode: mode,
+                occurredAt: occurredAt,
+                learningDate: learningDate,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String creditKey,
+                required String mode,
+                required String occurredAt,
+                required String learningDate,
+                Value<int> rowid = const Value.absent(),
+              }) => StatisticsActivityCompanion.insert(
+                creditKey: creditKey,
+                mode: mode,
+                occurredAt: occurredAt,
+                learningDate: learningDate,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StatisticsActivityTable, StatisticsActivityData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $StatisticsActivityTable,
+                    StatisticsActivityData
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StatisticsActivityTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $StatisticsActivityTable,
+      StatisticsActivityData,
+      $$StatisticsActivityTableFilterComposer,
+      $$StatisticsActivityTableOrderingComposer,
+      $$StatisticsActivityTableAnnotationComposer,
+      $$StatisticsActivityTableCreateCompanionBuilder,
+      $$StatisticsActivityTableUpdateCompanionBuilder,
+      (
+        StatisticsActivityData,
+        BaseReferences<
+          _$PikoDatabase,
+          $StatisticsActivityTable,
+          StatisticsActivityData
+        >,
+      ),
+      StatisticsActivityData,
+      PrefetchHooks Function()
+    >;
+typedef $$SpeedCompletionReceiptsTableCreateCompanionBuilder =
+    SpeedCompletionReceiptsCompanion Function({
+      required String entryId,
+      required String direction,
+      required String completedAt,
+      required String learningDate,
+      Value<int> rowid,
+    });
+typedef $$SpeedCompletionReceiptsTableUpdateCompanionBuilder =
+    SpeedCompletionReceiptsCompanion Function({
+      Value<String> entryId,
+      Value<String> direction,
+      Value<String> completedAt,
+      Value<String> learningDate,
+      Value<int> rowid,
+    });
+
+class $$SpeedCompletionReceiptsTableFilterComposer
+    extends Composer<_$PikoDatabase, $SpeedCompletionReceiptsTable> {
+  $$SpeedCompletionReceiptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SpeedCompletionReceiptsTableOrderingComposer
+    extends Composer<_$PikoDatabase, $SpeedCompletionReceiptsTable> {
+  $$SpeedCompletionReceiptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SpeedCompletionReceiptsTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $SpeedCompletionReceiptsTable> {
+  $$SpeedCompletionReceiptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get learningDate => $composableBuilder(
+    column: $table.learningDate,
+    builder: (column) => column,
+  );
+}
+
+class $$SpeedCompletionReceiptsTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $SpeedCompletionReceiptsTable,
+          SpeedCompletionReceipt,
+          $$SpeedCompletionReceiptsTableFilterComposer,
+          $$SpeedCompletionReceiptsTableOrderingComposer,
+          $$SpeedCompletionReceiptsTableAnnotationComposer,
+          $$SpeedCompletionReceiptsTableCreateCompanionBuilder,
+          $$SpeedCompletionReceiptsTableUpdateCompanionBuilder,
+          (
+            SpeedCompletionReceipt,
+            BaseReferences<
+              _$PikoDatabase,
+              $SpeedCompletionReceiptsTable,
+              SpeedCompletionReceipt
+            >,
+          ),
+          SpeedCompletionReceipt,
+          PrefetchHooks Function()
+        > {
+  $$SpeedCompletionReceiptsTableTableManager(
+    _$PikoDatabase db,
+    $SpeedCompletionReceiptsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SpeedCompletionReceiptsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SpeedCompletionReceiptsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SpeedCompletionReceiptsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> entryId = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<String> completedAt = const Value.absent(),
+                Value<String> learningDate = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SpeedCompletionReceiptsCompanion(
+                entryId: entryId,
+                direction: direction,
+                completedAt: completedAt,
+                learningDate: learningDate,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entryId,
+                required String direction,
+                required String completedAt,
+                required String learningDate,
+                Value<int> rowid = const Value.absent(),
+              }) => SpeedCompletionReceiptsCompanion.insert(
+                entryId: entryId,
+                direction: direction,
+                completedAt: completedAt,
+                learningDate: learningDate,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $SpeedCompletionReceiptsTable,
+                    SpeedCompletionReceipt
+                  >(table),
+                  BaseReferences<
+                    _$PikoDatabase,
+                    $SpeedCompletionReceiptsTable,
+                    SpeedCompletionReceipt
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SpeedCompletionReceiptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $SpeedCompletionReceiptsTable,
+      SpeedCompletionReceipt,
+      $$SpeedCompletionReceiptsTableFilterComposer,
+      $$SpeedCompletionReceiptsTableOrderingComposer,
+      $$SpeedCompletionReceiptsTableAnnotationComposer,
+      $$SpeedCompletionReceiptsTableCreateCompanionBuilder,
+      $$SpeedCompletionReceiptsTableUpdateCompanionBuilder,
+      (
+        SpeedCompletionReceipt,
+        BaseReferences<
+          _$PikoDatabase,
+          $SpeedCompletionReceiptsTable,
+          SpeedCompletionReceipt
+        >,
+      ),
+      SpeedCompletionReceipt,
+      PrefetchHooks Function()
+    >;
 
 class $PikoDatabaseManager {
   final _$PikoDatabase _db;
@@ -10181,10 +12465,24 @@ class $PikoDatabaseManager {
       $$CategoryDimensionsTableTableManager(_db, _db.categoryDimensions);
   $$CategoryValuesTableTableManager get categoryValues =>
       $$CategoryValuesTableTableManager(_db, _db.categoryValues);
+  $$CategoryGroupPreferencesTableTableManager get categoryGroupPreferences =>
+      $$CategoryGroupPreferencesTableTableManager(
+        _db,
+        _db.categoryGroupPreferences,
+      );
   $$VocabularyCategoryAssignmentsTableTableManager
   get vocabularyCategoryAssignments =>
       $$VocabularyCategoryAssignmentsTableTableManager(
         _db,
         _db.vocabularyCategoryAssignments,
+      );
+  $$StatisticsOriginsTableTableManager get statisticsOrigins =>
+      $$StatisticsOriginsTableTableManager(_db, _db.statisticsOrigins);
+  $$StatisticsActivityTableTableManager get statisticsActivity =>
+      $$StatisticsActivityTableTableManager(_db, _db.statisticsActivity);
+  $$SpeedCompletionReceiptsTableTableManager get speedCompletionReceipts =>
+      $$SpeedCompletionReceiptsTableTableManager(
+        _db,
+        _db.speedCompletionReceipts,
       );
 }

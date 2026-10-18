@@ -93,10 +93,16 @@ class HeldUpdate implements CategoriesRepository {
     required String id,
     required String name,
     required CategoryMode mode,
+    bool? carryOver,
   }) async {
     updates++;
     await gate.future;
-    return real.updateDimension(id: id, name: name, mode: mode);
+    return real.updateDimension(
+      id: id,
+      name: name,
+      mode: mode,
+      carryOver: carryOver,
+    );
   }
 
   @override

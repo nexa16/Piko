@@ -81,6 +81,7 @@ class SelectionHarness {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.ensureVisible(key('collection-${fixture.owner.id}'));
     await tester.tap(key('collection-${fixture.owner.id}'));
     await tester.pumpAndSettle();
   }
@@ -329,13 +330,24 @@ void main() {
         findsOneWidget,
       );
       final viewport = tester.getRect(find.byType(Scrollable).first);
-      final panel = tester.getRect(key('vocabulary-selection-panel'));
+      final panel = tester.getRect(key('vocabulary-selection-scroll'));
+      expect(
+        viewport.height -
+            tester.getSize(key('collection-compact-header')).height,
+        greaterThanOrEqualTo(48),
+      );
       expect(viewport.bottom, lessThan(panel.top));
       expect(panel.left, greaterThanOrEqualTo(0));
       expect(panel.right, lessThanOrEqualTo(320));
       expect(panel.bottom, lessThanOrEqualTo(900));
-      expect(key('vocabulary-clear-selection').hitTestable(), findsOneWidget);
-      expect(key('vocabulary-select-all').hitTestable(), findsOneWidget);
+      for (final id in [
+        'vocabulary-clear-selection',
+        'vocabulary-select-all',
+      ]) {
+        await tester.ensureVisible(key(id));
+        await tester.pumpAndSettle();
+        expect(key(id).hitTestable(), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     },
   );
@@ -348,7 +360,20 @@ void main() {
       await h.start(tester);
       final retained = h.selection(tester);
       final help = key('collection-learning-help');
-      await h.reveal(tester, help);
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 20 && help.hitTestable().evaluate().isEmpty; i++) {
+        final viewport = tester.getRect(find.byType(Scrollable).first);
+        await tester.dragFrom(
+          Offset(viewport.center.dx, viewport.bottom - 24),
+          const Offset(0, -80),
+        );
+        await tester.pumpAndSettle();
+      }
+      expect(help.hitTestable(), findsOneWidget);
       await tester.tap(help);
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
