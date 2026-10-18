@@ -32,6 +32,8 @@ class VocabularyContentEditor extends StatefulWidget {
     this.collectionId,
     this.error,
     this.onPendingWrites,
+    this.exampleSuggestion,
+    this.hintSuggestion,
     super.key,
   });
   final VocabularyContent value;
@@ -43,6 +45,7 @@ class VocabularyContentEditor extends StatefulWidget {
   final String? collectionId;
   final Object? error;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final Widget? exampleSuggestion, hintSuggestion;
   @override
   State<VocabularyContentEditor> createState() =>
       _VocabularyContentEditorState();
@@ -158,6 +161,7 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              ?widget.exampleSuggestion,
               for (var i = 0; i < pairs.length; i++) ...[
                 field(
                   i == 0
@@ -228,6 +232,7 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              ?widget.hintSuggestion,
               field('content-hint', copy.text('vocab.hint'), hint),
               SizedBox(height: gap),
               PikoSwitch(

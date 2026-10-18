@@ -16,6 +16,8 @@ import 'question_examples_control.dart';
 import '../../data/full_export.dart';
 import '../../platform/vocabulary_json_platform.dart';
 import '../interchange/full_export_control.dart';
+import '../ai/ai_content.dart';
+import '../ai/ai_controls.dart';
 
 class SettingsRoute extends StatelessWidget {
   const SettingsRoute({
@@ -25,6 +27,7 @@ class SettingsRoute extends StatelessWidget {
     this.registerPending,
     this.fullExportService,
     this.fullExportPlatform,
+    this.aiAccess,
     super.key,
   });
   final ValueListenable<AppLanguageController?> binding;
@@ -33,6 +36,7 @@ class SettingsRoute extends StatelessWidget {
   final ValueChanged<Future<void>>? registerPending;
   final FullExportService? fullExportService;
   final VocabularyJsonPlatform? fullExportPlatform;
+  final AiAccess? aiAccess;
 
   @override
   Widget build(BuildContext context) =>
@@ -149,6 +153,8 @@ class SettingsRoute extends StatelessWidget {
                           const SystemVocabularyJsonPlatform.fullExport(),
                       registerPending: registerPending ?? (_) {},
                     ),
+                  if (aiAccess case final access?)
+                    AiConnectionControl(access: access),
                 ],
               ),
             ),

@@ -23,6 +23,9 @@ import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
 import 'entry_session_controller.dart';
+import '../ai/ai_content.dart';
+import '../ai/ai_controls.dart';
+import '../ai/entry_ai_controller.dart';
 
 /// Production entry content. The caller owns the session and deletion service;
 /// Collection route wiring and swipe presentation are separate specifications.
@@ -33,6 +36,7 @@ class EntrySessionScreen extends StatefulWidget {
     this.onOpenInterchange,
     this.onPendingWrites,
     this.categoriesRepository,
+    this.aiAccess,
     super.key,
   });
   final CollectionRecord collection;
@@ -40,6 +44,7 @@ class EntrySessionScreen extends StatefulWidget {
   final Future<VocabularyJsonReturn?> Function()? onOpenInterchange;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
+  final AiAccess? aiAccess;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
@@ -72,6 +77,20 @@ class _Editors {
 }
 
 class _EntrySessionScreenState extends State<EntrySessionScreen> {
+  EntryAiController? ai;
+  void bindAi() {
+    ai?.dispose();
+    final access = widget.aiAccess;
+    ai = access == null
+        ? null
+        : EntryAiController(
+            session: session,
+            access: access,
+            targetLanguage: widget.collection.targetLanguage.code,
+            nativeLanguage: widget.collection.nativeLanguage.code,
+          );
+  }
+
   static const draftId = 'draft';
   final scroll = ScrollController();
   late final interactionAnchor = PikoInteractionAnchor(
@@ -124,6 +143,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   void initState() {
     super.initState();
     assert(widget.collection.id == session.collectionId);
+    bindAi();
     advancementRevision = session.advancementRevision;
     previousActiveId = activeId;
     previousIds = ids;
@@ -142,6 +162,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   @override
   void didUpdateWidget(EntrySessionScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.session != session ||
+        oldWidget.aiAccess != widget.aiAccess ||
+        oldWidget.collection.targetLanguage !=
+            widget.collection.targetLanguage ||
+        oldWidget.collection.nativeLanguage != widget.collection.nativeLanguage) {
+      bindAi();
+    }
     if (oldWidget.session != session) {
       oldWidget.session.removeListener(changed);
       oldWidget.session.forgetUndo();
@@ -785,6 +812,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     final route = ModalRoute.of(context);
     if (route?.isCurrent != true) return;
     setState(() => exitDraining = true);
+    ai?.cancel();
     FocusScope.of(context).unfocus();
     VocabularyJsonReturn? result;
     try {
@@ -829,6 +857,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         identical(session, initiatingSession) &&
         route?.isCurrent == true;
     exitRequest = request;
+    ai?.cancel();
     try {
       final draft = initiatingSession.draft;
       if (!initiatingSession.isCompleted &&
@@ -1210,6 +1239,18 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           field(false),
                           if (session.supportsContent)
                             VocabularyContentEditor(
+                              exampleSuggestion: draft && ai != null
+                                  ? AiSuggestionControl(
+                                      controller: ai!,
+                                      task: AiTask.example,
+                                    )
+                                  : null,
+                              hintSuggestion: draft && ai != null
+                                  ? AiSuggestionControl(
+                                      controller: ai!,
+                                      task: AiTask.hint,
+                                    )
+                                  : null,
                               value: values.content,
                               collectionId: widget.collection.id,
                               preferences: session.hintPreferences,
@@ -1603,6 +1644,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   @override
   void dispose() {
     dismissOwnedExitDialog();
+    ai?.dispose();
     session.removeListener(changed);
     session.forgetUndo();
     for (final editor in editors.values) {

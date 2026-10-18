@@ -5,6 +5,7 @@ import '../../data/categories_repository.dart';
 import 'entry_session_controller.dart';
 import 'entry_session_screen.dart';
 import '../interchange/vocabulary_json_page.dart' show VocabularyJsonReturn;
+import '../ai/ai_content.dart';
 
 /// The composition root supplies dependencies; the route owns their lifetime.
 typedef EntrySessionFactory =
@@ -17,12 +18,14 @@ final class EntrySessionResources {
     this.interchangeBuilder,
     this.onPendingWrites,
     this.categoriesRepository,
+    this.aiAccess,
   });
   final EntrySessionController session;
   final VocabularyDeletionService deletionService;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
+  final AiAccess? aiAccess;
 
   void dispose() {
     session.dispose();
@@ -63,6 +66,7 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
   Widget build(BuildContext context) => EntrySessionScreen(
     collection: widget.collection,
     session: resources.session,
+    aiAccess: resources.aiAccess,
     categoriesRepository: resources.categoriesRepository,
     onOpenInterchange: resources.interchangeBuilder == null
         ? null
