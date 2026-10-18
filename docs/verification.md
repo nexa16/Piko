@@ -2,7 +2,17 @@
 
 The [manifest](build-manifest.json) identifies the exact normal APK, committed application source, configuration and original captures. This page separates ordinary-product observation, instrumented checks and remaining acceptance gaps.
 
-## Settings and input alignment
+## Language identity and current JSON interchange
+
+The current application offers 128 catalog choices and immutable custom language names, current-only Collection JSON schema 5 and target/native/Hint tuple uniqueness. Storage schema 20 preserves existing content and learning while installing the new comparison keys; collision preflight aborts without modifying the source database.
+
+The integrated host suite passes **1,299 tests** at `17af23b`. The only later application change wraps an unchanged validation statement in braces; **27 affected import/data tests pass** at normal-APK source `9af2f3b`, and analysis reports no issues. Canonical generator and documentation tests pass **28/28**. This is a complete passing host run plus a bounded style-only follow-up, not a claim that all tests were rerun after that style change.
+
+Changed-surface Android verification passes **nine English states** at `353e3ca` and **nine German states at 320dp/200%** at `17af23b`, with **64 measured form-row instances** (16dp content inset, at least 48dp height). These include language search/custom selection and parent raw-draft preservation, both Collection import entrances, invalid input, analysis, confirmation/cancel/Apply and retained learning. The real Android keyboard and native Back are observed; current Collection JSON is saved and reopened through the actual system document UI with exact byte equality in both languages. Every capture is inspected. Some captures retain a scrolled body; at 320dp/200%, the inherited final-resort wrapping can split long words and more scrolling is needed. This is focused changed-surface coverage, not another whole-app audit or a complete accessibility matrix.
+
+The normal `main.dart` development APK uses **0.1.0+10**, source `9af2f3b`, the existing certificate, min SDK24/target36 and ARM32/ARM64/x86_64. It installs in place and cold-starts; Home, Settings and native Android Back pass without fatal/plugin startup errors. The actual existing schema19 database upgrades to20 with all rowids, identities, content, complete learning, settings and sentinel preserved; only the intended custom-name columns and comparison keys change. The exact normal APK is restored after same-version debug inspection, and its installed SHA256 matches the preserved candidate. No uninstall, data clearing or destructive downgrade is used. Phone acceptance and publication remain separate owner gates. The screenshot gallery below retains its older documented build; no historical image is relabeled as this candidate.
+
+## Settings and input alignment baseline
 
 The current source adds shared grouped Settings/forms, global-to-Collection Settings navigation, focused category management and saved-word dialogs, while retaining the manual entry session and its saved history. The gallery and manifest below still identify the earlier ordinary-product capture build; instrumented audit images are not substituted for those product captures.
 
