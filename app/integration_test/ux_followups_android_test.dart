@@ -178,6 +178,7 @@ void main() {
           'width': media.size.width,
           'height': media.size.height,
           'scale': media.textScaler.scale(14) / 14,
+          'disableAnimations': media.disableAnimations,
           'measures': measures,
           'icons': icons,
         });
@@ -263,6 +264,7 @@ void main() {
         if (config.scale == '200') {
           expect(media.size.width, closeTo(320, 1));
           expect(media.textScaler.scale(14), closeTo(28, 1));
+          expect(media.disableAnimations, isTrue);
         }
         final viewport = tester.getRect(find.byType(Scrollable).first);
         expect(
@@ -365,6 +367,8 @@ void main() {
         await launchDirection('speed', LearningDirection.targetToNative);
         expect(find.byType(SpeedSetupDialog), findsOneWidget);
         await record('selected-speed-setup');
+        await reveal(find.text(copy.text('speed.exitExplanation')));
+        await record('selected-speed-leaving');
         final pool = key('speed-pool-size');
         await reveal(pool);
         await tester.tap(pool);
@@ -475,10 +479,16 @@ void main() {
         await reveal(input);
         await tester.enterText(input, jsonEncode(invalidRow));
         await tap(button('json.analyze'));
+        final rowIssue = find.textContaining(
+          'collections[0].entries[0].categoryAssignments',
+        );
+        expect(rowIssue, findsOneWidget);
+        await reveal(rowIssue);
         await record('json-long-row-errors');
         await reveal(input);
         await tester.enterText(input, validWire);
         await tap(button('json.analyze'));
+        await reveal(button('json.apply'));
         await record('json-review');
         await tap(button('json.apply'));
         await record('json-confirmation');
@@ -491,6 +501,7 @@ void main() {
             matching: button('json.apply'),
           ),
         );
+        await reveal(button('json.returnToCollection'));
         await record('json-applied-result');
         expect(await stored(db), before);
         expect(
