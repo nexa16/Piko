@@ -79,7 +79,10 @@ void main() {
       Future<void> reveal(Finder target) async {
         await tester.pumpAndSettle();
         if (target.evaluate().isNotEmpty) {
-          await tester.ensureVisible(target.first);
+          await Scrollable.ensureVisible(
+            tester.element(target.first),
+            alignment: .5,
+          );
           await tester.pumpAndSettle();
         }
         for (
@@ -93,7 +96,7 @@ void main() {
               ? null
               : tester.getRect(target.first);
           await tester.dragFrom(
-            Offset(area.left + 4, area.center.dy),
+            Offset(area.left + 40, area.center.dy),
             Offset(
               0,
               rect != null && rect.center.dy < area.center.dy ? 140 : -140,
@@ -298,6 +301,7 @@ void main() {
         expect(key('vocabulary-selection-panel'), findsNothing);
         expect(await stored(db), before);
         // The original reviewed word has no due work in either direction, but is valid Speed practice.
+        await top();
         await reveal(card);
         await tester.longPress(tags.first);
         await tester.pumpAndSettle();

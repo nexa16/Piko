@@ -119,6 +119,13 @@ class Harness {
   }
 
   Future<void> start(WidgetTester tester, {String language = 'en'}) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 60 && tester.view.viewInsets.bottom > 0; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(tester.view.viewInsets.bottom, 0);
     final button = find.text(PikoCopy(language).text('learn.startSpeed'));
     await tester.ensureVisible(button);
     await tester.tap(button);
