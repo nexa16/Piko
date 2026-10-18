@@ -120,6 +120,7 @@ void main() {
           jsonEncode({
             'phase': phase,
             'run': config.runId,
+            if (phase == 'ime-back') 'raw': '0',
             if (phase == 'ime-back')
               'x':
                   (tester.getCenter(key('speed-pool-size')).dx *
@@ -372,14 +373,15 @@ void main() {
         final pool = key('speed-pool-size');
         await reveal(pool);
         await tester.tap(pool);
-        await tester.enterText(pool, '1e2');
+        await tester.enterText(pool, '0');
         await tester.pumpAndSettle();
         expect(
           tester.widget<PikoButton>(button('learn.startSpeed')).onPressed,
           isNull,
         );
+        await settleCatalogueCapture(tester, 'before-native-ime', at: pool);
         await native('ime-back');
-        expect(tester.widget<TextField>(pool).controller!.text, '1e2');
+        expect(tester.widget<TextField>(pool).controller!.text, '0');
         await record('pool-invalid');
         await native('setup-back');
         expect(find.byType(SpeedSetupDialog), findsNothing);
