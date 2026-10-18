@@ -1,10 +1,11 @@
 # Technical reference
 
-This reference describes the application source selected by the [build manifest](build-manifest.json). Source links below are immutable links to that commit; documentation commits do not change APK provenance. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout section describes subsequent source changes. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
 - [Runtime and preferences](#runtime)
+- [Interaction layout](#interaction-layout)
 - [Storage and migrations](#storage)
 - [Vocabulary identity and content](#vocabulary)
 - [Queries, categories and selection](#queries)
@@ -23,6 +24,15 @@ The runtime hydrates retained language and learning-direction settings and track
 UI composition seams permit injected repositories/controllers/clocks in tests. An injected route or synthetic test entry point is not the ordinary product entry point used by the gallery.
 
 Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/main.dart), [`PikoRuntime`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/piko_runtime.dart), [`CollectionViewScopes`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/collections/collection_view_scope.dart).
+
+<a id="interaction-layout"></a>
+## Interaction layout
+
+Shared pages, dialog bodies and the entry stack preserve the interacted control's top edge during same-surface layout changes. Disclosures retain their header; learning hint/reveal/editor changes retain the learning card. Compensation happens during layout before paint, with no extra blank area added for anchoring. Dialog bodies remain content-sized. Shared controls also capture semantic and keyboard activation without introducing an accessibility node.
+
+Only one interaction owns a scroll container at a time. A new interaction, deliberate scrolling or an explicit reveal takes precedence. Removed controls fall back to their surviving contextual header or neighbor. Scroll bounds, viewport/text-scale changes and keyboard/caret visibility limit exact coordinate retention. Entry-stack navigation keeps its existing centered transition; optional content grows from its header.
+
+These changes are newer than the gallery APK. Source: [shared anchoring](../app/lib/ui/components/piko_interaction_anchor.dart), [entry coordination](../app/lib/features/entry/entry_session_screen.dart). Host behavior and regression checks cover transitions, bounds, raw input, selection, keyboard navigation and enlarged text; device evidence remains tied to the exact tested source.
 
 <a id="storage"></a>
 ## Storage and migrations

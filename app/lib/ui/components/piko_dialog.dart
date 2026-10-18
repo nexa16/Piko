@@ -6,6 +6,7 @@ import '../../shared/copy_scope.dart';
 import '../piko_theme.dart';
 import 'piko_button.dart';
 import 'piko_icon.dart';
+import 'piko_interaction_anchor.dart';
 
 enum PikoDialogPurpose { form, confirmation, selection, directChoice, summary }
 
@@ -230,7 +231,7 @@ class _DialogContents extends StatelessWidget {
           header,
           SizedBox(height: d.dimension('spacing.3')),
           Flexible(
-            child: SingleChildScrollView(
+            child: PikoAnchoredBoxScrollView(
               key: const ValueKey('selection-dialog-body'),
               child: body,
             ),

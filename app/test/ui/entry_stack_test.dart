@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'dart:async';
 
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -237,7 +238,7 @@ void main() {
         find.byKey(const ValueKey('entry-stack')),
       );
       final scroll = tester
-          .widget<SingleChildScrollView>(
+          .widget<PikoAnchoredBoxScrollView>(
             find.byKey(const ValueKey('entry-stack')),
           )
           .controller!;
@@ -342,7 +343,7 @@ void main() {
       expect(focusedFields, greaterThan(0));
       FocusManager.instance.primaryFocus?.unfocus();
       final scroll = tester
-          .widget<SingleChildScrollView>(
+          .widget<PikoAnchoredBoxScrollView>(
             find.byKey(const ValueKey('entry-stack')),
           )
           .controller!;
@@ -559,7 +560,7 @@ void main() {
       );
       expect(
         tester
-            .widget<SingleChildScrollView>(
+            .widget<PikoAnchoredBoxScrollView>(
               find.byKey(const ValueKey('entry-stack')),
             )
             .physics,

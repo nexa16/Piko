@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import '../../data/categories_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -432,7 +433,7 @@ class _CategoryAssignmentPickerState extends State<CategoryAssignmentPicker> {
                 ),
                 ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: cap),
-                  child: SingleChildScrollView(
+                  child: PikoAnchoredBoxScrollView(
                     key: const ValueKey('category-value-list'),
                     controller: listScroll,
                     child: Column(

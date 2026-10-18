@@ -44,7 +44,7 @@ class PikoPage extends StatelessWidget {
               maxWidth: d.dimension('controls.contentWidth'),
             ),
             child: slivers == null
-                ? SingleChildScrollView(padding: padding, child: child)
+                ? PikoAnchoredBoxScrollView(padding: padding, child: child!)
                 : interactionAnchor != null
                 ? interactionAnchor!.scope(
                     child: PikoAnchoredScrollView(

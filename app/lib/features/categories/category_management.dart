@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../ui/components/piko_interaction_anchor.dart';
 import '../../data/categories_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -228,6 +229,7 @@ class _DimensionBranch extends StatefulWidget {
 }
 
 class _DimensionBranchState extends State<_DimensionBranch> {
+  final _anchorHeader = GlobalKey();
   late Stream<List<CategoryValueRecord>> values;
   bool creating = false;
   @override
@@ -273,10 +275,17 @@ class _DimensionBranchState extends State<_DimensionBranch> {
     final copy = PikoCopyScope.of(context);
     return ExpansionTile(
       key: ValueKey('category-dimension-${widget.dimension.id}'),
-      title: Text(widget.dimension.name),
+      title: PikoAnchorRegion(
+        key: _anchorHeader,
+        child: Text(widget.dimension.name),
+      ),
       initiallyExpanded: widget.initiallyExpanded,
       maintainState: true,
-      onExpansionChanged: widget.onExpanded,
+      onExpansionChanged: (expanded) {
+        final header = _anchorHeader.currentContext;
+        if (header != null) PikoAnchorRegion.capture(header);
+        widget.onExpanded(expanded);
+      },
       children: [
         _DimensionEditor(
           key: ValueKey('dimension-form-${widget.dimension.id}'),

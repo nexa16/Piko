@@ -116,6 +116,12 @@ try {
     $remainingProcess = (Invoke-Adb -Arguments @('shell', 'pidof', '-s', $package) -AllowMissingProcess).Trim()
     if ($remainingProcess) { throw 'Application is still running after force-stop; refusing acceptance.' }
     $baseline = Read-ProtectedFiles
+    $installedPackage = Invoke-Adb -Arguments @('shell', 'dumpsys', 'package', $package)
+    $installedVersions = [regex]::Matches($installedPackage, '(?m)^\s*versionCode=(\d+)\b')
+    if ($installedVersions.Count -ne 1) {
+        throw 'Installed versionCode is ambiguous; refusing acceptance.'
+    }
+    $installedVersion = $installedVersions[0].Groups[1].Value
     $abi = (Invoke-Adb -Arguments @('shell', 'getprop', 'ro.product.cpu.abi')).Trim()
     $targetPlatform = switch ($abi) {
         'x86_64' { 'android-x64' }
@@ -126,6 +132,7 @@ try {
     # Build a single matching ABI, avoiding the storage cost of a universal APK.
     $buildArguments = @('build', 'apk', '--debug', '--no-pub', '--target', $targetPath,
         '--target-platform', $targetPlatform,
+        "--build-number=$installedVersion",
         '--dart-define=INTEGRATION_TEST_SHOULD_REPORT_RESULTS_TO_NATIVE=false')
     foreach ($item in $Define) { $buildArguments += "--dart-define=$item" }
     & $flutterExecutable @buildArguments

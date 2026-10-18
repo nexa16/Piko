@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,7 +43,7 @@ void main() {
         await tester.pumpAndSettle();
         final stack = find.byKey(const ValueKey('entry-stack'));
         final position = tester
-            .widget<SingleChildScrollView>(stack)
+            .widget<PikoAnchoredBoxScrollView>(stack)
             .controller!;
         final savedId = session.confirmedEntries.single.id;
         final saved = find.byKey(ValueKey('entry-card-$savedId'));
@@ -130,7 +131,9 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     final stack = find.byKey(const ValueKey('entry-stack'));
-    final position = tester.widget<SingleChildScrollView>(stack).controller!;
+    final position = tester
+        .widget<PikoAnchoredBoxScrollView>(stack)
+        .controller!;
     expect(position.position.maxScrollExtent, 0);
     final savedId = session.confirmedEntries.single.id;
     final bounds = tester.getRect(stack);

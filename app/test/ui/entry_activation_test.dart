@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,7 +77,9 @@ void main() {
       expect(session.activeEntryId, 'entry-2');
       expect(focused(tester, 'entry-2', 'target'), isFalse);
       expect(focused(tester, 'entry-2', 'native'), isFalse);
-      final scroll = tester.widget<SingleChildScrollView>(viewport).controller!;
+      final scroll = tester
+          .widget<PikoAnchoredBoxScrollView>(viewport)
+          .controller!;
       scroll.jumpTo(scroll.position.minScrollExtent);
       await tester.pumpAndSettle();
       expect(session.activeEntryId, 'entry-2');

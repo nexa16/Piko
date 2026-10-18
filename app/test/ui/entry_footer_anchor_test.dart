@@ -1,3 +1,4 @@
+import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
@@ -77,7 +78,7 @@ void main() {
       final first = f.session.confirmedEntries.first.id;
       expect(f.session.activeEntryId, first);
       expect(
-        tester.widget<SingleChildScrollView>(viewport).controller!.offset,
+        tester.widget<PikoAnchoredBoxScrollView>(viewport).controller!.offset,
         0,
       );
       expect(
