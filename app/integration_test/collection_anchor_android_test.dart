@@ -48,7 +48,7 @@ void main() {
         'fixture': 'anchor-synthetic-v1',
         'requireAnchor': requireAnchor,
         'locale': config.locale,
-        'classification': 'instrumented-profile-app-surface',
+        'classification': 'instrumented-android-app-surface',
         'measurements': <Object?>[],
       };
       var passed = false;
