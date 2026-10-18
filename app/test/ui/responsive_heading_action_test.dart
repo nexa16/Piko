@@ -109,10 +109,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         final brand = find.byKey(const ValueKey('home-brand'));
-        final settings = find.widgetWithText(
-          PikoButton,
-          copy.text('nav.settings'),
-        );
+        final settings = find.byTooltip(copy.text('nav.settings'));
         final collectionHeading = find.byKey(
           const ValueKey('home-collections-heading'),
         );
@@ -126,7 +123,8 @@ void main() {
           collectionHeading,
           copy.text('home.collections').split(' ').last,
         );
-        _expectStacked(tester, brand, settings);
+        expect(tester.getRect(settings).width, greaterThanOrEqualTo(48));
+        expect(tester.getRect(settings).right, lessThanOrEqualTo(320));
         _expectStacked(tester, collectionHeading, newCollection);
         expect(tester.takeException(), isNull);
 

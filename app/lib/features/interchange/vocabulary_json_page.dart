@@ -70,8 +70,20 @@ class VocabularyJsonPage extends StatefulWidget {
     this.onPendingWrites,
     this.onImported,
     this.asDialog = false,
+    this.initialExport = false,
     this.draft,
   });
+  final bool initialExport;
+  VocabularyJsonPage withExportView(bool export) => VocabularyJsonPage(
+    collection: collection,
+    service: service,
+    platform: platform,
+    onPendingWrites: onPendingWrites,
+    onImported: onImported,
+    asDialog: asDialog,
+    draft: draft,
+    initialExport: export,
+  );
   final bool asDialog;
   final VocabularyJsonDraft? draft;
   final CollectionRecord collection;
@@ -92,7 +104,9 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
   _ImportReview? review;
   bool confirming = false, applying = false;
   bool expandedInput = false, returning = false;
-  _JsonView view = _JsonView.importJson;
+  late _JsonView view = widget.initialExport
+      ? _JsonView.exportJson
+      : _JsonView.importJson;
   _TransferSection transferSection = _TransferSection.input;
   ModalRoute<dynamic>? confirmationRoute;
 

@@ -183,7 +183,7 @@ void main() {
       );
       scope.expandGroups(['travel'], false);
       await tester.pumpAndSettle();
-      expect(field, findsNothing);
+      expect(field, findsOneWidget);
       scope.expandGroups(['food'], true);
       await tester.pumpAndSettle();
       expect(
@@ -198,7 +198,7 @@ void main() {
       service.value = projection(all: const [one, two], visible: const []);
       binding.refresh();
       await tester.pumpAndSettle();
-      expect(field, findsNothing);
+      expect(field, findsOneWidget);
       service.value = grouped();
       binding.refresh();
       await tester.pumpAndSettle();

@@ -5,7 +5,7 @@ import 'package:piko/data/full_export.dart';
 import 'package:piko/features/interchange/full_export_control.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
-import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_form.dart';
 import 'package:piko/ui/components/piko_page.dart';
 import 'json_transfer_test.dart' show JsonTestPlatform;
 
@@ -69,16 +69,16 @@ void main() {
       final platform = JsonTestPlatform()..saveResult = false;
       final drains = <Future<void>>[];
       await mount(tester, service, platform, drains: drains);
-      final button = tester.widget<PikoButton>(exportButton);
+      final button = tester.widget<PikoFormRow>(exportButton);
       button.focusNode!.requestFocus();
       await tester.pump();
-      final activate = button.onPressed!;
+      final activate = button.onTap!;
       await tester.tap(exportButton);
       activate();
       await tester.pumpAndSettle();
       expect(service.calls, 1);
       expect(drains, hasLength(1));
-      expect(tester.widget<PikoButton>(exportButton).onPressed, isNull);
+      expect(tester.widget<PikoFormRow>(exportButton).onTap, isNull);
       var drained = false;
       unawaited(drains.single.then((_) => drained = true));
       expect(drained, isFalse);
@@ -117,7 +117,7 @@ void main() {
           lessThanOrEqualTo(800),
         );
         expect(
-          tester.widget<PikoButton>(exportButton).label,
+          tester.widget<PikoFormRow>(exportButton).title,
           copy.text('action.retry'),
         );
         expect(tester.getTopLeft(exportButton).dy, closeTo(top, .5));
@@ -169,7 +169,7 @@ void main() {
     expect(platform.saved, isEmpty);
     navigator.pop();
     await tester.pumpAndSettle();
-    expect(tester.widget<PikoButton>(exportButton).onPressed, isNotNull);
+    expect(tester.widget<PikoFormRow>(exportButton).onTap, isNotNull);
 
     service.gate = Completer<String>();
     await tester.tap(exportButton);
@@ -179,7 +179,7 @@ void main() {
     await tester.pumpAndSettle();
     await Future.wait(drains);
     expect(platform.saved, isEmpty);
-    expect(tester.widget<PikoButton>(exportButton).onPressed, isNotNull);
+    expect(tester.widget<PikoFormRow>(exportButton).onTap, isNotNull);
     expect(tester.takeException(), isNull);
   });
 }

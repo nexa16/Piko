@@ -8,6 +8,7 @@ import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_switch.dart';
 import '../../ui/piko_theme.dart';
+import '../../ui/components/piko_page.dart';
 
 /// Embedded under the Collection menu's Edit categories expansion. This widget
 /// owns no navigation page and never writes vocabulary text or learning.
@@ -858,6 +859,65 @@ class _DeleteCategoryState extends State<_DeleteCategory> {
           onPressed: pending ? null : confirm,
         ),
       ],
+    );
+  }
+}
+
+class CategoryManagementPage extends StatefulWidget {
+  const CategoryManagementPage({
+    required this.collectionId,
+    required this.collectionName,
+    this.repository,
+    this.managementBuilder,
+    this.onPendingWrites,
+    super.key,
+  });
+  final String collectionId, collectionName;
+  final CategoriesRepository? repository;
+  final WidgetBuilder? managementBuilder;
+  final ValueChanged<Future<void>>? onPendingWrites;
+  @override
+  State<CategoryManagementPage> createState() => _CategoryManagementPageState();
+}
+
+class _CategoryManagementPageState extends State<CategoryManagementPage> {
+  bool busy = false;
+  @override
+  Widget build(BuildContext context) {
+    final copy = PikoCopyScope.of(context);
+    return PopScope(
+      canPop: !busy,
+      child: Scaffold(
+        body: PikoPage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PikoHeading(
+                title: copy.text('catPreview.manage'),
+                subtitle: widget.collectionName,
+                leading: PikoIconButton(
+                  icon: const PikoIcon(PikoIconName.arrowLeft),
+                  semanticLabel: copy.text('common.back'),
+                  onPressed: busy
+                      ? null
+                      : () => Navigator.of(context).maybePop(),
+                ),
+              ),
+              if (widget.managementBuilder != null)
+                Builder(builder: widget.managementBuilder!)
+              else
+                CategoryManagement(
+                  collectionId: widget.collectionId,
+                  repository: widget.repository!,
+                  onPendingWrites: widget.onPendingWrites,
+                  onPendingChanged: (value) {
+                    if (mounted) setState(() => busy = value);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -393,6 +393,30 @@ const copyCatalog = <String, Object?>{
 "de": "Piko",
 "en": "Piko",
 },
+"catPreview.categories": <String, Object?>{
+"de": "Kategorien",
+"en": "Categories",
+},
+"catPreview.delete": <String, Object?>{
+"de": "Löschen",
+"en": "Delete",
+},
+"catPreview.groups": <String, Object?>{
+"de": "Kategoriegruppen",
+"en": "Category groups",
+},
+"catPreview.manage": <String, Object?>{
+"de": "Kategorien bearbeiten",
+"en": "Edit categories",
+},
+"catPreview.properties": <String, Object?>{
+"de": "Gruppeneinstellungen",
+"en": "Group settings",
+},
+"catPreview.values": <String, Object?>{
+"de": "Werte",
+"en": "Values",
+},
 "category.addDimension": <String, Object?>{
 "de": "Kategoriegruppe hinzufügen",
 "en": "Add category group",
@@ -840,6 +864,18 @@ const copyCatalog = <String, Object?>{
 "entry.unsaved": <String, Object?>{
 "de": "Änderungen nicht gespeichert",
 "en": "Changes not saved",
+},
+"form.discard": <String, Object?>{
+"de": "Änderungen verwerfen",
+"en": "Discard changes",
+},
+"form.discardHelp": <String, Object?>{
+"de": "Diese Änderungen wurden noch nicht gespeichert.",
+"en": "These changes have not been saved yet.",
+},
+"form.discardTitle": <String, Object?>{
+"de": "Ungespeicherte Änderungen verwerfen?",
+"en": "Discard unsaved changes?",
 },
 "fullExport.action": <String, Object?>{
 "de": "Alle Sammlungen exportieren",
@@ -2141,6 +2177,10 @@ const copyCatalog = <String, Object?>{
 "de": "App-Sprache wird geladen…",
 "en": "Loading app language…",
 },
+"settings.noCollections": <String, Object?>{
+"de": "Noch keine Sammlungen vorhanden.",
+"en": "No Collections yet.",
+},
 "settings.preferredDirection": <String, Object?>{
 "de": "Lernrichtung",
 "en": "Learning direction",
@@ -2156,6 +2196,50 @@ const copyCatalog = <String, Object?>{
 "settings.saving": <String, Object?>{
 "de": "App-Sprache wird gespeichert…",
 "en": "Saving app language…",
+},
+"settingsPreview.areas": <String, Object?>{
+"de": "Bereiche",
+"en": "Areas",
+},
+"settingsPreview.collectionSettings": <String, Object?>{
+"de": "Sammlungseinstellungen",
+"en": "Collection settings",
+},
+"settingsPreview.collectionSummary": <String, Object?>{
+"de": "Vorgaben und Kategorien je Sammlung",
+"en": "Defaults and categories for each Collection",
+},
+"settingsPreview.collections": <String, Object?>{
+"de": "Sammlungen",
+"en": "Collections",
+},
+"settingsPreview.data": <String, Object?>{
+"de": "Daten",
+"en": "Data",
+},
+"settingsPreview.generalGroup": <String, Object?>{
+"de": "Allgemein",
+"en": "General",
+},
+"settingsPreview.globalExportSummary": <String, Object?>{
+"de": "Vokabeln und Statistik · JSON",
+"en": "Vocabulary and statistics · JSON",
+},
+"settingsPreview.learning": <String, Object?>{
+"de": "Lernen",
+"en": "Learning",
+},
+"settingsPreview.management": <String, Object?>{
+"de": "Verwaltung",
+"en": "Management",
+},
+"settingsPreview.view": <String, Object?>{
+"de": "Ansicht",
+"en": "View",
+},
+"settingsPreview.vocabulary": <String, Object?>{
+"de": "Vokabeln",
+"en": "Vocabulary",
 },
 "speed.completionNotice": <String, Object?>{
 "de": "Intensivlernen abgeschlossen · {count} Vokabeln",

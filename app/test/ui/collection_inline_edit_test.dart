@@ -184,12 +184,16 @@ Finder field(String id, [bool target = true]) => find.descendant(
 );
 Finder collapse() => find.byWidgetPredicate(
   (w) =>
-      (w is PikoButton && (w.label == 'Finish editing' || w.label == 'Bearbeiten abschließen')) ||
+      (w is PikoButton &&
+          (w.label == 'Finish editing' ||
+              w.label == 'Bearbeiten abschließen')) ||
       w is PikoIconButton &&
-      (w.semanticLabel == 'Collapse vocabulary editor' ||
-          w.semanticLabel == 'Vokabeleditor einklappen' ||
-          w.semanticLabel == 'Finish editing' ||
-          w.semanticLabel == 'Bearbeiten abschließen'),
+          (w.semanticLabel == 'Close' ||
+              w.semanticLabel == 'Schließen' ||
+              w.semanticLabel == 'Collapse vocabulary editor' ||
+              w.semanticLabel == 'Vokabeleditor einklappen' ||
+              w.semanticLabel == 'Finish editing' ||
+              w.semanticLabel == 'Bearbeiten abschließen'),
 );
 Future<void> mount(
   WidgetTester tester,
@@ -203,6 +207,9 @@ Future<void> mount(
   tester.view.physicalSize = Size(width, 1000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+  tester.platformDispatcher.textScaleFactorTestValue = scale;
+  addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   await tester.pumpWidget(
     PikoApp(
       localeController: locale,
@@ -364,7 +371,7 @@ void main() {
       );
       await tester.enterText(field(first.id), ' ');
       await tester.pumpAndSettle();
-      await tester.tap(card(second.id));
+      await tester.tap(collapse());
       await tester.pumpAndSettle();
       expect(field(first.id), findsOneWidget);
       expect(field(second.id), findsNothing);
@@ -433,7 +440,7 @@ void main() {
       expect(text.focusNode!.hasFocus, isTrue);
       repo.error();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Erneut versuchen'));
+      await tester.tap(find.byKey(const ValueKey('editor-source-retry')));
       await tester.pumpAndSettle();
       expect(repo.watchCalls, 2);
       expect(
@@ -472,12 +479,7 @@ void main() {
       collections.streams.last.addError(StateError('metadata failed'));
       await tester.pumpAndSettle();
       expect(field(one.id), findsOneWidget);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(CollectionLoadFailure),
-          matching: find.text('Try again'),
-        ),
-      );
+      await tester.tap(find.byKey(const ValueKey('editor-source-retry')));
       await tester.pumpAndSettle();
       expect(collections.streams.length, 2);
       expect(repo.watchCalls, 3);
@@ -514,7 +516,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(field(one.id), 'Changed');
       await tester.pump();
-      await tester.tap(card(two.id));
+      await tester.tap(collapse());
       await tester.pump();
       expect(tester.widget<TextField>(field(one.id)).enabled, isFalse);
       repo.records = [two];
@@ -544,7 +546,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(collapse());
       await tester.pump();
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.byKey(const ValueKey('editor-source-retry')));
       await tester.pumpAndSettle();
       expect(repo.watchCalls, 2);
       expect(tester.widget<TextField>(field(one.id)).enabled, isTrue);
@@ -582,7 +584,7 @@ void main() {
   );
 
   testWidgets(
-    'compact action is labelled and keyboard activated; canonical layout uses viewport breakpoint',
+    'edit action is labelled and keyboard activated; modal fields remain stacked across widths',
     (tester) async {
       final repo = LiveVocabulary();
       cleanup(tester, repo);
@@ -596,8 +598,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(field(one.id), findsOneWidget);
       expect(
-        tester.getTopLeft(field(one.id)).dy,
         tester.getTopLeft(field(one.id, false)).dy,
+        greaterThan(tester.getBottomLeft(field(one.id)).dy),
       );
       expect(
         tester.widget<TextField>(field(one.id)).style!.fontWeight,

@@ -3,6 +3,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
 import 'collection_list_chip.dart';
 import '../../ui/piko_theme.dart';
@@ -117,73 +118,100 @@ class CollectionListMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), scope = binding.scope;
-    final groups = binding.snapshot == null
-        ? <String>[]
-        : groupVocabulary(
-            binding.snapshot!,
-            scope.view,
-          ).map((g) => g.id).whereType<String>().toList();
     final available = enabled && binding.ready && !scope.viewPending;
-    return PikoAnchorRegion(
-      child: Builder(
-        builder: (anchorContext) => PopupMenuButton<String>(
-          key: const ValueKey('collection-list-menu'),
-          tooltip: copy.text('list.options'),
-          enabled: available,
-          onOpened: () => PikoAnchorRegion.capture(anchorContext),
-          icon: const RotatedBox(
-            quarterTurns: 1,
-            child: PikoIcon(PikoIconName.ellipsis),
-          ),
-          constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              value: 'mode',
-              child: Text(
-                '${copy.text('view.mode')}\n${copy.text('view.${scope.view.mode.name}')}',
-              ),
+    return PikoButton(
+      key: const ValueKey('collection-list-menu'),
+      label: copy.text('settingsPreview.view'),
+      icon: const PikoIcon(PikoIconName.grid2x2),
+      variant: PikoButtonVariant.ghost,
+      onPressed: available
+          ? () => showPikoDialog<void>(
+              context,
+              builder: (_) => _ViewOverviewDialog(binding: binding),
+            )
+          : null,
+    );
+  }
+}
+
+class _ViewOverviewDialog extends StatefulWidget {
+  const _ViewOverviewDialog({required this.binding});
+  final CollectionQueryBinding binding;
+  @override
+  State<_ViewOverviewDialog> createState() => _ViewOverviewDialogState();
+}
+
+class _ViewOverviewDialogState extends State<_ViewOverviewDialog> {
+  CollectionViewPicker? screen;
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.binding,
+    builder: (context, _) {
+      final copy = PikoCopyScope.of(context),
+          binding = widget.binding,
+          scope = binding.scope;
+      if (screen != null) {
+        return _ViewDialog(
+          key: ValueKey(screen),
+          binding: binding,
+          picker: screen!,
+          onBack: () => setState(() => screen = null),
+          onApplied: () => setState(() => screen = null),
+        );
+      }
+      final groups = binding.snapshot == null
+          ? <String>[]
+          : groupVocabulary(
+              binding.snapshot!,
+              scope.view,
+            ).map((g) => g.id).whereType<String>().toList();
+      return PikoDialog(
+        title: copy.text('settingsPreview.view'),
+        purpose: PikoDialogPurpose.directChoice,
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PikoNavigationRow(
+              title: copy.text('view.mode'),
+              subtitle: copy.text('view.${scope.view.mode.name}'),
+              onTap: () => setState(() => screen = CollectionViewPicker.mode),
             ),
-            PopupMenuItem(
-              value: 'languageOrder',
-              child: Text(
-                '${copy.text('view.languageOrder')}\n${copy.text(scope.view.targetFirst ? 'view.targetFirst' : 'view.nativeFirst')}',
+            PikoNavigationRow(
+              title: copy.text('view.languageOrder'),
+              subtitle: copy.text(
+                scope.view.targetFirst
+                    ? 'view.targetFirst'
+                    : 'view.nativeFirst',
               ),
+              onTap: () =>
+                  setState(() => screen = CollectionViewPicker.languageOrder),
             ),
             if (scope.view.grouping != null) ...[
-              const PopupMenuDivider(),
-              PopupMenuItem<String>(
-                enabled: false,
-                child: Text(copy.text('list.groups')),
+              PikoFormRow(
+                title: copy.text('view.expandAll'),
+                onTap: groups.any((id) => !scope.expandedGroups.contains(id))
+                    ? () {
+                        scope.expandGroups(groups, true);
+                        setState(() {});
+                      }
+                    : null,
               ),
-              PopupMenuItem(
-                value: 'expand',
-                enabled: groups.any((id) => !scope.expandedGroups.contains(id)),
-                child: Text(copy.text('view.expandAll')),
-              ),
-              PopupMenuItem(
-                value: 'collapse',
-                enabled: groups.any(scope.expandedGroups.contains),
-                child: Text(copy.text('view.collapseAll')),
+              PikoFormRow(
+                title: copy.text('view.collapseAll'),
+                onTap: groups.any(scope.expandedGroups.contains)
+                    ? () {
+                        scope.expandGroups(groups, false);
+                        setState(() {});
+                      }
+                    : null,
               ),
             ],
           ],
-          onSelected: (value) {
-            if (value == 'expand' || value == 'collapse') {
-              scope.expandGroups(groups, value == 'expand');
-            } else {
-              showCollectionViewPicker(
-                context,
-                binding,
-                value == 'mode'
-                    ? CollectionViewPicker.mode
-                    : CollectionViewPicker.languageOrder,
-              );
-            }
-          },
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class CollectionListResults extends StatelessWidget {
@@ -259,7 +287,14 @@ class CollectionListResults extends StatelessWidget {
 }
 
 class _ViewDialog extends StatefulWidget {
-  const _ViewDialog({required this.binding, required this.picker});
+  const _ViewDialog({
+    super.key,
+    required this.binding,
+    required this.picker,
+    this.onBack,
+    this.onApplied,
+  });
+  final VoidCallback? onBack, onApplied;
   final CollectionViewPicker picker;
   final CollectionQueryBinding binding;
   @override
@@ -296,7 +331,11 @@ class _ViewDialogState extends State<_ViewDialog> {
     await scope.saveView(draft);
     if (!mounted) return;
     if (scope.viewError == null) {
-      Navigator.of(context).pop();
+      if (widget.onApplied != null) {
+        widget.onApplied!();
+      } else {
+        Navigator.of(context).pop();
+      }
     } else {
       setState(() {
         pending = false;
@@ -334,6 +373,7 @@ class _ViewDialogState extends State<_ViewDialog> {
     );
     return PikoDialog(
       title: copy.text('view.${widget.picker.name}'),
+      onBack: widget.onBack,
       purpose: PikoDialogPurpose.selection,
       dismissible: !pending,
       onClose: pending ? null : () => Navigator.of(context).pop(),

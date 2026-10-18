@@ -7,6 +7,7 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_form.dart';
 import 'category_assignment_picker_test.dart'
     show PickerFixture, value, checked;
 import 'category_inline_value_test.dart' as actions;
@@ -34,15 +35,15 @@ Finder target(PickerFixture f) => find.descendant(
 Finder picker(PickerFixture f) =>
     find.byKey(ValueKey('category-picker-${f.entryId}-${f.dimension.id}'));
 Finder label(PickerFixture f, int index) {
-  final section = find.byKey(ValueKey('categories-toggle-${f.entryId}'));
-  return section.evaluate().isNotEmpty
-      ? find.descendant(
-          of: section,
-          matching: find.textContaining(f.values[index].name),
-        )
-      : find.byKey(
-          ValueKey('category-label-${f.entryId}-${f.values[index].id}'),
-        );
+  if (picker(f).evaluate().isNotEmpty) {
+    return find.descendant(
+      of: picker(f),
+      matching: find.textContaining(f.values[index].name),
+    );
+  }
+  return find.byKey(
+    ValueKey('category-label-${f.entryId}-${f.values[index].id}'),
+  );
 }
 
 Future<void> mount(
@@ -133,7 +134,7 @@ void main() {
         expect(raw.text, ' pomme modifiée ');
         await press(
           tester,
-          find.byKey(ValueKey('inline-complete-${f.entryId}')),
+          find.byTooltip(PikoCopy(language).text('common.close')),
         );
         await f.flush(tester);
         expect(find.byType(TextField), findsNothing);
@@ -172,7 +173,7 @@ void main() {
         ))!.targetText,
         'Après suppression',
       );
-      await press(tester, find.byKey(ValueKey('inline-complete-${f.entryId}')));
+      await press(tester, find.byTooltip('Close'));
       await f.flush(tester);
       expect(find.byType(TextField), findsNothing);
       expect(tester.takeException(), isNull);
@@ -198,7 +199,7 @@ void main() {
       await press(
         tester,
         find.widgetWithText(
-          PikoButton,
+          PikoNavigationRow,
           PikoCopy('en').text('category.addDimension'),
         ),
       );

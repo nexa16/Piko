@@ -7,6 +7,7 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_form.dart';
 import '../features/entry_session_category_test.dart' show EntryCategoryFixture;
 import 'category_assignment_picker_test.dart' show value, checked;
 import 'category_inline_value_test.dart' show press;
@@ -64,11 +65,14 @@ Future<void> pressCardAction(WidgetTester tester, Finder action) async {
 Finder picker(EntryCategoryFixture f, String id) =>
     find.byKey(ValueKey('category-picker-$id-${f.dimension.id}'));
 Finder chip(EntryCategoryFixture f, String id, String valueId) {
-  final section = find.byKey(ValueKey('categories-toggle-$id'));
   final name = valueId == f.first.id ? f.first.name : f.second.name;
-  return section.evaluate().isNotEmpty
-      ? find.descendant(of: section, matching: find.textContaining(name))
-      : find.byKey(ValueKey('category-label-$id-$valueId'));
+  if (picker(f, id).evaluate().isNotEmpty) {
+    return find.descendant(
+      of: picker(f, id),
+      matching: find.textContaining(name),
+    );
+  }
+  return find.byKey(ValueKey('category-label-$id-$valueId'));
 }
 
 void main() {
@@ -191,7 +195,7 @@ void main() {
       await pressCardAction(
         tester,
         find.widgetWithText(
-          PikoButton,
+          PikoNavigationRow,
           PikoCopy('en').text('category.addDimension'),
         ),
       );

@@ -29,11 +29,15 @@ Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab812
 <a id="interaction-layout"></a>
 ## Interaction layout
 
+Settings and input surfaces compose the shared `PikoFormSection`, `PikoFormGroup`, `PikoFormFieldRow`, `PikoFormRow` and `PikoNavigationRow` roles. The shared row owns its 16 logical-pixel content inset, 48 minimum height, typography and centered trailing icon; feature callers supply labels and behavior. Navigation uses one pinned Chevron asset. Dialogs use named standard or grouped-form presentations, with shared header/Back/Close placement; grouped forms place surface-colored groups on the app background. Canonical values still originate in `shared/design-config.js` and its generated adapter.
+
+App Settings links to a Collection overview, which opens the same scoped Settings page as the Collection gear. Preferences and data actions remain distinct; grouped appearance does not turn import/export into a retained preference. Saved-word modal editing reuses the serialized edit controller and waits for the route exit transition before disposing it. Manual entry retains its session controller and confirmed-word stack. Empty examples activate local fields on request without admitting a write until content changes. Category Properties retain explicit atomic Save; assignment pickers retain staged Apply.
+
 Shared pages, dialog bodies and the entry stack preserve the interacted control's top edge during same-surface layout changes. Disclosures retain their header; learning hint/reveal/editor changes retain the learning card. Compensation happens during layout before paint, with no extra blank area added for anchoring. Dialog bodies remain content-sized. Shared controls also capture semantic and keyboard activation without introducing an accessibility node.
 
 Only one interaction owns a scroll container at a time. A new interaction, deliberate scrolling or an explicit reveal takes precedence. Removed controls fall back to their surviving contextual header or neighbor. Scroll bounds, viewport/text-scale changes and keyboard/caret visibility limit exact coordinate retention. Entry-stack navigation keeps its existing centered transition; optional content grows from its header.
 
-The selected APK includes these changes. Source: [shared anchoring](../app/lib/ui/components/piko_interaction_anchor.dart), [entry coordination](../app/lib/features/entry/entry_session_screen.dart). Host behavior and regression checks cover transitions, bounds, raw input, selection, keyboard navigation and enlarged text; device evidence remains tied to the exact tested source.
+The documented capture APK remains identified by its manifest; newer UI changes require their own source-bound verification. Source: [shared anchoring](../app/lib/ui/components/piko_interaction_anchor.dart), [entry coordination](../app/lib/features/entry/entry_session_screen.dart). Host behavior and regression checks cover transitions, bounds, raw input, selection, keyboard navigation and enlarged text; device evidence remains tied to the exact tested source.
 
 <a id="storage"></a>
 ## Storage and migrations

@@ -12,6 +12,7 @@ import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/ui/components/piko_form.dart';
 import 'json_import_test.dart' show confirmJson;
 import 'json_transfer_test.dart' show JsonTestPlatform, pressJson;
 import 'review_launch_test.dart' show ClosingDatabase;
@@ -58,7 +59,9 @@ void main() {
           await tester.tap(find.byTooltip(copy.text('action.addEntry')));
           await tester.pumpAndSettle();
           expect(find.text(copy.text('entry.manualMethod')), findsOneWidget);
-          await pressJson(tester, 'json.importTab', language: language);
+          await tester.tap(
+            find.widgetWithText(PikoNavigationRow, copy.text('json.importTab')),
+          );
           await flush(tester, db);
           expect(find.byType(VocabularyJsonPage), findsOneWidget);
           expect(find.byType(PikoDialog), findsOneWidget);
@@ -81,7 +84,12 @@ void main() {
           await tester.ensureVisible(menu);
           await tester.tap(menu);
           await tester.pumpAndSettle();
-          await pressJson(tester, 'json.title', language: language);
+          final import = find.widgetWithText(
+            PikoFormRow,
+            copy.text('json.importTab'),
+          );
+          await tester.ensureVisible(import);
+          await tester.tap(import);
           await flush(tester, db);
           expect(find.text(copy.text('json.collapseInput')), findsOneWidget);
           expect(
@@ -120,6 +128,8 @@ void main() {
             'json.returnToCollection',
             language: language,
           );
+          await flush(tester, db);
+          await tester.tap(find.byTooltip(copy.text('common.back')));
           await flush(tester, db);
           expect(find.byType(CollectionDetail), findsOneWidget);
           expect(tester.takeException(), isNull);

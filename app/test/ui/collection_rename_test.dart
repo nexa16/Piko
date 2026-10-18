@@ -384,23 +384,12 @@ void main() {
   );
 
   testWidgets(
-    'locale and metadata updates preserve name draft and pending inline autosave controllers',
+    'locale and metadata updates preserve each active name and vocabulary editor',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
       final h = RenameHarness(f);
       await h.mount(tester);
-      final id = f.entries.first.id;
-      await tester.tap(find.byKey(ValueKey('vocabulary-$id')));
-      await flush(tester, f);
-      final target = find.descendant(
-        of: find.byKey(ValueKey('inline-$id-target')),
-        matching: find.byType(TextField),
-      );
-      final vocabularyController = tester.widget<TextField>(target).controller!;
-      f.repository.updateGates[id] = Completer<void>();
-      await tester.enterText(target, 'Pending word');
-      await tester.pump();
       await tester.tap(rename);
       await tester.pumpAndSettle();
       await tester.enterText(name, '  Own draft  ');
@@ -416,35 +405,38 @@ void main() {
       );
       await flush(tester, f);
       expect(controller.value, raw);
-      expect(tester.widget<TextField>(name).focusNode!.hasFocus, isTrue);
-      expect(
-        identical(tester.widget<TextField>(name).controller, controller),
-        isTrue,
-      );
-      expect(
-        identical(
-          tester.widget<TextField>(target).controller,
-          vocabularyController,
-        ),
-        isTrue,
-      );
+      expect(tester.widget<TextField>(name).controller, same(controller));
       await tester.tap(save);
       await flush(tester, f);
       expect(find.text('Own draft'), findsOneWidget);
-      expect(vocabularyController.text, 'Pending word');
-      expect(
-        identical(
-          tester.widget<TextField>(target).controller,
-          vocabularyController,
-        ),
-        isTrue,
+      final id = f.entries.first.id;
+      await tester.tap(find.byKey(ValueKey('vocabulary-$id')));
+      await flush(tester, f);
+      final target = find.descendant(
+        of: find.byKey(ValueKey('inline-$id-target')),
+        matching: find.byType(TextField),
       );
+      final vocabularyController = tester.widget<TextField>(target).controller!;
+      f.repository.updateGates[id] = Completer<void>();
+      await tester.enterText(target, 'Pending word');
+      await tester.pump();
+      h.locale.value = 'en';
+      await tester.runAsync(
+        () => f.collections.rename(id: f.owner.id, name: 'Updated metadata'),
+      );
+      await flush(tester, f);
+      expect(
+        tester.widget<TextField>(target).controller,
+        same(vocabularyController),
+      );
+      expect(vocabularyController.text, 'Pending word');
       f.repository.updateGates[id]!.complete();
       await flush(tester, f);
       expect(
         (await tester.runAsync(() => f.real.watchById(id).first))!.targetText,
         'Pending word',
       );
+      expect(tester.takeException(), isNull);
     },
   );
 

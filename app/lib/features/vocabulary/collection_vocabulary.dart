@@ -23,6 +23,7 @@ import '../categories/vocabulary_categories.dart';
 import 'vocabulary_learning_status.dart';
 import 'vocabulary_content_editor.dart';
 import 'saved_vocabulary_editor.dart';
+import 'saved_vocabulary_dialog.dart';
 import 'vocabulary_selection.dart';
 import 'package:flutter/services.dart';
 
@@ -39,11 +40,15 @@ class CollectionVocabulary extends StatefulWidget {
     this.categoriesRepository,
     this.sliver = false,
     this.selection,
+    this.metadataError,
+    this.onRetryMetadata,
     this.preferredDirections = const {
       LearningDirection.targetToNative,
       LearningDirection.nativeToTarget,
     },
   });
+  final Object? metadataError;
+  final VoidCallback? onRetryMetadata;
   final CollectionRecord collection;
   final VocabularyRepository repository;
   final ValueChanged<Future<void>>? onPendingWrites;
@@ -82,6 +87,18 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   StreamSubscription<List<VocabularyRecord>>? subscription;
   List<VocabularyRecord> rows = [];
   Object? loadError;
+  final dialogSourceStatus = VocabularyEditorSourceStatus();
+  void retryDialogSource() {
+    if (!mounted || widget.writeBarrier?.frozen == true) return;
+    if (widget.metadataError != null) {
+      widget.onRetryMetadata?.call();
+    } else if (widget.queryBinding != null) {
+      widget.queryBinding!.refresh();
+    } else {
+      setState(watch);
+    }
+  }
+
   String? openingErrorId;
   bool waiting = true, switching = false;
   Object? transition;
@@ -135,6 +152,9 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     }
     if (oldWidget.collection.id != widget.collection.id ||
         oldWidget.repository != widget.repository) {
+      _savedDialogOwner = Object();
+      _closeSavedDialog();
+      _openingSavedDialog = false;
       retireEditor(oldWidget.onPendingWrites);
       switching = false;
       rows = [];
@@ -179,6 +199,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             final anchorTop = anchorBox is RenderBox && anchorBox.attached
                 ? anchorBox.localToGlobal(Offset.zero).dy
                 : null;
+            if (_savedDialogEntry != null &&
+                !value.any((row) => row.id == _savedDialogEntry)) {
+              _closeSavedDialog();
+            }
             if (editor != null &&
                 !value.any((row) => row.id == editor!.edits.entryId)) {
               retireEditor(widget.onPendingWrites);
@@ -213,6 +237,11 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     loadError = binding.error;
     final snapshot = binding.snapshot;
     if (snapshot == null) return;
+    if (binding.ready &&
+        _savedDialogEntry != null &&
+        !snapshot.allEntries.any((row) => row.id == _savedDialogEntry)) {
+      _closeSavedDialog();
+    }
     // A filter may temporarily hide an editor. Its raw draft and controller
     // remain owned here until the user changes editor or the entry is deleted.
     if (binding.ready &&
@@ -522,11 +551,70 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     selection.toggle(id);
   }
 
+  Object _savedDialogOwner = Object();
+  ModalRoute<void>? _savedDialog;
+  String? _savedDialogEntry;
+  bool _openingSavedDialog = false;
+
+  void _closeSavedDialog() {
+    _savedDialogOwner = Object();
+    _openingSavedDialog = false;
+    final owned = _savedDialog;
+    _savedDialog = null;
+    _savedDialogEntry = null;
+    if (owned != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (owned.isActive) owned.navigator?.removeRoute(owned);
+      });
+    }
+  }
+
   Future<void> activateOccurrence(String id, String? group) async {
-    if (actionBusy) return;
-    await activateRow(id);
-    if (mounted && editor?.edits.entryId == id) {
-      setState(() => editorOccurrence = occurrence(id, group));
+    if (actionBusy || _openingSavedDialog || _savedDialog != null) return;
+    final owner = _savedDialogOwner;
+    _openingSavedDialog = true;
+    _savedDialogEntry = id;
+    try {
+      await showSavedVocabularyDialog(
+        context,
+        collection: widget.collection,
+        repository: widget.repository,
+        entryId: id,
+        categories: widget.categoriesRepository,
+        onPendingWrites: widget.onPendingWrites,
+        sourceStatus: dialogSourceStatus,
+        canUse: () =>
+            mounted &&
+            identical(_savedDialogOwner, owner) &&
+            _savedDialogEntry == id &&
+            widget.writeBarrier?.frozen != true,
+        onRouteCreated: (route) {
+          if (mounted &&
+              identical(_savedDialogOwner, owner) &&
+              _savedDialogEntry == id) {
+            _savedDialog = route;
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (route.isActive) route.navigator?.removeRoute(route);
+            });
+          }
+        },
+        onDelete: widget.mutations == null
+            ? null
+            : (entry) => deleteEntry(entry),
+      );
+    } catch (_) {
+      if (mounted && identical(_savedDialogOwner, owner)) {
+        setState(() => openingErrorId = id);
+      }
+    } finally {
+      if (mounted && identical(_savedDialogOwner, owner)) {
+        setState(() {
+          _savedDialog = null;
+          _savedDialogEntry = null;
+          _openingSavedDialog = false;
+        });
+      }
     }
   }
 
@@ -558,7 +646,22 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (view.mode == VocabularyViewMode.detailed) ...[
-            Text(first, style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    first,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                if (!selecting)
+                  PikoIconButton(
+                    icon: const PikoIcon(PikoIconName.pencil),
+                    semanticLabel: copy.text('vocab.inlineEdit'),
+                    onPressed: actionBusy ? null : activate,
+                  ),
+              ],
+            ),
             Text(second),
             for (final pair in record.content.examples) ...[
               SizedBox(height: pikoDesign.dimension('spacing.2')),
@@ -879,6 +982,15 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
+    final revision = generation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && revision == generation) {
+        dialogSourceStatus.update(
+          widget.metadataError ?? loadError,
+          retryDialogSource,
+        );
+      }
+    });
     void onPointerMove(PointerMoveEvent event) {
       anchorRevision++;
       if (Scrollable.maybeOf(context)?.position.userScrollDirection !=
@@ -1105,6 +1217,8 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
 
   @override
   void dispose() {
+    _closeSavedDialog();
+    dialogSourceStatus.dispose();
     widget.selection?.removeListener(changed);
     widget.queryBinding?.removeListener(projectionChanged);
     generation++;

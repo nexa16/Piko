@@ -8,6 +8,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import '../categories/vocabulary_categories.dart';
@@ -41,6 +42,7 @@ class SavedVocabularyEditor extends StatelessWidget {
     this.categories,
     this.snapshot,
     this.busy = false,
+    this.showHeader = true,
     this.onPendingWrites,
     super.key,
   });
@@ -53,7 +55,7 @@ class SavedVocabularyEditor extends StatelessWidget {
   final VoidCallback? onDelete;
   final CategoriesRepository? categories;
   final CollectionQuerySnapshot? snapshot;
-  final bool busy;
+  final bool busy, showHeader;
   final ValueChanged<Future<void>>? onPendingWrites;
 
   @override
@@ -87,81 +89,53 @@ class SavedVocabularyEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    copy.text('vocab.inlineEdit'),
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      copy.text(
-                        edits.isSaving
-                            ? 'entry.saving'
-                            : error != null || edits.hasUncommittedChanges
-                            ? 'entry.unsaved'
-                            : 'entry.saved',
-                      ),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            PikoIconButton(
-              key: ValueKey('inline-complete-${edits.entryId}'),
-              icon: const RotatedBox(
-                quarterTurns: 3,
-                child: PikoIcon(PikoIconName.chevronRight),
-              ),
-              semanticLabel: copy.text('vocab.inlineCollapse'),
-              onPressed: busy ? null : onCollapse,
-            ),
-            if (onDelete != null)
-              PopupMenuButton<String>(
-                key: ValueKey('inline-menu-${edits.entryId}'),
-                tooltip: copy.text('vocab.editorMenu'),
-                enabled: !busy,
-                icon: const PikoIcon(PikoIconName.ellipsis),
-                itemBuilder: (_) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(copy.text('vocab.delete')),
-                  ),
-                ],
-                onSelected: (_) {
-                  if (admitted()) onDelete!();
-                },
-              ),
-          ],
-        ),
-        SizedBox(height: pikoDesign.dimension('spacing.3')),
-        if (MediaQuery.sizeOf(context).width <=
-            pikoDesign.dimension(
-              'components.inlineVocabulary.compactBreakpoint',
-            ))
-          Column(
-            children: [
-              field(true),
-              SizedBox(height: pikoDesign.dimension('spacing.3')),
-              field(false),
-            ],
-          )
-        else
+        if (showHeader)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: field(true)),
-              SizedBox(width: pikoDesign.dimension('spacing.3')),
-              Expanded(child: field(false)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      copy.text('vocab.inlineEdit'),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        copy.text(
+                          edits.isSaving
+                              ? 'entry.saving'
+                              : error != null || edits.hasUncommittedChanges
+                              ? 'entry.unsaved'
+                              : 'entry.saved',
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PikoIconButton(
+                key: ValueKey('inline-complete-${edits.entryId}'),
+                icon: const RotatedBox(
+                  quarterTurns: 3,
+                  child: PikoIcon(PikoIconName.chevronRight),
+                ),
+                semanticLabel: copy.text('vocab.inlineCollapse'),
+                onPressed: busy ? null : onCollapse,
+              ),
             ],
           ),
+        SizedBox(height: pikoDesign.dimension('spacing.3')),
+        PikoFormSection(
+          title: copy.text('settingsPreview.vocabulary'),
+          children: [
+            PikoFormFieldRow(child: field(true)),
+            PikoFormFieldRow(child: field(false)),
+          ],
+        ),
         if (edits.supportsContent)
           VocabularyContentEditor(
             value: edits.draft.content,
@@ -206,24 +180,62 @@ class SavedVocabularyEditor extends StatelessWidget {
             },
           ),
         if (edits.supportsContent)
-          PikoSwitch(
-            key: ValueKey('inline-active-${edits.entryId}'),
+          PikoFormSection(
+            title: copy.text('settingsPreview.learning'),
+            children: [
+              PikoFormFieldRow(
+                child: PikoSwitch(
+                  key: ValueKey('inline-active-${edits.entryId}'),
 
-            title: Text(copy.text('vocab.active')),
-            value: edits.draft.active,
-            subtitle: Text(
+                  title: Text(copy.text('vocab.active')),
+                  value: edits.draft.active,
+                  subtitle: Text(
+                    copy.text(
+                      edits.draft.active
+                          ? 'vocab.activeHelp'
+                          : 'vocab.inactiveHelp',
+                    ),
+                  ),
+                  onChanged: busy
+                      ? null
+                      : (value) {
+                          if (admitted()) {
+                            edits.edit(active: value);
+                            register();
+                          }
+                        },
+                ),
+              ),
+            ],
+          ),
+        if (onDelete != null)
+          PikoFormGroup(
+            children: [
+              PikoFormRow(
+                key: ValueKey('inline-delete-${edits.entryId}'),
+                title: copy.text('vocab.delete'),
+                danger: true,
+                trailing: const PikoIcon(PikoIconName.trash),
+                onTap: busy
+                    ? null
+                    : () {
+                        if (admitted()) onDelete!();
+                      },
+              ),
+            ],
+          ),
+        if (!showHeader)
+          Semantics(
+            liveRegion: true,
+            child: Text(
               copy.text(
-                edits.draft.active ? 'vocab.activeHelp' : 'vocab.inactiveHelp',
+                edits.isSaving
+                    ? 'entry.saving'
+                    : error != null || edits.hasUncommittedChanges
+                    ? 'entry.unsaved'
+                    : 'entry.saved',
               ),
             ),
-            onChanged: busy
-                ? null
-                : (value) {
-                    if (admitted()) {
-                      edits.edit(active: value);
-                      register();
-                    }
-                  },
           ),
         if (error != null)
           Semantics(

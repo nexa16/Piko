@@ -17,7 +17,9 @@ import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
-import 'package:piko/ui/components/piko_field.dart';
+import 'package:piko/ui/components/piko_form.dart';
+import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/components/piko_preference_picker.dart';
 import 'package:piko/ui/components/piko_switch.dart';
 import '../test/data/regular_reviews_test.dart' show Fixture;
 import 'review_correction_android_test.dart' as review;
@@ -102,17 +104,68 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      Finder nav(String id) =>
+          find.widgetWithText(PikoNavigationRow, copy.text(id));
+      Finder action(String id) =>
+          find.widgetWithText(PikoFormRow, copy.text(id));
+      Future<void> pageBack() => tap(find.byTooltip(copy.text('common.back')));
       Future<void> close() => tap(find.byTooltip(copy.text('common.close')));
       Future<void> record(String id, {bool capture = false}) async {
         await tester.pumpAndSettle();
         final targets = await androidTapTargetGuideline.evaluate(tester);
         final labels = await labeledTapTargetGuideline.evaluate(tester);
+        final rows = <Map<String, Object?>>[];
+        for (final row in tester.widgetList<PikoFormRow>(
+          find.byType(PikoFormRow),
+        )) {
+          final owner = find.byWidget(row);
+          final bounds = tester.getRect(owner);
+          final title = find
+              .descendant(of: owner, matching: find.text(row.title))
+              .first;
+          final content = tester.getRect(title);
+          final inset = content.left - bounds.left;
+          expect(
+            inset,
+            closeTo(16, .5),
+            reason: '$id / ${row.title}: shared row inset',
+          );
+          expect(bounds.height, greaterThanOrEqualTo(48));
+          final icons = find.descendant(
+            of: owner,
+            matching: find.byType(PikoIcon),
+          );
+          double? trailingInset, centerDelta;
+          if (icons.evaluate().isNotEmpty) {
+            final glyph = tester.getRect(icons.last);
+            trailingInset = bounds.right - glyph.right;
+            centerDelta = glyph.center.dy - bounds.center.dy;
+            expect(
+              trailingInset,
+              closeTo(16, .5),
+              reason: '$id / ${row.title}: trailing inset',
+            );
+            expect(
+              centerDelta,
+              closeTo(0, .5),
+              reason: '$id / ${row.title}: centered trailing icon',
+            );
+          }
+          rows.add({
+            'title': row.title,
+            'inset': inset,
+            'height': bounds.height,
+            'trailingInset': trailingInset,
+            'iconCenterDelta': centerDelta,
+          });
+        }
         surfaces.add({
           'id': id,
           'androidTargets': targets.passed,
           'targetFindings': targets.reason,
           'labels': labels.passed,
           'labelFindings': labels.reason,
+          'formRowMeasurements': rows,
           'visibleText': [
             for (final text in tester.widgetList<Text>(find.byType(Text)))
               if (text.data != null) text.data,
@@ -214,7 +267,7 @@ void main() {
           () => key('collection-${fixture.owner.id}').evaluate().isNotEmpty,
         );
         await record('home');
-        await tap(button('nav.settings'));
+        await tap(find.byTooltip(copy.text('nav.settings')));
         expect(find.byType(SettingsRoute), findsOneWidget);
         final media = MediaQuery.of(tester.element(find.byType(SettingsRoute)));
         manifest['width'] = media.size.width;
@@ -224,13 +277,19 @@ void main() {
           expect(media.textScaler.scale(14), closeTo(28, 1));
         }
         await record('global-settings', capture: true);
-        await tap(find.byType(PikoDropdown<Locale>));
+        await tap(find.byType(PikoPreferencePicker<Locale>));
         await record('global-language-choices');
         await back();
         await tap(key('settings-preferred-direction'));
         await record('global-direction-choices');
         await back();
-        await tap(button('common.back'));
+        await tap(nav('settingsPreview.collections'));
+        await record('settings-collections', capture: true);
+        await tap(key('collection-settings-${fixture.owner.id}'));
+        await record('collection-settings-from-global', capture: true);
+        await pageBack();
+        await pageBack();
+        await pageBack();
         if (config.locale == 'en') {
           await tap(button('action.new'));
           expect(find.byType(CreateCollectionDialog), findsOneWidget);
@@ -250,34 +309,31 @@ void main() {
         expect(find.byType(CollectionDetail), findsOneWidget);
         await record('collection-detail');
         await menu();
-        await record('collection-more');
-        await tap(key('collection-menu-settings'));
-        await record('collection-options', capture: true);
+        await record('collection-settings', capture: true);
         final hint = key('collection-hint-default');
         final openingHint = tester.widget<PikoSwitch>(hint).value;
         await tap(hint);
         expect(tester.widget<PikoSwitch>(hint).value, !openingHint);
-        await close();
+        await pageBack();
         await menu();
-        await tap(key('collection-menu-settings'));
         expect(tester.widget<PikoSwitch>(hint).value, !openingHint);
         await tap(hint);
-        await tap(key('collection-menu-categories'));
+        await tap(nav('catPreview.categories'));
+        await record('category-overview', capture: true);
         await tap(find.text('Topic').last);
         final carry = key('category-carry-over-${topic.id}');
-        await reveal(carry);
         await record('category-definition-form', capture: true);
-        expect(tester.widget<PikoSwitch>(carry).value, isFalse);
         await tap(carry);
         expect((await categories.dimensionById(topic.id))!.carryOver, isFalse);
-        await record('category-unsaved-preference');
-        await close();
-        await menu();
-        await tap(key('collection-menu-categories'));
+        await pageBack();
+        await record('category-unsaved-confirmation');
+        await tap(button('form.discard'));
         await tap(find.text('Topic').last);
         expect(tester.widget<PikoSwitch>(carry).value, isFalse);
         await record('category-reopened-unsaved-discarded');
-        await close();
+        await pageBack();
+        await pageBack();
+        await pageBack();
         if (config.locale == 'en') {
           await tap(key('collection-filters'));
           await record('filters', capture: true);
@@ -301,6 +357,8 @@ void main() {
           await record('list-options');
           await tap(find.textContaining(copy.text('view.mode')).last);
           await record('layout-picker');
+          await pageBack();
+          await record('layout-returned-overview');
           await close();
           await tap(key('collection-list-menu'));
           await tap(find.textContaining(copy.text('view.languageOrder')).last);
@@ -310,8 +368,7 @@ void main() {
           await record('learning-help');
           await tap(find.byTooltip(copy.text('learnHelp.close')));
           await tap(key('vocabulary-${fixture.entry.id}'));
-          await record('saved-vocabulary-editor');
-          await tap(key('categories-toggle-${fixture.entry.id}'));
+          await record('saved-vocabulary-editor', capture: true);
           await tap(key('category-picker-${fixture.entry.id}-${topic.id}'));
           await record('category-assignment', capture: true);
           await tap(key('category-value-${work.id}'));
@@ -320,18 +377,17 @@ void main() {
             (await categories.assignments(fixture.entry.id)).single.valueIds,
             {travel.id},
           );
-          await tap(button('category.addDimension'));
+          await tap(nav('category.addDimension'));
           await record('create-category-group');
           await close();
-          await tap(key('inline-menu-${fixture.entry.id}'));
-          await tap(find.text(copy.text('vocab.delete')).last);
+          await tap(key('inline-delete-${fixture.entry.id}'));
           // Explicit vocabulary deletion uses its bounded Undo contract;
           // Collection/category definitions separately require confirmation.
           await tap(button('vocab.undo'));
           await record('vocabulary-restored-after-undo');
           await tap(find.byTooltip(copy.text('action.addEntry')));
           await record('entry-method');
-          await tap(button('entry.manualMethod'));
+          await tap(nav('entry.manualMethod'));
           expect(find.byType(EntrySessionScreen), findsOneWidget);
           await record('new-vocabulary-editor', capture: true);
           final target = find.descendant(
@@ -339,15 +395,38 @@ void main() {
             matching: find.byType(TextField),
           );
           await reveal(target);
-          await tester.enterText(target, 'chat');
+          await tester.enterText(target, 'audit word');
+          final native = find.descendant(
+            of: key('draft-native'),
+            matching: find.byType(TextField),
+          );
+          await tester.enterText(native, 'Auditwort');
           await tester.pumpAndSettle();
-          FocusManager.instance.primaryFocus?.unfocus();
-          await tester.pumpAndSettle();
-          await tap(find.byTooltip(copy.text('common.back')));
+          await tap(find.byTooltip(copy.text('action.saveNext')));
+          final entryScreen = tester.widget<EntrySessionScreen>(
+            find.byType(EntrySessionScreen),
+          );
+          final saved = entryScreen.session.confirmedEntries.single;
+          expect(key('entry-card-${saved.id}'), findsOneWidget);
+          await record('entry-session-retains-history', capture: true);
+          await tap(key('entry-card-${saved.id}'));
+          expect(entryScreen.session.activeEntryId, saved.id);
+          await record('entry-session-revisit', capture: true);
+          await pageBack();
+          await tap(find.byTooltip(copy.text('action.addEntry')));
+          await tap(nav('entry.manualMethod'));
+          await tester.enterText(
+            find.descendant(
+              of: key('draft-target'),
+              matching: find.byType(TextField),
+            ),
+            'unfinished audit',
+          );
+          await pageBack();
           await record('entry-discard-confirmation');
           await tap(button('entry.discard'));
           await menu();
-          await tap(button('json.title'));
+          await tap(action('json.importTab'));
           await record('json-import');
           final input = key('json-input');
           await reveal(input);
@@ -386,6 +465,7 @@ void main() {
           await tap(key('json-export-tab'));
           await record('json-export');
           await close();
+          await pageBack();
           await launch('speed');
           await record('speed-setup', capture: true);
           await close();
@@ -403,10 +483,12 @@ void main() {
           await tap(button('action.cancel'));
         }
         for (final table in protected.keys) {
+          final after = await review.rows(db, table);
           expect(
-            await review.rows(db, table),
-            protected[table],
-            reason: 'Read/cancel audit preserved $table',
+            after,
+            containsAll(protected[table]!),
+            reason:
+                'Audit preserved original fixture $table; new session records are explicit',
           );
         }
         expect(

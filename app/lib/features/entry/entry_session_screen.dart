@@ -19,6 +19,7 @@ import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_entry_header.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_swipe_reveal.dart';
 import '../../ui/piko_theme.dart';
@@ -1032,6 +1033,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
         animate(
           PikoCard(
             key: ValueKey('entry-card-$id'),
+            role: active ? PikoCardRole.input : PikoCardRole.standard,
             selected: active,
             constraints: BoxConstraints(
               minHeight: pikoDesign.dimension(
@@ -1094,23 +1096,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ? null
                                 : () => collapseSaved(id),
                           ),
-                          if (session.supportsDeletion)
-                            PopupMenuButton<String>(
-                              key: ValueKey('entry-menu-$id'),
-                              tooltip: copy.text('vocab.editorMenu'),
-                              enabled:
-                                  !session.isBusy &&
-                                  !exitDraining &&
-                                  exitRequest == null,
-                              icon: const PikoIcon(PikoIconName.ellipsis),
-                              itemBuilder: (_) => [
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text(copy.text('vocab.delete')),
-                                ),
-                              ],
-                              onSelected: (_) => deleteEntry(id),
-                            ),
                         ],
                       ),
                   ],
@@ -1205,9 +1190,13 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           SizedBox(height: pikoDesign.dimension('spacing.4')),
-                          field(true),
-                          SizedBox(height: pikoDesign.dimension('spacing.4')),
-                          field(false),
+                          PikoFormSection(
+                            title: copy.text('settingsPreview.vocabulary'),
+                            children: [
+                              PikoFormFieldRow(child: field(true)),
+                              PikoFormFieldRow(child: field(false)),
+                            ],
+                          ),
                           if (session.supportsContent)
                             VocabularyContentEditor(
                               value: values.content,
@@ -1331,41 +1320,67 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                               },
                             ),
                           if (session.supportsContent)
-                            PikoSwitch(
-                              key: ValueKey('entry-active-$id'),
+                            PikoFormSection(
+                              title: copy.text('settingsPreview.learning'),
+                              children: [
+                                PikoFormFieldRow(
+                                  child: PikoSwitch(
+                                    key: ValueKey('entry-active-$id'),
 
-                              title: Text(copy.text('vocab.active')),
-                              value: values.active,
-                              subtitle: Text(
-                                copy.text(
-                                  values.active
-                                      ? 'vocab.activeHelp'
-                                      : 'vocab.inactiveHelp',
+                                    title: Text(copy.text('vocab.active')),
+                                    value: values.active,
+                                    subtitle: Text(
+                                      copy.text(
+                                        values.active
+                                            ? 'vocab.activeHelp'
+                                            : 'vocab.inactiveHelp',
+                                      ),
+                                    ),
+                                    onChanged:
+                                        !active ||
+                                            session.isBusy ||
+                                            exitDraining ||
+                                            exitRequest != null
+                                        ? null
+                                        : (value) {
+                                            if (ModalRoute.of(
+                                                  context,
+                                                )?.isCurrent !=
+                                                true) {
+                                              return;
+                                            }
+                                            if (draft) {
+                                              session.setActive(value);
+                                            } else {
+                                              session.editSavedEntry(
+                                                id,
+                                                active: value,
+                                              );
+                                              widget.onPendingWrites?.call(
+                                                session.awaitSavedEdits(),
+                                              );
+                                            }
+                                          },
+                                  ),
                                 ),
-                              ),
-                              onChanged:
-                                  !active ||
+                              ],
+                            ),
+                          if (!draft && session.supportsDeletion)
+                            PikoFormGroup(
+                              children: [
+                                PikoFormRow(
+                                  key: ValueKey('entry-delete-$id'),
+                                  title: copy.text('vocab.delete'),
+                                  danger: true,
+                                  trailing: const PikoIcon(PikoIconName.trash),
+                                  onTap:
                                       session.isBusy ||
-                                      exitDraining ||
-                                      exitRequest != null
-                                  ? null
-                                  : (value) {
-                                      if (ModalRoute.of(context)?.isCurrent !=
-                                          true) {
-                                        return;
-                                      }
-                                      if (draft) {
-                                        session.setActive(value);
-                                      } else {
-                                        session.editSavedEntry(
-                                          id,
-                                          active: value,
-                                        );
-                                        widget.onPendingWrites?.call(
-                                          session.awaitSavedEdits(),
-                                        );
-                                      }
-                                    },
+                                          exitDraining ||
+                                          exitRequest != null
+                                      ? null
+                                      : () => deleteEntry(id),
+                                ),
+                              ],
                             ),
                           SizedBox(height: pikoDesign.dimension('spacing.3')),
                           if (draft)

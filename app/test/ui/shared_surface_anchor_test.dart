@@ -107,7 +107,7 @@ void main() {
         baseOffset: 2,
         extentOffset: 5,
       );
-      final disclosure = find.byKey(const ValueKey('content-examples-toggle'));
+      final disclosure = find.byKey(const ValueKey('content-add-example'));
       await scrollActionIntoView(tester, disclosure);
       final top = tester.getTopLeft(disclosure).dy;
       await tester.tap(disclosure);

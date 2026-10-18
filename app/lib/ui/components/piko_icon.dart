@@ -23,6 +23,7 @@ enum PikoIconName {
   rotateCcw('rotate-ccw'),
   search('search'),
   settings('settings'),
+  tags('tags'),
   trash('trash'),
   upload('upload'),
   x('x'),

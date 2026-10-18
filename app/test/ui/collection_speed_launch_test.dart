@@ -231,7 +231,7 @@ void main() {
   );
 
   testWidgets(
-    'Speed safely preserves an invalid raw editor and blocks Review and menu while setup owns launch',
+    'invalid vocabulary dialog blocks Speed until corrected; setup blocks competing launches',
     (tester) async {
       final h = DetailSpeedHarness();
       await h.mount(tester);
@@ -241,8 +241,6 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const ValueKey('vocabulary-one')));
-      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('vocabulary-one')));
       await tester.pumpAndSettle();
       final field = find.descendant(
@@ -250,24 +248,16 @@ void main() {
         matching: find.byType(TextField),
       );
       await tester.enterText(field, '  ');
-      await tester.pumpAndSettle();
       final controller = tester.widget<TextField>(field).controller;
-      await h.setup(tester);
-      final review = find.byKey(
-        const ValueKey('collection-review-targetToNative'),
-        skipOffstage: false,
-      );
-      expect(tester.widget<PikoButton>(review).onPressed, isNull);
-      final menu = find.byKey(
-        const ValueKey('collection-menu'),
-        skipOffstage: false,
-      );
-      expect(tester.widget<PikoIconButton>(menu).onPressed, isNull);
       await tester.tap(find.byTooltip('Close'));
       await tester.pumpAndSettle();
-      expect(h.requests, isEmpty);
       expect(tester.widget<TextField>(field).controller, same(controller));
-      expect(controller!.text, '  ');
+      expect(h.requests, isEmpty);
+      await tester.enterText(field, 'One');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      await h.setup(tester);
       expect(
         tester
             .widget<PikoButton>(
@@ -277,8 +267,23 @@ void main() {
               ),
             )
             .onPressed,
-        isNotNull,
+        isNull,
       );
+      expect(
+        tester
+            .widget<PikoIconButton>(
+              find.byKey(
+                const ValueKey('collection-menu'),
+                skipOffstage: false,
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      expect(h.requests, isEmpty);
+      expect(tester.takeException(), isNull);
     },
   );
 }

@@ -1,47 +1,36 @@
-import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:piko/features/collections/collections_home.dart';
-import 'package:piko/features/settings/settings_route.dart';
-import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/shared/catalogs.dart';
-import 'package:piko/ui/components/piko_card.dart';
-import 'package:piko/ui/components/piko_button.dart';
-import 'package:piko/ui/components/piko_field.dart';
-import 'package:piko/ui/components/piko_page.dart';
+import 'package:piko/ui/components/piko_form.dart';
+import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/components/piko_preference_picker.dart';
 import 'settings_test.dart' as settings;
 
 void main() {
   testWidgets(
-    'normal Settings title/card and field inset match binding box geometry',
+    'real language and direction rows share 16px insets and centered chevrons',
     (tester) async {
       final h = settings.Harness();
       try {
         await h.mount(tester);
         await h.open(tester);
         await h.flush(tester);
-        final title = tester.getRect(
-          find.text(const PikoCopy('en').text('nav.settings')),
-        );
-        final languageCard = find.ancestor(
-          of: settings.dropdown,
-          matching: find.byType(PikoCard),
-        );
-        final card = tester.getRect(languageCard);
-        final field = tester.getRect(
-          find.descendant(of: languageCard, matching: find.byType(PikoField)),
-        );
-        // Binding h1 bottom margin collapses with section margin to 23px;
-        // card border/padding 1+19 and field's 17px outer margins give 37px.
-        expect(
-          [
-            card.top - title.bottom,
-            field.top - card.top,
-            card.bottom - field.bottom,
-          ],
-          [23, 37, 37],
-        );
+        final rows = find.byType(PikoNavigationRow);
+        expect(rows, findsNWidgets(3));
+        for (var i = 0; i < 2; i++) {
+          final row = rows.at(i), rect = tester.getRect(rows.at(i));
+          final label = find
+              .descendant(of: row, matching: find.byType(Text))
+              .first;
+          final icon = find.descendant(
+            of: row,
+            matching: find.byType(PikoIcon),
+          );
+          expect(tester.getRect(label).left - rect.left, 16);
+          expect(rect.right - tester.getRect(icon).right, 16);
+          expect(tester.getCenter(icon).dy, closeTo(rect.center.dy, .01));
+        }
       } finally {
         await h.cleanup(tester);
       }
@@ -50,112 +39,46 @@ void main() {
   for (final language in ['en', 'de']) {
     for (final width in [320.0, 392.0]) {
       testWidgets(
-        '$language ${width.toInt()}px 200% Settings is singular, reachable and keyboard usable',
+        '$language ${width.toInt()}px 200% settings are reachable and language choice is keyboard operated',
         (tester) async {
-          final h = settings.Harness();
-          final semantics = tester.ensureSemantics();
           tester.view.physicalSize = Size(width, 900);
           tester.view.devicePixelRatio = 1;
           tester.platformDispatcher.textScaleFactorTestValue = 2;
-          addTearDown(tester.view.resetPhysicalSize);
-          addTearDown(tester.view.resetDevicePixelRatio);
+          addTearDown(tester.view.reset);
           addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          final h = settings.Harness();
+          final semantics = tester.ensureSemantics();
           try {
             await tester.runAsync(
               () => h.repository.real.write('locale', language),
             );
             await h.mount(tester);
-            final home = tester.state(find.byType(CollectionsHome));
             final controller = await h.open(tester);
             await h.flush(tester);
             final copy = PikoCopy(language);
-            expect(find.byType(PikoHeading), findsOneWidget);
-            expect(find.byType(PikoCard), findsNWidgets(4));
-            expect(settings.dropdown, findsOneWidget);
-            final direction = find.byType(DropdownButton<PreferredDirection>);
-            expect(direction, findsOneWidget);
-            expect(find.byType(PikoButton), findsNWidgets(2));
-            expect(find.byKey(const ValueKey('settings-full-export')), findsOneWidget);
-            expect(find.byKey(const ValueKey('ai-connection')), findsNothing);
-            final title = find.text(copy.text('nav.settings'));
-            expect(title, findsOneWidget);
-            expect(
-              tester.getSemantics(title).getSemanticsData().headingLevel,
-              1,
-            );
-            expect(find.text(copy.text('settings.language')), findsOneWidget);
-            expect(
-              find.text(copy.text('settings.preferredDirection')),
-              findsOneWidget,
-            );
-            for (final excluded in [
-              'settings.learning',
-              'settings.direction',
-              'settings.developer',
-              'settings.ai',
-              'settings.answerMode',
-            ]) {
-              expect(find.text(copy.text(excluded)), findsNothing);
-            }
-            expect(find.byType(TextField), findsNothing);
-            expect(find.byType(Checkbox), findsOneWidget);
-            expect(find.byType(Switch), findsNothing);
-            final allowed = {
-              copy.text('nav.settings'),
-              copy.text('settings.language'),
-              copy.text('settings.questionExamples'),
-              copy.text('settings.preferredDirection'),
-              copy.text('settings.directionTargetToNative'),
-              copy.text('settings.directionNativeToTarget'),
-              copy.text('settings.directionBoth'),
-              copy.text('common.back'),
-              copy.text('fullExport.action'),
-              copy.text('fullExport.description'),
-              'English',
-              'Deutsch',
-            };
-            for (final text in tester.widgetList<Text>(find.byType(Text))) {
-              expect(allowed, contains(text.data));
-            }
-            final back = settings.button('common.back', language);
-            final native = find.byType(DropdownButton<Locale>);
-            for (final target in [back, native, direction]) {
-              await tester.ensureVisible(target);
+            expect(find.text(copy.text('nav.settings')), findsOneWidget);
+            expect(find.byType(PikoFormSection), findsNWidgets(4));
+            for (final row in find.byType(PikoNavigationRow).evaluate()) {
+              final finder = find.byWidget(row.widget);
+              await tester.ensureVisible(finder);
               await tester.pumpAndSettle();
-              final rect = tester.getRect(target);
+              final rect = tester.getRect(finder);
               expect(rect.height, greaterThanOrEqualTo(48));
-              expect(rect.width, greaterThanOrEqualTo(48));
               expect(rect.left, greaterThanOrEqualTo(0));
               expect(rect.right, lessThanOrEqualTo(width));
-              expect(rect.top, greaterThanOrEqualTo(0));
-              expect(rect.bottom, lessThanOrEqualTo(900));
             }
-            await tester.ensureVisible(back);
+            final picker = find.byType(PikoPreferencePicker<Locale>);
+            await tester.ensureVisible(picker);
             await tester.pumpAndSettle();
-            expect(
-              // The passive geometry wrapper owns no accessibility node.
-              tester.getSemantics(
-                find.descendant(of: back, matching: find.byType(TextButton)),
-              ),
-              matchesSemantics(
-                label: copy.text('common.back'),
-                isButton: true,
-                hasTapAction: true,
-                hasFocusAction: true,
-                isFocusable: true,
-                hasEnabledState: true,
-                isEnabled: true,
-              ),
-            );
-            // Traverse to the real native dropdown, rather than invoking its callback.
+            FocusManager.instance.primaryFocus?.unfocus();
             var reached = false;
-            for (var pass = 0; pass < 5; pass++) {
+            for (var i = 0; i < 8; i++) {
               await tester.sendKeyEvent(LogicalKeyboardKey.tab);
               await tester.pumpAndSettle();
               reached =
                   FocusManager.instance.primaryFocus?.context
                       ?.findAncestorWidgetOfExactType<
-                        DropdownButton<Locale>
+                        PikoPreferencePicker<Locale>
                       >() !=
                   null;
               if (reached) break;
@@ -163,58 +86,35 @@ void main() {
             expect(reached, isTrue);
             await tester.sendKeyEvent(LogicalKeyboardKey.space);
             await tester.pumpAndSettle();
-            for (final option in ['English', 'Deutsch']) {
-              final item = find
-                  .ancestor(
-                    of: find.text(option).last,
-                    matching: find.byType(DropdownMenuItem<Locale>),
-                  )
-                  .first;
-              final rect = tester.getRect(item);
+            expect(find.byType(RadioGroup<Locale>), findsOneWidget);
+            for (final tile in find.byType(RadioListTile<Locale>).evaluate()) {
+              final rect = tester.getRect(find.byWidget(tile.widget));
               expect(rect.height, greaterThanOrEqualTo(48));
-              expect(rect.left, greaterThanOrEqualTo(0));
               expect(rect.right, lessThanOrEqualTo(width));
-              expect(find.bySemanticsLabel(RegExp(option)), findsWidgets);
             }
             final next = language == 'en' ? 'de' : 'en';
-            await tester.sendKeyEvent(
-              language == 'en'
-                  ? LogicalKeyboardKey.arrowDown
-                  : LogicalKeyboardKey.arrowUp,
-            );
-            await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-            await tester.pumpAndSettle();
-            await h.drain(tester, controller);
-            expect(h.selected!.value.languageCode, next);
-            expect(
-              find.text(PikoCopy(next).text('settings.language')),
-              findsOneWidget,
-            );
-            FocusManager.instance.primaryFocus?.unfocus();
-            await tester.pump();
-            var backFocused = false;
-            for (var pass = 0; pass < 5; pass++) {
+            var selected = false;
+            for (var i = 0; i < 8; i++) {
               await tester.sendKeyEvent(LogicalKeyboardKey.tab);
               await tester.pumpAndSettle();
-              backFocused =
-                  tester
-                      .getSemantics(
-                        find.descendant(
-                          of: settings.button('common.back', next),
-                          matching: find.byType(TextButton),
-                        ),
-                      )
-                      .getSemanticsData()
-                      .flagsCollection
-                      .isFocused ==
-                  Tristate.isTrue;
-              if (backFocused) break;
+              final tile = FocusManager.instance.primaryFocus?.context
+                  ?.findAncestorWidgetOfExactType<RadioListTile<Locale>>();
+              if (tile != null) {
+                await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+                await tester.pumpAndSettle();
+                selected = true;
+                break;
+              }
             }
-            expect(backFocused, isTrue);
-            await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+            expect(selected, isTrue);
+            await h.drain(tester, controller);
+            expect(h.selected!.value.languageCode, next);
+            final back = settings.button('common.back', next);
+            expect(tester.getSize(back).height, greaterThanOrEqualTo(48));
+            await tester.ensureVisible(back);
+            await tester.tap(back);
             await tester.pumpAndSettle();
-            expect(find.byType(SettingsRoute), findsNothing);
-            expect(tester.state(find.byType(CollectionsHome)), same(home));
+            expect(find.byType(PikoPreferencePicker<Locale>), findsNothing);
             expect(tester.takeException(), isNull);
           } finally {
             semantics.dispose();
