@@ -33,6 +33,7 @@ class CollectionsHome extends StatefulWidget {
     required this.repository,
     this.entrySessionFactory,
     this.interchangeBuilder,
+    this.aiBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -55,6 +56,7 @@ class CollectionsHome extends StatefulWidget {
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
+  final Widget Function(BuildContext, CollectionRecord)? aiBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -121,6 +123,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           collectionId: collection.id,
           entrySessionFactory: widget.entrySessionFactory,
           interchangeBuilder: widget.interchangeBuilder,
+          aiBuilder: widget.aiBuilder,
           reviewSessionFactory:
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,

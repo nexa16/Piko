@@ -73,6 +73,7 @@ class CollectionDetail extends StatefulWidget {
     required this.collectionId,
     this.entrySessionFactory,
     this.interchangeBuilder,
+    this.aiBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -95,6 +96,7 @@ class CollectionDetail extends StatefulWidget {
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
+  final Widget Function(BuildContext, CollectionRecord)? aiBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -554,6 +556,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           vocabularyRepository: widget.vocabularyRepository,
           onPendingVocabularyWrites: widget.onPendingVocabularyWrites,
           interchangeBuilder: widget.interchangeBuilder,
+          aiBuilder: widget.aiBuilder,
           categoriesRepository: widget.categoriesRepository,
           categoryManagementBuilder: widget.categoryManagementBuilder,
           settingsOnly: true,
@@ -683,6 +686,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               ),
                             );
                           },
+                  ),
+                ],
+              ),
+            if (widget.aiBuilder != null)
+              PikoFormSection(
+                title: copy.text('ai.title'),
+                children: [
+                  PikoNavigationRow(
+                    title: copy.text('ai.preview'),
+                    onTap: available() ? _openAi : null,
                   ),
                 ],
               ),
@@ -997,8 +1010,36 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
+  Future<void> _openAi() async {
+    final record = _currentCollection, builder = widget.aiBuilder;
+    if (record == null || builder == null || _openingEntry || _learningBusy) {
+      return;
+    }
+    final barrier = _writeBarrier, owner = _identity;
+    setState(() => _openingEntry = true);
+    barrier.freeze();
+    try {
+      await barrier.drain();
+      await _mutations?.awaitPending();
+      if (!mounted ||
+          owner != _identity ||
+          ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(builder: (context) => builder(context, record)),
+      );
+    } finally {
+      barrier.release();
+      if (mounted && owner == _identity) {
+        setState(() => _openingEntry = false);
+        widget.queryBinding?.refresh();
+      }
+    }
+  }
+
   Future<void> _openEntry() async {
-    if (widget.interchangeBuilder == null) {
+    if (widget.interchangeBuilder == null && widget.aiBuilder == null) {
       await _openManualEntry();
       return;
     }
@@ -1019,10 +1060,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 onTap: () => Navigator.of(context).pop('manual'),
               ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
-              PikoNavigationRow(
-                title: copy.text('json.importTab'),
-                onTap: () => Navigator.of(context).pop('import'),
-              ),
+              if (widget.interchangeBuilder != null)
+                PikoNavigationRow(
+                  title: copy.text('json.importTab'),
+                  onTap: () => Navigator.of(context).pop('import'),
+                ),
+              if (widget.aiBuilder != null)
+                PikoNavigationRow(
+                  title: copy.text('ai.action.generate'),
+                  onTap: () => Navigator.of(context).pop('ai'),
+                ),
             ],
           ),
         );
@@ -1031,6 +1078,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     if (method == 'manual') await _openManualEntry();
     if (method == 'import') await _openInterchange();
+    if (method == 'ai') await _openAi();
   }
 
   Future<void> _openManualEntry() async {

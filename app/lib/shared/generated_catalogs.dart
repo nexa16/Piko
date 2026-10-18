@@ -405,6 +405,234 @@ const copyCatalog = <String, Object?>{
 "en": "Speed",
 "note": "Internal mode remains speed. Public label is open; edit here to try Learn new / Intensive learning.",
 },
+"ai.action": <String, Object?>{
+"de": "Aktion",
+"en": "Action",
+},
+"ai.action.gaps": <String, Object?>{
+"de": "Lücken im Bestand finden",
+"en": "Find inventory gaps",
+},
+"ai.action.generate": <String, Object?>{
+"de": "Vokabeln erstellen",
+"en": "Generate vocabulary",
+},
+"ai.action.hints": <String, Object?>{
+"de": "Verwandte Bedeutungen unterscheiden",
+"en": "Distinguish related meanings",
+},
+"ai.action.review": <String, Object?>{
+"de": "Collection prüfen",
+"en": "Review Collection",
+},
+"ai.allowGroups": <String, Object?>{
+"de": "Vorschläge für neue Kategoriegruppen erlauben",
+"en": "Allow proposals for new category groups",
+},
+"ai.allowValues": <String, Object?>{
+"de": "Vorschläge für neue Kategoriewerte erlauben",
+"en": "Allow proposals for new category values",
+},
+"ai.applied": <String, Object?>{
+"de": "Änderungen übernommen",
+"en": "Changes adopted",
+},
+"ai.apply": <String, Object?>{
+"de": "Ausgewählte Änderungen übernehmen",
+"en": "Adopt selected changes",
+},
+"ai.comprehensive": <String, Object?>{
+"de": "Umfassender Niveauwortschatz",
+"en": "Comprehensive level vocabulary",
+},
+"ai.consent": <String, Object?>{
+"de": "AI für diesen Auftrag verwenden",
+"en": "Use AI for this request",
+},
+"ai.counts": <String, Object?>{
+"de": "{cards} neue Karten · {changes} vorgeschlagene Änderungen",
+"en": "{cards} new cards · {changes} proposed changes",
+},
+"ai.coverage": <String, Object?>{
+"de": "Bearbeitete gespeicherte Karten: {processed} von {total}",
+"en": "Processed saved cards: {processed} of {total}",
+},
+"ai.current": <String, Object?>{
+"de": "Aktuell",
+"en": "Current",
+},
+"ai.definitionDependencies": <String, Object?>{
+"de": "Bestätige neue Definitionen einzeln. Eine ausgewählte Zuordnung benötigt ihre Gruppe und ihren Wert.",
+"en": "Approve new definitions separately. A selected assignment requires its group and value.",
+},
+"ai.discard": <String, Object?>{
+"de": "Vorschläge verwerfen / Auftrag abbrechen",
+"en": "Discard proposals / cancel request",
+},
+"ai.error.accessDenied": <String, Object?>{
+"de": "Dieses Gerät hat keinen freigegebenen AI-Zugriff. Lokales Bearbeiten und Lernen bleiben verfügbar.",
+"en": "This device has no approved AI access. Local editing and learning remain available.",
+},
+"ai.error.collision": <String, Object?>{
+"de": "Die ausgewählten Änderungen würden doppelte Wort-/Hinweisidentitäten erzeugen. Nichts wurde gespeichert. Passe die Auswahl an oder bearbeite die Karten.",
+"en": "Selected changes would create duplicate word/Hint identities. Nothing was saved. Adjust your selection or edit the cards.",
+},
+"ai.error.consumed": <String, Object?>{
+"de": "Diese Vorschläge werden bereits übernommen oder wurden schon gespeichert.",
+"en": "These proposals are already being applied or have been adopted.",
+},
+"ai.error.contextLimit": <String, Object?>{
+"de": "Der vollständige benötigte Kontext passt nicht in diesen Auftrag. Nichts wurde stillschweigend ausgelassen oder gespeichert.",
+"en": "The complete required context does not fit this request. Nothing was silently omitted or saved.",
+},
+"ai.error.dependency": <String, Object?>{
+"de": "Prüfe ausgewählte Definitionen, Kategorieregeln und die Bestätigung unvollständiger Ergebnisse. Nichts wurde gespeichert.",
+"en": "Check selected definitions, category rules and partial-result approval. Nothing was saved.",
+},
+"ai.error.disabled": <String, Object?>{
+"de": "AI ist in diesem Build deaktiviert.",
+"en": "AI is disabled in this build.",
+},
+"ai.error.invalidResponse": <String, Object?>{
+"de": "Die Antwort konnte nicht validiert werden. Nichts wurde übernommen.",
+"en": "The response could not be validated. Nothing was applied.",
+},
+"ai.error.limit": <String, Object?>{
+"de": "Das freigegebene Dienst- oder Vorgangslimit wurde erreicht. Es erfolgt kein automatischer Wiederholungsversuch.",
+"en": "The admitted service or operation limit was reached. No automatic retry will run.",
+},
+"ai.error.network": <String, Object?>{
+"de": "Keine Verbindung. Deine Eingabe bleibt erhalten; ein neuer Versuch startet nur ausdrücklich.",
+"en": "No connection. Keep your input and retry explicitly when ready.",
+},
+"ai.error.stale": <String, Object?>{
+"de": "Der benötigte Inhalt hat sich geändert. Diese Vorschläge können nicht mehr übernommen werden; starte bei Bedarf einen neuen ausdrücklichen Auftrag.",
+"en": "The required content changed. These proposals can no longer be applied; start a new explicit request if needed.",
+},
+"ai.error.timeout": <String, Object?>{
+"de": "Der Auftrag hat das Zeitlimit erreicht und kann Kosten verursacht haben. Es erfolgt kein automatischer Wiederholungsversuch.",
+"en": "The request timed out and may have incurred a charge. No automatic retry will run.",
+},
+"ai.error.unavailable": <String, Object?>{
+"de": "AI ist derzeit nicht verfügbar. Eingaben und gespeicherte Daten bleiben erhalten.",
+"en": "AI is currently unavailable. Your input and saved data are retained.",
+},
+"ai.field.assignments": <String, Object?>{
+"de": "Kategorien",
+"en": "Categories",
+},
+"ai.field.examples": <String, Object?>{
+"de": "Beispiele",
+"en": "Examples",
+},
+"ai.field.hint": <String, Object?>{
+"de": "Hinweis",
+"en": "Hint",
+},
+"ai.field.native": <String, Object?>{
+"de": "Wort in der Muttersprache",
+"en": "Native word",
+},
+"ai.field.target": <String, Object?>{
+"de": "Fremdwort",
+"en": "Target word",
+},
+"ai.goal": <String, Object?>{
+"de": "Thema, Niveau oder Lernkontext (bei Lücken/Prüfung optional)",
+"en": "Topic, level or learning context (optional for gaps/review)",
+},
+"ai.hintScope": <String, Object?>{
+"de": "Wähle die Karten für Hinweise. Alle direkt verwandten Bedeutungen bleiben Vergleichskontext.",
+"en": "Choose which related cards need Hints. All directly related meanings remain comparison context.",
+},
+"ai.mode.multiple": <String, Object?>{
+"de": "Mehrere Werte",
+"en": "Multiple values",
+},
+"ai.mode.single": <String, Object?>{
+"de": "Ein Wert",
+"en": "One value",
+},
+"ai.newGroup": <String, Object?>{
+"de": "Neue Kategoriegruppe",
+"en": "New category group",
+},
+"ai.newValue": <String, Object?>{
+"de": "Neuer Kategoriewert",
+"en": "New category value",
+},
+"ai.noHint": <String, Object?>{
+"de": "Kein Hinweis",
+"en": "No Hint",
+},
+"ai.outcome.change": <String, Object?>{
+"de": "Vorgeschlagene Korrektur",
+"en": "Proposed correction",
+},
+"ai.outcome.keep": <String, Object?>{
+"de": "Aktuellen Inhalt behalten",
+"en": "Keep current content",
+},
+"ai.outcome.noHintNeeded": <String, Object?>{
+"de": "Kein Hinweis nötig",
+"en": "No Hint needed",
+},
+"ai.outcome.requiresNewMeaning": <String, Object?>{
+"de": "Andere Bedeutung: bisheriger Lernstand darf nicht übernommen werden",
+"en": "Different meaning: existing learning cannot be reused",
+},
+"ai.outcome.unresolved": <String, Object?>{
+"de": "Ungeklärte Bedeutung",
+"en": "Unresolved meaning",
+},
+"ai.partialConsent": <String, Object?>{
+"de": "Ausgewählte Vorschläge dieses ausdrücklich unvollständigen Ergebnisses übernehmen",
+"en": "Adopt selected proposals from this explicitly partial result",
+},
+"ai.preview": <String, Object?>{
+"de": "Vorschläge prüfen",
+"en": "Review proposals",
+},
+"ai.privacy": <String, Object?>{
+"de": "Ein ausdrücklicher Auftrag sendet den benötigten Vokabel- und Kategoriekontext dieser Collection an den Piko-AI-Dienst und OpenAI. Lernverlauf, Statistik und andere Collections bleiben auf diesem Gerät. Piko führt keinen zusätzlichen Prompt-/Antwortverlauf. Es gilt die übliche Anbieterverarbeitung; eine Speicherung von null Tagen wird nicht zugesagt. Lokales Bearbeiten und Lernen funktionieren ohne AI.",
+"en": "An explicit request sends this Collection’s required vocabulary and category context to the Piko AI service and OpenAI. Learning history, statistics and other Collections stay on this device. Piko does not keep a separate prompt/result history. Standard provider processing applies; zero retention is not promised. Local editing and learning work without AI.",
+},
+"ai.privacyTitle": <String, Object?>{
+"de": "Optionaler AI-Zugriff",
+"en": "Optional AI access",
+},
+"ai.proposed": <String, Object?>{
+"de": "Vorgeschlagen",
+"en": "Proposed",
+},
+"ai.request": <String, Object?>{
+"de": "Auftrag",
+"en": "Request",
+},
+"ai.requesting": <String, Object?>{
+"de": "Wird erstellt …",
+"en": "Generating…",
+},
+"ai.reviewReminder": <String, Object?>{
+"de": "Prüfe Bedeutungen, Beispiele und Abdeckung. Eine gültige Struktur bestätigt weder Sprachqualität noch Vollständigkeit. Nichts wird automatisch ausgewählt.",
+"en": "Check meanings, examples and coverage yourself. Format validation does not verify language quality or completeness. Nothing is selected automatically.",
+},
+"ai.stage": <String, Object?>{
+"de": "Ausgewählte Hinweise mit dieser Karte speichern",
+"en": "Use selected Hints when saving this card",
+},
+"ai.start": <String, Object?>{
+"de": "Vorschläge erstellen",
+"en": "Generate proposals",
+},
+"ai.title": <String, Object?>{
+"de": "AI-Vokabeln",
+"en": "AI vocabulary",
+},
+"ai.unavailableClassification": <String, Object?>{
+"de": "Nicht verfügbare Zuordnung",
+"en": "Unavailable classification",
+},
 "app.name": <String, Object?>{
 "de": "Piko",
 "en": "Piko",
