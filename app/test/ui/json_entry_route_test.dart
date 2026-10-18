@@ -68,6 +68,7 @@ void main() {
           final input = find.byKey(const ValueKey('json-input'));
           await tester.enterText(input, '  incomplete raw JSON  ');
           await pressJson(tester, 'json.expandInput', language: language);
+          await pressJson(tester,'json.analyze',language:language);
           final group = find.byKey(const ValueKey('json-group-example'));
           await tester.ensureVisible(group);
           await tester.tap(group);
@@ -99,11 +100,11 @@ void main() {
           expect(tester.widget<CheckboxListTile>(group).value, isFalse);
           platform.file = jsonEncode({
             'format': 'piko-vocabulary',
-            'schemaVersion': 3,
+            'schemaVersion': 5,
             'collections': [
               {
-                'targetLanguage': 'fr',
-                'nativeLanguage': 'de',
+                'targetLanguage': {'kind':'catalog','id':'fr'},
+                'nativeLanguage': {'kind':'catalog','id':'de'},
                 'entries': [
                   {'targetText': 'One', 'nativeText': 'Eins'},
                 ],

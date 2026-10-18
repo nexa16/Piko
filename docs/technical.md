@@ -1,6 +1,6 @@
 # Technical reference
 
-This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented application build, including statistics, schema 19, category ordering/carry-over and Speed preservation. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented application build, including statistics; current storage uses schema 20 with immutable language metadata and meaning-aware identity, alongside category ordering/carry-over and Speed preservation. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
@@ -42,11 +42,11 @@ The documented capture APK remains identified by its manifest; newer UI changes 
 <a id="storage"></a>
 ## Storage and migrations
 
-Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **19**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
+Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **20**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
 
 | Stored area | Responsibility |
 | --- | --- |
-| Collections | UUID, name and target/native language codes. |
+| Collections | UUID, name, stable target/native language IDs and nullable exact custom display names. |
 | Vocabulary | UUID, Collection ownership, canonical text/comparison keys, stable order, optional added time, activity and hint content/visibility. |
 | Examples/categories | Ordered example pairs; Collection-owned dimensions/values and word assignments. |
 | Learning | Two directional items per word, serialized FSRS cards, generation/revision guards and Speed completion. |
@@ -57,18 +57,18 @@ Upgrades run additive/backfill steps appropriate to the starting schema, inside 
 
 Saved editors serialize admitted writes, retain invalid raw drafts for correction, and distinguish validation from persistence errors. Pending writes are drained at relevant navigation/learning boundaries. Deletion and Undo use ownership/conflict checks; restoration cannot overwrite unrelated edits. Do not manipulate allocator high-water marks or infer preservation from a newly created empty database. Android preservation and termination protocols are in [developer setup](development.md#android-verification).
 
-Sources: [`PikoDatabase` and migrations](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_vocabulary_repository.dart).
+Sources: [`PikoDatabase` and migrations](../app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](../app/lib/data/local/sqlite_vocabulary_repository.dart).
 
 <a id="vocabulary"></a>
 ## Vocabulary identity and content
 
-Vocabulary display text is NFC-normalized and trimmed at its ends. Comparison keys additionally use locale-independent lowercase, without full Unicode case folding: `ß` remains different from `ss`. Internal spacing, punctuation and accents are not folded away. The final target/native pair must be unique within a Collection, including batch-update results. Stable UUIDs identify records independently of editable text.
+Vocabulary display text is NFC-normalized and trimmed at its ends, preserving internal spacing and case. Identity keys additionally collapse every run of Unicode White_Space to one space and lowercase without full case folding: `ẞ` equals `ß`, while `ß` remains different from `ss`. Punctuation, accents and compatibility characters remain significant. The final target/native/Hint tuple must be unique within a Collection; missing/blank Hint uses an empty key. UUIDs remain identity. Search, sorting and answer comparison keep their independent normalization contracts. New meanings receive separate fresh learning; editing an existing Hint preserves learning. Schema 20 preflights new collisions before rebuilding the vocabulary table with original rowids, all dependent rows and complete learning intact. A collision rolls back the upgrade and reports that resolution is required; nothing is deleted or merged.
 
 A vocabulary entry has two learning directions. Editing words, examples, hints or categories retains that identity and its learning state. Independent `active` state gates both directions and Speed eligibility; it is not a derived readiness/mastery level.
 
 Example pairs preserve order and require both sides when nonempty; each side is capped at 1,000 characters. A hint is capped at 2,000 and has `always`/`hidden` visibility. Collection Hint defaults apply to new content rather than rewriting existing entries. Added timestamps for legacy entries may be unknown; the app does not synthesize historical creation dates.
 
-Sources: [`normalization`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
+Sources: [`normalization`](../app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
 
 <a id="queries"></a>
 ## Queries, categories and selection
@@ -137,16 +137,16 @@ Sources: [statistics repository](../app/lib/data/local/sqlite_statistics_reposit
 
 | Contract | Implemented behavior |
 | --- | --- |
-| Envelope | `format: "piko-vocabulary"`; export `schemaVersion: 4`; import versions 1–4; exactly one Collection with a matching language pair. |
+| Envelope | `format: "piko-vocabulary"`; export/import `schemaVersion: 5` only; exactly one Collection with a matching language pair. |
 | Limits | 1,000,000 UTF-8 bytes; bounded entries/content and type/identity validation. |
 | Export | Collection, category definitions/assignments, entries, examples, hint, activity, added date and associated directional learning/review/retry data. Scheduler metadata identifies card compatibility. |
 | Import | Selected target/native/category/example/hint/activity groups; omitted or unselected existing content is retained. Imported learning is ignored. New words receive fresh learning state and default activity/Hint behavior where omitted. |
-| Identity | Existing owned UUIDs select updates; foreign/duplicate IDs and final duplicate word pairs fail validation. Collection metadata does not replace the destination. |
+| Identity | Existing owned UUIDs select updates; foreign/duplicate IDs and final duplicate word-pair/Hint tuples fail validation using effective selected content. Collection metadata does not replace the destination. |
 | Apply | Confirmation follows analysis. Authoritative stale-preview and one-shot guards precede an atomic transaction; no partial batch on failure. |
 
-The in-app example generator produces synthetic structure for the destination language pair. Use it as the shape reference rather than inventing a second independently maintained JSON example. Collection export is not whole-app backup and import is not progress restoration. Schema-4 Activity is independent of learning. Unknown source versions and malformed data must be corrected before apply; the UI's row/path feedback identifies the affected location.
+The in-app example generator produces synthetic structure for the destination language pair. Use it as the shape reference rather than inventing a second independently maintained JSON example. Collection export is not whole-app backup and import is not progress restoration. Activity is independent of learning. Language fields use `{kind: "catalog", id: "pt-BR"}` or `{kind: "custom", id: "custom:<UUID>", name: "exact name"}`. Unknown identities, missing names and catalog/custom mismatches fail before writes; immutable destination language metadata is never replaced. See [wire changes and manual conversion](json-format.md). Unknown source versions and malformed data must be corrected before apply; the UI's row/path feedback identifies the affected location.
 
-The global export uses a separate `piko.full-export` envelope with `schemaVersion: 1`, `collectionSchemaVersion: 4`, UTC `exportedAt`, scheduler metadata, `collections` and `statistics`. `SqliteFullExportService` wraps the shared Collection payload builder and a non-initializing statistics read in one transaction. No globals, local category preferences, paths, raw logs or statistics identity rows are included. The Collection importer rejects this envelope even when it contains only one Collection; arbitrary statistics fields on supported Collection imports have no effect.
+The global export uses a separate `piko.full-export` envelope with `schemaVersion: 1`, `collectionSchemaVersion: 5`, UTC `exportedAt`, scheduler metadata, `collections` and `statistics`. `SqliteFullExportService` wraps the shared Collection payload builder and a non-initializing statistics read in one transaction. No globals, local category preferences, paths, raw logs or statistics identity rows are included. The Collection importer rejects this envelope even when it contains only one Collection; arbitrary statistics fields on supported Collection imports have no effect.
 
 The statistics block is `null` before storage initialization. Otherwise its version-1 fields are `recordedSinceUtc`, `recordedSinceLearningDate`, `snapshotLearningDate`, `boundaryLocalTime: "04:00"`, `dayAssignment: "recordedLocalDate"`, `coverageRanges`, `partialLearningDates` and `dailyCounts`. Inclusive `{firstDate, lastDate}` ranges contain fully covered dates after initialization and before the current day. The initialization/current day and recorded earlier or future buckets are partial; unavailable gaps are not filled. Ascending daily rows contain `learningDate`, `longTermReviews` and `speedCompletions`, including all retained future-assigned dates. Known zero dates may be omitted because coverage remains explicit. No 30-day export cutoff or full-import/restore operation exists.
 
@@ -157,7 +157,7 @@ Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/1f5089aac
 <a id="resources"></a>
 ## Shared resources
 
-`shared/copy.js` owns EN/DE labels and matching placeholders; `shared/design-config.js` owns semantic colors, typography, spacing and reusable component configuration. The generator validates and emits the Flutter catalog and byte-identical icon adapters. Generated files are tracked outputs, not independent editable defaults.
+`shared/languages.js` owns stable language catalog metadata; its generated adapter and `shared/copy.js` supply all 128 choices. `shared/copy.js` owns EN/DE labels and matching placeholders; `shared/design-config.js` owns semantic colors, typography, spacing and reusable component configuration. The generator validates and emits the Flutter catalog and byte-identical icon adapters. Generated files are tracked outputs, not independent editable defaults.
 
 Lucide SVG source and notices live in `mockups/assets/icons/lucide`; the app packages generated copies under its own assets directory. Nunito Sans and Korean fallback font assets and their notices are bundled offline. Original artwork and Android system UI have their own appearance; historical mockups are not product screenshot evidence. The Android release configuration currently uses debug signing and is not a store-ready signing setup.
 

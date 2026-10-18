@@ -1,3 +1,4 @@
+import 'package:piko/data/collections_repository.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
@@ -124,7 +125,7 @@ void main() {
           [
             {'id': f.entry.id, ...fields},
           ],
-          envelope: {'schemaVersion': 3},
+          envelope: {'schemaVersion': 5},
         ),
         groups: groups,
       );
@@ -172,8 +173,8 @@ void main() {
         expect((await completeSnapshot(f.db))[table], before[table]);
       }
       final minimal = VocabularyJsonFormat.minimalSample(
-        targetLanguage: 'fr',
-        nativeLanguage: 'de',
+        targetLanguage: VocabularyLanguage.french,
+        nativeLanguage: VocabularyLanguage.german,
       );
       expect(minimal, isNot(contains('learning')));
       expect(minimal, isNot(contains('addedAt')));
@@ -218,9 +219,10 @@ void main() {
             if (table.key == 'collections') {
               row.remove('automatic_hint_default');
               row.remove('hint_default_offer_handled');
+              row.remove('target_language_name');row.remove('native_language_name');
             }
             if (table.key == 'vocabulary_entries') {
-              row.remove('active');
+              row.remove('active');row.remove('hint_key');
               row.remove('added_at');
               row['example_target_text'] = 'Premier.';
               row['example_native_text'] = 'Erster.';

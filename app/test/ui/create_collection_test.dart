@@ -62,9 +62,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Enter a collection name.'), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'Name');
-      await tester.tap(find.byType(DropdownButton<VocabularyLanguage>).last);
+      await tester.ensureVisible(find.byKey(const ValueKey('collection.nativeLanguage')));
+      await tester.tap(find.byKey(const ValueKey('collection.nativeLanguage')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Korean').last);
+      await tester.enterText(find.byType(TextField).last,'Korean'); await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('language-ko')));
+      await tester.tap(find.byKey(const ValueKey('language-ko')));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Create collection'));
       await tester.tap(find.text('Create collection'));
@@ -103,9 +106,11 @@ void main() {
       await tester.tap(find.text('Neu'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '  Meine Sammlung  ');
-      await tester.tap(find.byType(DropdownButton<VocabularyLanguage>).first);
+      await tester.tap(find.byKey(const ValueKey('collection.targetLanguage')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Französisch').last);
+      await tester.enterText(find.byType(TextField).last,'Französisch');await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('language-fr')));
+      await tester.tap(find.byKey(const ValueKey('language-fr')));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Sammlung erstellen'));
       await tester.tap(find.text('Sammlung erstellen'));

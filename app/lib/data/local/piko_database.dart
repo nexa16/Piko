@@ -22,6 +22,8 @@ class Collections extends Table {
   TextColumn get name => text()();
   TextColumn get targetLanguage => text()();
   TextColumn get nativeLanguage => text()();
+  TextColumn get targetLanguageName => text().nullable()();
+  TextColumn get nativeLanguageName => text().nullable()();
   BoolColumn get automaticHintDefault =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get hintDefaultOfferHandled =>
@@ -41,6 +43,7 @@ class VocabularyEntries extends Table {
   TextColumn get nativeText => text()();
   TextColumn get targetKey => text()();
   TextColumn get nativeKey => text()();
+  TextColumn get hintKey => text().withDefault(const Constant(''))();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
   TextColumn get exampleTargetText => text().nullable().check(
     const CustomExpression<bool>(
@@ -73,7 +76,7 @@ class VocabularyEntries extends Table {
   List<String> get customConstraints => [
     'CHECK(length(trim(target_text)) > 0)',
     'CHECK(length(trim(native_text)) > 0)',
-    'UNIQUE(collection_id, target_key, native_key)',
+    'UNIQUE(collection_id, target_key, native_key, hint_key)',
   ];
 }
 
@@ -315,7 +318,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -436,6 +439,11 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createIndex(statisticsActivityDate);
         }
         if (from < 18) await m.createTable(categoryGroupPreferences);
+        if (from < 20 && from >= 2) {
+          await m.addColumn(collections, collections.targetLanguageName);
+          await m.addColumn(collections, collections.nativeLanguageName);
+        }
+        if (from < 20 && from >= 4) await _upgradeVocabularySenseKeys(m);
         if (from == 18) {
           await m.addColumn(
             categoryGroupPreferences,
@@ -504,6 +512,56 @@ class PikoDatabase extends _$PikoDatabase {
         }
       });
 
+  Future<void> _upgradeVocabularySenseKeys(Migrator migrator) async {
+    final rows = await customSelect(
+      'SELECT rowid AS original_rowid, * FROM vocabulary_entries ORDER BY rowid',
+    ).get();
+    final keys = <(String, String, String, String)>{};
+    for (final row in rows) {
+      if (!keys.add((
+        row.read<String>('collection_id'),
+        vocabularyIdentityKey(row.read<String>('target_text')),
+        vocabularyIdentityKey(row.read<String>('native_text')),
+        vocabularyIdentityKey(row.readNullable<String>('hint_text')),
+      ))) {
+        throw const VocabularyMigrationCollision();
+      }
+    }
+    // Foreign keys are enabled only in beforeOpen. Rebuild with original rowids
+    // and all columns, then validate every dependent table before committing.
+    await migrator.createTable(
+      vocabularyEntries.createAlias('vocabulary_entries_v20'),
+    );
+    for (final row in rows) {
+      final fields = Map<String, Object?>.of(row.data)
+        ..remove('original_rowid');
+      fields['target_key'] = vocabularyIdentityKey(
+        fields['target_text'] as String,
+      );
+      fields['native_key'] = vocabularyIdentityKey(
+        fields['native_text'] as String,
+      );
+      fields['hint_key'] = vocabularyIdentityKey(
+        fields['hint_text'] as String?,
+      );
+      final names = ['rowid', ...fields.keys];
+      await customStatement(
+        'INSERT INTO vocabulary_entries_v20 (${names.join(',')}) VALUES (${List.filled(names.length, '?').join(',')})',
+        [row.read<int>('original_rowid'), ...fields.values],
+      );
+    }
+    await customStatement('DROP TABLE vocabulary_entries');
+    await customStatement(
+      'ALTER TABLE vocabulary_entries_v20 RENAME TO vocabulary_entries',
+    );
+    await _createVocabularyOwnershipIndex();
+    if ((await customSelect('PRAGMA foreign_key_check').get()).isNotEmpty) {
+      throw StateError(
+        'Vocabulary sense migration failed foreign-key validation',
+      );
+    }
+  }
+
   Future<void> _upgradeVocabularyKeys(Migrator migrator) async {
     // Read the old structure explicitly: the v4 generated mapper needs keys.
     final rows = await customSelect(
@@ -513,8 +571,8 @@ class PikoDatabase extends _$PikoDatabase {
     for (final row in rows) {
       final key = (
         row.read<String>('collection_id'),
-        vocabularyComparisonKey(row.read<String>('target_text')),
-        vocabularyComparisonKey(row.read<String>('native_text')),
+        vocabularyIdentityKey(row.read<String>('target_text')),
+        vocabularyIdentityKey(row.read<String>('native_text')),
       );
       if (!keys.add(key)) throw const VocabularyMigrationCollision();
     }
@@ -532,8 +590,8 @@ class PikoDatabase extends _$PikoDatabase {
           row.read<String>('collection_id'),
           target,
           native,
-          vocabularyComparisonKey(target),
-          vocabularyComparisonKey(native),
+          vocabularyIdentityKey(target),
+          vocabularyIdentityKey(native),
         ],
       );
     }
@@ -550,5 +608,6 @@ class PikoDatabase extends _$PikoDatabase {
 final class VocabularyMigrationCollision implements Exception {
   const VocabularyMigrationCollision();
   @override
-  String toString() => 'Vocabulary migration found duplicate normalized pairs.';
+  String toString() =>
+      'Vocabulary migration blocked: duplicate word pair and Hint after whitespace normalization. Source data is unchanged.';
 }

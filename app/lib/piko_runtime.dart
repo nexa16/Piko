@@ -351,6 +351,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
                 copy.text(
                   binding.error == null
                       ? 'settings.loading'
+                      : binding.error is VocabularyMigrationCollision
+                      ? 'storage.migrationCollision'
                       : 'settings.loadFailed',
                 ),
               ),

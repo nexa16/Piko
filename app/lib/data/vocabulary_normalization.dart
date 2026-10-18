@@ -18,3 +18,11 @@ int compareVocabularyLabels(String a, String b) {
   }
   return left.length.compareTo(right.length);
 }
+
+/// Identity only: search/sort/answer normalization retains its own contract.
+final _identityWhitespace = RegExp(
+  r'[\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+',
+);
+String vocabularyIdentityKey(String? text) => unorm.nfc(
+  (text ?? '').replaceAll(_identityWhitespace, ' ').trim().toLowerCase(),
+);

@@ -66,9 +66,8 @@ class SavedVocabularyEditor extends StatelessWidget {
     void register() => onPendingWrites?.call(edits.awaitSavedEdits());
     Widget field(bool first) => PikoTextField(
       key: ValueKey('inline-${edits.entryId}-${first ? 'target' : 'native'}'),
-      label: copy.text(
-        (first ? collection.targetLanguage : collection.nativeLanguage).copyKey,
-      ),
+      label: (first ? collection.targetLanguage : collection.nativeLanguage)
+          .label(copy.locale),
       controller: first ? target : native,
       focusNode: first ? targetFocus : nativeFocus,
       enabled: !busy,
@@ -150,8 +149,8 @@ class SavedVocabularyEditor extends StatelessWidget {
               final drain = edits.trackPreferenceWrite(operation);
               onPendingWrites?.call(drain);
             },
-            targetLanguage: copy.text(collection.targetLanguage.copyKey),
-            nativeLanguage: copy.text(collection.nativeLanguage.copyKey),
+            targetLanguage: collection.targetLanguage.label(copy.locale),
+            nativeLanguage: collection.nativeLanguage.label(copy.locale),
             onChanged: (value, _) {
               if (admitted()) {
                 edits.setContent(value);

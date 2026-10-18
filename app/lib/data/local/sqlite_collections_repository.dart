@@ -55,11 +55,13 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
   CollectionRecord _record(Collection row) => CollectionRecord(
     id: row.id,
     name: row.name,
-    targetLanguage: VocabularyLanguage.values.singleWhere(
-      (v) => v.code == row.targetLanguage,
+    targetLanguage: VocabularyLanguage.stored(
+      row.targetLanguage,
+      row.targetLanguageName,
     ),
-    nativeLanguage: VocabularyLanguage.values.singleWhere(
-      (v) => v.code == row.nativeLanguage,
+    nativeLanguage: VocabularyLanguage.stored(
+      row.nativeLanguage,
+      row.nativeLanguageName,
     ),
   );
 
@@ -86,7 +88,7 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw CollectionValidation.requiredName;
-    if (targetLanguage == nativeLanguage) {
+    if (targetLanguage.matches(nativeLanguage)) {
       throw CollectionValidation.sameLanguage;
     }
     final id = const Uuid().v4();
@@ -98,6 +100,8 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
             name: trimmed,
             targetLanguage: targetLanguage.code,
             nativeLanguage: nativeLanguage.code,
+            targetLanguageName: Value(targetLanguage.customName),
+            nativeLanguageName: Value(nativeLanguage.customName),
           ),
         );
     return CollectionRecord(

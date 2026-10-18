@@ -132,12 +132,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
       issue(VocabularyJsonIssueCode.unsupportedFormat, 'format');
     }
     if (decoded['schemaVersion'] is! int ||
-        ![
-          1,
-          2,
-          3,
-          VocabularyJsonFormat.schemaVersion,
-        ].contains(decoded['schemaVersion'])) {
+        decoded['schemaVersion'] != VocabularyJsonFormat.schemaVersion) {
       issue(VocabularyJsonIssueCode.unsupportedVersion, 'schemaVersion');
     }
     final collections = decoded['collections'];
@@ -301,8 +296,24 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         ]),
       ),
     ]);
-    if (source['targetLanguage'] != owner.targetLanguage ||
-        source['nativeLanguage'] != owner.nativeLanguage) {
+    try {
+      final target = VocabularyLanguage.fromJson(source['targetLanguage']);
+      final native = VocabularyLanguage.fromJson(source['nativeLanguage']);
+      if (!target.matches(
+            VocabularyLanguage.stored(
+              owner.targetLanguage,
+              owner.targetLanguageName,
+            ),
+          ) ||
+          !native.matches(
+            VocabularyLanguage.stored(
+              owner.nativeLanguage,
+              owner.nativeLanguageName,
+            ),
+          )) {
+        issue(VocabularyJsonIssueCode.languageMismatch, 'collections[0]');
+      }
+    } on FormatException {
       issue(VocabularyJsonIssueCode.languageMismatch, 'collections[0]');
     }
     final exampleStore = SqliteVocabularyContent(database);
@@ -447,8 +458,9 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
     final finalPairs = {
       for (final entry in existing.values)
         entry.id: (
-          vocabularyComparisonKey(entry.targetText),
-          vocabularyComparisonKey(entry.nativeText),
+          vocabularyIdentityKey(entry.targetText),
+          vocabularyIdentityKey(entry.nativeText),
+          vocabularyIdentityKey(entry.hintText),
         ),
     };
     for (var index = 0; index < request.entries.length; index++) {
@@ -765,8 +777,9 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         }
       }
       finalPairs[id] = (
-        vocabularyComparisonKey(target),
-        vocabularyComparisonKey(native),
+        vocabularyIdentityKey(target),
+        vocabularyIdentityKey(native),
+        vocabularyIdentityKey(content.hintText),
       );
       if (issues.length != startIssues ||
           request.issues.any((issue) => issue.row == rowNumber)) {
@@ -818,7 +831,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         {'hintVisibilityDefault': defaultVisibility.name},
       ]);
     }
-    final pairOwners = <(String, String), String>{};
+    final pairOwners = <(String, String, String), String>{};
     final collisions = <String>{};
     for (final entry in finalPairs.entries) {
       final prior = pairOwners[entry.value];
@@ -916,25 +929,27 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           );
         }
         final changedTexts = <_EntryChange>[];
-        final occupied = <(String, String)>{};
+        final occupied = <(String, String, String)>{};
         for (final row
             in await (database.select(database.vocabularyEntries)..where(
                   (row) => row.collectionId.equals(preview.collectionId),
                 ))
                 .get()) {
-          occupied.add((row.targetKey, row.nativeKey));
+          occupied.add((row.targetKey, row.nativeKey, row.hintKey));
         }
         for (final entry in current.entries) {
           occupied.add((
-            vocabularyComparisonKey(entry.target),
-            vocabularyComparisonKey(entry.native),
+            vocabularyIdentityKey(entry.target),
+            vocabularyIdentityKey(entry.native),
+            vocabularyIdentityKey(entry.content.hintText),
           ));
           if (entry.isNew || !entry.changed) continue;
           final stored = await (database.select(
             database.vocabularyEntries,
           )..where((row) => row.id.equals(entry.id))).getSingle();
           if (stored.targetText != entry.target ||
-              stored.nativeText != entry.native) {
+              stored.nativeText != entry.native ||
+              stored.hintKey != vocabularyIdentityKey(entry.content.hintText)) {
             changedTexts.add(entry);
           }
         }
@@ -942,10 +957,10 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
         // so complete final-state swaps never delete/recreate vocabulary rows.
         for (final entry in changedTexts) {
           var token = const Uuid().v4();
-          while (occupied.contains((token, token))) {
+          while (occupied.contains((token, token, token))) {
             token = const Uuid().v4();
           }
-          occupied.add((token, token));
+          occupied.add((token, token, token));
           final count =
               await (database.update(
                 database.vocabularyEntries,
@@ -953,6 +968,7 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                 VocabularyEntriesCompanion(
                   targetKey: Value(token),
                   nativeKey: Value(token),
+                  hintKey: Value(token),
                 ),
               );
           if (count != 1) {
@@ -963,15 +979,16 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
           if (entry.isNew) {
             final rowId = await database.allocateVocabularyRowId();
             await database.customInsert(
-              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,hint_text,hint_visibility,added_at,active) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+              'INSERT INTO vocabulary_entries(rowid,id,collection_id,target_text,native_text,target_key,native_key,hint_key,hint_text,hint_visibility,added_at,active) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
               variables: [
                 Variable(rowId),
                 Variable(entry.id),
                 Variable(preview.collectionId),
                 Variable(entry.target),
                 Variable(entry.native),
-                Variable(vocabularyComparisonKey(entry.target)),
-                Variable(vocabularyComparisonKey(entry.native)),
+                Variable(vocabularyIdentityKey(entry.target)),
+                Variable(vocabularyIdentityKey(entry.native)),
+                Variable(vocabularyIdentityKey(entry.content.hintText)),
 
                 Variable<String>(entry.content.hintText),
                 Variable(entry.content.hintVisibility.name),
@@ -989,8 +1006,11 @@ extension _VocabularyJsonImport on SqliteVocabularyJsonService {
                   VocabularyEntriesCompanion(
                     targetText: Value(entry.target),
                     nativeText: Value(entry.native),
-                    targetKey: Value(vocabularyComparisonKey(entry.target)),
-                    nativeKey: Value(vocabularyComparisonKey(entry.native)),
+                    targetKey: Value(vocabularyIdentityKey(entry.target)),
+                    nativeKey: Value(vocabularyIdentityKey(entry.native)),
+                    hintKey: Value(
+                      vocabularyIdentityKey(entry.content.hintText),
+                    ),
 
                     active: Value(entry.active),
                     hintText: Value(entry.content.hintText),

@@ -1074,8 +1074,8 @@ const copyCatalog = <String, Object?>{
 "en": "Upload image or PDF",
 },
 "json.activityHelp": <String, Object?>{
-"de": "Der Aktivitätsstatus ersetzt die Einstellung Aktiv oder Inaktiv, wenn sie angegeben ist. Fehlt sie oder ist sie nicht ausgewählt, behalten vorhandene Vokabeln ihre Einstellung und neue sind aktiv. Für ältere Dateien gelten dieselben Standards.",
-"en": "Activity replaces a word’s Active or Inactive setting when supplied. If omitted or not selected, existing words keep their setting and new words are Active. Older files keep the same defaults.",
+"de": "Der Aktivitätsstatus ersetzt die Einstellung Aktiv oder Inaktiv, wenn sie angegeben ist. Fehlt sie oder ist sie nicht ausgewählt, behalten vorhandene Vokabeln ihre Einstellung und neue sind aktiv.",
+"en": "Activity replaces a word’s Active or Inactive setting when supplied. If omitted or not selected, existing words keep their setting and new words are Active.",
 },
 "json.analyze": <String, Object?>{
 "de": "JSON prüfen",
@@ -1273,21 +1273,573 @@ const copyCatalog = <String, Object?>{
 "de": "Wird verarbeitet…",
 "en": "Working…",
 },
+"language.am": <String, Object?>{
+"de": "Amharisch",
+"en": "Amharic",
+},
+"language.ambiguous": <String, Object?>{
+"de": "Wähle die passende Sprache aus der Liste.",
+"en": "Choose the matching language from the list.",
+},
+"language.ar": <String, Object?>{
+"de": "Arabisch",
+"en": "Arabic",
+},
+"language.arabic-levantine": <String, Object?>{
+"de": "Arabisch (Levantinisch)",
+"en": "Arabic (Levantine)",
+},
+"language.arz": <String, Object?>{
+"de": "Arabisch (Ägyptisch)",
+"en": "Arabic (Egyptian)",
+},
+"language.as": <String, Object?>{
+"de": "Assamesisch",
+"en": "Assamese",
+},
+"language.ay": <String, Object?>{
+"de": "Aymara",
+"en": "Aymara",
+},
+"language.az": <String, Object?>{
+"de": "Aserbaidschanisch",
+"en": "Azerbaijani",
+},
+"language.backToSearch": <String, Object?>{
+"de": "Zurück zur Sprachauswahl",
+"en": "Back to language search",
+},
+"language.be": <String, Object?>{
+"de": "Belarussisch",
+"en": "Belarusian",
+},
+"language.bg": <String, Object?>{
+"de": "Bulgarisch",
+"en": "Bulgarian",
+},
+"language.bho": <String, Object?>{
+"de": "Bhodschpuri",
+"en": "Bhojpuri",
+},
+"language.bm": <String, Object?>{
+"de": "Bambara",
+"en": "Bambara",
+},
+"language.bn": <String, Object?>{
+"de": "Bengalisch",
+"en": "Bangla",
+},
+"language.bo": <String, Object?>{
+"de": "Tibetisch",
+"en": "Tibetan",
+},
+"language.br": <String, Object?>{
+"de": "Bretonisch",
+"en": "Breton",
+},
+"language.bs": <String, Object?>{
+"de": "Bosnisch",
+"en": "Bosnian",
+},
+"language.ca": <String, Object?>{
+"de": "Katalanisch",
+"en": "Catalan",
+},
+"language.ceb": <String, Object?>{
+"de": "Cebuano",
+"en": "Cebuano",
+},
+"language.chinese": <String, Object?>{
+"de": "Mandarin",
+"en": "Mandarin",
+},
+"language.chooseNative": <String, Object?>{
+"de": "Muttersprache wählen",
+"en": "Choose native language",
+},
+"language.chooseTarget": <String, Object?>{
+"de": "Zielsprache wählen",
+"en": "Choose target language",
+},
+"language.co": <String, Object?>{
+"de": "Korsisch",
+"en": "Corsican",
+},
+"language.cr": <String, Object?>{
+"de": "Cree",
+"en": "Cree",
+},
+"language.cs": <String, Object?>{
+"de": "Tschechisch",
+"en": "Czech",
+},
+"language.custom": <String, Object?>{
+"de": "Eigene Sprache hinzufügen",
+"en": "Add your own language",
+},
+"language.customDescription": <String, Object?>{
+"de": "Für einen Dialekt oder eine fehlende Sprache",
+"en": "For a dialect or a language not listed",
+},
+"language.customHint": <String, Object?>{
+"de": "Piko verwendet den Namen als Bezeichnung und prüft die Vokabeln nicht.",
+"en": "Piko uses this as a label. It does not verify the vocabulary.",
+},
+"language.customPrompt": <String, Object?>{
+"de": "Name eingeben, zum Beispiel Bairisch",
+"en": "Enter a name, for example Bavarian",
+},
+"language.customRequired": <String, Object?>{
+"de": "Gib einen Sprachnamen ein.",
+"en": "Enter a language name.",
+},
+"language.customSave": <String, Object?>{
+"de": "Sprache hinzufügen",
+"en": "Add language",
+},
+"language.customTitle": <String, Object?>{
+"de": "Sprache benennen",
+"en": "Name your language",
+},
+"language.cv": <String, Object?>{
+"de": "Tschuwaschisch",
+"en": "Chuvash",
+},
+"language.cy": <String, Object?>{
+"de": "Walisisch",
+"en": "Welsh",
+},
+"language.da": <String, Object?>{
+"de": "Dänisch",
+"en": "Danish",
+},
+"language.el": <String, Object?>{
+"de": "Griechisch",
+"en": "Greek",
+},
 "language.english": <String, Object?>{
 "de": "Englisch",
 "en": "English",
+},
+"language.es-ES": <String, Object?>{
+"de": "Spanisch (Spanien)",
+"en": "Spanish (Spain)",
+},
+"language.es-MX": <String, Object?>{
+"de": "Spanisch (Mexiko)",
+"en": "Spanish (Mexico)",
+},
+"language.et": <String, Object?>{
+"de": "Estnisch",
+"en": "Estonian",
+},
+"language.eu": <String, Object?>{
+"de": "Baskisch",
+"en": "Basque",
+},
+"language.fa": <String, Object?>{
+"de": "Persisch",
+"en": "Persian",
+},
+"language.ff": <String, Object?>{
+"de": "Ful",
+"en": "Fula",
+},
+"language.fo": <String, Object?>{
+"de": "Färöisch",
+"en": "Faroese",
 },
 "language.french": <String, Object?>{
 "de": "Französisch",
 "en": "French",
 },
+"language.fy": <String, Object?>{
+"de": "Westfriesisch",
+"en": "Western Frisian",
+},
+"language.gd": <String, Object?>{
+"de": "Gälisch (Schottland)",
+"en": "Scottish Gaelic",
+},
 "language.german": <String, Object?>{
 "de": "Deutsch",
 "en": "German",
 },
+"language.gl": <String, Object?>{
+"de": "Galicisch",
+"en": "Galician",
+},
+"language.gn": <String, Object?>{
+"de": "Guaraní",
+"en": "Guarani",
+},
+"language.gu": <String, Object?>{
+"de": "Gujarati",
+"en": "Gujarati",
+},
+"language.ha": <String, Object?>{
+"de": "Haussa",
+"en": "Hausa",
+},
+"language.haw": <String, Object?>{
+"de": "Hawaiisch",
+"en": "Hawaiian",
+},
+"language.he": <String, Object?>{
+"de": "Hebräisch",
+"en": "Hebrew",
+},
+"language.hindi": <String, Object?>{
+"de": "Hindi",
+"en": "Hindi",
+},
+"language.hmn": <String, Object?>{
+"de": "Miao",
+"en": "Hmong",
+},
+"language.hr": <String, Object?>{
+"de": "Kroatisch",
+"en": "Croatian",
+},
+"language.ht": <String, Object?>{
+"de": "Haiti-Kreolisch",
+"en": "Haitian Creole",
+},
+"language.hu": <String, Object?>{
+"de": "Ungarisch",
+"en": "Hungarian",
+},
+"language.hy": <String, Object?>{
+"de": "Armenisch",
+"en": "Armenian",
+},
+"language.ig": <String, Object?>{
+"de": "Igbo",
+"en": "Igbo",
+},
+"language.is": <String, Object?>{
+"de": "Isländisch",
+"en": "Icelandic",
+},
+"language.italian": <String, Object?>{
+"de": "Italienisch",
+"en": "Italian",
+},
+"language.iu": <String, Object?>{
+"de": "Inuktitut",
+"en": "Inuktitut",
+},
+"language.japanese": <String, Object?>{
+"de": "Japanisch",
+"en": "Japanese",
+},
+"language.jv": <String, Object?>{
+"de": "Javanisch",
+"en": "Javanese",
+},
+"language.ka": <String, Object?>{
+"de": "Georgisch",
+"en": "Georgian",
+},
+"language.kg": <String, Object?>{
+"de": "Kongolesisch",
+"en": "Kongo",
+},
+"language.ki": <String, Object?>{
+"de": "Kikuyu",
+"en": "Kikuyu",
+},
+"language.kk": <String, Object?>{
+"de": "Kasachisch",
+"en": "Kazakh",
+},
+"language.kl": <String, Object?>{
+"de": "Grönländisch",
+"en": "Kalaallisut",
+},
+"language.km": <String, Object?>{
+"de": "Khmer",
+"en": "Khmer",
+},
+"language.kn": <String, Object?>{
+"de": "Kannada",
+"en": "Kannada",
+},
 "language.korean": <String, Object?>{
 "de": "Koreanisch",
 "en": "Korean",
+},
+"language.ks": <String, Object?>{
+"de": "Kaschmiri",
+"en": "Kashmiri",
+},
+"language.ku": <String, Object?>{
+"de": "Kurdisch",
+"en": "Kurdish",
+},
+"language.ky": <String, Object?>{
+"de": "Kirgisisch",
+"en": "Kyrgyz",
+},
+"language.lb": <String, Object?>{
+"de": "Luxemburgisch",
+"en": "Luxembourgish",
+},
+"language.lg": <String, Object?>{
+"de": "Ganda",
+"en": "Ganda",
+},
+"language.listLabel": <String, Object?>{
+"de": "Sprachen",
+"en": "Languages",
+},
+"language.lo": <String, Object?>{
+"de": "Laotisch",
+"en": "Lao",
+},
+"language.lt": <String, Object?>{
+"de": "Litauisch",
+"en": "Lithuanian",
+},
+"language.lv": <String, Object?>{
+"de": "Lettisch",
+"en": "Latvian",
+},
+"language.mg": <String, Object?>{
+"de": "Malagasy",
+"en": "Malagasy",
+},
+"language.mi": <String, Object?>{
+"de": "Māori",
+"en": "Māori",
+},
+"language.mk": <String, Object?>{
+"de": "Mazedonisch",
+"en": "Macedonian",
+},
+"language.ml": <String, Object?>{
+"de": "Malayalam",
+"en": "Malayalam",
+},
+"language.mn": <String, Object?>{
+"de": "Mongolisch",
+"en": "Mongolian",
+},
+"language.mr": <String, Object?>{
+"de": "Marathi",
+"en": "Marathi",
+},
+"language.ms": <String, Object?>{
+"de": "Malaiisch",
+"en": "Malay",
+},
+"language.mt": <String, Object?>{
+"de": "Maltesisch",
+"en": "Maltese",
+},
+"language.my": <String, Object?>{
+"de": "Birmanisch",
+"en": "Burmese",
+},
+"language.ne": <String, Object?>{
+"de": "Nepalesisch",
+"en": "Nepali",
+},
+"language.nl": <String, Object?>{
+"de": "Niederländisch",
+"en": "Dutch",
+},
+"language.no": <String, Object?>{
+"de": "Norwegisch",
+"en": "Norwegian",
+},
+"language.noResults": <String, Object?>{
+"de": "Keine passende Sprache in dieser Auswahl. Füge unten eine eigene hinzu.",
+"en": "No matching language in this shortlist. Add your own below.",
+},
+"language.nv": <String, Object?>{
+"de": "Navajo",
+"en": "Navajo",
+},
+"language.ny": <String, Object?>{
+"de": "Nyanja",
+"en": "Nyanja",
+},
+"language.om": <String, Object?>{
+"de": "Oromo",
+"en": "Oromo",
+},
+"language.or": <String, Object?>{
+"de": "Oriya",
+"en": "Odia",
+},
+"language.pa": <String, Object?>{
+"de": "Punjabi",
+"en": "Punjabi",
+},
+"language.pl": <String, Object?>{
+"de": "Polnisch",
+"en": "Polish",
+},
+"language.portuguese": <String, Object?>{
+"de": "Portugiesisch",
+"en": "Portuguese",
+},
+"language.ps": <String, Object?>{
+"de": "Paschtu",
+"en": "Pashto",
+},
+"language.pt-BR": <String, Object?>{
+"de": "Portugiesisch (Brasilien)",
+"en": "Portuguese (Brazil)",
+},
+"language.pt-PT": <String, Object?>{
+"de": "Portugiesisch (Portugal)",
+"en": "Portuguese (Portugal)",
+},
+"language.qu": <String, Object?>{
+"de": "Quechua",
+"en": "Quechua",
+},
+"language.ro": <String, Object?>{
+"de": "Rumänisch",
+"en": "Romanian",
+},
+"language.ru": <String, Object?>{
+"de": "Russisch",
+"en": "Russian",
+},
+"language.rw": <String, Object?>{
+"de": "Kinyarwanda",
+"en": "Kinyarwanda",
+},
+"language.sd": <String, Object?>{
+"de": "Sindhi",
+"en": "Sindhi",
+},
+"language.search": <String, Object?>{
+"de": "Sprachen suchen",
+"en": "Search languages",
+},
+"language.si": <String, Object?>{
+"de": "Singhalesisch",
+"en": "Sinhala",
+},
+"language.sk": <String, Object?>{
+"de": "Slowakisch",
+"en": "Slovak",
+},
+"language.sl": <String, Object?>{
+"de": "Slowenisch",
+"en": "Slovenian",
+},
+"language.sm": <String, Object?>{
+"de": "Samoanisch",
+"en": "Samoan",
+},
+"language.sn": <String, Object?>{
+"de": "Shona",
+"en": "Shona",
+},
+"language.so": <String, Object?>{
+"de": "Somali",
+"en": "Somali",
+},
+"language.spanish": <String, Object?>{
+"de": "Spanisch",
+"en": "Spanish",
+},
+"language.sq": <String, Object?>{
+"de": "Albanisch",
+"en": "Albanian",
+},
+"language.sr": <String, Object?>{
+"de": "Serbisch",
+"en": "Serbian",
+},
+"language.sv": <String, Object?>{
+"de": "Schwedisch",
+"en": "Swedish",
+},
+"language.sw": <String, Object?>{
+"de": "Suaheli",
+"en": "Swahili",
+},
+"language.ta": <String, Object?>{
+"de": "Tamil",
+"en": "Tamil",
+},
+"language.te": <String, Object?>{
+"de": "Telugu",
+"en": "Telugu",
+},
+"language.th": <String, Object?>{
+"de": "Thailändisch",
+"en": "Thai",
+},
+"language.ti": <String, Object?>{
+"de": "Tigrinya",
+"en": "Tigrinya",
+},
+"language.tk": <String, Object?>{
+"de": "Turkmenisch",
+"en": "Turkmen",
+},
+"language.tpi": <String, Object?>{
+"de": "Neumelanesisch",
+"en": "Tok Pisin",
+},
+"language.tr": <String, Object?>{
+"de": "Türkisch",
+"en": "Turkish",
+},
+"language.tt": <String, Object?>{
+"de": "Tatarisch",
+"en": "Tatar",
+},
+"language.uk": <String, Object?>{
+"de": "Ukrainisch",
+"en": "Ukrainian",
+},
+"language.ur": <String, Object?>{
+"de": "Urdu",
+"en": "Urdu",
+},
+"language.uz": <String, Object?>{
+"de": "Usbekisch",
+"en": "Uzbek",
+},
+"language.vi": <String, Object?>{
+"de": "Vietnamesisch",
+"en": "Vietnamese",
+},
+"language.xh": <String, Object?>{
+"de": "Xhosa",
+"en": "Xhosa",
+},
+"language.yi": <String, Object?>{
+"de": "Jiddisch",
+"en": "Yiddish",
+},
+"language.yo": <String, Object?>{
+"de": "Yoruba",
+"en": "Yoruba",
+},
+"language.yue": <String, Object?>{
+"de": "Kantonesisch",
+"en": "Cantonese",
+},
+"language.zh-Hans": <String, Object?>{
+"de": "Mandarin (vereinfachte Schrift)",
+"en": "Mandarin (Simplified script)",
+},
+"language.zh-Hant": <String, Object?>{
+"de": "Mandarin (traditionelle Schrift)",
+"en": "Mandarin (Traditional script)",
+},
+"language.zu": <String, Object?>{
+"de": "Zulu",
+"en": "Zulu",
 },
 "learn.answerPlaceholder": <String, Object?>{
 "de": "Antwort eingeben",
@@ -1790,8 +2342,8 @@ const copyCatalog = <String, Object?>{
 "en": "Invalid JSON preview",
 },
 "r2.jsonDuplicate": <String, Object?>{
-"de": "Das Ergebnis würde doppelte Vokabelpaare enthalten.",
-"en": "The result would contain duplicate vocabulary pairs.",
+"de": "Das resultierende Wortpaar mit diesem Hinweis ist schon vorhanden.",
+"en": "The resulting word pair and Hint already exist.",
 },
 "r2.jsonGroups": <String, Object?>{
 "de": "Inhalte ersetzen (ohne Lernstand)",
@@ -2485,6 +3037,10 @@ const copyCatalog = <String, Object?>{
 "de": "Gestern",
 "en": "Yesterday",
 },
+"storage.migrationCollision": <String, Object?>{
+"de": "Das Speicherupgrade wurde gestoppt, weil vorhandene Wortpaare mit ihren Hinweisen zu Dubletten würden. Deine Daten sind unverändert. Die betroffenen Einträge müssen vor einem erneuten Versuch geklärt werden.",
+"en": "The storage upgrade stopped because existing word pairs and Hints would become duplicates. Your data is unchanged. Resolve the conflicting entries before retrying.",
+},
 "summary.completed": <String, Object?>{
 "de": "Vokabeln abgeschlossen",
 "en": "Vocabulary completed",
@@ -2754,8 +3310,8 @@ const copyCatalog = <String, Object?>{
 "en": "Discarding changes…",
 },
 "vocab.inlineDuplicate": <String, Object?>{
-"de": "Dieses Vokabelpaar ist bereits in dieser Sammlung vorhanden. Ändere dieses Paar oder den bereits gespeicherten Eintrag.",
-"en": "This vocabulary pair already exists in this collection. Change this pair or edit the conflicting saved entry.",
+"de": "Dieses Wortpaar mit diesem Hinweis ist schon vorhanden. Ändere das Wortpaar oder den Hinweis für eine andere Bedeutung.",
+"en": "This word pair and Hint already exist. Change the pair or Hint to save a different meaning.",
 },
 "vocab.inlineEdit": <String, Object?>{
 "de": "Vokabel bearbeiten",

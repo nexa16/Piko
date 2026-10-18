@@ -514,14 +514,16 @@ final class EntrySessionController extends ChangeNotifier {
     final contentError = _contentError(value);
     if (contentError != null) return contentError;
     final entries = await _repository.watchByCollection(collectionId).first;
-    final target = vocabularyComparisonKey(value.targetText);
-    final native = vocabularyComparisonKey(value.nativeText);
+    final target = vocabularyIdentityKey(value.targetText);
+    final native = vocabularyIdentityKey(value.nativeText);
     return entries.any(
           (entry) =>
               entry.collectionId == collectionId &&
               entry.id != excludingId &&
-              vocabularyComparisonKey(entry.targetText) == target &&
-              vocabularyComparisonKey(entry.nativeText) == native,
+              vocabularyIdentityKey(entry.targetText) == target &&
+              vocabularyIdentityKey(entry.nativeText) == native &&
+              vocabularyIdentityKey(entry.content.hintText) ==
+                  vocabularyIdentityKey(value.content.hintText),
         )
         ? VocabularyValidation.duplicatePair
         : null;

@@ -200,11 +200,13 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
         collection: CollectionRecord(
           id: owner.id,
           name: owner.name,
-          targetLanguage: VocabularyLanguage.values.singleWhere(
-            (language) => language.code == owner.targetLanguage,
+          targetLanguage: VocabularyLanguage.stored(
+            owner.targetLanguage,
+            owner.targetLanguageName,
           ),
-          nativeLanguage: VocabularyLanguage.values.singleWhere(
-            (language) => language.code == owner.nativeLanguage,
+          nativeLanguage: VocabularyLanguage.stored(
+            owner.nativeLanguage,
+            owner.nativeLanguageName,
           ),
         ),
         allEntries: entries,

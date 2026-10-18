@@ -961,12 +961,11 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       key: target ? editor.targetBounds : editor.nativeBounds,
       child: PikoTextField(
         key: ValueKey('$id-${target ? 'target' : 'native'}'),
-        label: copy.text(
-          (target
-                  ? widget.collection.targetLanguage
-                  : widget.collection.nativeLanguage)
-              .copyKey,
-        ),
+        label:
+            (target
+                    ? widget.collection.targetLanguage
+                    : widget.collection.nativeLanguage)
+                .label(copy.locale),
         controller: target ? editor.target : editor.native,
         focusNode: target ? editor.targetFocus : editor.nativeFocus,
         enabled: !session.isBusy && !exitDraining,
@@ -1210,12 +1209,10 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 );
                                 widget.onPendingWrites?.call(drain);
                               },
-                              targetLanguage: copy.text(
-                                widget.collection.targetLanguage.copyKey,
-                              ),
-                              nativeLanguage: copy.text(
-                                widget.collection.nativeLanguage.copyKey,
-                              ),
+                              targetLanguage: widget.collection.targetLanguage
+                                  .label(copy.locale),
+                              nativeLanguage: widget.collection.nativeLanguage
+                                  .label(copy.locale),
                               makeDefault: values.makeHintVisibilityDefault,
                               onFocus: () {
                                 followEditor = false;

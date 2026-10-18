@@ -28,8 +28,8 @@ String reviewDirectionLabel(
   CollectionRecord collection,
   LearningDirection direction,
 ) {
-  final target = collection.targetLanguage.code.toUpperCase();
-  final native = collection.nativeLanguage.code.toUpperCase();
+  final target = collection.targetLanguage.directionLabel;
+  final native = collection.nativeLanguage.directionLabel;
   return direction == LearningDirection.targetToNative
       ? '$target → $native'
       : '$native → $target';

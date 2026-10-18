@@ -114,11 +114,8 @@ void main() {
         returned: returns.add,
       );
       await tester.enterText(input, 'source JSON');
-      expect(
-        find.text(PikoCopy('en').text('json.activityHelp')),
-        findsOneWidget,
-      );
       await pressJson(tester, 'json.analyze');
+      expect(find.text(PikoCopy('en').text('json.activityHelp')),findsOneWidget);
       final check = tester.widget<PikoButton>(
         find.widgetWithText(PikoButton, PikoCopy('en').text('json.analyze')),
       );
@@ -391,6 +388,7 @@ void main() {
     (tester) async {
       final service = ImportService();
       await mountJson(tester, service, JsonTestPlatform());
+      await pressJson(tester,'json.analyze');
       for (final group in VocabularyJsonGroup.values) {
         final tile = find.byKey(ValueKey('json-group-${group.name}'));
         await tester.ensureVisible(tile);
@@ -543,11 +541,11 @@ void main() {
         input,
         jsonEncode({
           'format': 'piko-vocabulary',
-          'schemaVersion': 1,
+          'schemaVersion': 5,
           'collections': [
             {
-              'targetLanguage': 'fr',
-              'nativeLanguage': 'de',
+              'targetLanguage': {'kind':'catalog','id':'fr'},
+              'nativeLanguage': {'kind':'catalog','id':'de'},
               'entries': [
                 {
                   'id': original.id,

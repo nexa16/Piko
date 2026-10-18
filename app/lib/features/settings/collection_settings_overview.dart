@@ -77,7 +77,7 @@ class _CollectionSettingsOverviewState
                         key: ValueKey('collection-settings-${collection.id}'),
                         title: collection.name,
                         subtitle:
-                            '${copy.text(collection.targetLanguage.copyKey)} · ${copy.text(collection.nativeLanguage.copyKey)}',
+                            '${collection.targetLanguage.label(copy.locale)} · ${collection.nativeLanguage.label(copy.locale)}',
                         onTap: () {
                           if (ModalRoute.of(context)?.isCurrent == true) {
                             Navigator.of(context).push(

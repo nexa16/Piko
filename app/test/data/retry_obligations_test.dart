@@ -705,6 +705,7 @@ void main() {
                       ...row,
                       'automatic_hint_default': 0,
                       'hint_default_offer_handled': 0,
+                    'target_language_name': null,'native_language_name': null,
                     }
                   else if (table == 'vocabulary_entries')
                     {
@@ -713,6 +714,7 @@ void main() {
                       'example_native_text': null,
                       'hint_text': null,
                       'hint_visibility': 'always',
+                    'hint_key': '',
                       'active': 1,
                       'added_at': null,
                     }

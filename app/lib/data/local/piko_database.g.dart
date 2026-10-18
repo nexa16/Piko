@@ -257,6 +257,28 @@ class $CollectionsTable extends Collections
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _targetLanguageNameMeta =
+      const VerificationMeta('targetLanguageName');
+  @override
+  late final GeneratedColumn<String> targetLanguageName =
+      GeneratedColumn<String>(
+        'target_language_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _nativeLanguageNameMeta =
+      const VerificationMeta('nativeLanguageName');
+  @override
+  late final GeneratedColumn<String> nativeLanguageName =
+      GeneratedColumn<String>(
+        'native_language_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _automaticHintDefaultMeta =
       const VerificationMeta('automaticHintDefault');
   @override
@@ -292,6 +314,8 @@ class $CollectionsTable extends Collections
     name,
     targetLanguage,
     nativeLanguage,
+    targetLanguageName,
+    nativeLanguageName,
     automaticHintDefault,
     hintDefaultOfferHandled,
   ];
@@ -342,6 +366,24 @@ class $CollectionsTable extends Collections
     } else if (isInserting) {
       context.missing(_nativeLanguageMeta);
     }
+    if (data.containsKey('target_language_name')) {
+      context.handle(
+        _targetLanguageNameMeta,
+        targetLanguageName.isAcceptableOrUnknown(
+          data['target_language_name']!,
+          _targetLanguageNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('native_language_name')) {
+      context.handle(
+        _nativeLanguageNameMeta,
+        nativeLanguageName.isAcceptableOrUnknown(
+          data['native_language_name']!,
+          _nativeLanguageNameMeta,
+        ),
+      );
+    }
     if (data.containsKey('automatic_hint_default')) {
       context.handle(
         _automaticHintDefaultMeta,
@@ -385,6 +427,14 @@ class $CollectionsTable extends Collections
         DriftSqlType.string,
         data['${effectivePrefix}native_language'],
       )!,
+      targetLanguageName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_language_name'],
+      ),
+      nativeLanguageName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}native_language_name'],
+      ),
       automaticHintDefault: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}automatic_hint_default'],
@@ -407,6 +457,8 @@ class Collection extends DataClass implements Insertable<Collection> {
   final String name;
   final String targetLanguage;
   final String nativeLanguage;
+  final String? targetLanguageName;
+  final String? nativeLanguageName;
   final bool automaticHintDefault;
   final bool hintDefaultOfferHandled;
   const Collection({
@@ -414,6 +466,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     required this.name,
     required this.targetLanguage,
     required this.nativeLanguage,
+    this.targetLanguageName,
+    this.nativeLanguageName,
     required this.automaticHintDefault,
     required this.hintDefaultOfferHandled,
   });
@@ -424,6 +478,12 @@ class Collection extends DataClass implements Insertable<Collection> {
     map['name'] = Variable<String>(name);
     map['target_language'] = Variable<String>(targetLanguage);
     map['native_language'] = Variable<String>(nativeLanguage);
+    if (!nullToAbsent || targetLanguageName != null) {
+      map['target_language_name'] = Variable<String>(targetLanguageName);
+    }
+    if (!nullToAbsent || nativeLanguageName != null) {
+      map['native_language_name'] = Variable<String>(nativeLanguageName);
+    }
     map['automatic_hint_default'] = Variable<bool>(automaticHintDefault);
     map['hint_default_offer_handled'] = Variable<bool>(hintDefaultOfferHandled);
     return map;
@@ -435,6 +495,12 @@ class Collection extends DataClass implements Insertable<Collection> {
       name: Value(name),
       targetLanguage: Value(targetLanguage),
       nativeLanguage: Value(nativeLanguage),
+      targetLanguageName: targetLanguageName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetLanguageName),
+      nativeLanguageName: nativeLanguageName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nativeLanguageName),
       automaticHintDefault: Value(automaticHintDefault),
       hintDefaultOfferHandled: Value(hintDefaultOfferHandled),
     );
@@ -450,6 +516,12 @@ class Collection extends DataClass implements Insertable<Collection> {
       name: serializer.fromJson<String>(json['name']),
       targetLanguage: serializer.fromJson<String>(json['targetLanguage']),
       nativeLanguage: serializer.fromJson<String>(json['nativeLanguage']),
+      targetLanguageName: serializer.fromJson<String?>(
+        json['targetLanguageName'],
+      ),
+      nativeLanguageName: serializer.fromJson<String?>(
+        json['nativeLanguageName'],
+      ),
       automaticHintDefault: serializer.fromJson<bool>(
         json['automaticHintDefault'],
       ),
@@ -466,6 +538,8 @@ class Collection extends DataClass implements Insertable<Collection> {
       'name': serializer.toJson<String>(name),
       'targetLanguage': serializer.toJson<String>(targetLanguage),
       'nativeLanguage': serializer.toJson<String>(nativeLanguage),
+      'targetLanguageName': serializer.toJson<String?>(targetLanguageName),
+      'nativeLanguageName': serializer.toJson<String?>(nativeLanguageName),
       'automaticHintDefault': serializer.toJson<bool>(automaticHintDefault),
       'hintDefaultOfferHandled': serializer.toJson<bool>(
         hintDefaultOfferHandled,
@@ -478,6 +552,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     String? name,
     String? targetLanguage,
     String? nativeLanguage,
+    Value<String?> targetLanguageName = const Value.absent(),
+    Value<String?> nativeLanguageName = const Value.absent(),
     bool? automaticHintDefault,
     bool? hintDefaultOfferHandled,
   }) => Collection(
@@ -485,6 +561,12 @@ class Collection extends DataClass implements Insertable<Collection> {
     name: name ?? this.name,
     targetLanguage: targetLanguage ?? this.targetLanguage,
     nativeLanguage: nativeLanguage ?? this.nativeLanguage,
+    targetLanguageName: targetLanguageName.present
+        ? targetLanguageName.value
+        : this.targetLanguageName,
+    nativeLanguageName: nativeLanguageName.present
+        ? nativeLanguageName.value
+        : this.nativeLanguageName,
     automaticHintDefault: automaticHintDefault ?? this.automaticHintDefault,
     hintDefaultOfferHandled:
         hintDefaultOfferHandled ?? this.hintDefaultOfferHandled,
@@ -499,6 +581,12 @@ class Collection extends DataClass implements Insertable<Collection> {
       nativeLanguage: data.nativeLanguage.present
           ? data.nativeLanguage.value
           : this.nativeLanguage,
+      targetLanguageName: data.targetLanguageName.present
+          ? data.targetLanguageName.value
+          : this.targetLanguageName,
+      nativeLanguageName: data.nativeLanguageName.present
+          ? data.nativeLanguageName.value
+          : this.nativeLanguageName,
       automaticHintDefault: data.automaticHintDefault.present
           ? data.automaticHintDefault.value
           : this.automaticHintDefault,
@@ -515,6 +603,8 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('name: $name, ')
           ..write('targetLanguage: $targetLanguage, ')
           ..write('nativeLanguage: $nativeLanguage, ')
+          ..write('targetLanguageName: $targetLanguageName, ')
+          ..write('nativeLanguageName: $nativeLanguageName, ')
           ..write('automaticHintDefault: $automaticHintDefault, ')
           ..write('hintDefaultOfferHandled: $hintDefaultOfferHandled')
           ..write(')'))
@@ -527,6 +617,8 @@ class Collection extends DataClass implements Insertable<Collection> {
     name,
     targetLanguage,
     nativeLanguage,
+    targetLanguageName,
+    nativeLanguageName,
     automaticHintDefault,
     hintDefaultOfferHandled,
   );
@@ -538,6 +630,8 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.name == this.name &&
           other.targetLanguage == this.targetLanguage &&
           other.nativeLanguage == this.nativeLanguage &&
+          other.targetLanguageName == this.targetLanguageName &&
+          other.nativeLanguageName == this.nativeLanguageName &&
           other.automaticHintDefault == this.automaticHintDefault &&
           other.hintDefaultOfferHandled == this.hintDefaultOfferHandled);
 }
@@ -547,6 +641,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<String> name;
   final Value<String> targetLanguage;
   final Value<String> nativeLanguage;
+  final Value<String?> targetLanguageName;
+  final Value<String?> nativeLanguageName;
   final Value<bool> automaticHintDefault;
   final Value<bool> hintDefaultOfferHandled;
   final Value<int> rowid;
@@ -555,6 +651,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.name = const Value.absent(),
     this.targetLanguage = const Value.absent(),
     this.nativeLanguage = const Value.absent(),
+    this.targetLanguageName = const Value.absent(),
+    this.nativeLanguageName = const Value.absent(),
     this.automaticHintDefault = const Value.absent(),
     this.hintDefaultOfferHandled = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -564,6 +662,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     required String name,
     required String targetLanguage,
     required String nativeLanguage,
+    this.targetLanguageName = const Value.absent(),
+    this.nativeLanguageName = const Value.absent(),
     this.automaticHintDefault = const Value.absent(),
     this.hintDefaultOfferHandled = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -576,6 +676,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<String>? name,
     Expression<String>? targetLanguage,
     Expression<String>? nativeLanguage,
+    Expression<String>? targetLanguageName,
+    Expression<String>? nativeLanguageName,
     Expression<bool>? automaticHintDefault,
     Expression<bool>? hintDefaultOfferHandled,
     Expression<int>? rowid,
@@ -585,6 +687,10 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (name != null) 'name': name,
       if (targetLanguage != null) 'target_language': targetLanguage,
       if (nativeLanguage != null) 'native_language': nativeLanguage,
+      if (targetLanguageName != null)
+        'target_language_name': targetLanguageName,
+      if (nativeLanguageName != null)
+        'native_language_name': nativeLanguageName,
       if (automaticHintDefault != null)
         'automatic_hint_default': automaticHintDefault,
       if (hintDefaultOfferHandled != null)
@@ -598,6 +704,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<String>? name,
     Value<String>? targetLanguage,
     Value<String>? nativeLanguage,
+    Value<String?>? targetLanguageName,
+    Value<String?>? nativeLanguageName,
     Value<bool>? automaticHintDefault,
     Value<bool>? hintDefaultOfferHandled,
     Value<int>? rowid,
@@ -607,6 +715,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       name: name ?? this.name,
       targetLanguage: targetLanguage ?? this.targetLanguage,
       nativeLanguage: nativeLanguage ?? this.nativeLanguage,
+      targetLanguageName: targetLanguageName ?? this.targetLanguageName,
+      nativeLanguageName: nativeLanguageName ?? this.nativeLanguageName,
       automaticHintDefault: automaticHintDefault ?? this.automaticHintDefault,
       hintDefaultOfferHandled:
           hintDefaultOfferHandled ?? this.hintDefaultOfferHandled,
@@ -628,6 +738,12 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     }
     if (nativeLanguage.present) {
       map['native_language'] = Variable<String>(nativeLanguage.value);
+    }
+    if (targetLanguageName.present) {
+      map['target_language_name'] = Variable<String>(targetLanguageName.value);
+    }
+    if (nativeLanguageName.present) {
+      map['native_language_name'] = Variable<String>(nativeLanguageName.value);
     }
     if (automaticHintDefault.present) {
       map['automatic_hint_default'] = Variable<bool>(
@@ -652,6 +768,8 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('name: $name, ')
           ..write('targetLanguage: $targetLanguage, ')
           ..write('nativeLanguage: $nativeLanguage, ')
+          ..write('targetLanguageName: $targetLanguageName, ')
+          ..write('nativeLanguageName: $nativeLanguageName, ')
           ..write('automaticHintDefault: $automaticHintDefault, ')
           ..write('hintDefaultOfferHandled: $hintDefaultOfferHandled, ')
           ..write('rowid: $rowid')
@@ -732,6 +850,18 @@ class $VocabularyEntriesTable extends VocabularyEntries
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hintKeyMeta = const VerificationMeta(
+    'hintKey',
+  );
+  @override
+  late final GeneratedColumn<String> hintKey = GeneratedColumn<String>(
+    'hint_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _activeMeta = const VerificationMeta('active');
   @override
@@ -825,6 +955,7 @@ class $VocabularyEntriesTable extends VocabularyEntries
     nativeText,
     targetKey,
     nativeKey,
+    hintKey,
     active,
     exampleTargetText,
     exampleNativeText,
@@ -891,6 +1022,12 @@ class $VocabularyEntriesTable extends VocabularyEntries
       );
     } else if (isInserting) {
       context.missing(_nativeKeyMeta);
+    }
+    if (data.containsKey('hint_key')) {
+      context.handle(
+        _hintKeyMeta,
+        hintKey.isAcceptableOrUnknown(data['hint_key']!, _hintKeyMeta),
+      );
     }
     if (data.containsKey('active')) {
       context.handle(
@@ -970,6 +1107,10 @@ class $VocabularyEntriesTable extends VocabularyEntries
         DriftSqlType.string,
         data['${effectivePrefix}native_key'],
       )!,
+      hintKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hint_key'],
+      )!,
       active: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}active'],
@@ -1010,6 +1151,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
   final String nativeText;
   final String targetKey;
   final String nativeKey;
+  final String hintKey;
   final bool active;
   final String? exampleTargetText;
   final String? exampleNativeText;
@@ -1023,6 +1165,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     required this.nativeText,
     required this.targetKey,
     required this.nativeKey,
+    required this.hintKey,
     required this.active,
     this.exampleTargetText,
     this.exampleNativeText,
@@ -1039,6 +1182,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     map['native_text'] = Variable<String>(nativeText);
     map['target_key'] = Variable<String>(targetKey);
     map['native_key'] = Variable<String>(nativeKey);
+    map['hint_key'] = Variable<String>(hintKey);
     map['active'] = Variable<bool>(active);
     if (!nullToAbsent || exampleTargetText != null) {
       map['example_target_text'] = Variable<String>(exampleTargetText);
@@ -1064,6 +1208,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       nativeText: Value(nativeText),
       targetKey: Value(targetKey),
       nativeKey: Value(nativeKey),
+      hintKey: Value(hintKey),
       active: Value(active),
       exampleTargetText: exampleTargetText == null && nullToAbsent
           ? const Value.absent()
@@ -1093,6 +1238,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       nativeText: serializer.fromJson<String>(json['nativeText']),
       targetKey: serializer.fromJson<String>(json['targetKey']),
       nativeKey: serializer.fromJson<String>(json['nativeKey']),
+      hintKey: serializer.fromJson<String>(json['hintKey']),
       active: serializer.fromJson<bool>(json['active']),
       exampleTargetText: serializer.fromJson<String?>(
         json['exampleTargetText'],
@@ -1115,6 +1261,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
       'nativeText': serializer.toJson<String>(nativeText),
       'targetKey': serializer.toJson<String>(targetKey),
       'nativeKey': serializer.toJson<String>(nativeKey),
+      'hintKey': serializer.toJson<String>(hintKey),
       'active': serializer.toJson<bool>(active),
       'exampleTargetText': serializer.toJson<String?>(exampleTargetText),
       'exampleNativeText': serializer.toJson<String?>(exampleNativeText),
@@ -1131,6 +1278,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     String? nativeText,
     String? targetKey,
     String? nativeKey,
+    String? hintKey,
     bool? active,
     Value<String?> exampleTargetText = const Value.absent(),
     Value<String?> exampleNativeText = const Value.absent(),
@@ -1144,6 +1292,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     nativeText: nativeText ?? this.nativeText,
     targetKey: targetKey ?? this.targetKey,
     nativeKey: nativeKey ?? this.nativeKey,
+    hintKey: hintKey ?? this.hintKey,
     active: active ?? this.active,
     exampleTargetText: exampleTargetText.present
         ? exampleTargetText.value
@@ -1169,6 +1318,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           : this.nativeText,
       targetKey: data.targetKey.present ? data.targetKey.value : this.targetKey,
       nativeKey: data.nativeKey.present ? data.nativeKey.value : this.nativeKey,
+      hintKey: data.hintKey.present ? data.hintKey.value : this.hintKey,
       active: data.active.present ? data.active.value : this.active,
       exampleTargetText: data.exampleTargetText.present
           ? data.exampleTargetText.value
@@ -1193,6 +1343,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           ..write('nativeText: $nativeText, ')
           ..write('targetKey: $targetKey, ')
           ..write('nativeKey: $nativeKey, ')
+          ..write('hintKey: $hintKey, ')
           ..write('active: $active, ')
           ..write('exampleTargetText: $exampleTargetText, ')
           ..write('exampleNativeText: $exampleNativeText, ')
@@ -1211,6 +1362,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
     nativeText,
     targetKey,
     nativeKey,
+    hintKey,
     active,
     exampleTargetText,
     exampleNativeText,
@@ -1228,6 +1380,7 @@ class VocabularyEntry extends DataClass implements Insertable<VocabularyEntry> {
           other.nativeText == this.nativeText &&
           other.targetKey == this.targetKey &&
           other.nativeKey == this.nativeKey &&
+          other.hintKey == this.hintKey &&
           other.active == this.active &&
           other.exampleTargetText == this.exampleTargetText &&
           other.exampleNativeText == this.exampleNativeText &&
@@ -1243,6 +1396,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
   final Value<String> nativeText;
   final Value<String> targetKey;
   final Value<String> nativeKey;
+  final Value<String> hintKey;
   final Value<bool> active;
   final Value<String?> exampleTargetText;
   final Value<String?> exampleNativeText;
@@ -1257,6 +1411,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     this.nativeText = const Value.absent(),
     this.targetKey = const Value.absent(),
     this.nativeKey = const Value.absent(),
+    this.hintKey = const Value.absent(),
     this.active = const Value.absent(),
     this.exampleTargetText = const Value.absent(),
     this.exampleNativeText = const Value.absent(),
@@ -1272,6 +1427,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     required String nativeText,
     required String targetKey,
     required String nativeKey,
+    this.hintKey = const Value.absent(),
     this.active = const Value.absent(),
     this.exampleTargetText = const Value.absent(),
     this.exampleNativeText = const Value.absent(),
@@ -1292,6 +1448,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     Expression<String>? nativeText,
     Expression<String>? targetKey,
     Expression<String>? nativeKey,
+    Expression<String>? hintKey,
     Expression<bool>? active,
     Expression<String>? exampleTargetText,
     Expression<String>? exampleNativeText,
@@ -1307,6 +1464,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       if (nativeText != null) 'native_text': nativeText,
       if (targetKey != null) 'target_key': targetKey,
       if (nativeKey != null) 'native_key': nativeKey,
+      if (hintKey != null) 'hint_key': hintKey,
       if (active != null) 'active': active,
       if (exampleTargetText != null) 'example_target_text': exampleTargetText,
       if (exampleNativeText != null) 'example_native_text': exampleNativeText,
@@ -1324,6 +1482,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     Value<String>? nativeText,
     Value<String>? targetKey,
     Value<String>? nativeKey,
+    Value<String>? hintKey,
     Value<bool>? active,
     Value<String?>? exampleTargetText,
     Value<String?>? exampleNativeText,
@@ -1339,6 +1498,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
       nativeText: nativeText ?? this.nativeText,
       targetKey: targetKey ?? this.targetKey,
       nativeKey: nativeKey ?? this.nativeKey,
+      hintKey: hintKey ?? this.hintKey,
       active: active ?? this.active,
       exampleTargetText: exampleTargetText ?? this.exampleTargetText,
       exampleNativeText: exampleNativeText ?? this.exampleNativeText,
@@ -1369,6 +1529,9 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
     }
     if (nativeKey.present) {
       map['native_key'] = Variable<String>(nativeKey.value);
+    }
+    if (hintKey.present) {
+      map['hint_key'] = Variable<String>(hintKey.value);
     }
     if (active.present) {
       map['active'] = Variable<bool>(active.value);
@@ -1403,6 +1566,7 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
           ..write('nativeText: $nativeText, ')
           ..write('targetKey: $targetKey, ')
           ..write('nativeKey: $nativeKey, ')
+          ..write('hintKey: $hintKey, ')
           ..write('active: $active, ')
           ..write('exampleTargetText: $exampleTargetText, ')
           ..write('exampleNativeText: $exampleNativeText, ')
@@ -6677,6 +6841,8 @@ typedef $$CollectionsTableCreateCompanionBuilder =
       required String name,
       required String targetLanguage,
       required String nativeLanguage,
+      Value<String?> targetLanguageName,
+      Value<String?> nativeLanguageName,
       Value<bool> automaticHintDefault,
       Value<bool> hintDefaultOfferHandled,
       Value<int> rowid,
@@ -6687,6 +6853,8 @@ typedef $$CollectionsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String> targetLanguage,
       Value<String> nativeLanguage,
+      Value<String?> targetLanguageName,
+      Value<String?> nativeLanguageName,
       Value<bool> automaticHintDefault,
       Value<bool> hintDefaultOfferHandled,
       Value<int> rowid,
@@ -6792,6 +6960,16 @@ class $$CollectionsTableFilterComposer
 
   ColumnFilters<String> get nativeLanguage => $composableBuilder(
     column: $table.nativeLanguage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetLanguageName => $composableBuilder(
+    column: $table.targetLanguageName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nativeLanguageName => $composableBuilder(
+    column: $table.nativeLanguageName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6910,6 +7088,16 @@ class $$CollectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get targetLanguageName => $composableBuilder(
+    column: $table.targetLanguageName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nativeLanguageName => $composableBuilder(
+    column: $table.nativeLanguageName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get automaticHintDefault => $composableBuilder(
     column: $table.automaticHintDefault,
     builder: (column) => ColumnOrderings(column),
@@ -6943,6 +7131,16 @@ class $$CollectionsTableAnnotationComposer
 
   GeneratedColumn<String> get nativeLanguage => $composableBuilder(
     column: $table.nativeLanguage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get targetLanguageName => $composableBuilder(
+    column: $table.targetLanguageName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nativeLanguageName => $composableBuilder(
+    column: $table.nativeLanguageName,
     builder: (column) => column,
   );
 
@@ -7071,6 +7269,8 @@ class $$CollectionsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> targetLanguage = const Value.absent(),
                 Value<String> nativeLanguage = const Value.absent(),
+                Value<String?> targetLanguageName = const Value.absent(),
+                Value<String?> nativeLanguageName = const Value.absent(),
                 Value<bool> automaticHintDefault = const Value.absent(),
                 Value<bool> hintDefaultOfferHandled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7079,6 +7279,8 @@ class $$CollectionsTableTableManager
                 name: name,
                 targetLanguage: targetLanguage,
                 nativeLanguage: nativeLanguage,
+                targetLanguageName: targetLanguageName,
+                nativeLanguageName: nativeLanguageName,
                 automaticHintDefault: automaticHintDefault,
                 hintDefaultOfferHandled: hintDefaultOfferHandled,
                 rowid: rowid,
@@ -7089,6 +7291,8 @@ class $$CollectionsTableTableManager
                 required String name,
                 required String targetLanguage,
                 required String nativeLanguage,
+                Value<String?> targetLanguageName = const Value.absent(),
+                Value<String?> nativeLanguageName = const Value.absent(),
                 Value<bool> automaticHintDefault = const Value.absent(),
                 Value<bool> hintDefaultOfferHandled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7097,6 +7301,8 @@ class $$CollectionsTableTableManager
                 name: name,
                 targetLanguage: targetLanguage,
                 nativeLanguage: nativeLanguage,
+                targetLanguageName: targetLanguageName,
+                nativeLanguageName: nativeLanguageName,
                 automaticHintDefault: automaticHintDefault,
                 hintDefaultOfferHandled: hintDefaultOfferHandled,
                 rowid: rowid,
@@ -7222,6 +7428,7 @@ typedef $$VocabularyEntriesTableCreateCompanionBuilder =
       required String nativeText,
       required String targetKey,
       required String nativeKey,
+      Value<String> hintKey,
       Value<bool> active,
       Value<String?> exampleTargetText,
       Value<String?> exampleNativeText,
@@ -7238,6 +7445,7 @@ typedef $$VocabularyEntriesTableUpdateCompanionBuilder =
       Value<String> nativeText,
       Value<String> targetKey,
       Value<String> nativeKey,
+      Value<String> hintKey,
       Value<bool> active,
       Value<String?> exampleTargetText,
       Value<String?> exampleNativeText,
@@ -7349,6 +7557,11 @@ class $$VocabularyEntriesTableFilterComposer
 
   ColumnFilters<String> get nativeKey => $composableBuilder(
     column: $table.nativeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hintKey => $composableBuilder(
+    column: $table.hintKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7490,6 +7703,11 @@ class $$VocabularyEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get hintKey => $composableBuilder(
+    column: $table.hintKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get active => $composableBuilder(
     column: $table.active,
     builder: (column) => ColumnOrderings(column),
@@ -7571,6 +7789,9 @@ class $$VocabularyEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get nativeKey =>
       $composableBuilder(column: $table.nativeKey, builder: (column) => column);
+
+  GeneratedColumn<String> get hintKey =>
+      $composableBuilder(column: $table.hintKey, builder: (column) => column);
 
   GeneratedColumn<bool> get active =>
       $composableBuilder(column: $table.active, builder: (column) => column);
@@ -7714,6 +7935,7 @@ class $$VocabularyEntriesTableTableManager
                 Value<String> nativeText = const Value.absent(),
                 Value<String> targetKey = const Value.absent(),
                 Value<String> nativeKey = const Value.absent(),
+                Value<String> hintKey = const Value.absent(),
                 Value<bool> active = const Value.absent(),
                 Value<String?> exampleTargetText = const Value.absent(),
                 Value<String?> exampleNativeText = const Value.absent(),
@@ -7728,6 +7950,7 @@ class $$VocabularyEntriesTableTableManager
                 nativeText: nativeText,
                 targetKey: targetKey,
                 nativeKey: nativeKey,
+                hintKey: hintKey,
                 active: active,
                 exampleTargetText: exampleTargetText,
                 exampleNativeText: exampleNativeText,
@@ -7744,6 +7967,7 @@ class $$VocabularyEntriesTableTableManager
                 required String nativeText,
                 required String targetKey,
                 required String nativeKey,
+                Value<String> hintKey = const Value.absent(),
                 Value<bool> active = const Value.absent(),
                 Value<String?> exampleTargetText = const Value.absent(),
                 Value<String?> exampleNativeText = const Value.absent(),
@@ -7758,6 +7982,7 @@ class $$VocabularyEntriesTableTableManager
                 nativeText: nativeText,
                 targetKey: targetKey,
                 nativeKey: nativeKey,
+                hintKey: hintKey,
                 active: active,
                 exampleTargetText: exampleTargetText,
                 exampleNativeText: exampleNativeText,

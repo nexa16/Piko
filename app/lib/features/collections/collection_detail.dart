@@ -575,7 +575,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             PikoFormHeading(
               title: copy.text('settingsPreview.collectionSettings'),
               subtitle:
-                  '${record.name} · ${record.targetLanguage.code.toUpperCase()} · ${record.nativeLanguage.code.toUpperCase()}',
+                  '${record.name} · ${record.targetLanguage.directionLabel} · ${record.nativeLanguage.directionLabel}',
               leading: PikoIconButton(
                 icon: const PikoIcon(PikoIconName.arrowLeft),
                 semanticLabel: copy.text('common.back'),

@@ -1,3 +1,4 @@
+import '../support/freeze_pre20.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
@@ -201,7 +202,7 @@ void main() {
       final document =
           jsonDecode(await service.exportCollection(f.owner.id))
               as Map<String, dynamic>;
-      expect(document['schemaVersion'], 4);
+      expect(document['schemaVersion'], 5);
       expect(jsonEncode(document), isNot(contains('customValueOrder')));
       final collection =
           (document['collections'] as List).single as Map<String, dynamic>;
@@ -340,7 +341,8 @@ void main() {
       await database.close();
       final legacy = sqlite.sqlite3.open(file.path);
       legacy.execute('DROP TABLE category_group_preferences');
-      legacy.execute('PRAGMA user_version = 17');
+      freezePre20(legacy);
+        legacy.execute('PRAGMA user_version = 17');
       legacy.close();
       database = PikoDatabase(NativeDatabase(file));
       repository = SqliteCategoriesRepository(database);

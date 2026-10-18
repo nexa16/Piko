@@ -21,7 +21,7 @@ Piko stores vocabulary on the device and offers self-assessed Long-term and Spee
 <a id="collections"></a>
 ## Collections
 
-From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. The available language choices are Korean, German, English and French; interface language is a separate setting.
+From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. Each language field opens a searchable directory with 128 choices: 120 base languages, six curated varieties and two Mandarin script options alongside generic Mandarin. Custom is available in the same picker. A custom name matching a catalog label in the current interface language after case/whitespace/punctuation normalization selects that catalog identity; otherwise the exact name is retained. Existing Collection languages and custom names remain fixed. Interface language is a separate setting.
 
 Open a Collection from **My collections**. Its heading shows the language pair and vocabulary count. The information icon beside this metadata opens **How learning works**, including an expandable technical explanation. Closing help returns to the Collection.
 
@@ -49,7 +49,7 @@ Ordinary product emulator capture · [Full image](images/r7-collection.png) · [
 
 The entry session retains previously confirmed words for revisiting and editing. A new draft is different from an existing saved card: completing both required fields alone does not confirm the new word. Once a word is saved, valid edits save automatically. Watch **Saving…**, **Saved** and validation/error feedback rather than assuming an invalid edit reached storage.
 
-The same target/native pair cannot be saved twice in one Collection. Comparison trims outside whitespace, normalizes Unicode and ignores letter case; it does not merge all spelling variants. If a pair already exists, edit that saved entry or change the pair. Empty required fields and incomplete example pairs need correction before saving.
+The same target/native pair can have separate entries with different Hints. Each meaning has its own UUID and starts with fresh learning. A complete pair plus Hint must be unique within its Collection: comparison normalizes Unicode, lowercases and collapses runs of Unicode whitespace, while preserving punctuation and accents. An absent or whitespace-only Hint is the same empty key. Change the pair or Hint to resolve a duplicate. Editing the Hint on an existing entry preserves its learning. Empty required fields and incomplete example pairs need correction before saving.
 
 <img src="images/r7-entry-draft.png" width="320" alt="Unsaved manually typed livre and Buch with manual examples and Hint controls">
 
@@ -203,11 +203,11 @@ This is a report, not a restore file: the Collection importer rejects it. Saving
 ### Check and apply an import
 
 1. Use **Choose JSON file**, **Paste from clipboard**, or edit **Paste or edit JSON**. **Copy example JSON** supplies synthetic structure for the Collection's language pair.
-2. Choose which content groups to import: target text, native text, category assignments, examples, hint and Activity.
-3. Choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing.
+2. Choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing.
+3. Choose which content groups to import: target text, native text, category assignments, examples, hint and Activity. Recheck after changing groups.
 4. Fix errors and check again. When valid, choose **Import vocabulary** and confirm the batch.
 
-Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Schema versions 1–4 are accepted. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word pairs block the batch.
+Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Only current schema version 5 is accepted. Both language fields contain explicit catalog/custom identity objects; custom names match across installations after the same bounded normalization, while destination labels remain unchanged. See [manual conversion examples](json-format.md) for older files. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word-pair/Hint tuples block the batch. The check uses effective content after selected groups, omissions and clears are resolved.
 
 Existing learning is preserved. Imported learning and statistics data are ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
 

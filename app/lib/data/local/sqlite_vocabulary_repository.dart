@@ -98,6 +98,7 @@ final class SqliteVocabularyRepository
           VocabularyEntriesCompanion(
             active: active == null ? const Value.absent() : Value(active),
             hintText: Value(content.hintText),
+            hintKey: Value(vocabularyIdentityKey(content.hintText)),
             hintVisibility: Value(content.hintVisibility.name),
           ),
         );
@@ -130,10 +131,19 @@ final class SqliteVocabularyRepository
         group.key: Set<String>.of(group.value),
     };
     return _write(() async {
-      final saved = await createCategorized(
+      final categories = SqliteCategoriesRepository(database);
+      await categories.validateAssignments(
+        collectionId: collectionId,
+        assignments: requested,
+      );
+      final saved = await _create(
         collectionId: collectionId,
         targetText: targetText,
         nativeText: nativeText,
+        content: normalized,
+      );
+      await categories.replaceAssignments(
+        entryId: saved.id,
         assignments: requested,
       );
       await _writeContent(
@@ -208,12 +218,15 @@ final class SqliteVocabularyRepository
         group.key: Set<String>.of(group.value),
     };
     return _write(() async {
-      final saved = await updateCategorized(
+      final saved = await _update(
         id: id,
         targetText: targetText,
         nativeText: nativeText,
-        assignments: requested,
+        content: normalized,
       );
+      await SqliteCategoriesRepository(
+        database,
+      ).replaceAssignments(entryId: id, assignments: requested);
       await _writeContent(id, normalized, makeHintVisibilityDefault, active);
       return VocabularyRecord(
         id: saved.id,
@@ -343,14 +356,13 @@ final class SqliteVocabularyRepository
                 VocabularyEntriesCompanion(
                   targetText: Value(original.targetText),
                   nativeText: Value(original.nativeText),
-                  targetKey: Value(
-                    vocabularyComparisonKey(original.targetText),
-                  ),
-                  nativeKey: Value(
-                    vocabularyComparisonKey(original.nativeText),
-                  ),
+                  targetKey: Value(vocabularyIdentityKey(original.targetText)),
+                  nativeKey: Value(vocabularyIdentityKey(original.nativeText)),
                   active: Value(original.active),
                   hintText: Value(original.content.hintText),
+                  hintKey: Value(
+                    vocabularyIdentityKey(original.content.hintText),
+                  ),
                   hintVisibility: Value(original.content.hintVisibility.name),
                 ),
               );
@@ -401,8 +413,12 @@ final class SqliteVocabularyRepository
   (String, String) _texts(String targetText, String nativeText) {
     final target = normalizeVocabularyText(targetText);
     final native = normalizeVocabularyText(nativeText);
-    if (target.isEmpty) throw VocabularyValidation.requiredTarget;
-    if (native.isEmpty) throw VocabularyValidation.requiredNative;
+    if (vocabularyIdentityKey(target).isEmpty) {
+      throw VocabularyValidation.requiredTarget;
+    }
+    if (vocabularyIdentityKey(native).isEmpty) {
+      throw VocabularyValidation.requiredNative;
+    }
     return (target, native);
   }
 
@@ -468,6 +484,17 @@ final class SqliteVocabularyRepository
     required String collectionId,
     required String targetText,
     required String nativeText,
+  }) => _create(
+    collectionId: collectionId,
+    targetText: targetText,
+    nativeText: nativeText,
+  );
+
+  Future<VocabularyRecord> _create({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    VocabularyContent? content,
   }) async {
     final (target, native) = _texts(targetText, nativeText);
     return _write(() async {
@@ -477,20 +504,22 @@ final class SqliteVocabularyRepository
       if (collection == null) throw VocabularyValidation.collectionNotFound;
       final id = const Uuid().v4();
       final rowId = await database.allocateVocabularyRowId();
-      final visibility = await readHintVisibilityDefault(
-        collectionId: collectionId,
-      );
+      final visibility =
+          content?.hintVisibility ??
+          await readHintVisibilityDefault(collectionId: collectionId);
       final addedAt = database.clock.now().toUtc();
       await database.customInsert(
-        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_visibility, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_key, hint_text, hint_visibility, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         variables: [
           Variable(rowId),
           Variable(id),
           Variable(collectionId),
           Variable(target),
           Variable(native),
-          Variable(vocabularyComparisonKey(target)),
-          Variable(vocabularyComparisonKey(native)),
+          Variable(vocabularyIdentityKey(target)),
+          Variable(vocabularyIdentityKey(native)),
+          Variable(vocabularyIdentityKey(content?.hintText)),
+          Variable<String>(content?.hintText),
           Variable(visibility.name),
           Variable(addedAt.toIso8601String()),
         ],
@@ -513,6 +542,13 @@ final class SqliteVocabularyRepository
     required String id,
     required String targetText,
     required String nativeText,
+  }) => _update(id: id, targetText: targetText, nativeText: nativeText);
+
+  Future<VocabularyRecord> _update({
+    required String id,
+    required String targetText,
+    required String nativeText,
+    VocabularyContent? content,
   }) async {
     final (target, native) = _texts(targetText, nativeText);
     return _write(() async {
@@ -526,8 +562,16 @@ final class SqliteVocabularyRepository
         VocabularyEntriesCompanion(
           targetText: Value(target),
           nativeText: Value(native),
-          targetKey: Value(vocabularyComparisonKey(target)),
-          nativeKey: Value(vocabularyComparisonKey(native)),
+          targetKey: Value(vocabularyIdentityKey(target)),
+          nativeKey: Value(vocabularyIdentityKey(native)),
+          hintKey: Value(
+            vocabularyIdentityKey(
+              content == null ? existing.hintText : content.hintText,
+            ),
+          ),
+          hintText: content == null
+              ? const Value.absent()
+              : Value(content.hintText),
         ),
       );
       return VocabularyRecord(

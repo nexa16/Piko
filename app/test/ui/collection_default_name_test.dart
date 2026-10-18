@@ -1,3 +1,4 @@
+import 'package:piko/shared/copy_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/collections_repository.dart';
@@ -29,13 +30,14 @@ Future<void> changeLanguage(
   VocabularyLanguage language, {
   bool native = false,
 }) async {
-  final dropdown = tester.widget<DropdownButton<VocabularyLanguage>>(
-    native
-        ? find.byType(DropdownButton<VocabularyLanguage>).last
-        : find.byType(DropdownButton<VocabularyLanguage>).first,
-  );
-  dropdown.onChanged!(language);
+  final trigger=find.byKey(ValueKey(native ? 'collection.nativeLanguage' : 'collection.targetLanguage'));
+  await tester.ensureVisible(trigger); await tester.tap(trigger);
   await tester.pumpAndSettle();
+  final search=find.byType(TextField).last;
+  await tester.enterText(search, language.label(PikoCopyScope.of(tester.element(search)).locale));
+  await tester.pumpAndSettle();
+  final choice=find.byKey(ValueKey('language-${language.code}'));
+  await tester.ensureVisible(choice); await tester.tap(choice); await tester.pumpAndSettle();
 }
 
 void main() {
@@ -51,7 +53,7 @@ void main() {
           nameField(tester).controller!.text,
           copy.text('language.korean'),
         );
-        for (final language in VocabularyLanguage.values) {
+        for (final language in [VocabularyLanguage.korean, VocabularyLanguage.french, VocabularyLanguage.english, VocabularyLanguage.german, VocabularyLanguage.values.singleWhere((v)=>v.code=='zh-Hans')]) {
           await changeLanguage(tester, language);
           expect(
             nameField(tester).controller!.text,

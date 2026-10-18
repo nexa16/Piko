@@ -9,8 +9,8 @@ typedef CollectionEntryCountBuilder =
 String collectionLanguagePair(BuildContext context, CollectionRecord record) {
   final copy = PikoCopyScope.of(context);
   return copy.text('collection.languagePair', {
-    'target': copy.text(record.targetLanguage.copyKey),
-    'native': copy.text(record.nativeLanguage.copyKey),
+    'target': record.targetLanguage.label(copy.locale),
+    'native': record.nativeLanguage.label(copy.locale),
   });
 }
 

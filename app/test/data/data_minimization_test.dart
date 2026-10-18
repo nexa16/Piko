@@ -20,6 +20,8 @@ const allowedColumns = <String, Set<String>>{
     'name',
     'target_language',
     'native_language',
+    'target_language_name', // Immutable custom display label.
+    'native_language_name',
     'automatic_hint_default',
     'hint_default_offer_handled',
   },
@@ -30,6 +32,7 @@ const allowedColumns = <String, Set<String>>{
     'native_text',
     'target_key',
     'native_key',
+    'hint_key', // Deterministic word-pair/Hint uniqueness, no extra history.
     'example_target_text',
     'example_native_text',
     'hint_text',

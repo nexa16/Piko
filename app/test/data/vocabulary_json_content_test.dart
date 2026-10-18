@@ -18,8 +18,14 @@ const rich = VocabularyContent(
   hintText: 'A fruit',
   hintVisibility: HintVisibility.hidden,
 );
-String v2(List<Object?> entries) =>
-    input(entries, envelope: {'schemaVersion': 2});
+// Compact one-pair test builder emits current ordered examples, never legacy JSON.
+String contentInput(List<Object?> entries) => input([
+  for (final entry in entries)
+    if (entry is Map<String,Object?> && entry.containsKey('example')) {
+      for (final field in entry.entries) if(field.key != 'example') field.key:field.value,
+      'examples': entry['example'] == null ? null : entry['example'] is Map ? [entry['example']] : entry['example'],
+    } else entry,
+]);
 
 void main() {
   Future<Fixture> fixture() async {
@@ -57,7 +63,7 @@ void main() {
       final before = await completeSnapshot(f.db);
       final encoded = await service.exportCollection(f.owner.id);
       final document = jsonDecode(encoded) as Map;
-      expect(document['schemaVersion'], 4);
+      expect(document['schemaVersion'], 5);
       final row =
           ((document['collections'] as List).single['entries'] as List).single
               as Map;
@@ -86,36 +92,17 @@ void main() {
         emptyHint,
       );
       expect(await completeSnapshot(f.db), before);
-      expect((jsonDecode(service.sampleJson()) as Map)['schemaVersion'], 1);
+      expect((jsonDecode(service.sampleJson()) as Map)['schemaVersion'], 5);
     },
   );
 
-  for (final version in [1, 2]) {
-    test(
-      'v$version omission preserves content; v1 ignores unknown optional fields',
-      () async {
-        final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
-        final before = await completeSnapshot(f.db);
-        final preview = await service.analyzeImport(
-          collectionId: f.owner.id,
-          json: input(
-            [
-              {
-                'id': f.entry.id,
-                if (version == 1) 'example': 123,
-                if (version == 1) 'hint': ['unknown'],
-              },
-            ],
-            envelope: {'schemaVersion': version},
-          ),
-        );
-        expect(preview.canApply, isTrue);
-        expect(preview.unchangedCount, 1);
-        await service.applyImport(preview);
-        expect(await completeSnapshot(f.db), before);
-      },
-    );
-  }
+  test('current schema omission preserves content and learning', () async {
+    final f=await fixture(), service=SqliteVocabularyJsonService(f.db);
+    final before=await completeSnapshot(f.db);
+    final preview=await service.analyzeImport(collectionId:f.owner.id,json:input([{'id':f.entry.id,'unknown':'ignored'}]));
+    expect(preview.canApply,isTrue); expect(preview.unchangedCount,1);
+    await service.applyImport(preview); expect(await completeSnapshot(f.db),before);
+  });
 
   test(
     'explicit null clears selected content while an unselected group preserves text and visibility',
@@ -124,7 +111,7 @@ void main() {
       final before = await completeSnapshot(f.db);
       final ignored = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': f.entry.id,
             'example': 123,
@@ -139,7 +126,7 @@ void main() {
       expect(await completeSnapshot(f.db), before);
       final clear = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {'id': f.entry.id, 'example': null, 'hint': null},
         ]),
       );
@@ -162,12 +149,12 @@ void main() {
   );
 
   test(
-    'v2 normalizes content and retains existing visibility when omitted',
+    'current schema normalizes content and retains existing visibility when omitted',
     () async {
       final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
       final preview = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': f.entry.id,
             'example': {'targetText': ' e\u0301 ', 'nativeText': ' 예문 '},
@@ -187,7 +174,7 @@ void main() {
       );
       final exactLimit = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': f.entry.id,
             'example': {
@@ -202,7 +189,7 @@ void main() {
       await service.applyImport(exactLimit);
       final visibilityOnly = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': f.entry.id,
             'hint': {'visibility': 'always'},
@@ -225,7 +212,7 @@ void main() {
       ).write(HintVisibility.settingKey, 'hidden');
       final preview = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': newId,
             'targetText': 'New',
@@ -265,7 +252,7 @@ void main() {
       }
       final unselected = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'targetText': 'Unselected',
             'nativeText': 'Nicht ausgewählt',
@@ -287,7 +274,7 @@ void main() {
   );
 
   test(
-    'invalid v2 content has actionable paths and never changes storage',
+    'invalid current content has actionable paths and never changes storage',
     () async {
       final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
       final before = await completeSnapshot(f.db);
@@ -296,19 +283,19 @@ void main() {
           {
             'example': {'targetText': 'partial'},
           },
-          'example.nativeText',
+          'examples[0].nativeText',
         ),
         (
           {
             'example': {'targetText': ' ', 'nativeText': 'partial'},
           },
-          'example',
+          'examples[0]',
         ),
         (
           {
             'example': {'targetText': '🦊' * 1001, 'nativeText': 'ok'},
           },
-          'example.targetText',
+          'examples[0].targetText',
         ),
         (
           {
@@ -331,7 +318,7 @@ void main() {
       ]) {
         final preview = await service.analyzeImport(
           collectionId: f.owner.id,
-          json: v2([
+          json: contentInput([
             {'id': f.entry.id, ...fields},
           ]),
         );
@@ -358,7 +345,7 @@ void main() {
       final settings = SqliteSettingsRepository(f.db);
       final derived = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': newId,
             'targetText': 'New',
@@ -376,7 +363,7 @@ void main() {
       expect(await completeSnapshot(f.db), afterSetting);
       final explicit = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': newId,
             'targetText': 'New',
@@ -389,7 +376,7 @@ void main() {
       expect((await service.applyImport(explicit)).newCount, 1);
       final existing = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {
             'id': f.entry.id,
             'hint': {'text': 'replacement'},
@@ -415,7 +402,7 @@ void main() {
       final before = await completeSnapshot(f.db);
       final preview = await service.analyzeImport(
         collectionId: f.owner.id,
-        json: v2([
+        json: contentInput([
           {'id': newId, 'targetText': 'New', 'nativeText': 'Neu'},
           {
             'id': f.entry.id,

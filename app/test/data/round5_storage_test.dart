@@ -82,13 +82,13 @@ void main() {
   );
 
   test(
-    'v4 Activity is independent, validates booleans, preserves omissions and legacy input, and rolls back failed apply',
+    'current Activity is independent, validates booleans, preserves omissions and current input, and rolls back failed apply',
     () async {
       final f = await fixture(), service = SqliteVocabularyJsonService(f.db);
       final before = await completeSnapshot(f.db);
       Future<VocabularyJsonPreview> preview(
         Map<String, Object?> fields, {
-        int version = 4,
+        int version = 5,
         Set<VocabularyJsonGroup> groups = VocabularyJsonGroup.all,
       }) => service.analyzeImport(
         collectionId: f.owner.id,
@@ -103,7 +103,7 @@ void main() {
       final change = await preview({'active': false});
       expect(change.updatedCount, 1);
       await service.applyImport(change);
-      for (final version in [1, 2, 3, 4]) {
+      for (final version in [5]) {
         await service.applyImport(
           await preview({'targetText': 'One'}, version: version),
         );
@@ -121,7 +121,7 @@ void main() {
       }
       final exported =
           jsonDecode(await service.exportCollection(f.owner.id)) as Map;
-      expect(exported['schemaVersion'], 4);
+      expect(exported['schemaVersion'], 5);
       expect(exported['collections'][0]['entries'][0]['active'], isFalse);
       expect(
         exported['collections'][0].containsKey('automaticHintDefault'),
@@ -191,8 +191,9 @@ void main() {
             if (table.key == 'collections') {
               row.remove('automatic_hint_default');
               row.remove('hint_default_offer_handled');
+                row.remove('target_language_name');row.remove('native_language_name');
             }
-            if (table.key == 'vocabulary_entries') row.remove('active');
+            if (table.key == 'vocabulary_entries') row.remove('active');row.remove('hint_key');
             final columns = row.keys
                 .map((key) => key == 'stored_rowid' ? 'rowid' : key)
                 .join(',');
@@ -249,7 +250,7 @@ void main() {
               [
                 {'targetText': 'Imported', 'nativeText': 'Importiert'},
               ],
-              envelope: {'schemaVersion': 4},
+              envelope: {'schemaVersion': 5},
             ),
           ),
         );

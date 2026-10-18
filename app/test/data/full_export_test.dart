@@ -89,7 +89,7 @@ void main() {
       final result = decode(await SqliteFullExportService(db).exportAll());
       expect(result['format'], 'piko.full-export');
       expect(result['schemaVersion'], 1);
-      expect(result['collectionSchemaVersion'], 4);
+      expect(result['collectionSchemaVersion'], 5);
       expect(result['collections'], isEmpty);
       expect(result['statistics'], isNull);
       expect(result['exportedAt'], instant.toIso8601String());

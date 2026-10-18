@@ -302,7 +302,7 @@ final class SqliteVocabularyDeletionService
           throw VocabularyUndoFailure.identityConflict;
         }
         await database.customInsert(
-          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, example_target_text, example_native_text, hint_text, hint_visibility, added_at, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO vocabulary_entries (rowid, id, collection_id, target_text, native_text, target_key, native_key, hint_key, example_target_text, example_native_text, hint_text, hint_visibility, added_at, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           variables: [
             Variable(snapshot.rowId),
             Variable(entry.id),
@@ -311,6 +311,7 @@ final class SqliteVocabularyDeletionService
             Variable(entry.nativeText),
             Variable(entry.targetKey),
             Variable(entry.nativeKey),
+            Variable(entry.hintKey),
             Variable(entry.exampleTargetText),
             Variable(entry.exampleNativeText),
             Variable(entry.hintText),
