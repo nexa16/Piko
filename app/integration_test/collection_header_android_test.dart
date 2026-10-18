@@ -345,13 +345,30 @@ void main() {
       expect(position().pixels, closeTo(selectedOffset, .5));
       detail().queryBinding!.scope.setSearch('no matching word');
       await settle();
+      expect(detail().queryBinding!.snapshot!.entries, isEmpty);
+      expect(find.text(copy.text('r2.noMatches')), findsOneWidget);
+      expect(key('piko-reading'), findsNothing);
+      expect(selection.ids, {fixture.entry.id});
+      // Empty results may fit without any collapse range. Verify painted zero
+      // actions separately on a genuinely long, inactive vocabulary list.
+      detail().queryBinding!.scope.setSearch('');
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=0 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
+      detail().queryBinding!.refresh();
+      await settle();
       await collapse();
       expect(action('review').count, '0');
       expect(action('speed').count, '0');
       expect(action('review').onPressed, isNull);
       expect(action('speed').onPressed, isNull);
       expect(selection.ids, {fixture.entry.id});
-      detail().queryBinding!.scope.setSearch('');
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=1 WHERE collection_id=?',
+        [fixture.owner.id],
+      );
+      detail().queryBinding!.refresh();
       await settle();
       selection.clear();
       step('one direction launches directly');
@@ -419,7 +436,11 @@ void main() {
         rating: LearningRating.again,
         at: clock.now(),
       );
-      detail().queryBinding!.scope.setSearch('One');
+      await db.customStatement(
+        'UPDATE vocabulary_entries SET active=0 WHERE collection_id=? AND id<>?',
+        [fixture.owner.id, fixture.entry.id],
+      );
+      detail().queryBinding!.refresh();
       await settle();
       await collapse();
       expect(action('review').count, '0');
