@@ -10,6 +10,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
+    private var aiVault: AiCredentialVault? = null
     private var clockChannel: EventChannel? = null
     private var clockReceiver: BroadcastReceiver? = null
 
@@ -20,6 +21,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        aiVault = AiCredentialVault(this, flutterEngine.dartExecutor.binaryMessenger)
         clockChannel = EventChannel(flutterEngine.dartExecutor.binaryMessenger, "piko/clock_changes")
         clockChannel?.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
@@ -48,6 +50,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        aiVault?.close()
+        aiVault = null
         stopClockReceiver()
         clockChannel?.setStreamHandler(null)
         clockChannel = null

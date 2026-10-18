@@ -231,6 +231,18 @@ Ordinary product emulator capture · [Full image](images/r7-settings.png) · [Ca
 
 [Settings image](screenshots.md#settings) · [Preference ownership](technical.md#runtime)
 
+## Optional AI vocabulary
+
+AI is hidden in ordinary builds. An explicitly enabled owner build can propose topic/level vocabulary, inventory gaps, related Hints and saved-Collection corrections. Access must also be configured and approved by the service. Manual editing and learning remain available without it.
+
+An explicit request shows the data-sharing notice and requires consent. Preview the target/native meanings, optional Hints, bilingual examples and category changes; select each proposal you want. New category definitions need separate selection. Nothing is selected or saved automatically. Saved Source labels and learning state remain protected. A new meaning receives a fresh card rather than reusing another meaning's progress.
+
+An incomplete generation can request another portion, which may incur costs. Earlier proposals remain visible and count toward the shared technical capacity. You can instead explicitly accept a partial result; its quantity does not certify complete topic or level coverage. Changing the underlying inventory invalidates the preview. Errors preserve choices for review. Stop waiting discards the local result; an already submitted request may still incur costs.
+
+Related Hints compare direct same-target or same-native meanings, including inactive cards. Selecting fewer target cards retains the full direct comparison group. For a new draft, approved Hints stay staged until Add-next or Done successfully saves that draft and the selected related changes together. Cancel or a failed save applies none of them. A saved card's normal edits finish before the Hint request.
+
+Content is sent only for the requested Collection scope. Learning history, statistics and other Collections are excluded. The device stores its optional backend session encrypted with Android Keystore; no provider key is present in the app. The Piko service keeps no separate prompt/result history. OpenAI temporarily retains asynchronous responses for about ten minutes and standard provider processing applies. A valid result format does not establish linguistic correctness; check meanings, examples and actual coverage before adopting proposals.
+
 <a id="glossary"></a>
 ## Glossary
 

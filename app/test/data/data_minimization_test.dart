@@ -97,6 +97,7 @@ const allowedColumns = <String, Set<String>>{
   // CAT-009 / CARRY-001: local group preferences, excluded from interchange.
   'category_group_preferences': {
     'tag_color_role',
+    'acquisition_source', // Known ordinary Source group UUID; no Entry provenance backfill/history.
     'dimension_id',
     'custom_value_order',
     'carry_over',

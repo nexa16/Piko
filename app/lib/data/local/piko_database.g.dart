@@ -5035,12 +5035,28 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _acquisitionSourceMeta = const VerificationMeta(
+    'acquisitionSource',
+  );
+  @override
+  late final GeneratedColumn<bool> acquisitionSource = GeneratedColumn<bool>(
+    'acquisition_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("acquisition_source" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     tagColorRole,
     dimensionId,
     customValueOrder,
     carryOver,
+    acquisitionSource,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5089,6 +5105,15 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         carryOver.isAcceptableOrUnknown(data['carry_over']!, _carryOverMeta),
       );
     }
+    if (data.containsKey('acquisition_source')) {
+      context.handle(
+        _acquisitionSourceMeta,
+        acquisitionSource.isAcceptableOrUnknown(
+          data['acquisition_source']!,
+          _acquisitionSourceMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5117,6 +5142,10 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         DriftSqlType.bool,
         data['${effectivePrefix}carry_over'],
       )!,
+      acquisitionSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}acquisition_source'],
+      )!,
     );
   }
 
@@ -5132,11 +5161,13 @@ class CategoryGroupPreference extends DataClass
   final String dimensionId;
   final bool customValueOrder;
   final bool carryOver;
+  final bool acquisitionSource;
   const CategoryGroupPreference({
     this.tagColorRole,
     required this.dimensionId,
     required this.customValueOrder,
     required this.carryOver,
+    required this.acquisitionSource,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5147,6 +5178,7 @@ class CategoryGroupPreference extends DataClass
     map['dimension_id'] = Variable<String>(dimensionId);
     map['custom_value_order'] = Variable<bool>(customValueOrder);
     map['carry_over'] = Variable<bool>(carryOver);
+    map['acquisition_source'] = Variable<bool>(acquisitionSource);
     return map;
   }
 
@@ -5158,6 +5190,7 @@ class CategoryGroupPreference extends DataClass
       dimensionId: Value(dimensionId),
       customValueOrder: Value(customValueOrder),
       carryOver: Value(carryOver),
+      acquisitionSource: Value(acquisitionSource),
     );
   }
 
@@ -5171,6 +5204,7 @@ class CategoryGroupPreference extends DataClass
       dimensionId: serializer.fromJson<String>(json['dimensionId']),
       customValueOrder: serializer.fromJson<bool>(json['customValueOrder']),
       carryOver: serializer.fromJson<bool>(json['carryOver']),
+      acquisitionSource: serializer.fromJson<bool>(json['acquisitionSource']),
     );
   }
   @override
@@ -5181,6 +5215,7 @@ class CategoryGroupPreference extends DataClass
       'dimensionId': serializer.toJson<String>(dimensionId),
       'customValueOrder': serializer.toJson<bool>(customValueOrder),
       'carryOver': serializer.toJson<bool>(carryOver),
+      'acquisitionSource': serializer.toJson<bool>(acquisitionSource),
     };
   }
 
@@ -5189,11 +5224,13 @@ class CategoryGroupPreference extends DataClass
     String? dimensionId,
     bool? customValueOrder,
     bool? carryOver,
+    bool? acquisitionSource,
   }) => CategoryGroupPreference(
     tagColorRole: tagColorRole.present ? tagColorRole.value : this.tagColorRole,
     dimensionId: dimensionId ?? this.dimensionId,
     customValueOrder: customValueOrder ?? this.customValueOrder,
     carryOver: carryOver ?? this.carryOver,
+    acquisitionSource: acquisitionSource ?? this.acquisitionSource,
   );
   CategoryGroupPreference copyWithCompanion(
     CategoryGroupPreferencesCompanion data,
@@ -5209,6 +5246,9 @@ class CategoryGroupPreference extends DataClass
           ? data.customValueOrder.value
           : this.customValueOrder,
       carryOver: data.carryOver.present ? data.carryOver.value : this.carryOver,
+      acquisitionSource: data.acquisitionSource.present
+          ? data.acquisitionSource.value
+          : this.acquisitionSource,
     );
   }
 
@@ -5218,14 +5258,20 @@ class CategoryGroupPreference extends DataClass
           ..write('tagColorRole: $tagColorRole, ')
           ..write('dimensionId: $dimensionId, ')
           ..write('customValueOrder: $customValueOrder, ')
-          ..write('carryOver: $carryOver')
+          ..write('carryOver: $carryOver, ')
+          ..write('acquisitionSource: $acquisitionSource')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(tagColorRole, dimensionId, customValueOrder, carryOver);
+  int get hashCode => Object.hash(
+    tagColorRole,
+    dimensionId,
+    customValueOrder,
+    carryOver,
+    acquisitionSource,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5233,7 +5279,8 @@ class CategoryGroupPreference extends DataClass
           other.tagColorRole == this.tagColorRole &&
           other.dimensionId == this.dimensionId &&
           other.customValueOrder == this.customValueOrder &&
-          other.carryOver == this.carryOver);
+          other.carryOver == this.carryOver &&
+          other.acquisitionSource == this.acquisitionSource);
 }
 
 class CategoryGroupPreferencesCompanion
@@ -5242,12 +5289,14 @@ class CategoryGroupPreferencesCompanion
   final Value<String> dimensionId;
   final Value<bool> customValueOrder;
   final Value<bool> carryOver;
+  final Value<bool> acquisitionSource;
   final Value<int> rowid;
   const CategoryGroupPreferencesCompanion({
     this.tagColorRole = const Value.absent(),
     this.dimensionId = const Value.absent(),
     this.customValueOrder = const Value.absent(),
     this.carryOver = const Value.absent(),
+    this.acquisitionSource = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoryGroupPreferencesCompanion.insert({
@@ -5255,6 +5304,7 @@ class CategoryGroupPreferencesCompanion
     required String dimensionId,
     this.customValueOrder = const Value.absent(),
     this.carryOver = const Value.absent(),
+    this.acquisitionSource = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : dimensionId = Value(dimensionId);
   static Insertable<CategoryGroupPreference> custom({
@@ -5262,6 +5312,7 @@ class CategoryGroupPreferencesCompanion
     Expression<String>? dimensionId,
     Expression<bool>? customValueOrder,
     Expression<bool>? carryOver,
+    Expression<bool>? acquisitionSource,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5269,6 +5320,7 @@ class CategoryGroupPreferencesCompanion
       if (dimensionId != null) 'dimension_id': dimensionId,
       if (customValueOrder != null) 'custom_value_order': customValueOrder,
       if (carryOver != null) 'carry_over': carryOver,
+      if (acquisitionSource != null) 'acquisition_source': acquisitionSource,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5278,6 +5330,7 @@ class CategoryGroupPreferencesCompanion
     Value<String>? dimensionId,
     Value<bool>? customValueOrder,
     Value<bool>? carryOver,
+    Value<bool>? acquisitionSource,
     Value<int>? rowid,
   }) {
     return CategoryGroupPreferencesCompanion(
@@ -5285,6 +5338,7 @@ class CategoryGroupPreferencesCompanion
       dimensionId: dimensionId ?? this.dimensionId,
       customValueOrder: customValueOrder ?? this.customValueOrder,
       carryOver: carryOver ?? this.carryOver,
+      acquisitionSource: acquisitionSource ?? this.acquisitionSource,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5304,6 +5358,9 @@ class CategoryGroupPreferencesCompanion
     if (carryOver.present) {
       map['carry_over'] = Variable<bool>(carryOver.value);
     }
+    if (acquisitionSource.present) {
+      map['acquisition_source'] = Variable<bool>(acquisitionSource.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5317,6 +5374,7 @@ class CategoryGroupPreferencesCompanion
           ..write('dimensionId: $dimensionId, ')
           ..write('customValueOrder: $customValueOrder, ')
           ..write('carryOver: $carryOver, ')
+          ..write('acquisitionSource: $acquisitionSource, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11586,6 +11644,7 @@ typedef $$CategoryGroupPreferencesTableCreateCompanionBuilder =
       required String dimensionId,
       Value<bool> customValueOrder,
       Value<bool> carryOver,
+      Value<bool> acquisitionSource,
       Value<int> rowid,
     });
 typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
@@ -11594,6 +11653,7 @@ typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
       Value<String> dimensionId,
       Value<bool> customValueOrder,
       Value<bool> carryOver,
+      Value<bool> acquisitionSource,
       Value<int> rowid,
     });
 
@@ -11654,6 +11714,11 @@ class $$CategoryGroupPreferencesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$CategoryDimensionsTableFilterComposer get dimensionId {
     final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -11702,6 +11767,11 @@ class $$CategoryGroupPreferencesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CategoryDimensionsTableOrderingComposer get dimensionId {
     final $$CategoryDimensionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -11747,6 +11817,11 @@ class $$CategoryGroupPreferencesTableAnnotationComposer
 
   GeneratedColumn<bool> get carryOver =>
       $composableBuilder(column: $table.carryOver, builder: (column) => column);
+
+  GeneratedColumn<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
+    builder: (column) => column,
+  );
 
   $$CategoryDimensionsTableAnnotationComposer get dimensionId {
     final $$CategoryDimensionsTableAnnotationComposer composer =
@@ -11816,12 +11891,14 @@ class $$CategoryGroupPreferencesTableTableManager
                 Value<String> dimensionId = const Value.absent(),
                 Value<bool> customValueOrder = const Value.absent(),
                 Value<bool> carryOver = const Value.absent(),
+                Value<bool> acquisitionSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion(
                 tagColorRole: tagColorRole,
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
                 carryOver: carryOver,
+                acquisitionSource: acquisitionSource,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -11830,12 +11907,14 @@ class $$CategoryGroupPreferencesTableTableManager
                 required String dimensionId,
                 Value<bool> customValueOrder = const Value.absent(),
                 Value<bool> carryOver = const Value.absent(),
+                Value<bool> acquisitionSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion.insert(
                 tagColorRole: tagColorRole,
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
                 carryOver: carryOver,
+                acquisitionSource: acquisitionSource,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

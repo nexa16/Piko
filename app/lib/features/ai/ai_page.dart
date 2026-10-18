@@ -1,6 +1,8 @@
+import '../../data/ai/ai_connection_controller.dart';
+import '../../data/ai/managed_ai_provider.dart';
+import 'ai_connection_control.dart';
 import 'package:flutter/material.dart';
 import '../../data/ai/ai_contract.dart';
-import '../../data/local/sqlite_ai_service.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_checkbox.dart';
@@ -12,11 +14,17 @@ import '../../ui/components/piko_preference_picker.dart';
 import '../../ui/piko_theme.dart';
 import 'ai_operation_controller.dart';
 
+final class AiAdopted {
+  const AiAdopted(this.adoption);
+  final AiAdoption adoption;
+}
+
 final class AiStagedHints {
-  AiStagedHints(this.plan, Set<String> selected)
+  AiStagedHints(this.plan, Set<String> selected, {this.allowPartial = false})
     : selected = Set.unmodifiable(selected);
   final AiPlan plan;
   final Set<String> selected;
+  final bool allowPartial;
 }
 
 class AiPage extends StatefulWidget {
@@ -31,7 +39,7 @@ class AiPage extends StatefulWidget {
     this.stageOnly = false,
     this.initialAction = AiAction.generate,
   });
-  final SqliteAiService service;
+  final AiContentService service;
   final AiProvider provider;
   final String collectionId, collectionName;
   final void Function(Future<void>)? registerPending;
@@ -97,13 +105,20 @@ class _AiPageState extends State<AiPage> {
 
   String _text(String key) => PikoCopyScope.of(context).text(key);
   bool get busy => controller.applying;
+  AiConnectionController? get connection {
+    final p = widget.provider;
+    return p is ManagedAiProvider && p.access is AiConnectionController
+        ? p.access as AiConnectionController
+        : null;
+  }
+
   Future<void> _start() async {
-    if (!consent || busy) return;
+    if (!consent || busy || ModalRoute.of(context)?.isCurrent == false) return;
     FocusManager.instance.primaryFocus?.unfocus();
     await controller.start(
       action: action,
       goal: goal.text,
-      comprehensiveLevel: comprehensive,
+      comprehensiveLevel: action == AiAction.generate && comprehensive,
       allowGroups: allowGroups,
       allowValues: allowValues,
       anchor: widget.anchor,
@@ -112,7 +127,9 @@ class _AiPageState extends State<AiPage> {
   }
 
   Future<void> _apply() async {
-    if (!controller.canApply) return;
+    if (!controller.canApply || ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
     FocusManager.instance.primaryFocus?.unfocus();
     if (widget.stageOnly) {
       if (!await widget.service.applicable(
@@ -123,14 +140,21 @@ class _AiPageState extends State<AiPage> {
         return;
       }
       if (mounted) {
-        Navigator.of(
-          context,
-        ).pop(AiStagedHints(controller.plan!, controller.selected));
+        Navigator.of(context).pop(
+          AiStagedHints(
+            controller.plan!,
+            controller.selected,
+            allowPartial: controller.allowPartial,
+          ),
+        );
       }
       return;
     }
     try {
-      await controller.apply();
+      final result = await controller.apply();
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(AiAdopted(result));
+      }
     } catch (_) {
       /* The controller keeps choices and localized failure. */
     }
@@ -221,6 +245,21 @@ class _AiPageState extends State<AiPage> {
               ? null
               : (v) => setState(() => controller.allowPartial = v),
         ),
+      if (controller.canContinue)
+        PikoButton(
+          key: const ValueKey('ai-continue'),
+          label: _text('ai.continue'),
+          onPressed: controller.continueGeneration,
+        ),
+      if (plan.cards.isNotEmpty &&
+          plan.request.snapshot.groups
+              .where((g) => g.acquisitionSource)
+              .any(
+                (g) => plan.cards.any(
+                  (c) => !c.assignments.containsKey(g.dimension.id),
+                ),
+              ))
+        Text(_text('ai.missingSource')),
       for (final limitation in plan.limitations) Text(limitation),
       gap,
       if (plan.groups.isNotEmpty || plan.values.isNotEmpty)
@@ -435,6 +474,12 @@ class _AiPageState extends State<AiPage> {
                           : (v) => setState(() => consent = v),
                     ),
                   ),
+                  if (connection != null)
+                    AiConnectionControl(
+                      connection: connection!,
+                      consent: consent,
+                      enabled: !busy && !controller.requesting,
+                    ),
                 ],
               ),
               if (controller.error != null)
@@ -451,6 +496,7 @@ class _AiPageState extends State<AiPage> {
                     busy ||
                         controller.requesting ||
                         !consent ||
+                        (connection != null && !connection!.configured) ||
                         (action == AiAction.generate &&
                             goal.text.trim().isEmpty) ||
                         (action == AiAction.hints &&

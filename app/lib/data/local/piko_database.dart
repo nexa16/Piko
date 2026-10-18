@@ -136,7 +136,7 @@ class CategoryValues extends Table {
   ];
 }
 
-/// Local presentation choices, deliberately absent from Collection interchange.
+/// Local group preferences/known acquisition lineage, absent from interchange.
 class CategoryGroupPreferences extends Table {
   TextColumn get tagColorRole => text().nullable()();
   TextColumn get dimensionId =>
@@ -144,6 +144,8 @@ class CategoryGroupPreferences extends Table {
   BoolColumn get customValueOrder =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get carryOver => boolean().withDefault(const Constant(false))();
+  BoolColumn get acquisitionSource =>
+      boolean().withDefault(const Constant(false))();
   @override
   Set<Column<Object>> get primaryKey => {dimensionId};
 }
@@ -320,7 +322,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -467,6 +469,12 @@ class PikoDatabase extends _$PikoDatabase {
           await m.addColumn(
             categoryGroupPreferences,
             categoryGroupPreferences.carryOver,
+          );
+        }
+        if (from >= 18 && from < 22) {
+          await m.addColumn(
+            categoryGroupPreferences,
+            categoryGroupPreferences.acquisitionSource,
           );
         }
       });

@@ -1,3 +1,4 @@
+import '../ai/ai_contract.dart' show aiSourceName;
 import '../vocabulary_normalization.dart' show compareVocabularyLabels;
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
@@ -58,6 +59,8 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
       position: row.position,
       carryOver: result.read<int>('carry_over') != 0,
       tagColorRole: result.readNullable<String>('tag_color_role'),
+      acquisitionSource:
+          result.read<int>('acquisition_source') != 0 || aiSourceName(row.name),
     );
   }
 
@@ -71,6 +74,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
   Selectable<QueryRow> _dimensions(String owner, {bool byId = false}) =>
       database.customSelect(
         'SELECT d.*, COALESCE(p.carry_over, 0) AS carry_over, p.tag_color_role '
+        ' , COALESCE(p.acquisition_source, 0) AS acquisition_source '
         'FROM category_dimensions d LEFT JOIN category_group_preferences p '
         'ON p.dimension_id = d.id WHERE d.${byId ? 'id' : 'collection_id'} = ? '
         'ORDER BY d.position, d.id',
@@ -226,6 +230,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
             ),
           );
       await database.assignCategoryTagColor(identity, collectionId);
+      if (aiSourceName(trimmed)) await _saveAcquisitionSource(identity);
       if (carryOver) await _saveCarryOver(identity, true);
       return (await dimensionById(identity))!;
     });
@@ -276,12 +281,25 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
             ),
           );
       if (count != 1) throw CategoryValidation.dimensionNotFound;
+      if (existing.acquisitionSource || aiSourceName(trimmed)) {
+        await _saveAcquisitionSource(id);
+      }
       if (carryOver != null && carryOver != existing.carryOver) {
         await _saveCarryOver(id, carryOver);
       }
       return (await dimensionById(id))!;
     });
   }
+
+  Future<void> _saveAcquisitionSource(String id) => database
+      .into(database.categoryGroupPreferences)
+      .insertOnConflictUpdate(
+        CategoryGroupPreferencesCompanion.insert(
+          dimensionId: id,
+          acquisitionSource: const Value(true),
+        ),
+      )
+      .then((_) {});
 
   Future<void> _saveCarryOver(String id, bool enabled) => database
       .into(database.categoryGroupPreferences)

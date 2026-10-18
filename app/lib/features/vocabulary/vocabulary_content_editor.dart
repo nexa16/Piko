@@ -32,6 +32,7 @@ class VocabularyContentEditor extends StatefulWidget {
     this.collectionId,
     this.error,
     this.onPendingWrites,
+    this.relatedHints,
     super.key,
   });
   final VocabularyContent value;
@@ -43,6 +44,7 @@ class VocabularyContentEditor extends StatefulWidget {
   final String? collectionId;
   final Object? error;
   final ValueChanged<Future<void>>? onPendingWrites;
+  final Widget? relatedHints;
   @override
   State<VocabularyContentEditor> createState() =>
       _VocabularyContentEditorState();
@@ -196,6 +198,7 @@ class _VocabularyContentEditorState extends State<VocabularyContentEditor> {
           title: copy.text('vocab.hint'),
           children: [
             field('content-hint', copy.text('vocab.hint'), hint),
+            if (widget.relatedHints != null) widget.relatedHints!,
             PikoFormFieldRow(
               child: PikoSwitch(
                 key: const ValueKey('content-hint-automatic'),

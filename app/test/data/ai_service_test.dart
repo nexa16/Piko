@@ -382,8 +382,8 @@ void main() {
       );
       expect(await stored(f.db), before);
       final saved = await service.apply(p, {'new', 'old'}, newAnchor: anchor);
-      expect(saved!.content.hintText, 'Flussrand');
-      expect(saved.id, isNot(anchor.record.id));
+      expect(saved.confirmation!.entry.content.hintText, 'Flussrand');
+      expect(saved.confirmation!.entry.id, isNot(anchor.record.id));
       expect(
         (await f.vocabulary.watchById(f.entry.id).first)!.content.hintText,
         'Geldinstitut',

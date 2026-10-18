@@ -1026,8 +1026,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           ModalRoute.of(context)?.isCurrent != true) {
         return;
       }
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(builder: (context) => builder(context, record)),
+      await Navigator.of(context).push<Object?>(
+        MaterialPageRoute<Object?>(builder: (context) => builder(context, record)),
       );
     } finally {
       barrier.release();

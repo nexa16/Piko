@@ -113,13 +113,26 @@ abstract interface class CollectionHintPreferences {
 
 /// Confirmation and the next draft's carry-over share one committed snapshot.
 final class EntryConfirmation {
-  EntryConfirmation(this.entry, Map<String, Set<String>> nextAssignments)
-    : nextAssignments = Map.unmodifiable({
-        for (final group in nextAssignments.entries)
-          group.key: Set<String>.unmodifiable(group.value),
-      });
+  EntryConfirmation(
+    this.entry,
+    Map<String, Set<String>> nextAssignments, {
+    Map<String, Set<String>>? assignments,
+    Map<String, VocabularyRecord> relatedEntries = const {},
+  }) : assignments = assignments == null
+           ? null
+           : Map.unmodifiable({
+               for (final g in assignments.entries)
+                 g.key: Set<String>.unmodifiable(g.value),
+             }),
+       relatedEntries = Map.unmodifiable(relatedEntries),
+       nextAssignments = Map.unmodifiable({
+         for (final group in nextAssignments.entries)
+           group.key: Set<String>.unmodifiable(group.value),
+       });
   final VocabularyRecord entry;
   final Map<String, Set<String>> nextAssignments;
+  final Map<String, Set<String>>? assignments;
+  final Map<String, VocabularyRecord> relatedEntries;
 }
 
 abstract interface class EntryConfirmationRepository {

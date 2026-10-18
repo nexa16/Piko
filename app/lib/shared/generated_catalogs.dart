@@ -405,6 +405,10 @@ const copyCatalog = <String, Object?>{
 "en": "Speed",
 "note": "Internal mode remains speed. Public label is open; edit here to try Learn new / Intensive learning.",
 },
+"ai.accessId": <String, Object?>{
+"de": "Geräte-Zugriffs-ID: {id}",
+"en": "Device access ID: {id}",
+},
 "ai.action": <String, Object?>{
 "de": "Aktion",
 "en": "Action",
@@ -445,9 +449,25 @@ const copyCatalog = <String, Object?>{
 "de": "Umfassender Niveauwortschatz",
 "en": "Comprehensive level vocabulary",
 },
+"ai.connect": <String, Object?>{
+"de": "Optionalen AI-Zugriff verbinden",
+"en": "Connect optional AI access",
+},
+"ai.connecting": <String, Object?>{
+"de": "Optionaler Zugriff wird vorbereitet …",
+"en": "Preparing optional access…",
+},
+"ai.connectionUnconfigured": <String, Object?>{
+"de": "AI-Zugriff ist für diesen Build nicht eingerichtet. Manuelles Bearbeiten und Lernen sind verfügbar.",
+"en": "AI access is not configured for this build. Manual editing and learning are available.",
+},
 "ai.consent": <String, Object?>{
 "de": "AI für diesen Auftrag verwenden",
 "en": "Use AI for this request",
+},
+"ai.continue": <String, Object?>{
+"de": "Weitere Portion anfordern (kann Kosten verursachen)",
+"en": "Request another portion (may incur costs)",
 },
 "ai.counts": <String, Object?>{
 "de": "{cards} neue Karten · {changes} vorgeschlagene Änderungen",
@@ -466,8 +486,16 @@ const copyCatalog = <String, Object?>{
 "en": "Approve new definitions separately. A selected assignment requires its group and value.",
 },
 "ai.discard": <String, Object?>{
-"de": "Vorschläge verwerfen / Auftrag abbrechen",
-"en": "Discard proposals / cancel request",
+"de": "Vorschläge verwerfen / Warten beenden",
+"en": "Discard proposals / stop waiting",
+},
+"ai.discardHints": <String, Object?>{
+"de": "Vorgemerkte Hinweise verwerfen",
+"en": "Discard staged Hints",
+},
+"ai.disconnect": <String, Object?>{
+"de": "AI-Zugriff trennen",
+"en": "Disconnect AI access",
 },
 "ai.error.accessDenied": <String, Object?>{
 "de": "Dieses Gerät hat keinen freigegebenen AI-Zugriff. Lokales Bearbeiten und Lernen bleiben verfügbar.",
@@ -545,6 +573,18 @@ const copyCatalog = <String, Object?>{
 "de": "Wähle die Karten für Hinweise. Alle direkt verwandten Bedeutungen bleiben Vergleichskontext.",
 "en": "Choose which related cards need Hints. All directly related meanings remain comparison context.",
 },
+"ai.hintsStaged": <String, Object?>{
+"de": "Ausgewählte Hinweise werden erst zusammen mit dieser neuen Karte gespeichert.",
+"en": "Selected Hints will be saved only together with this new card.",
+},
+"ai.identityReady": <String, Object?>{
+"de": "Dieses Gerät hat eine Zugriffsidentität. Der Piko-Dienst muss den AI-Zugriff zusätzlich freigeben.",
+"en": "This device has an access identity. The Piko service must separately approve its AI access.",
+},
+"ai.missingSource": <String, Object?>{
+"de": "Für einige neue Karten ist kein passender AI-Quellenwert verfügbar. Ihre Quelle bleibt ohne Zuordnung, solange du keinen passenden vorgeschlagenen Wert bestätigst.",
+"en": "Some new cards have no available AI Source label. Their Source stays unassigned unless you approve a suitable proposed label.",
+},
 "ai.mode.multiple": <String, Object?>{
 "de": "Mehrere Werte",
 "en": "Multiple values",
@@ -564,6 +604,10 @@ const copyCatalog = <String, Object?>{
 "ai.noHint": <String, Object?>{
 "de": "Kein Hinweis",
 "en": "No Hint",
+},
+"ai.notConnected": <String, Object?>{
+"de": "Keine AI-Zugriffsidentität ist verbunden.",
+"en": "No AI access identity is connected.",
 },
 "ai.outcome.change": <String, Object?>{
 "de": "Vorgeschlagene Korrektur",
@@ -594,8 +638,8 @@ const copyCatalog = <String, Object?>{
 "en": "Review proposals",
 },
 "ai.privacy": <String, Object?>{
-"de": "Ein ausdrücklicher Auftrag sendet den benötigten Vokabel- und Kategoriekontext dieser Collection an den Piko-AI-Dienst und OpenAI. Lernverlauf, Statistik und andere Collections bleiben auf diesem Gerät. Piko führt keinen zusätzlichen Prompt-/Antwortverlauf. Es gilt die übliche Anbieterverarbeitung; eine Speicherung von null Tagen wird nicht zugesagt. Lokales Bearbeiten und Lernen funktionieren ohne AI.",
-"en": "An explicit request sends this Collection’s required vocabulary and category context to the Piko AI service and OpenAI. Learning history, statistics and other Collections stay on this device. Piko does not keep a separate prompt/result history. Standard provider processing applies; zero retention is not promised. Local editing and learning work without AI.",
+"de": "Ein ausdrücklicher Auftrag sendet den benötigten Vokabel- und Kategoriekontext dieser Collection an den Piko-AI-Dienst und OpenAI. Eine anonyme Backend-Identität steuert Gerätezugriff und Limits ohne E-Mail oder Passwort. Lernverlauf, Statistik und andere Collections bleiben auf diesem Gerät. Piko führt keinen zusätzlichen Prompt-/Antwortverlauf. Für die asynchrone Verarbeitung hält der Anbieter Antworten ungefähr zehn Minuten vor; zusätzlich gilt die übliche Anbieterverarbeitung. Eine Speicherung von null Tagen wird nicht zugesagt. Das Beenden des Wartens verwirft das Ergebnis; ein bereits übermittelter Versuch kann Kosten verursachen. Lokales Bearbeiten und Lernen funktionieren ohne AI.",
+"en": "An explicit request sends this Collection’s required vocabulary and category context to the Piko AI service and OpenAI. An anonymous backend identity controls device access and limits without email or password. Learning history, statistics and other Collections stay on this device. Piko keeps no separate prompt/result history. For asynchronous processing, the provider temporarily retains responses for about ten minutes; standard provider processing also applies. Zero retention is not promised. Stopping waiting discards the result; an already submitted attempt may incur costs. Local editing and learning work without AI.",
 },
 "ai.privacyTitle": <String, Object?>{
 "de": "Optionaler AI-Zugriff",
@@ -604,6 +648,10 @@ const copyCatalog = <String, Object?>{
 "ai.proposed": <String, Object?>{
 "de": "Vorgeschlagen",
 "en": "Proposed",
+},
+"ai.relatedCount": <String, Object?>{
+"de": "Weitere direkt verwandte Karten: {count}",
+"en": "Other directly related cards: {count}",
 },
 "ai.request": <String, Object?>{
 "de": "Auftrag",

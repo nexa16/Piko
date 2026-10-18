@@ -1,3 +1,4 @@
+import '../ai/ai_entry_session_coordinator.dart';
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_deletion.dart';
@@ -17,14 +18,17 @@ final class EntrySessionResources {
     this.interchangeBuilder,
     this.onPendingWrites,
     this.categoriesRepository,
+    this.aiCoordinator,
   });
   final EntrySessionController session;
   final VocabularyDeletionService deletionService;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
+  final AiEntrySessionCoordinator? aiCoordinator;
 
   void dispose() {
+    aiCoordinator?.dispose();
     session.dispose();
     deletionService.dispose();
   }
@@ -63,6 +67,7 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
   Widget build(BuildContext context) => EntrySessionScreen(
     collection: widget.collection,
     session: resources.session,
+    aiCoordinator: resources.aiCoordinator,
     categoriesRepository: resources.categoriesRepository,
     onOpenInterchange: resources.interchangeBuilder == null
         ? null

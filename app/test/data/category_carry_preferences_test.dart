@@ -172,6 +172,7 @@ void main() {
               .map(
                 (row) => Map<String, Object?>.from(row as Map)
                   ..remove('tag_color_role')
+                  ..remove('acquisition_source')
                   ..remove('carry_over')
                   ..remove('target_language_name')
                   ..remove('native_language_name')

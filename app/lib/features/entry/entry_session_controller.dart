@@ -119,6 +119,7 @@ final class EntrySessionController extends ChangeNotifier {
   EntrySessionController({
     required this.collectionId,
     required VocabularyRepository repository,
+    this.confirmDraft,
     VocabularyDeletionService? deletionService,
     PikoClock? clock,
     // Public injection name with a private dependency; not a UI-facing property.
@@ -130,6 +131,8 @@ final class EntrySessionController extends ChangeNotifier {
        _clock = clock ?? const SystemPikoClock();
   final String collectionId;
   final VocabularyRepository _repository;
+  VocabularyRepository get repository => _repository;
+  final Future<EntryConfirmation> Function(EntryDraft snapshot)? confirmDraft;
   final VocabularyDeletionService? _deletionService;
   final PikoClock _clock;
   final Map<String, int> _ordinals = {};
@@ -447,6 +450,35 @@ final class EntrySessionController extends ChangeNotifier {
       if (pending.isEmpty) return;
       await Future.wait(pending);
     }
+  }
+
+  /// Hydrate only authoritative Hint adoption results after ordinary queues
+  /// settled. Newer invalid/raw buffers remain owned by their editor.
+  void adoptCommittedHints(Map<String, VocabularyRecord> entries) {
+    _ensureActive();
+    for (final record in entries.values) {
+      if (record.collectionId != collectionId) {
+        throw StateError('Foreign AI adoption');
+      }
+      final index = _confirmedEntries.indexWhere(
+        (entry) => entry.id == record.id,
+      );
+      if (index < 0) continue;
+      final buffer = _savedBuffers[record.id];
+      if (buffer == null) continue;
+      _confirmedEntries[index] = record;
+      if (buffer.error == null &&
+          !_savedWorkers.containsKey(record.id) &&
+          buffer.pending == null) {
+        _savedBuffers[record.id] = _SavedEntryBuffer(
+          record,
+          buffer.draft.assignments,
+        );
+      } else {
+        buffer.committed = record;
+      }
+    }
+    notifyListeners();
   }
 
   /// Reconcile this session's saved cards after an external confirmed import.
@@ -856,17 +888,19 @@ final class EntrySessionController extends ChangeNotifier {
         _activeEntryId = null;
         if (target.isEmpty) throw VocabularyValidation.requiredTarget;
         if (native.isEmpty) throw VocabularyValidation.requiredNative;
-        final record = await _create(snapshot);
+        final confirmation = await _persistDraft(snapshot);
+        final record = confirmation.entry;
         if (record.collectionId != collectionId) {
           throw StateError(
             'Completion returned an entry from another Collection.',
           );
         }
         if (!_disposed) {
+          _adoptRelatedConfirmation(confirmation);
           _confirmedEntries.add(record);
           _savedBuffers[record.id] = _SavedEntryBuffer(
             record,
-            snapshot.assignments,
+            confirmation.assignments ?? snapshot.assignments,
           );
           _ordinals[record.id] = _nextOrdinal++;
           _activeEntryId = record.id;
@@ -907,18 +941,7 @@ final class EntrySessionController extends ChangeNotifier {
           collectionId: collectionId,
         );
       }
-      final repository = _repository;
-      final confirmation = repository is EntryConfirmationRepository
-          ? await (repository as EntryConfirmationRepository).confirmNewEntry(
-              collectionId: collectionId,
-              targetText: snapshot.targetText,
-              nativeText: snapshot.nativeText,
-              assignments: snapshot.assignments,
-              content: snapshot.content,
-              active: snapshot.active,
-              makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
-            )
-          : EntryConfirmation(await _create(snapshot), const {});
+      final confirmation = await _persistDraft(snapshot);
       final record = confirmation.entry;
       if (record.collectionId != collectionId) {
         throw StateError(
@@ -927,10 +950,11 @@ final class EntrySessionController extends ChangeNotifier {
       }
       _pendingConfirmation = null;
       if (!_disposed) {
+        _adoptRelatedConfirmation(confirmation);
         _confirmedEntries.add(record);
         _savedBuffers[record.id] = _SavedEntryBuffer(
           record,
-          snapshot.assignments,
+          confirmation.assignments ?? snapshot.assignments,
         );
         _ordinals[record.id] = _nextOrdinal++;
         _advancementRevision++;
@@ -1059,6 +1083,39 @@ final class EntrySessionController extends ChangeNotifier {
     _draftRevision++;
     _draftError = null;
     notifyListeners();
+  }
+
+  Future<EntryConfirmation> _persistDraft(EntryDraft snapshot) async {
+    final repository = _repository;
+    return confirmDraft != null
+        ? await confirmDraft!(snapshot)
+        : repository is EntryConfirmationRepository
+        ? await (repository as EntryConfirmationRepository).confirmNewEntry(
+            collectionId: collectionId,
+            targetText: snapshot.targetText,
+            nativeText: snapshot.nativeText,
+            assignments: snapshot.assignments,
+            content: snapshot.content,
+            active: snapshot.active,
+            makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
+          )
+        : EntryConfirmation(await _create(snapshot), const {});
+  }
+
+  void _adoptRelatedConfirmation(EntryConfirmation confirmation) {
+    for (final related in confirmation.relatedEntries.values) {
+      final index = _confirmedEntries.indexWhere(
+        (entry) => entry.id == related.id,
+      );
+      if (index >= 0) {
+        final buffer = _savedBuffers[related.id];
+        _confirmedEntries[index] = related;
+        _savedBuffers[related.id] = _SavedEntryBuffer(
+          related,
+          buffer?.draft.assignments ?? const {},
+        );
+      }
+    }
   }
 
   Future<VocabularyRecord> _create(EntryDraft snapshot) {

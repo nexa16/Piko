@@ -1,3 +1,4 @@
+import 'sqlite_category_defaults.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../ai/ai_contract.dart';
@@ -12,9 +13,10 @@ import 'sqlite_vocabulary_content.dart';
 
 /// Proposals never write. All selected mutations share one authoritative SQLite
 /// transaction, including a new editor anchor and staged related Hint changes.
-final class SqliteAiService {
+final class SqliteAiService implements AiContentService {
   SqliteAiService(this.database, {this.enabled = pikoAiEnabled});
   final PikoDatabase database;
+  @override
   final bool enabled;
   final _consumed = <String>{};
   bool _applying = false;
@@ -22,6 +24,7 @@ final class SqliteAiService {
     if (!enabled) throw AiFailure.disabled;
   }
 
+  @override
   Future<AiSnapshot> snapshot(String collectionId) =>
       database.transaction(() async {
         final c = await (database.select(
@@ -62,6 +65,7 @@ final class SqliteAiService {
         );
       });
 
+  @override
   Future<AiRequest> request({
     required String collectionId,
     required AiAction action,
@@ -110,6 +114,7 @@ final class SqliteAiService {
     );
   }
 
+  @override
   Future<bool> applicable(AiRequest request, {AiEntry? currentDraft}) async {
     final fresh = await snapshot(request.snapshot.collectionId);
     if (request.action != AiAction.hints) {
@@ -128,7 +133,8 @@ final class SqliteAiService {
   /// Learning writes are intentionally outside the snapshot and never replaced.
   /// [newAnchor] is provided only by successful new-entry confirmation, never by
   /// merely accepting a Hint proposal in its review area.
-  Future<VocabularyRecord?> apply(
+  @override
+  Future<AiAdoption> apply(
     AiPlan plan,
     Set<String> selected, {
     bool allowPartial = false,
@@ -226,8 +232,8 @@ final class SqliteAiService {
         final changed = <String, AiEntry>{};
         final fields = <String>{};
         final sourceIds = {
-          for (final g in fresh.groups)
-            if (aiSourceName(g.dimension.name)) g.dimension.id,
+          for (final g in await cats.dimensions(fresh.collectionId))
+            if (g.acquisitionSource || aiSourceName(g.name)) g.id,
         };
         for (final edit in plan.edits.where((e) => selected.contains(e.id))) {
           if (!edit.applicable ||
@@ -334,7 +340,9 @@ final class SqliteAiService {
         for (final card in plan.cards.where((c) => selected.contains(c.id))) {
           final assignments = await resolve(card.assignments);
           // Acquisition is supplied by the app, never inferred by the model.
-          for (final g in groupsNow.where((g) => aiSourceName(g.name))) {
+          for (final g in groupsNow.where(
+            (g) => g.acquisitionSource || aiSourceName(g.name),
+          )) {
             final matches = (await cats.values(g.id))
                 .where(
                   (v) => {
@@ -397,6 +405,7 @@ final class SqliteAiService {
               .write(VocabularyEntriesCompanion(targetKey: Value(temporary)));
         }
         VocabularyRecord? savedAnchor;
+        final relatedUpdates = <String, VocabularyRecord>{};
         for (final entry in changed.values) {
           final r = entry.record;
           if (r.id == newAnchor?.record.id) {
@@ -404,13 +413,15 @@ final class SqliteAiService {
               collectionId: fresh.collectionId,
               targetText: r.targetText,
               nativeText: r.nativeText,
-              assignments: entry.assignments,
+              assignments: await SqliteCategoryDefaults(
+                database,
+              ).manualAssignments(fresh.collectionId, entry.assignments),
               content: r.content,
               active: r.active,
               makeHintVisibilityDefault: makeHintVisibilityDefault,
             );
           } else {
-            await vocab.updateWithContent(
+            relatedUpdates[r.id] = await vocab.updateWithContent(
               id: r.id,
               targetText: r.targetText,
               nativeText: r.nativeText,
@@ -430,7 +441,24 @@ final class SqliteAiService {
           );
         }
         beforeCommit?.call();
-        return savedAnchor;
+        if (savedAnchor == null) {
+          return AiAdoption(updatedEntries: relatedUpdates);
+        }
+        final committed = await vocab.categorizedAssignments(savedAnchor.id);
+        final carryGroups = await cats.dimensions(fresh.collectionId);
+        return AiAdoption(
+          updatedEntries: relatedUpdates,
+          confirmation: EntryConfirmation(
+            savedAnchor,
+            {
+              for (final g in carryGroups)
+                if (g.carryOver && committed.containsKey(g.id))
+                  g.id: committed[g.id]!,
+            },
+            assignments: committed,
+            relatedEntries: relatedUpdates,
+          ),
+        );
       });
       _consumed.add(plan.request.id);
       return created;

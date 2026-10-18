@@ -445,6 +445,9 @@ void main() {
         await db.close();
         final raw = sqlite.sqlite3.open(file.path);
         raw.execute(
+          'ALTER TABLE category_group_preferences DROP COLUMN acquisition_source',
+        );
+        raw.execute(
           'ALTER TABLE category_group_preferences DROP COLUMN tag_color_role',
         );
         final schema =

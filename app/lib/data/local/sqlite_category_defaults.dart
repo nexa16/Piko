@@ -48,11 +48,7 @@ final class SqliteCategoryDefaults {
     };
     final cats = SqliteCategoriesRepository(database);
     final groups = (await cats.dimensions(collectionId))
-        .where(
-          (g) =>
-              {'source', 'quelle'}.contains(vocabularyIdentityKey(g.name)) &&
-              g.mode == CategoryMode.multiple,
-        )
+        .where((g) => g.acquisitionSource && g.mode == CategoryMode.multiple)
         .toList();
     if (groups.length != 1) return result;
     final group = groups.single;

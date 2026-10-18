@@ -1,6 +1,6 @@
 # Technical reference
 
-This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented application build, including statistics; current storage uses schema 21 with immutable language metadata and meaning-aware identity, alongside category ordering/carry-over and Speed preservation. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented application build, including statistics; current storage uses schema 22 with immutable language metadata and meaning-aware identity, alongside category ordering/carry-over and Speed preservation. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
@@ -164,3 +164,18 @@ Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/1f5089aac
 Lucide SVG source and notices live in `mockups/assets/icons/lucide`; the app packages generated copies under its own assets directory. Nunito Sans and Korean fallback font assets and their notices are bundled offline. Original artwork and Android system UI have their own appearance; historical mockups are not product screenshot evidence. The Android release configuration currently uses debug signing and is not a store-ready signing setup.
 
 Sources: [`generator`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/tool/generate_shared.mjs), [`dependencies and assets`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/pubspec.yaml), [`Android build configuration`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/android/app/build.gradle.kts).
+
+
+## Optional AI content boundary
+
+`PIKO_AI_ENABLED` defaults to false. Enabled owner builds expose explicit generation, inventory gaps, saved-Collection review and directly related Hint proposals. `SqliteAiService` snapshots only the current content scope, validates stale data and dependencies again, and commits selected proposals atomically. Learning state, dates, activity and acquisition categories on saved entries are protected. New meanings receive new entries and learning items. Draft related Hints commit with the successful Add-next or Done confirmation; leaving their preview writes nothing.
+
+Generation can explicitly request another portion of an incomplete result. Portions share the original immutable inventory and include earlier proposals as comparison context. Choices remain local; failures preserve the preview. The aggregate technical admission ceiling is 200 cards for ordinary topics/gaps or 1000 for an explicitly comprehensive level. These bounds are absent from the model task and do not certify coverage. Complete requests are not automatically continued. Full-context byte limits reject an oversized request without silent truncation.
+
+Schema 22 adds `acquisition_source` to local category-group preferences. This keeps a known ordinary Source category recognizable after renaming. It creates no provenance entity, rewrites no old assignments and does not infer unknown imported provenance. JSON schema 5 stays unchanged. Existing category metadata gains a false default; new default Source groups mark their role explicitly.
+
+The Android session vault encrypts the optional anonymous backend session with Android Keystore AES-GCM and a random IV. It excludes the encrypted preference file from cloud backup and device transfer. No provider secret enters the app. Session enrollment and refresh require explicit AI interaction; automatic refresh is disabled. A client flag or publishable project key never authorizes service access.
+
+The separately configured `supabase/functions/piko-ai` service verifies the Auth user and an operator owner allowlist. PostgreSQL admission reserves a conservative configured allowance before one provider POST, records only operation/usage metadata, and holds unknown outcomes rather than retrying. Responses use `gpt-6.1-sol`, low reasoning, strict structured output, no tools, no fallback model, `store:false` and background processing. Short owned status GETs poll that same attempt. Stopping local waiting cannot undo already submitted work or its charge. OpenAI temporarily retains background responses for approximately ten minutes; standard provider processing also applies, so zero retention is not claimed.
+
+Deployment and live quality acceptance are separate gates. Missing project, access or allowance configuration fails closed. See the service README for operator setup, retention and remaining hosted verification.

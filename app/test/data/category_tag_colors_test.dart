@@ -164,14 +164,17 @@ void main() {
                       )
                       .get())
                   .map(
-                    (row) =>
-                        Map<String, Object?>.of(row.data)
-                          ..remove('tag_color_role'),
+                    (row) => Map<String, Object?>.of(row.data)
+                      ..remove('tag_color_role')
+                      ..remove('acquisition_source'),
                   )
                   .toList(),
       };
       await db.close();
       final raw = sqlite.sqlite3.open(file.path);
+      raw.execute(
+        'ALTER TABLE category_group_preferences DROP COLUMN acquisition_source',
+      );
       raw.execute(
         'ALTER TABLE category_group_preferences DROP COLUMN tag_color_role',
       );
@@ -182,7 +185,7 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        21,
+        22,
       );
       final assigned = await SqliteCategoriesRepository(
         db,
@@ -197,9 +200,9 @@ void main() {
                     )
                     .get())
                 .map(
-                  (row) =>
-                      Map<String, Object?>.of(row.data)
-                        ..remove('tag_color_role'),
+                  (row) => Map<String, Object?>.of(row.data)
+                    ..remove('tag_color_role')
+                    ..remove('acquisition_source'),
                 )
                 .toList();
         expect(

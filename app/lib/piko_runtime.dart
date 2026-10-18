@@ -1,3 +1,6 @@
+import 'data/ai/ai_connection_controller.dart';
+import 'platform/ai_credential_vault.dart';
+import 'features/ai/ai_entry_session_coordinator.dart';
 import 'data/ai/ai_contract.dart';
 import 'data/ai/managed_ai_provider.dart';
 import 'data/local/sqlite_ai_service.dart';
@@ -75,15 +78,24 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     database,
     interfaceLanguage: () => _language?.locale.value.languageCode ?? 'en',
   );
-  late final vocabulary = SqliteVocabularyRepository(database);
+  late final vocabulary = SqliteVocabularyRepository(
+    database,
+    ai: pikoAiEnabled ? AiSupport(aiService, aiProvider) : null,
+  );
   late final aiService = SqliteAiService(database);
+  late final aiAccess = AiConnectionController(
+    configuration: AiConnectionConfiguration.environment,
+    vault: const AndroidAiCredentialVault(),
+    gateway: SupabaseAiAuthGateway(AiConnectionConfiguration.environment),
+  );
   late final aiProvider =
       widget.aiProvider ??
       ManagedAiProvider(
-        endpoint: const String.fromEnvironment('PIKO_AI_SERVICE_URL').isEmpty
-            ? null
-            : Uri.tryParse(const String.fromEnvironment('PIKO_AI_SERVICE_URL')),
-        access: const UnavailableAiAccess(),
+        endpoint: AiConnectionConfiguration.environment.available
+            ? Uri.tryParse(AiConnectionConfiguration.environment.endpoint)
+            : null,
+        publishableKey: AiConnectionConfiguration.environment.publishableKey,
+        access: aiAccess,
       );
   Widget _aiPage(BuildContext context, CollectionRecord collection) =>
       !pikoAiEnabled
@@ -273,15 +285,26 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   EntrySessionResources _entrySession(String collectionId) {
     final deletion = SqliteVocabularyDeletionService(database);
+    late final EntrySessionController session;
+    final coordinator = pikoAiEnabled
+        ? AiEntrySessionCoordinator(
+            support: vocabulary.ai!,
+            repository: vocabulary,
+            session: () => session,
+          )
+        : null;
+    session = EntrySessionController(
+      collectionId: collectionId,
+      repository: vocabulary,
+      deletionService: deletion,
+      clock: database.clock,
+      confirmDraft: coordinator?.confirm,
+    );
     return EntrySessionResources(
+      aiCoordinator: coordinator,
       categoriesRepository: categories,
       onPendingWrites: trackWrites,
-      session: EntrySessionController(
-        collectionId: collectionId,
-        repository: vocabulary,
-        deletionService: deletion,
-        clock: database.clock,
-      ),
+      session: session,
       deletionService: deletion,
     );
   }
@@ -372,7 +395,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
-    if (widget.aiProvider == null && pikoAiEnabled) aiProvider.close();
+    if (widget.aiProvider == null && pikoAiEnabled) {
+      aiProvider.close();
+      aiAccess.dispose();
+    }
     _statistics?.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();

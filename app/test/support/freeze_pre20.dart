@@ -7,6 +7,13 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 void freezePre20(sqlite.Database raw) {
   if (raw
       .select('PRAGMA table_info(category_group_preferences)')
+      .any((r) => r['name'] == 'acquisition_source')) {
+    raw.execute(
+      'ALTER TABLE category_group_preferences DROP COLUMN acquisition_source',
+    );
+  }
+  if (raw
+      .select('PRAGMA table_info(category_group_preferences)')
       .any((r) => r['name'] == 'tag_color_role')) {
     raw.execute(
       'ALTER TABLE category_group_preferences DROP COLUMN tag_color_role',
