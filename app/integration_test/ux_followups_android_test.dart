@@ -37,7 +37,7 @@ import '../test/ui/selected_speed_launch_test.dart' as failure_cases;
 import '../test/ui/json_transfer_test.dart' as transfer_fault_cases;
 
 void main() {
-  final integration = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   testWidgets(
     'UX followups actual Android icons, twelve tags, full viewport, selected Header, IME and native transfer',
     (tester) async {
@@ -63,9 +63,10 @@ void main() {
         'locale': config.locale,
         'scale': config.scale,
         'normalProductionDatabaseOpened': false,
+        'captureMethod': 'external Android screencap; normal Flutter surface',
         'states': states,
       };
-      bool passed = false, converted = false;
+      bool passed = false;
       Finder key(String id) => find.byKey(ValueKey(id));
       late PikoCopy copy;
       Finder button(String id) =>
@@ -109,6 +110,38 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      Future<void> native(String phase) async {
+        await File('${directory.path}/phase.json').writeAsString(
+          jsonEncode({
+            'phase': phase,
+            'run': config.runId,
+            if (phase == 'ime-back')
+              'x':
+                  (tester.getCenter(key('speed-pool-size')).dx *
+                          View.of(
+                            tester.element(key('speed-pool-size')),
+                          ).devicePixelRatio)
+                      .round(),
+            if (phase == 'ime-back')
+              'y':
+                  (tester.getCenter(key('speed-pool-size')).dy *
+                          View.of(
+                            tester.element(key('speed-pool-size')),
+                          ).devicePixelRatio)
+                      .round(),
+          }),
+          flush: true,
+        );
+        final ack = File('${directory.path}/ack-$phase');
+        final end = DateTime.now().add(const Duration(seconds: 90));
+        while (!await ack.exists() && DateTime.now().isBefore(end)) {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(await ack.exists(), true, reason: 'Native phase $phase');
+        await tester.pumpAndSettle();
+      }
+
       Future<void> record(String id) async {
         final media = MediaQuery.of(tester.element(find.byType(Scaffold).last));
         final measures = <Map<String, Object?>>[];
@@ -144,48 +177,9 @@ void main() {
           'icons': icons,
         });
         await settleCatalogueCapture(tester, id);
-        if (!converted) {
-          await integration.convertFlutterSurfaceToImage();
-          await tester.pump();
-          converted = true;
-        }
-        await File(
-          '${directory.path}/$id.png',
-        ).writeAsBytes(await integration.takeScreenshot(id));
+        await native('capture-$id');
         await persist();
         expect(tester.takeException(), isNull, reason: id);
-      }
-
-      Future<void> native(String phase) async {
-        await File('${directory.path}/phase.json').writeAsString(
-          jsonEncode({
-            'phase': phase,
-            'run': config.runId,
-            if (phase == 'ime-back')
-              'x':
-                  (tester.getCenter(key('speed-pool-size')).dx *
-                          View.of(
-                            tester.element(key('speed-pool-size')),
-                          ).devicePixelRatio)
-                      .round(),
-            if (phase == 'ime-back')
-              'y':
-                  (tester.getCenter(key('speed-pool-size')).dy *
-                          View.of(
-                            tester.element(key('speed-pool-size')),
-                          ).devicePixelRatio)
-                      .round(),
-          }),
-          flush: true,
-        );
-        final ack = File('${directory.path}/ack-$phase');
-        final end = DateTime.now().add(const Duration(seconds: 90));
-        while (!await ack.exists() && DateTime.now().isBefore(end)) {
-          await Future<void>.delayed(const Duration(milliseconds: 200));
-          await tester.pump(const Duration(milliseconds: 100));
-        }
-        expect(await ack.exists(), true, reason: 'Native phase $phase');
-        await tester.pumpAndSettle();
       }
 
       Future<void> top() async {
