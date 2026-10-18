@@ -171,7 +171,7 @@ void main() {
       expect(h.selection.ids.length, 4);
       await h.open(tester);
       final reverse = find.byKey(
-        const ValueKey('selected-speed-direction-nativeToTarget'),
+        const ValueKey('learning-direction-nativeToTarget'),
       );
       await tester.ensureVisible(reverse);
       await tester.tap(reverse);

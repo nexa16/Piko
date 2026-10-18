@@ -12,6 +12,7 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/piko_theme.dart';
 import '../collections/collection_view_preferences.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
+import '../learning/learning_direction_choice.dart';
 import '../vocabulary/vocabulary_selection.dart';
 import 'speed_learning_session.dart';
 import 'speed_session_route.dart';
@@ -69,6 +70,7 @@ class SelectedSpeedLaunch extends StatefulWidget {
     this.enabled = true,
     this.actionBuilder,
     this.eligibleCount = 0,
+    this.availabilityChanges,
   });
   final CollectionRecord collection;
   final VocabularySelection selection;
@@ -84,6 +86,7 @@ class SelectedSpeedLaunch extends StatefulWidget {
   final VoidCallback? onSessionClosed;
   final bool enabled;
   final int eligibleCount;
+  final Listenable? availabilityChanges;
   final Widget Function(BuildContext, void Function(LearningDirection?)?)?
   actionBuilder;
   @override
@@ -150,32 +153,43 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
           context,
           canRestoreFocus: () => current() && owner?.isCurrent == true,
           onRouteCreated: (route) => _dialog = route,
-          builder: (dialogContext) => PikoDialog(
-            purpose: PikoDialogPurpose.directChoice,
+          builder: (dialogContext) => LearningDirectionChoice(
             title: PikoCopyScope.of(
               dialogContext,
             ).text('selectedSpeed.direction'),
-            body: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final value in LearningDirection.values.where(
-                  widget.directions.contains,
-                ))
-                  PikoButton(
-                    key: ValueKey('selected-speed-direction-${value.name}'),
-                    label: PikoCopyScope.of(dialogContext)
-                        .text('r2.speedDirectionCount', {
-                          'direction': reviewDirectionLabel(
-                            widget.collection,
-                            value,
-                          ),
-                          'count': widget.eligibleCount,
-                        }),
-                    onPressed: () => Navigator.of(dialogContext).pop(value),
-                  ),
-              ],
-            ),
+            initial: {
+              for (final d in widget.directions)
+                d: widget.eligibleCount > 0
+                    ? widget.eligibleCount
+                    : widget.selection.ids.length,
+            },
+            changes: Listenable.merge([
+              widget.selection,
+              widget.availabilityChanges,
+            ]),
+            canChoose: () => current() && widget.enabled,
+            load: () async {
+              final done = Completer<void>();
+              widget.onPendingWrites?.call(done.future);
+              try {
+                await widget.beforeLaunch();
+                if (!current() || !widget.enabled) return {};
+                final scope = await widget.loadScope(widget.selection.ids);
+                if (scope.collection.id != widget.collection.id) {
+                  throw StateError('Selection owner changed');
+                }
+                return {
+                  for (final d in widget.directions) d: scope.orderedIds.length,
+                };
+              } finally {
+                done.complete();
+              }
+            },
+            label: (d, count) =>
+                PikoCopyScope.of(dialogContext).text('r2.speedDirectionCount', {
+                  'direction': reviewDirectionLabel(widget.collection, d),
+                  'count': count,
+                }),
           ),
         );
         _dialog = null;

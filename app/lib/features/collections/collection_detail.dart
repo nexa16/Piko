@@ -133,6 +133,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   Object? _launchKeysIdentity;
   var _selectedSpeedKey = GlobalKey<SelectedSpeedLaunchState>();
   double _selectionPanelHeight = 0;
+  bool _lastSelectionNonempty = false, _retainSelectionOffset = false;
   Set<String>? _heldSelectionIds;
   bool get _selectedScopeActive =>
       _selection.active || _heldSelectionIds != null;
@@ -1194,6 +1195,11 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }
 
   Widget _build(BuildContext context) {
+    final nonempty = _selection.ids.isNotEmpty;
+    if (_lastSelectionNonempty != nonempty) {
+      _retainSelectionOffset = !nonempty;
+      _lastSelectionNonempty = nonempty;
+    }
     final copy = PikoCopyScope.of(context);
     final launchIdentity = (widget.collectionId, _identity, _reviewIdentity);
     if (_launchKeysIdentity != launchIdentity) {
@@ -1433,7 +1439,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             safeAreaBottom: widget.queryBinding == null,
             key: ValueKey('collection-page-${widget.collectionId}'),
             interactionAnchor: _interactionAnchor,
-            physics: const CollectionScrollPhysics(),
+            physics: CollectionScrollPhysics(
+              retainSelectionOffset: () => _retainSelectionOffset,
+              onUserScroll: () => _retainSelectionOffset = false,
+            ),
             slivers: [
               if (widget.queryBinding != null)
                 PikoCollapsingHeader(
@@ -1637,31 +1646,40 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             ],
           );
           if (widget.queryBinding == null) return page;
-          return Stack(
-            children: [
-              Positioned.fill(child: page),
-              if (_selection.ids.isNotEmpty)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: VocabularySelectionPanel(
-                    selection: _selection,
-                    matchingIds:
-                        widget.queryBinding!.snapshot?.entries
-                            .map((e) => e.id)
-                            .toList() ??
-                        const [],
-                    enabled: _queryControlsAvailable,
-                    onHeightChanged: (height) {
-                      if (mounted &&
-                          (_selectionPanelHeight - height).abs() > .1) {
-                        setState(() => _selectionPanelHeight = height);
-                      }
-                    },
+          return Listener(
+            onPointerDown: (_) => _retainSelectionOffset = false,
+            onPointerSignal: (_) => _retainSelectionOffset = false,
+            child: Stack(
+              children: [
+                Positioned.fill(child: page),
+                if (_selection.ids.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: VocabularySelectionPanel(
+                      selection: _selection,
+                      matchingIds:
+                          widget.queryBinding!.snapshot?.entries
+                              .map((e) => e.id)
+                              .toList() ??
+                          const [],
+                      enabled: _queryControlsAvailable,
+                      onHeightChanged: (height) {
+                        if (mounted &&
+                            (_selectionPanelHeight - height).abs() > .1) {
+                          setState(() {
+                            if (height < _selectionPanelHeight) {
+                              _retainSelectionOffset = true;
+                            }
+                            _selectionPanelHeight = height;
+                          });
+                        }
+                      },
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -1679,87 +1697,96 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     final copy = PikoCopyScope.of(context);
     final selectedCount =
         widget.queryBinding?.snapshot?.selected(_scopeIds).entries.length ?? 0;
-    return SelectedSpeedLaunch(
-      actionBuilder: (context, open) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final direction in _directions)
-            PikoButton(
-              key: ValueKey('collection-speed-${direction.name}'),
-              label: copy.text('r2.speedDirectionCount', {
-                'direction': reviewDirectionLabel(
-                  _lastReadyCollection!,
-                  direction,
-                ),
-                'count': selectedCount,
-              }),
-              variant: PikoButtonVariant.speed,
-              onPressed: open == null || selectedCount == 0
-                  ? null
-                  : () => open(direction),
-            ),
-        ],
-      ),
-      eligibleCount: selectedCount,
-      key: _selectedSpeedKey,
-      collection: _lastReadyCollection!,
-      selection: _selection,
-      directions: _directions,
-      factory: widget.selectedSpeedSessionFactory!,
-      vocabularyRepository: widget.vocabularyRepository!,
-      categoriesRepository: widget.categoriesRepository,
-      enabled:
-          ready &&
-          _directionReady &&
-          !_openingReview &&
-          !_openingEntry &&
-          _deleteRequest == null &&
-          _renameRequest == null &&
-          (_mutations?.isBusy != true || _openingSpeed) &&
-          (widget.queryBinding!.ready || _openingSpeed) &&
-          widget.queryBinding!.scope.viewReady &&
-          !widget.queryBinding!.scope.viewPending,
-      beforeLaunch: () async {
-        barrierForBuild.freeze();
-        await barrierForBuild.drain();
-        await mutationsForBuild?.awaitPending();
-      },
-      loadScope: (selected) async {
-        final binding = widget.queryBinding!;
-        final snapshot = await binding.service.query(
-          collectionId: binding.collectionId,
-          at: binding.clock.now().toUtc(),
-          search: binding.scope.search,
-          filters: binding.scope.filters,
-        );
-        return SelectedSpeedScope(snapshot, selected, binding.scope.view.sort);
-      },
-      onBusyChanged: (busy) {
-        if (!mounted ||
-            identityForBuild != _identity ||
-            reviewIdentityForBuild != _reviewIdentity) {
-          return;
-        }
-        setState(() {
-          _openingSpeed = busy;
-          if (busy) {
-            if (_selection.active) _heldSelectionIds ??= _selection.ids;
-            _speedCompletedCount = null;
-            _heldLearningSnapshot ??= widget.queryBinding!.snapshot;
-          } else {
-            _heldSelectionIds = null;
-            _heldLearningSnapshot = null;
+    return Focus(
+      focusNode: _expandedSpeedFocus,
+      canRequestFocus: false,
+      child: SelectedSpeedLaunch(
+        availabilityChanges: widget.queryBinding,
+        actionBuilder: (context, open) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final direction in _directions)
+              PikoButton(
+                key: ValueKey('collection-speed-${direction.name}'),
+                label: copy.text('r2.speedDirectionCount', {
+                  'direction': reviewDirectionLabel(
+                    _lastReadyCollection!,
+                    direction,
+                  ),
+                  'count': selectedCount,
+                }),
+                variant: PikoButtonVariant.speed,
+                onPressed: open == null || selectedCount == 0
+                    ? null
+                    : () => open(direction),
+              ),
+          ],
+        ),
+        eligibleCount: selectedCount,
+        key: _selectedSpeedKey,
+        collection: _lastReadyCollection!,
+        selection: _selection,
+        directions: _directions,
+        factory: widget.selectedSpeedSessionFactory!,
+        vocabularyRepository: widget.vocabularyRepository!,
+        categoriesRepository: widget.categoriesRepository,
+        enabled:
+            ready &&
+            _directionReady &&
+            !_openingReview &&
+            !_openingEntry &&
+            _deleteRequest == null &&
+            _renameRequest == null &&
+            (_mutations?.isBusy != true || _openingSpeed) &&
+            (widget.queryBinding!.ready || _openingSpeed) &&
+            widget.queryBinding!.scope.viewReady &&
+            !widget.queryBinding!.scope.viewPending,
+        beforeLaunch: () async {
+          barrierForBuild.freeze();
+          await barrierForBuild.drain();
+          await mutationsForBuild?.awaitPending();
+        },
+        loadScope: (selected) async {
+          final binding = widget.queryBinding!;
+          final snapshot = await binding.service.query(
+            collectionId: binding.collectionId,
+            at: binding.clock.now().toUtc(),
+            search: binding.scope.search,
+            filters: binding.scope.filters,
+          );
+          return SelectedSpeedScope(
+            snapshot,
+            selected,
+            binding.scope.view.sort,
+          );
+        },
+        onBusyChanged: (busy) {
+          if (!mounted ||
+              identityForBuild != _identity ||
+              reviewIdentityForBuild != _reviewIdentity) {
+            return;
           }
-        });
-        if (!busy) barrierForBuild.release();
-      },
-      onPendingWrites: registerForBuild,
-      onSessionClosed: widget.queryBinding!.refresh,
-      onCompleted: (count) {
-        if (mounted) {
-          setState(() => _speedCompletedCount = count);
-        }
-      },
+          setState(() {
+            _openingSpeed = busy;
+            if (busy) {
+              if (_selection.active) _heldSelectionIds ??= _selection.ids;
+              _speedCompletedCount = null;
+              _heldLearningSnapshot ??= widget.queryBinding!.snapshot;
+            } else {
+              _heldSelectionIds = null;
+              _heldLearningSnapshot = null;
+            }
+          });
+          if (!busy) barrierForBuild.release();
+        },
+        onPendingWrites: registerForBuild,
+        onSessionClosed: widget.queryBinding!.refresh,
+        onCompleted: (count) {
+          if (mounted) {
+            setState(() => _speedCompletedCount = count);
+          }
+        },
+      ),
     );
   }
 

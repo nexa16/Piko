@@ -14,6 +14,8 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/collection_view_preferences.dart';
+import 'package:piko/features/statistics/statistics_widgets.dart';
 import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/features/speed/speed_setup_dialog.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
@@ -264,12 +266,22 @@ void main() {
         final clearance = tester.getSize(key('selection-end-clearance')).height;
         expect(clearance, greaterThan(48));
         await record('selection-full-viewport');
+        final endScroll = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position;
+        endScroll.jumpTo(endScroll.maxScrollExtent);
+        await tester.pumpAndSettle();
+        final lastId = sortVocabulary(
+          detail.queryBinding!.snapshot!.entries,
+          detail.queryBinding!.scope.view.sort,
+        ).last.id;
+        final lastCard = key('vocabulary-$lastId');
+        final lastTop = tester.getRect(lastCard).top;
         await tap(key('vocabulary-clear-selection'));
+        expect(tester.getRect(lastCard).top, closeTo(lastTop, .5));
+        await record('selection-cleared-end');
         expect(selection.ids, isEmpty);
-        expect(
-          tester.getSize(key('selection-end-clearance')).height,
-          media.padding.bottom,
-        );
+        expect(key('vocabulary-selection-panel'), findsNothing);
         expect(await stored(db), before);
         // The original reviewed word has no due work in either direction, but is valid Speed practice.
         await reveal(card);
@@ -338,6 +350,11 @@ void main() {
           find.byTooltip(copy.text('settingsPreview.collectionSettings')),
         );
         await tap(
+          find.widgetWithText(PikoFormRow, copy.text('collection.delete')),
+        );
+        await record('real-delete-confirmation');
+        await tap(button('action.cancel'));
+        await tap(
           find.widgetWithText(PikoFormRow, copy.text('json.importTab')),
         );
         final input = key('json-input');
@@ -375,6 +392,43 @@ void main() {
           await db.customSelect('PRAGMA foreign_key_check').get(),
           isEmpty,
         );
+        await tester.pumpWidget(
+          PikoApp(
+            locale: Locale(config.locale),
+            home: Scaffold(
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const StatisticsReminder(),
+                      PikoNavigationRow(title: 'Navigation', onTap: () {}),
+                      PikoButton(
+                        label: 'Primary',
+                        variant: PikoButtonVariant.reviewPrimary,
+                        icon: const PikoIcon(PikoIconName.plus),
+                        onPressed: () {},
+                      ),
+                      PikoButton(
+                        label: 'Danger',
+                        variant: PikoButtonVariant.dangerFilled,
+                        icon: const PikoIcon(PikoIconName.trash),
+                        onPressed: () {},
+                      ),
+                      const PikoButton(
+                        label: 'Disabled',
+                        variant: PikoButtonVariant.reviewPrimary,
+                        icon: PikoIcon(PikoIconName.plus),
+                        onPressed: null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await record('warning-contextual-icon-roles');
         passed = true;
       } finally {
         await tester.pumpWidget(const SizedBox());
