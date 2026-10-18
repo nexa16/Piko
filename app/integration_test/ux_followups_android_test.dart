@@ -529,6 +529,6 @@ void main() {
   );
   // Production setup/controller widgets, with synthetic held/failing factories.
   // These exercise Android pending/Back/failure/retry without OS fault injection.
-  failure_cases.main();`n  transfer_fault_cases.main();
+  failure_cases.main();
+  transfer_fault_cases.main();
 }
-
