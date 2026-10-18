@@ -253,7 +253,7 @@ void main() {
       await h.start(tester);
       await h.start(tester);
       expect(h.requests.length, 1);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
       await tester.pumpAndSettle();
       h.gate!.complete();
       await tester.pumpAndSettle();

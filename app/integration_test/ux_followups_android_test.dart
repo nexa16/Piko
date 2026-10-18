@@ -280,14 +280,14 @@ void main() {
           tester.getRect(find.byType(Scrollable).first).height,
           viewport.height,
         );
-        final clearance = tester.getSize(key('selection-end-clearance')).height;
-        expect(clearance, greaterThan(48));
         await record('selection-full-viewport');
         final endScroll = tester
             .state<ScrollableState>(find.byType(Scrollable).first)
             .position;
         endScroll.jumpTo(endScroll.maxScrollExtent);
         await tester.pumpAndSettle();
+        final clearance = tester.getSize(key('selection-end-clearance')).height;
+        expect(clearance, greaterThan(48));
         final lastId = sortVocabulary(
           detail.queryBinding!.snapshot!.entries,
           detail.queryBinding!.scope.view.sort,
