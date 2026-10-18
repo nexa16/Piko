@@ -311,7 +311,12 @@ void main() {
       expect(position().pixels, closeTo(offset, .5));
       db.queryGate = null;
       db.failQuery = false;
-      await tap(find.text(copy.text('action.retry')));
+      await tap(
+        find.descendant(
+          of: key('collection-compact-header'),
+          matching: find.text(copy.text('action.retry')),
+        ),
+      );
       await settle();
       expect(position().pixels, closeTo(offset, .5));
       step('selection and no-result zeros');
