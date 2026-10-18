@@ -45,6 +45,9 @@ void main() {
         'scale': config.scale,
       };
       Finder key(String value) => find.byKey(ValueKey(value));
+      Finder heading(String value) => find.byWidgetPredicate(
+        (widget) => widget is Text && widget.data == value,
+      );
       Finder field(String value) =>
           find.descendant(of: key(value), matching: find.byType(TextField));
       Finder button(String id) =>
@@ -161,7 +164,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         final firstToggle = key('category-carry-over-${groups[0].id}');
-        await tap(find.widgetWithText(Text, groups[0].name));
+        await tap(heading(groups[0].name));
         expect(tester.widget<PikoSwitch>(firstToggle).value, isFalse);
         await tap(firstToggle);
         expect(
@@ -172,7 +175,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         for (var i = 0; i < 2; i++) {
-          await tap(find.widgetWithText(Text, groups[i].name));
+          await tap(heading(groups[i].name));
           final toggle = key('category-carry-over-${groups[i].id}');
           expect(tester.widget<PikoSwitch>(toggle).value, isFalse);
           await tap(toggle);
@@ -202,7 +205,7 @@ void main() {
             await reveal(toggle);
             await capture('carry-settings');
           }
-          await tap(find.widgetWithText(Text, groups[i].name));
+          await tap(heading(groups[i].name));
         }
         await tap(find.byTooltip(copy.text('common.close')));
         await tap(find.byTooltip(copy.text('action.addEntry')));
