@@ -65,6 +65,7 @@ class HeldDimension implements CategoriesRepository {
     required String collectionId,
     required String name,
     required CategoryMode mode,
+    bool carryOver = false,
     String? id,
   }) async {
     writes++;
@@ -73,6 +74,7 @@ class HeldDimension implements CategoriesRepository {
       collectionId: collectionId,
       name: name,
       mode: mode,
+      carryOver: carryOver,
       id: id,
     );
   }

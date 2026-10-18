@@ -6,6 +6,7 @@ import '../../ui/components/piko_button.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_icon.dart';
+import '../../ui/components/piko_switch.dart';
 import '../../ui/piko_theme.dart';
 
 /// Embedded under the Collection menu's Edit categories expansion. This widget
@@ -404,10 +405,15 @@ class _DimensionEditorState extends State<_DimensionEditor> {
   late String openingName = name.text;
   late CategoryMode mode = widget.dimension?.mode ?? CategoryMode.single;
   late CategoryMode openingMode = mode;
+  late bool carryOver = widget.dimension?.carryOver ?? false;
+  late bool openingCarryOver = carryOver;
   Object? error;
   bool saving = false;
   int generation = 0;
-  bool get changed => name.text != openingName || mode != openingMode;
+  bool get changed =>
+      name.text != openingName ||
+      mode != openingMode ||
+      carryOver != openingCarryOver;
   @override
   void didUpdateWidget(_DimensionEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -419,6 +425,8 @@ class _DimensionEditorState extends State<_DimensionEditor> {
       openingName = name.text;
       mode = widget.dimension?.mode ?? CategoryMode.single;
       openingMode = mode;
+      carryOver = widget.dimension?.carryOver ?? false;
+      openingCarryOver = carryOver;
       saving = false;
       error = null;
       return;
@@ -428,6 +436,8 @@ class _DimensionEditorState extends State<_DimensionEditor> {
       openingName = name.text;
       mode = widget.dimension!.mode;
       openingMode = mode;
+      carryOver = widget.dimension!.carryOver;
+      openingCarryOver = carryOver;
     }
   }
 
@@ -440,6 +450,7 @@ class _DimensionEditorState extends State<_DimensionEditor> {
       return;
     }
     final text = name.text, selectedMode = mode, dimension = widget.dimension;
+    final selectedCarryOver = carryOver;
     final revision = generation;
     setState(() {
       saving = true;
@@ -452,11 +463,13 @@ class _DimensionEditorState extends State<_DimensionEditor> {
                 collectionId: widget.collectionId,
                 name: text,
                 mode: selectedMode,
+                carryOver: selectedCarryOver,
               )
             : widget.repository.updateDimension(
                 id: dimension.id,
                 name: text,
                 mode: selectedMode,
+                carryOver: selectedCarryOver,
               ),
       );
       if (!mounted || revision != generation) return;
@@ -465,6 +478,8 @@ class _DimensionEditorState extends State<_DimensionEditor> {
         openingName = saved.name;
         mode = saved.mode;
         openingMode = saved.mode;
+        carryOver = saved.carryOver;
+        openingCarryOver = saved.carryOver;
         error = null;
         saving = false;
       });
@@ -525,6 +540,20 @@ class _DimensionEditorState extends State<_DimensionEditor> {
                   ),
               ],
             ),
+          ),
+          PikoSwitch(
+            key: ValueKey(
+              'category-carry-over-${widget.dimension?.id ?? 'new'}',
+            ),
+            title: Text(copy.text('category.carryOver')),
+            subtitle: Text(copy.text('category.carryOverHelp')),
+            value: carryOver,
+            onChanged: widget.pending
+                ? null
+                : (value) => setState(() {
+                    carryOver = value;
+                    error = null;
+                  }),
           ),
           if (error != null)
             Text(

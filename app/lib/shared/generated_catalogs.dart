@@ -390,6 +390,14 @@ const copyCatalog = <String, Object?>{
 "de": "Kategoriegruppe hinzufügen",
 "en": "Add category group",
 },
+"category.carryOver": <String, Object?>{
+"de": "Vom vorherigen Wort übernehmen",
+"en": "Carry over from previous word",
+},
+"category.carryOverHelp": <String, Object?>{
+"de": "Neue Entwürfe derselben Eingabesitzung übernehmen die Werte dieser Gruppe vom zuletzt erfolgreich bestätigten Wort. Zum Übernehmen der Einstellung die Gruppe speichern.",
+"en": "For new drafts in the same entry session, copy this group's values from the last successfully confirmed word. Save the group to apply this setting.",
+},
 "category.clearValueSearch": <String, Object?>{
 "de": "Wertesuche leeren",
 "en": "Clear value search",

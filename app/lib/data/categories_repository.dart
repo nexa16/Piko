@@ -7,12 +7,14 @@ final class CategoryDimensionRecord {
     required this.name,
     required this.mode,
     required this.position,
+    this.carryOver = false,
   });
   final String id;
   final String collectionId;
   final String name;
   final CategoryMode mode;
   final int position;
+  final bool carryOver;
 }
 
 final class CategoryValueRecord {
@@ -63,6 +65,7 @@ abstract interface class CategoriesRepository {
     required String collectionId,
     required String name,
     required CategoryMode mode,
+    bool carryOver = false,
     String? id,
   });
   Future<CategoryDimensionRecord> renameDimension({
@@ -70,12 +73,14 @@ abstract interface class CategoriesRepository {
     required String name,
   });
 
-  /// Confirms both editable fields together. Switching to Single never drops
+  /// Confirms group fields together; omitted preferences remain unchanged.
+  /// Switching to Single never drops
   /// existing assignments; conflicting entries must be resolved first.
   Future<CategoryDimensionRecord> updateDimension({
     required String id,
     required String name,
     required CategoryMode mode,
+    bool? carryOver,
   });
   Future<void> deleteDimension(String id);
   Future<CategoryValueRecord> createValue({

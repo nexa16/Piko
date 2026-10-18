@@ -4845,8 +4845,27 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _carryOverMeta = const VerificationMeta(
+    'carryOver',
+  );
   @override
-  List<GeneratedColumn> get $columns => [dimensionId, customValueOrder];
+  late final GeneratedColumn<bool> carryOver = GeneratedColumn<bool>(
+    'carry_over',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("carry_over" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    dimensionId,
+    customValueOrder,
+    carryOver,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4879,6 +4898,12 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         ),
       );
     }
+    if (data.containsKey('carry_over')) {
+      context.handle(
+        _carryOverMeta,
+        carryOver.isAcceptableOrUnknown(data['carry_over']!, _carryOverMeta),
+      );
+    }
     return context;
   }
 
@@ -4899,6 +4924,10 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         DriftSqlType.bool,
         data['${effectivePrefix}custom_value_order'],
       )!,
+      carryOver: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}carry_over'],
+      )!,
     );
   }
 
@@ -4912,15 +4941,18 @@ class CategoryGroupPreference extends DataClass
     implements Insertable<CategoryGroupPreference> {
   final String dimensionId;
   final bool customValueOrder;
+  final bool carryOver;
   const CategoryGroupPreference({
     required this.dimensionId,
     required this.customValueOrder,
+    required this.carryOver,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['dimension_id'] = Variable<String>(dimensionId);
     map['custom_value_order'] = Variable<bool>(customValueOrder);
+    map['carry_over'] = Variable<bool>(carryOver);
     return map;
   }
 
@@ -4928,6 +4960,7 @@ class CategoryGroupPreference extends DataClass
     return CategoryGroupPreferencesCompanion(
       dimensionId: Value(dimensionId),
       customValueOrder: Value(customValueOrder),
+      carryOver: Value(carryOver),
     );
   }
 
@@ -4939,6 +4972,7 @@ class CategoryGroupPreference extends DataClass
     return CategoryGroupPreference(
       dimensionId: serializer.fromJson<String>(json['dimensionId']),
       customValueOrder: serializer.fromJson<bool>(json['customValueOrder']),
+      carryOver: serializer.fromJson<bool>(json['carryOver']),
     );
   }
   @override
@@ -4947,15 +4981,18 @@ class CategoryGroupPreference extends DataClass
     return <String, dynamic>{
       'dimensionId': serializer.toJson<String>(dimensionId),
       'customValueOrder': serializer.toJson<bool>(customValueOrder),
+      'carryOver': serializer.toJson<bool>(carryOver),
     };
   }
 
   CategoryGroupPreference copyWith({
     String? dimensionId,
     bool? customValueOrder,
+    bool? carryOver,
   }) => CategoryGroupPreference(
     dimensionId: dimensionId ?? this.dimensionId,
     customValueOrder: customValueOrder ?? this.customValueOrder,
+    carryOver: carryOver ?? this.carryOver,
   );
   CategoryGroupPreference copyWithCompanion(
     CategoryGroupPreferencesCompanion data,
@@ -4967,6 +5004,7 @@ class CategoryGroupPreference extends DataClass
       customValueOrder: data.customValueOrder.present
           ? data.customValueOrder.value
           : this.customValueOrder,
+      carryOver: data.carryOver.present ? data.carryOver.value : this.carryOver,
     );
   }
 
@@ -4974,44 +5012,51 @@ class CategoryGroupPreference extends DataClass
   String toString() {
     return (StringBuffer('CategoryGroupPreference(')
           ..write('dimensionId: $dimensionId, ')
-          ..write('customValueOrder: $customValueOrder')
+          ..write('customValueOrder: $customValueOrder, ')
+          ..write('carryOver: $carryOver')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(dimensionId, customValueOrder);
+  int get hashCode => Object.hash(dimensionId, customValueOrder, carryOver);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CategoryGroupPreference &&
           other.dimensionId == this.dimensionId &&
-          other.customValueOrder == this.customValueOrder);
+          other.customValueOrder == this.customValueOrder &&
+          other.carryOver == this.carryOver);
 }
 
 class CategoryGroupPreferencesCompanion
     extends UpdateCompanion<CategoryGroupPreference> {
   final Value<String> dimensionId;
   final Value<bool> customValueOrder;
+  final Value<bool> carryOver;
   final Value<int> rowid;
   const CategoryGroupPreferencesCompanion({
     this.dimensionId = const Value.absent(),
     this.customValueOrder = const Value.absent(),
+    this.carryOver = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoryGroupPreferencesCompanion.insert({
     required String dimensionId,
     this.customValueOrder = const Value.absent(),
+    this.carryOver = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : dimensionId = Value(dimensionId);
   static Insertable<CategoryGroupPreference> custom({
     Expression<String>? dimensionId,
     Expression<bool>? customValueOrder,
+    Expression<bool>? carryOver,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (dimensionId != null) 'dimension_id': dimensionId,
       if (customValueOrder != null) 'custom_value_order': customValueOrder,
+      if (carryOver != null) 'carry_over': carryOver,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5019,11 +5064,13 @@ class CategoryGroupPreferencesCompanion
   CategoryGroupPreferencesCompanion copyWith({
     Value<String>? dimensionId,
     Value<bool>? customValueOrder,
+    Value<bool>? carryOver,
     Value<int>? rowid,
   }) {
     return CategoryGroupPreferencesCompanion(
       dimensionId: dimensionId ?? this.dimensionId,
       customValueOrder: customValueOrder ?? this.customValueOrder,
+      carryOver: carryOver ?? this.carryOver,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5037,6 +5084,9 @@ class CategoryGroupPreferencesCompanion
     if (customValueOrder.present) {
       map['custom_value_order'] = Variable<bool>(customValueOrder.value);
     }
+    if (carryOver.present) {
+      map['carry_over'] = Variable<bool>(carryOver.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5048,6 +5098,7 @@ class CategoryGroupPreferencesCompanion
     return (StringBuffer('CategoryGroupPreferencesCompanion(')
           ..write('dimensionId: $dimensionId, ')
           ..write('customValueOrder: $customValueOrder, ')
+          ..write('carryOver: $carryOver, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11254,12 +11305,14 @@ typedef $$CategoryGroupPreferencesTableCreateCompanionBuilder =
     CategoryGroupPreferencesCompanion Function({
       required String dimensionId,
       Value<bool> customValueOrder,
+      Value<bool> carryOver,
       Value<int> rowid,
     });
 typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
     CategoryGroupPreferencesCompanion Function({
       Value<String> dimensionId,
       Value<bool> customValueOrder,
+      Value<bool> carryOver,
       Value<int> rowid,
     });
 
@@ -11310,6 +11363,11 @@ class $$CategoryGroupPreferencesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get carryOver => $composableBuilder(
+    column: $table.carryOver,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$CategoryDimensionsTableFilterComposer get dimensionId {
     final $$CategoryDimensionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -11345,6 +11403,11 @@ class $$CategoryGroupPreferencesTableOrderingComposer
   });
   ColumnOrderings<bool> get customValueOrder => $composableBuilder(
     column: $table.customValueOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get carryOver => $composableBuilder(
+    column: $table.carryOver,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -11385,6 +11448,9 @@ class $$CategoryGroupPreferencesTableAnnotationComposer
     column: $table.customValueOrder,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get carryOver =>
+      $composableBuilder(column: $table.carryOver, builder: (column) => column);
 
   $$CategoryDimensionsTableAnnotationComposer get dimensionId {
     final $$CategoryDimensionsTableAnnotationComposer composer =
@@ -11452,20 +11518,24 @@ class $$CategoryGroupPreferencesTableTableManager
               ({
                 Value<String> dimensionId = const Value.absent(),
                 Value<bool> customValueOrder = const Value.absent(),
+                Value<bool> carryOver = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion(
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
+                carryOver: carryOver,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String dimensionId,
                 Value<bool> customValueOrder = const Value.absent(),
+                Value<bool> carryOver = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion.insert(
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
+                carryOver: carryOver,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

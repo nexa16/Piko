@@ -111,6 +111,29 @@ abstract interface class CollectionHintPreferences {
   });
 }
 
+/// Confirmation and the next draft's carry-over share one committed snapshot.
+final class EntryConfirmation {
+  EntryConfirmation(this.entry, Map<String, Set<String>> nextAssignments)
+    : nextAssignments = Map.unmodifiable({
+        for (final group in nextAssignments.entries)
+          group.key: Set<String>.unmodifiable(group.value),
+      });
+  final VocabularyRecord entry;
+  final Map<String, Set<String>> nextAssignments;
+}
+
+abstract interface class EntryConfirmationRepository {
+  Future<EntryConfirmation> confirmNewEntry({
+    required String collectionId,
+    required String targetText,
+    required String nativeText,
+    required Map<String, Set<String>> assignments,
+    required VocabularyContent content,
+    bool makeHintVisibilityDefault = false,
+    bool active = true,
+  });
+}
+
 /// Optional read capability; captured once per learning-card presentation.
 abstract interface class QuestionExamplesRepository {
   Future<bool> readQuestionExamples();

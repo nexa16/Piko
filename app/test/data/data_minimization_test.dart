@@ -91,8 +91,12 @@ const allowedColumns = <String, Set<String>>{
     'position',
   },
   'category_values': {'id', 'dimension_id', 'name', 'name_key', 'position'},
-  // CAT-009: local group presentation, excluded from interchange.
-  'category_group_preferences': {'dimension_id', 'custom_value_order'},
+  // CAT-009 / CARRY-001: local group preferences, excluded from interchange.
+  'category_group_preferences': {
+    'dimension_id',
+    'custom_value_order',
+    'carry_over',
+  },
   // Collection/dimension columns enforce ownership through composite FKs.
   'vocabulary_category_assignments': {
     'entry_id',

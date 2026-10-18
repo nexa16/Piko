@@ -834,7 +834,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
       if (!initiatingSession.isCompleted &&
           (draft.targetText.trim().isNotEmpty ||
               draft.nativeText.trim().isNotEmpty ||
-              draft.assignments.isNotEmpty ||
+              initiatingSession.hasDraftCategoryEdits ||
               draft.hasOptionalText ||
               draft.makeHintVisibilityDefault)) {
         final discard = await showPikoDialog<bool>(

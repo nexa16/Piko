@@ -3,6 +3,8 @@ globalThis.PIKO_COPY = {
   "schemaVersion": 1,
   "defaultLocale": "en",
   "entries": {
+"category.carryOver": {"en":"Carry over from previous word","de":"Vom vorherigen Wort übernehmen"},
+"category.carryOverHelp": {"en":"For new drafts in the same entry session, copy this group's values from the last successfully confirmed word. Save the group to apply this setting.","de":"Neue Entwürfe derselben Eingabesitzung übernehmen die Werte dieser Gruppe vom zuletzt erfolgreich bestätigten Wort. Zum Übernehmen der Einstellung die Gruppe speichern."},
 "category.reorder": {"en":"Reorder {value}","de":"{value} verschieben"},
 "category.moveUp": {"en":"Move up","de":"Nach oben"},
 "category.moveDown": {"en":"Move down","de":"Nach unten"},

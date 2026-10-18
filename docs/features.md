@@ -87,6 +87,8 @@ Assign values from a vocabulary editor. Values start alphabetically. In **Filter
 
 Categories feed the list's filters and grouping. If none exist, the category/filter area explains that state; create category definitions before expecting values to select.
 
+In **Edit categories**, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
+
 <img src="images/07-categories.png" width="320" alt="Topic category editor with One value and Multiple values modes and alphabetical values">
 
 Ordinary product emulator capture · [Full image](images/07-categories.png) · [Capture metadata: `07-categories`](build-manifest.json)

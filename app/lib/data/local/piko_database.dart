@@ -138,6 +138,7 @@ class CategoryGroupPreferences extends Table {
       text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
   BoolColumn get customValueOrder =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get carryOver => boolean().withDefault(const Constant(false))();
   @override
   Set<Column<Object>> get primaryKey => {dimensionId};
 }
@@ -314,7 +315,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -435,6 +436,12 @@ class PikoDatabase extends _$PikoDatabase {
           await m.createIndex(statisticsActivityDate);
         }
         if (from < 18) await m.createTable(categoryGroupPreferences);
+        if (from == 18) {
+          await m.addColumn(
+            categoryGroupPreferences,
+            categoryGroupPreferences.carryOver,
+          );
+        }
       });
     },
     beforeOpen: (_) async {

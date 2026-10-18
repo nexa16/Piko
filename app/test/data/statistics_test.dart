@@ -533,7 +533,7 @@ void main() {
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',
           ),
-          18,
+          19,
         );
       } finally {
         await db.close();

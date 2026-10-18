@@ -48,14 +48,18 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     }
   }
 
-  CategoryDimensionRecord _dimension(StoredCategoryDimension row) =>
-      CategoryDimensionRecord(
-        id: row.id,
-        collectionId: row.collectionId,
-        name: row.name,
-        mode: CategoryMode.values.byName(row.mode),
-        position: row.position,
-      );
+  CategoryDimensionRecord _dimension(QueryRow result) {
+    final row = database.categoryDimensions.map(result.data);
+    return CategoryDimensionRecord(
+      id: row.id,
+      collectionId: row.collectionId,
+      name: row.name,
+      mode: CategoryMode.values.byName(row.mode),
+      position: row.position,
+      carryOver: result.read<int>('carry_over') != 0,
+    );
+  }
+
   CategoryValueRecord _value(StoredCategoryValue row) => CategoryValueRecord(
     id: row.id,
     dimensionId: row.dimensionId,
@@ -63,14 +67,18 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     position: row.position,
   );
 
-  SimpleSelectStatement<$CategoryDimensionsTable, StoredCategoryDimension>
-  _dimensions(String collectionId) =>
-      database.select(database.categoryDimensions)
-        ..where((row) => row.collectionId.equals(collectionId))
-        ..orderBy([
-          (row) => OrderingTerm(expression: row.position),
-          (row) => OrderingTerm(expression: row.id),
-        ]);
+  Selectable<QueryRow> _dimensions(String owner, {bool byId = false}) =>
+      database.customSelect(
+        'SELECT d.*, COALESCE(p.carry_over, 0) AS carry_over '
+        'FROM category_dimensions d LEFT JOIN category_group_preferences p '
+        'ON p.dimension_id = d.id WHERE d.${byId ? 'id' : 'collection_id'} = ? '
+        'ORDER BY d.position, d.id',
+        variables: [Variable(owner)],
+        readsFrom: {
+          database.categoryDimensions,
+          database.categoryGroupPreferences,
+        },
+      );
   SimpleSelectStatement<$CategoryValuesTable, StoredCategoryValue> _values(
     String dimensionId,
   ) => database.select(database.categoryValues)
@@ -92,9 +100,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
       ).watch().map((rows) => rows.map(_dimension).toList(growable: false));
   @override
   Future<CategoryDimensionRecord?> dimensionById(String id) async {
-    final row = await (database.select(
-      database.categoryDimensions,
-    )..where((row) => row.id.equals(id))).getSingleOrNull();
+    final row = await _dimensions(id, byId: true).getSingleOrNull();
     return row == null ? null : _dimension(row);
   }
 
@@ -192,6 +198,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     required String collectionId,
     required String name,
     required CategoryMode mode,
+    bool carryOver = false,
     String? id,
   }) async {
     final trimmed = _name(name), identity = _id(id);
@@ -217,6 +224,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
               position: position,
             ),
           );
+      if (carryOver) await _saveCarryOver(identity, true);
       return (await dimensionById(identity))!;
     });
   }
@@ -239,6 +247,7 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     required String id,
     required String name,
     required CategoryMode mode,
+    bool? carryOver,
   }) async {
     final trimmed = _name(name);
     return _write(() async {
@@ -265,9 +274,22 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
             ),
           );
       if (count != 1) throw CategoryValidation.dimensionNotFound;
+      if (carryOver != null && carryOver != existing.carryOver) {
+        await _saveCarryOver(id, carryOver);
+      }
       return (await dimensionById(id))!;
     });
   }
+
+  Future<void> _saveCarryOver(String id, bool enabled) => database
+      .into(database.categoryGroupPreferences)
+      .insertOnConflictUpdate(
+        CategoryGroupPreferencesCompanion.insert(
+          dimensionId: id,
+          carryOver: Value(enabled),
+        ),
+      )
+      .then((_) {});
 
   @override
   Future<void> deleteDimension(String id) => _write(() async {

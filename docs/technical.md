@@ -1,6 +1,6 @@
 # Technical reference
 
-This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout and statistics sections, schema 18, category ordering and Speed preservation describe subsequent source changes. Their current source links are relative to this checkout. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout and statistics sections, schema 19, category ordering/carry-over and Speed preservation describe subsequent source changes. Their current source links are relative to this checkout. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
@@ -38,7 +38,7 @@ These changes are newer than the gallery APK. Source: [shared anchoring](../app/
 <a id="storage"></a>
 ## Storage and migrations
 
-Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **18**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
+Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **19**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
 
 | Stored area | Responsibility |
 | --- | --- |
@@ -74,6 +74,8 @@ Sources: [`normalization`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd3
 Single dimensions allow one value per word; Multiple dimensions allow several. Display sorting uses normalized Unicode scalar lexical order, without locale collation, accent folding or natural-number sorting. Ties preserve original order. Date sorting puts unknown dates after known ones. Grouping can render one word in several value groups; counts and selection use its identity rather than rendered occurrences.
 
 Category values use their alphabetical default until an explicit move. `SqliteCategoriesRepository.reorderValues` atomically checks the complete observed UUID sequence, validates a permutation and writes contiguous ranks with the group's local custom-order flag. Concurrent stale moves fail without overwriting later changes. Rename keeps rank, new/imported values append, and deletion retains surviving relative order. Vocabulary Undo restores surviving assignments without changing later category order or reviving deleted definitions. These local preferences are excluded from Collection interchange. Pickers, tags, management and grouped headings consume the repository's effective sequence; vocabulary sorting inside headings remains independent. Filters commit order directly, separately from staged membership; a failed move rolls back and exposes retry without losing pending choices. The grouped sliver body has one scroll region, long-press drag/autoscroll and accessible menu/custom actions. Nonempty value search blocks reordering.
+
+Schema 19 adds a default-off carry-over flag to the local group preferences. Name, selection mode and explicitly supplied carry-over settings commit together; callers omitting the preference preserve it. Manual-entry confirmation creates the word and captures its persisted assignments for currently enabled groups in one transaction. The controller uses that immutable result only to initialize the next draft. Saved-card edits, deletion/Undo and later preference changes cannot overwrite an initialized draft. Reference refresh prunes deleted definitions; current ownership/cardinality are revalidated by the normal save transaction. Untouched carried assignments are defaults, so an otherwise empty new draft does not require saving a blank word on completion or show a discard warning. Neither preferences nor ephemeral session sources extend Collection interchange.
 
 `CollectionViewPreferences` holds layout, language order, grouping and sorting. Query bindings combine search/filters with those preferences and refresh on database invalidation. Staged dialog choices are committed with Apply. `VocabularySelection` owns only transient UUIDs: Select all unions matching IDs, hidden selections remain selected, and explicit clear/page departure ends selection. It performs no persistent mutation. The separate selected-Speed launcher reads that transient membership without changing automatic launch scope.
 

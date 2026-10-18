@@ -207,6 +207,11 @@ final class EntrySessionController extends ChangeNotifier {
     ),
   );
   EntryDraft _draft = const EntryDraft();
+  Map<String, Set<String>> _initialDraftAssignments = const {};
+  // Untouched carry-over is an initial value, not an unfinished new word.
+  bool get hasDraftCategoryEdits =>
+      _draft.assignments.isNotEmpty &&
+      !_sameEntryAssignments(_draft.assignments, _initialDraftAssignments);
   Object? _draftError;
   int _draftRevision = 0, _activationRevision = 0;
   final Map<String, Future<void>> _rechecks = {};
@@ -844,7 +849,7 @@ final class EntrySessionController extends ChangeNotifier {
       final native = normalizeVocabularyText(snapshot.nativeText);
       if (target.isNotEmpty ||
           native.isNotEmpty ||
-          snapshot.assignments.isNotEmpty ||
+          hasDraftCategoryEdits ||
           snapshot.hasOptionalText) {
         _activeEntryId = null;
         if (target.isEmpty) throw VocabularyValidation.requiredTarget;
@@ -900,7 +905,19 @@ final class EntrySessionController extends ChangeNotifier {
           collectionId: collectionId,
         );
       }
-      final record = await _create(snapshot);
+      final repository = _repository;
+      final confirmation = repository is EntryConfirmationRepository
+          ? await (repository as EntryConfirmationRepository).confirmNewEntry(
+              collectionId: collectionId,
+              targetText: snapshot.targetText,
+              nativeText: snapshot.nativeText,
+              assignments: snapshot.assignments,
+              content: snapshot.content,
+              active: snapshot.active,
+              makeHintVisibilityDefault: snapshot.makeHintVisibilityDefault,
+            )
+          : EntryConfirmation(await _create(snapshot), const {});
+      final record = confirmation.entry;
       if (record.collectionId != collectionId) {
         throw StateError(
           'Confirmation returned an entry from another Collection.',
@@ -918,7 +935,9 @@ final class EntrySessionController extends ChangeNotifier {
         if (snapshot.makeHintVisibilityDefault) {
           _newHintVisibility = snapshot.content.hintVisibility;
         }
-        _draft = EntryDraft(
+        _initialDraftAssignments = confirmation.nextAssignments;
+        _draft = EntryDraft.categorized(
+          assignments: _initialDraftAssignments,
           content: VocabularyContent(hintVisibility: _newHintVisibility),
         );
         _draftContentEdited = false;
@@ -1161,6 +1180,7 @@ final class EntrySessionController extends ChangeNotifier {
           );
           var changed = false;
           final next = pruned(_draft);
+          _initialDraftAssignments = prune(_initialDraftAssignments);
           if (!_sameEntryAssignments(next.assignments, _draft.assignments)) {
             _draft = next;
             _draftRevision++;
