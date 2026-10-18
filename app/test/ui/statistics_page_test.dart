@@ -307,6 +307,7 @@ void main() {
       expect(find.text('Activity'), findsNothing);
       binding.refresh();
       await settle(tester, repo, sample(now, count: 0, yesterday: 1));
+      expect(find.text('1 day'), findsOneWidget);
       expect(find.text('Activity'), findsOneWidget);
       expect(find.byKey(const ValueKey('statistics-star')), findsNothing);
       expect(find.byKey(const ValueKey('statistics-reminder')), findsOneWidget);

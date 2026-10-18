@@ -19,6 +19,7 @@ globalThis.PIKO_COPY = {
 "statistics.reviews": {"en":"Vocabulary learned","de":"Gelernte Vokabeln"},
 "statistics.streak": {"en":"Learning streak","de":"Lernserie"},
 "statistics.days": {"en":"{count} days","de":"{count} Tage"},
+"statistics.day": {"en":"{count} day","de":"{count} Tag"},
 "statistics.average": {"en":"Average vocabulary learned per active day","de":"Durchschnittlich gelernte Vokabeln pro aktivem Lerntag"},
 "statistics.window": {"en":"Past 30 days","de":"Letzte 30 Tage"},
 "statistics.history": {"en":"Daily activity","de":"Tägliche Lernaktivität"},

@@ -160,11 +160,14 @@ class StatisticsSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  copy.text('statistics.days', {
-                    'count': MaterialLocalizations.of(
-                      context,
-                    ).formatDecimal(snapshot.streak),
-                  }),
+                  copy.text(
+                    snapshot.streak == 1 ? 'statistics.day' : 'statistics.days',
+                    {
+                      'count': MaterialLocalizations.of(
+                        context,
+                      ).formatDecimal(snapshot.streak),
+                    },
+                  ),
                   key: const ValueKey('statistics-streak'),
                   style: TextStyle(
                     fontSize: pikoDesign.dimension(

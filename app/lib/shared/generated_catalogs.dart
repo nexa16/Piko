@@ -2078,6 +2078,10 @@ const copyCatalog = <String, Object?>{
 "de": "Der Verlauf beginnt mit der ersten Einrichtung der Statistik. Der erste Tag ist nur teilweise erfasst. Frühere Lernaktivität und importierte Lernstände werden nicht nachträglich gezählt. Historische Datumszuordnungen bleiben bei Uhrzeit- oder Zeitzonenänderungen erhalten. Speed zählt jede erfolgreich abgeschlossene Vokabelrichtung einmal pro Lerntag.",
 "en": "History starts when statistics are first initialized. The first day is only partially recorded. Earlier activity and imported learning are not reconstructed. Historical dates stay fixed when your clock or timezone changes. Speed counts each successfully completed vocabulary direction once per learning day.",
 },
+"statistics.day": <String, Object?>{
+"de": "{count} Tag",
+"en": "{count} day",
+},
 "statistics.dayLabel": <String, Object?>{
 "de": "{date}: {value}. {coverage}",
 "en": "{date}: {value}. {coverage}",
