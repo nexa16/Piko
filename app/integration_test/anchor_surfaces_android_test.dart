@@ -221,7 +221,9 @@ void main() {
               ),
             ),
           );
-          final title = find.text('Topics');
+          final title = find.byWidgetPredicate(
+            (widget) => widget is Text && widget.data == 'Topics',
+          );
           await measure('category-expand', title, title);
           final name = find.descendant(
             of: find.byKey(
