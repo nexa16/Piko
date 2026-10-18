@@ -74,6 +74,7 @@ void main() {
       }
 
       Future<void> tap(Finder target) async {
+        expect(target, findsOneWidget);
         await reveal(target);
         await tester.tap(target.hitTestable().first);
         await tester.pumpAndSettle();
@@ -160,7 +161,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         final firstToggle = key('category-carry-over-${groups[0].id}');
-        await tap(key('category-dimension-${groups[0].id}'));
+        await tap(find.text(groups[0].name));
         expect(tester.widget<PikoSwitch>(firstToggle).value, isFalse);
         await tap(firstToggle);
         expect(
@@ -171,7 +172,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         for (var i = 0; i < 2; i++) {
-          await tap(key('category-dimension-${groups[i].id}'));
+          await tap(find.text(groups[i].name));
           final toggle = key('category-carry-over-${groups[i].id}');
           expect(tester.widget<PikoSwitch>(toggle).value, isFalse);
           await tap(toggle);
@@ -201,7 +202,7 @@ void main() {
             await reveal(toggle);
             await capture('carry-settings');
           }
-          await tap(key('category-dimension-${groups[i].id}'));
+          await tap(find.text(groups[i].name));
         }
         await tap(find.byTooltip(copy.text('common.close')));
         await tap(find.byTooltip(copy.text('action.addEntry')));
