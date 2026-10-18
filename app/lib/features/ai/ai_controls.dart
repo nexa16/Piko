@@ -6,6 +6,7 @@ import '../../ui/components/piko_card.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
+import '../../ui/components/piko_focus_highlight.dart';
 import '../../ui/piko_theme.dart';
 import 'ai_content.dart';
 import 'entry_ai_controller.dart';
@@ -187,6 +188,9 @@ class _AiSuggestionControlState extends State<AiSuggestionControl> {
             key: ValueKey('ai-suggest-focus-${task.name}'),
             focusNode: suggestFocus,
             includeSemantics: false,
+            onFocusChange: (_) {
+              if (mounted) setState(() {});
+            },
             onKeyEvent: (_, event) {
               if (event is KeyDownEvent &&
                   (event.logicalKey == LogicalKeyboardKey.enter ||
@@ -199,20 +203,41 @@ class _AiSuggestionControlState extends State<AiSuggestionControl> {
               }
               return KeyEventResult.ignored;
             },
-            child: ExcludeFocus(
-              child: PikoButton(
-                key: ValueKey('ai-suggest-${task.name}'),
-                label: copy.text(
-                  task == AiTask.example
-                      ? 'ai.suggestExample'
-                      : 'ai.suggestHint',
+            child: PikoFocusHighlight(
+              builder: (context, visible) => MergeSemantics(
+                child: Semantics(
+                  focused: suggestFocus.hasFocus,
+                  child: DecoratedBox(
+                    position: DecorationPosition.foreground,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        pikoDesign.dimension('components.buttons.radius'),
+                      ),
+                      border: Border.all(
+                        color: visible && suggestFocus.hasFocus
+                            ? pikoDesign.color('primary')
+                            : Colors.transparent,
+                        width: pikoDesign.dimension('states.focusWidth'),
+                      ),
+                    ),
+                    child: ExcludeFocus(
+                      child: PikoButton(
+                        key: ValueKey('ai-suggest-${task.name}'),
+                        label: copy.text(
+                          task == AiTask.example
+                              ? 'ai.suggestExample'
+                              : 'ai.suggestHint',
+                        ),
+                        icon: PikoIcon(
+                          task == AiTask.example
+                              ? PikoIconName.bookOpen
+                              : PikoIconName.info,
+                        ),
+                        onPressed: available ? request : null,
+                      ),
+                    ),
+                  ),
                 ),
-                icon: PikoIcon(
-                  task == AiTask.example
-                      ? PikoIconName.bookOpen
-                      : PikoIconName.info,
-                ),
-                onPressed: available ? request : null,
               ),
             ),
           ),
@@ -224,7 +249,8 @@ class _AiSuggestionControlState extends State<AiSuggestionControl> {
             ),
             PikoButton(
               label: copy.text('action.cancel'),
-              onPressed: controller.cancel,
+              focusNode: discardFocus,
+              onPressed: () => finish(use: false),
             ),
           ],
           if (owns && controller.error != null) ...[

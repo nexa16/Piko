@@ -12,6 +12,7 @@ class HeldAiGateway implements AiContentGateway {
   @override
   bool configured = true;
   int connections = 0, disconnections = 0;
+  Completer<void>? disconnectWait;
   final calls = <AiContentRequest>[];
   Completer<Object?>? response;
   @override
@@ -22,6 +23,7 @@ class HeldAiGateway implements AiContentGateway {
   @override
   Future<void> disconnect() async {
     disconnections++;
+    await disconnectWait?.future;
   }
 
   @override
@@ -281,6 +283,29 @@ void main() {
       gateway.hint();
       await retry;
       expect(ai.suggestion, isA<AiHint>());
+    },
+  );
+  test(
+    'disconnect owns access until cleanup finishes; reconnect cannot race it',
+    () async {
+      pair();
+      await access.connect();
+      final pending = ai.request(AiTask.example);
+      gateway.disconnectWait = Completer<void>();
+      final disconnect = access.disconnect();
+      expect(access.enabled, isFalse);
+      expect(access.busy, isTrue);
+      gateway.example();
+      await pending;
+      expect(access.busy, isTrue);
+      await access.connect();
+      expect(gateway.connections, 1);
+      gateway.disconnectWait!.complete();
+      await disconnect;
+      await access.connect();
+      expect(gateway.connections, 2);
+      expect(access.enabled, isTrue);
+      expect(ai.suggestion, isNull);
     },
   );
 }

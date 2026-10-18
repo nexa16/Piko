@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' show Tristate;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/features/ai/ai_content.dart';
@@ -40,6 +41,14 @@ void main() {
           nativeLanguage: 'de',
         );
         final scroll = ScrollController();
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox.shrink());
+          ai.dispose();
+          aiAccess.dispose();
+          session.dispose();
+          scroll.dispose();
+          await fixture.db.close();
+        });
         final copy = PikoCopy(locale);
         await tester.pumpWidget(
           PikoApp(
@@ -122,6 +131,30 @@ void main() {
         await tester.pumpAndSettle();
         expect(gateway.calls, hasLength(2));
         expect(focus?.hasFocus, isTrue);
+        expect(
+          tester
+              .getSemantics(suggest)
+              .getSemanticsData()
+              .flagsCollection
+              .isFocused,
+          Tristate.isTrue,
+        );
+        final ring =
+            tester
+                    .widget<DecoratedBox>(
+                      find
+                          .ancestor(
+                            of: suggest,
+                            matching: find.byType(DecoratedBox),
+                          )
+                          .first,
+                    )
+                    .decoration
+                as BoxDecoration;
+        expect(
+          ring.border!.top.color,
+          Theme.of(tester.element(suggest)).colorScheme.primary,
+        );
         expect(tester.getTopLeft(suggest).dy, closeTo(top, .5));
         gateway.example();
         await tester.pumpAndSettle();
@@ -143,11 +176,6 @@ void main() {
         expect(session.draft.content.examples, hasLength(2));
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
-        ai.dispose();
-        aiAccess.dispose();
-        session.dispose();
-        scroll.dispose();
-        await fixture.db.close();
       },
     );
   }

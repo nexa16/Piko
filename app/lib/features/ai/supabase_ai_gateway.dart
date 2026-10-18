@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_content.dart';
+import 'ai_http_client.dart';
 
 /// This adapter is inert in ordinary builds. Only reviewed public connection
 /// values may be supplied; provider and service-role keys belong on the server.
@@ -17,6 +17,7 @@ final class SupabaseAiGateway implements AiContentGateway {
   SupabaseClient? _client;
   Future<void>? _connecting;
   int _generation = 0;
+  final _transport = AiHttpClient();
   @override
   bool get configured {
     final uri = Uri.tryParse(url);
@@ -39,6 +40,7 @@ final class SupabaseAiGateway implements AiContentGateway {
       url: url,
       publishableKey: publishableKey,
       debug: false,
+      httpClient: _transport,
       authOptions: const FlutterAuthClientOptions(
         autoRefreshToken: false,
         detectSessionInUri: false,
@@ -47,11 +49,9 @@ final class SupabaseAiGateway implements AiContentGateway {
     _client = instance.client;
     if (generation != _generation) return;
     if (_client!.auth.currentSession == null) {
-      await _client!.auth.signInAnonymously().timeout(
-        const Duration(seconds: 30),
-      );
+      await _client!.auth.signInAnonymously();
     } else if (_client!.auth.currentSession!.isExpired) {
-      await _client!.auth.refreshSession().timeout(const Duration(seconds: 30));
+      await _client!.auth.refreshSession();
     }
     if (_client!.auth.currentUser?.isAnonymous != true) {
       throw AiFailure.authentication;
@@ -61,35 +61,41 @@ final class SupabaseAiGateway implements AiContentGateway {
   @override
   Future<void> disconnect() async {
     _generation++;
+    _transport.cancelAll();
     try {
       await _connecting;
     } catch (_) {
       /* No network retry on disconnect. */
     }
     // Local sign-out works offline and cannot touch the vocabulary database.
-    await _client?.auth.signOut(scope: SignOutScope.local);
+    try {
+      await _client?.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {
+      if (_client?.auth.currentSession != null) rethrow;
+    }
   }
 
   @override
   Future<Object?> generate(AiContentRequest request) async {
+    final generation = _generation;
     final client = _client;
     if (client == null || client.auth.currentSession == null) {
       throw AiFailure.authentication;
     }
     try {
       if (client.auth.currentSession!.isExpired) {
-        await client.auth.refreshSession().timeout(const Duration(seconds: 30));
+        await client.auth.refreshSession();
       }
-      final result = await client.functions
-          .invoke(
-            'piko-content',
-            body: request.toJson(),
-            headers: {
-              'Authorization':
-                  'Bearer ${client.auth.currentSession!.accessToken}',
-            },
-          )
-          .timeout(const Duration(seconds: 45));
+      if (generation != _generation || client.auth.currentSession == null) {
+        throw AiFailure.authentication;
+      }
+      final result = await client.functions.invoke(
+        'piko-content',
+        body: request.toJson(),
+        headers: {
+          'Authorization': 'Bearer ${client.auth.currentSession!.accessToken}',
+        },
+      );
       return result.data;
     } on FunctionException catch (failure) {
       throw switch (failure.status) {

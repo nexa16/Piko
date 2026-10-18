@@ -100,17 +100,18 @@ final class AiAccess extends ChangeNotifier {
   AiAccess(this.gateway);
   final AiContentGateway gateway;
   bool _enabled = false, _busy = false, _disposed = false;
+  bool _changingAccess = false;
   int _generation = 0;
   bool get configured => gateway.configured;
   bool get enabled => _enabled;
-  bool get busy => _busy;
+  bool get busy => _busy || _changingAccess;
   AiFailure? error;
   void changed() {
     if (!_disposed) notifyListeners();
   }
 
   Future<void> connect() async {
-    if (_busy || _disposed) return;
+    if (busy || _disposed) return;
     if (!configured) {
       error = AiFailure.unavailable;
       changed();
@@ -132,7 +133,8 @@ final class AiAccess extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
-    if (_disposed) return;
+    if (_disposed || _changingAccess) return;
+    _changingAccess = true;
     _generation++;
     _enabled = false;
     error = null;
@@ -141,13 +143,15 @@ final class AiAccess extends ChangeNotifier {
       await gateway.disconnect();
     } catch (_) {
       if (!_disposed) error = AiFailure.connection;
+    } finally {
+      _changingAccess = false;
     }
     changed();
   }
 
   Future<AiContentSuggestion> generate(AiContentRequest request) async {
     if (!_enabled || _disposed) throw AiFailure.authentication;
-    if (_busy) throw AiFailure.busy;
+    if (busy) throw AiFailure.busy;
     final generation = _generation;
     _busy = true;
     changed();
