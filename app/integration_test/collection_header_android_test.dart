@@ -520,11 +520,24 @@ void main() {
       await verifyPose('reading');
       final ownerWords = detail().queryBinding!.snapshot!.allEntries;
       for (final word in ownerWords) {
-        await fixture.review(word: word, at: clock.now());
-        await fixture.review(word: word, reverse: true, at: clock.now());
+        // Keep new-word eligibility: reviewed words cannot enter automatic
+        // Speed. Fixture cards can be scheduled ahead without a review event.
+        for (final item in await fixture.learning.forEntry(word.id)) {
+          await fixture.learning.saveCard(
+            item.id,
+            item.card..due = clock.now().add(const Duration(days: 1)),
+          );
+        }
       }
       await db.customStatement('UPDATE learning_items SET speed_completed=0');
-      await verifyPose(null); // Speed only, despite future regular reviews.
+      await verifyPose(null);
+      expect(
+        detail().queryBinding!.snapshot!.directions.values.every(
+          (direction) =>
+              direction.dueCount == 0 && direction.newSpeedItems.isNotEmpty,
+        ),
+        isTrue,
+      );
       await db.customStatement('UPDATE learning_items SET speed_completed=1');
       await verifyPose('sleeping');
       await capture('contextual-sleeping');
