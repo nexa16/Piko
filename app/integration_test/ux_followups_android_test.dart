@@ -582,6 +582,7 @@ void main() {
         expect(await stored(db), before);
         await tester.pumpWidget(
           PikoApp(
+            key: const ValueKey('ux-contextual-roles-root'),
             locale: Locale(config.locale),
             home: Scaffold(
               body: SafeArea(
