@@ -233,6 +233,18 @@ void main() {
       await tester.enterText(search, 'Value 2');
       await tester.pumpAndSettle();
       expect(find.text(copy.text('category.reorderSearch')), findsOneWidget);
+      final searchController = tester.widget<TextField>(search).controller!;
+      final searchSelection = searchController.selection;
+      // Complete native IME input before traversing results. At 320dp/200%
+      // the keyboard and fixed footer leave too little room for a row menu.
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await review.waitUntil(
+        tester,
+        () => MediaQuery.viewInsetsOf(tester.element(search)).bottom == 0,
+      );
+      expect(searchController.text, 'Value 2');
+      expect(searchController.selection, searchSelection);
+      expect(tester.widget<PikoButton>(apply).onPressed, isNull);
       final searchedValue = (await categories.values(
         group.id,
       )).firstWhere((value) => value.name == 'Value 20');
