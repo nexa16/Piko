@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
@@ -133,11 +134,14 @@ void main() {
       }
 
       Future<void> menu() async {
+        final expanded = key('collection-menu');
+        if (expanded.evaluate().isNotEmpty) {
+          await tester.ensureVisible(expanded);
+          await tester.pumpAndSettle();
+        }
         final compact = key('collection-compact-menu');
         await tap(
-          compact.hitTestable().evaluate().isNotEmpty
-              ? compact
-              : key('collection-menu'),
+          compact.hitTestable().evaluate().isNotEmpty ? compact : expanded,
         );
       }
 
@@ -356,7 +360,22 @@ void main() {
           await record('json-error', capture: true);
           final expandInput = button('json.expandInput');
           await reveal(expandInput);
-          final semanticRect = tester.getSemantics(expandInput).rect;
+          // The PikoButton widget can resolve to a merged dialog ancestor.
+          // Measure the specifically labeled button node, not that ancestor.
+          final nodes = <SemanticsNode>[];
+          void collect(SemanticsNode node) {
+            if (node.label == copy.text('json.expandInput')) nodes.add(node);
+            node.visitChildren((child) {
+              collect(child);
+              return true;
+            });
+          }
+
+          for (final view in tester.binding.renderViews) {
+            collect(view.owner!.semanticsOwner!.rootSemanticsNode!);
+          }
+          expect(nodes, hasLength(1));
+          final semanticRect = nodes.single.rect;
           manifest['jsonExpandTargetAfterReveal'] = {
             'width': semanticRect.width,
             'height': semanticRect.height,
