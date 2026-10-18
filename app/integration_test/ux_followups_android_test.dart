@@ -405,7 +405,8 @@ void main() {
         await tap(button('json.file'));
         await native('file-valid-retry');
         expect(tester.widget<TextField>(input).controller!.text, validWire);
-        if (!await Clipboard.hasStrings()) {
+        if (const bool.fromEnvironment('PIKO_SYNTHETIC_CLIPBOARD_AVAILABLE') &&
+            !await Clipboard.hasStrings()) {
           final wire = await SqliteVocabularyJsonService(
             db,
           ).exportCollection(f.owner.id);
@@ -420,7 +421,7 @@ void main() {
               'real UI copy/read exact bytes; no prior plain-text clip; cleared';
         } else {
           manifest['nativeClipboard'] =
-              'not run: pre-existing clipboard retained without reading';
+              'not run: clipboard ownership/emptiness not proven; retained without reading';
         }
         await record('json-return-transport');
         final invalidRow = jsonDecode(validWire) as Map<String, dynamic>;
