@@ -353,7 +353,17 @@ void main() {
           await tester.pumpAndSettle();
           await tap(button('json.analyze'));
           expect(find.text(copy.text('json.invalidSyntax')), findsOneWidget);
-          await record('json-error');
+          await record('json-error', capture: true);
+          final expandInput = button('json.expandInput');
+          await reveal(expandInput);
+          final semanticRect = tester.getSemantics(expandInput).rect;
+          manifest['jsonExpandTargetAfterReveal'] = {
+            'width': semanticRect.width,
+            'height': semanticRect.height,
+          };
+          expect(semanticRect.width, greaterThanOrEqualTo(48));
+          expect(semanticRect.height, greaterThanOrEqualTo(48));
+          await record('json-error-expand-revealed');
           await tap(key('json-export-tab'));
           await record('json-export');
           await close();
