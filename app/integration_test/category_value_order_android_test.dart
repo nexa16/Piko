@@ -17,7 +17,6 @@ import 'package:piko/piko_runtime.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
-import 'package:piko/ui/components/piko_field.dart';
 import '../test/data/regular_reviews_test.dart' show Fixture;
 import 'review_correction_android_test.dart' as review;
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
@@ -305,16 +304,23 @@ void main() {
       await tap(key('collection-menu'));
       await tap(key('collection-menu-categories'));
       await tap(key('category-dimension-${group.id}'));
-      final managementIds = tester
-          .widgetList<PikoTextField>(find.byType(PikoTextField))
-          .map((w) => w.key)
-          .whereType<ValueKey<String>>()
-          .map((k) => k.value)
-          .where((k) => k.startsWith('category-management-value-'))
-          .toList();
+      final managementRows = find.descendant(
+        of: key('category-dimension-${group.id}'),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w.key is ValueKey<String> &&
+              custom.contains((w.key! as ValueKey<String>).value),
+        ),
+      );
+      await review.waitUntil(
+        tester,
+        () => managementRows.evaluate().length == custom.length,
+      );
       expect(
-        managementIds,
-        custom.map((id) => 'category-management-value-$id').toList(),
+        tester
+            .widgetList(managementRows)
+            .map((w) => (w.key! as ValueKey<String>).value),
+        custom,
       );
       await tap(find.byTooltip(copy.text('common.close')));
       await tap(key('collection-group'));
@@ -330,8 +336,10 @@ void main() {
         );
         await tester.pumpAndSettle();
       }
-      // Stored query ordering was asserted above; now ensure every actual
-      // heading is reachable with the same grouping without changing words.
+      final headingTops = groupedIds
+          .map((id) => tester.getTopLeft(key('collection-group-$id')).dy)
+          .toList();
+      expect(headingTops, orderedEquals(List<double>.of(headingTops)..sort()));
       expect(await protectedRows(), baseline);
       // Return to a new popup and capture one normal-size important surface.
       await tap(key('collection-filters'));
