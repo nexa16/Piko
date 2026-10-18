@@ -138,7 +138,7 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
                       key: const ValueKey('speed-fixed-direction'),
                       style: TextStyle(color: d.color('muted')),
                     ),
-                    SizedBox(height: gap),
+                    SizedBox(height: d.dimension('spacing.2')),
                     if (widget.selectionDetails != null)
                       widget.selectionDetails!
                     else
@@ -190,9 +190,9 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
             ('speed.rulesTitle', 'speed.rulesExplanation'),
             ('speed.leavingTitle', 'speed.exitExplanation'),
           ]) ...[
-            PikoFormSection(
+            PikoFormSection.explanation(
               title: copy.text(section.$1),
-              children: [PikoFormFieldRow(child: Text(copy.text(section.$2)))],
+              text: copy.text(section.$2),
             ),
           ],
         ],

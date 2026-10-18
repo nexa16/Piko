@@ -65,6 +65,18 @@ void main() {
         tester.getRect(groups.at(1)).top - tester.getRect(groups.first).bottom,
         24,
       );
+      for (final pair in [
+        ('speed.rulesTitle', 'speed.rulesExplanation'),
+        ('speed.leavingTitle', 'speed.exitExplanation'),
+      ]) {
+        final title = find.text(PikoCopy('en').text(pair.$1));
+        final body = find.text(PikoCopy('en').text(pair.$2));
+        expect(tester.getRect(body).top - tester.getRect(title).bottom, 16);
+      }
+      expect(
+        tester.getRect(groups.at(3)).top - tester.getRect(groups.at(2)).bottom,
+        24,
+      );
       final field = find.byKey(const ValueKey('speed-pool-size'));
       expect(tester.getSize(field).height, greaterThanOrEqualTo(48));
       await tester.enterText(field, '1e2');
