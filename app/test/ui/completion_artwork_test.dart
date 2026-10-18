@@ -20,6 +20,9 @@ void main() {
   testWidgets(
     'Speed celebrates only committed completion, overrides reading and restores it on X; next launch clears notice',
     (tester) async {
+      tester.view.physicalSize = const Size(320, 450);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final h = DetailSpeedHarness();
       await h.mount(tester);
       expect(find.byType(PikoReading), findsOneWidget);

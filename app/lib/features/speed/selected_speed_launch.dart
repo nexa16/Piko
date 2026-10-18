@@ -131,6 +131,7 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
         !widget.enabled ||
         widget.selection.ids.isEmpty ||
         widget.directions.isEmpty ||
+        (chosen != null && !widget.directions.contains(chosen)) ||
         owner?.isCurrent != true) {
       return;
     }

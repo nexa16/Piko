@@ -446,11 +446,12 @@ class PikoDatabase extends _$PikoDatabase {
           await m.addColumn(collections, collections.nativeLanguageName);
         }
         if (from < 20 && from >= 4) await _upgradeVocabularySenseKeys(m);
-        if (from >= 18 && from < 21)
+        if (from >= 18 && from < 21) {
           await m.addColumn(
             categoryGroupPreferences,
             categoryGroupPreferences.tagColorRole,
           );
+        }
         if (from < 21) {
           final groups = await customSelect(
             'SELECT id, collection_id FROM category_dimensions ORDER BY collection_id, position, id',
