@@ -331,6 +331,64 @@ void main() {
         await tap(find.text('Topic').last);
         expect(tester.widget<PikoSwitch>(carry).value, isFalse);
         await record('category-reopened-unsaved-discarded');
+        await tap(carry);
+        await tap(button('category.saveDimension'));
+        expect((await categories.dimensionById(topic.id))!.carryOver, isTrue);
+        await pageBack();
+        await tap(find.text('Topic').last);
+        expect(tester.widget<PikoSwitch>(carry).value, isTrue);
+        await record('category-properties-saved-and-reopened');
+        await tap(carry);
+        await tap(button('category.saveDimension'));
+        expect((await categories.dimensionById(topic.id))!.carryOver, isFalse);
+        await tap(nav('r2.addValue'));
+        await record('category-value-create', capture: true);
+        await tap(button('r2.save'));
+        await record('category-value-validation');
+        final valueField = find.descendant(
+          of: key('category-value-name'),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(valueField, 'Audit value');
+        await tester.pumpAndSettle();
+        await tap(button('r2.save'));
+        final created = (await categories.values(
+          topic.id,
+        )).singleWhere((v) => v.name == 'Audit value');
+        Finder valueRow(String name) => find
+            .ancestor(
+              of: find.text(name),
+              matching: find.byType(PikoFormFieldRow),
+            )
+            .first;
+        await tap(
+          find.descendant(
+            of: valueRow('Audit value'),
+            matching: find.byTooltip(copy.text('r2.editValue')),
+          ),
+        );
+        await record('category-value-rename');
+        await tester.enterText(valueField, 'Renamed audit value');
+        await tester.pumpAndSettle();
+        await tap(button('r2.save'));
+        expect(
+          (await categories.values(
+            topic.id,
+          )).singleWhere((v) => v.id == created.id).name,
+          'Renamed audit value',
+        );
+        await tap(
+          find.descendant(
+            of: valueRow('Renamed audit value'),
+            matching: find.byTooltip(copy.text('category.deleteValue')),
+          ),
+        );
+        await record('category-value-delete-confirmation');
+        await tap(button('catPreview.delete'));
+        expect(
+          (await categories.values(topic.id)).where((v) => v.id == created.id),
+          isEmpty,
+        );
         await pageBack();
         await pageBack();
         await pageBack();
