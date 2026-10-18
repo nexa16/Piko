@@ -116,49 +116,61 @@ void main() {
       }
 
       Future<void> native(String phase) async {
-        await File('${directory.path}/phase.json').writeAsString(
-          jsonEncode({
-            'phase': phase,
-            'run': config.runId,
-            if (phase == 'ime-back') 'raw': '0',
-            if (phase == 'ime-back')
-              'x':
-                  (tester
-                              .getCenter(
-                                find.descendant(
-                                  of: key('speed-pool-size'),
-                                  matching: find.byType(EditableText),
-                                ),
-                              )
-                              .dx *
-                          View.of(
-                            tester.element(key('speed-pool-size')),
-                          ).devicePixelRatio)
-                      .round(),
-            if (phase == 'ime-back')
-              'y':
-                  (tester
-                              .getCenter(
-                                find.descendant(
-                                  of: key('speed-pool-size'),
-                                  matching: find.byType(EditableText),
-                                ),
-                              )
-                              .dy *
-                          View.of(
-                            tester.element(key('speed-pool-size')),
-                          ).devicePixelRatio)
-                      .round(),
-          }),
-          flush: true,
-        );
-        final ack = File('${directory.path}/ack-$phase');
-        final end = DateTime.now().add(const Duration(seconds: 90));
-        while (!await ack.exists() && DateTime.now().isBefore(end)) {
-          // DocumentsUI can pause Flutter frames. Wait on wall time only.
-          await Future<void>.delayed(const Duration(milliseconds: 200));
+        final live = tester.binding as LiveTestWidgetsFlutterBinding;
+        final oldPointer = live.shouldPropagateDevicePointerEvents;
+        final oldPolicy = live.framePolicy;
+        if (phase == 'ime-back') {
+          live.shouldPropagateDevicePointerEvents = true;
+          live.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
         }
-        expect(await ack.exists(), true, reason: 'Native phase $phase');
+        try {
+          await File('${directory.path}/phase.json').writeAsString(
+            jsonEncode({
+              'phase': phase,
+              'run': config.runId,
+              if (phase == 'ime-back') 'raw': '0',
+              if (phase == 'ime-back')
+                'x':
+                    (tester
+                                .getCenter(
+                                  find.descendant(
+                                    of: key('speed-pool-size'),
+                                    matching: find.byType(EditableText),
+                                  ),
+                                )
+                                .dx *
+                            View.of(
+                              tester.element(key('speed-pool-size')),
+                            ).devicePixelRatio)
+                        .round(),
+              if (phase == 'ime-back')
+                'y':
+                    (tester
+                                .getCenter(
+                                  find.descendant(
+                                    of: key('speed-pool-size'),
+                                    matching: find.byType(EditableText),
+                                  ),
+                                )
+                                .dy *
+                            View.of(
+                              tester.element(key('speed-pool-size')),
+                            ).devicePixelRatio)
+                        .round(),
+            }),
+            flush: true,
+          );
+          final ack = File('${directory.path}/ack-$phase');
+          final end = DateTime.now().add(const Duration(seconds: 90));
+          while (!await ack.exists() && DateTime.now().isBefore(end)) {
+            // DocumentsUI can pause Flutter frames. Wait on wall time only.
+            await Future<void>.delayed(const Duration(milliseconds: 200));
+          }
+          expect(await ack.exists(), true, reason: 'Native phase $phase');
+        } finally {
+          live.shouldPropagateDevicePointerEvents = oldPointer;
+          live.framePolicy = oldPolicy;
+        }
         await tester.pumpAndSettle();
       }
 
