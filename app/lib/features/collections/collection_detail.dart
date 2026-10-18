@@ -117,6 +117,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   final _compactMenuFocus = FocusNode();
   final _compactReviewFocus = FocusNode();
   final _compactSpeedFocus = FocusNode();
+  final _expandedNoticeFocus = FocusNode();
+  final _compactNoticeFocus = FocusNode();
   var _reviewLaunchKey = GlobalKey<ReviewLaunchState>();
   var _speedLaunchKey = GlobalKey<SpeedLaunchState>();
   Object? _launchKeysIdentity;
@@ -133,11 +135,15 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         next = _compactSpeedFocus;
       } else if (_menuFocus.hasFocus) {
         next = _compactMenuFocus;
+      } else if (_expandedNoticeFocus.hasFocus) {
+        next = _compactNoticeFocus;
       } else if (_expandedHeaderFocus.hasFocus) {
         next = _compactBackFocus;
       }
     } else if (_compactMenuFocus.hasFocus) {
       next = _menuFocus;
+    } else if (_compactNoticeFocus.hasFocus) {
+      next = _expandedNoticeFocus;
     } else if (_compactBackFocus.hasFocus ||
         _compactReviewFocus.hasFocus ||
         _compactSpeedFocus.hasFocus) {
@@ -1041,6 +1047,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       _compactMenuFocus,
       _compactReviewFocus,
       _compactSpeedFocus,
+      _expandedNoticeFocus,
+      _compactNoticeFocus,
     ]) {
       focus.dispose();
     }
@@ -1127,6 +1135,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   if (_speedCompletedCount != null && ready)
                     SpeedCompletionNotice(
                       count: _speedCompletedCount!,
+                      dismissFocusNode: _expandedNoticeFocus,
                       onDismiss: () =>
                           setState(() => _speedCompletedCount = null),
                     ),
@@ -1867,6 +1876,13 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 color: d.color('muted'),
               ),
             ),
+            if (_speedCompletedCount != null && ready)
+              SpeedCompletionNotice(
+                count: _speedCompletedCount!,
+                showArtwork: false,
+                dismissFocusNode: _compactNoticeFocus,
+                onDismiss: () => setState(() => _speedCompletedCount = null),
+              ),
             if (!resolved)
               Text(
                 copy.text(

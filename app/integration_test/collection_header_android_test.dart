@@ -18,6 +18,7 @@ import 'package:piko/features/learning/learning_direction_choice.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/features/speed/speed_setup_dialog.dart';
+import 'package:piko/features/speed/speed_session_route.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
@@ -429,6 +430,62 @@ void main() {
       field.controller!.clear();
       detail().queryBinding!.scope.setSearch('');
       await settle();
+      step('committed Speed notice survives compact transition without art');
+      Future<Map<String, Object?>> longTerm() async => {
+        for (final table in [
+          'learning_items',
+          'regular_reviews',
+          'retry_obligations',
+          'scope_answer_ordinals',
+        ])
+          table: [
+            for (final row in await review.rows(db, table))
+              {...row}..remove('speed_completed'),
+          ],
+      };
+      final beforeCompletion = await longTerm();
+      detail().queryBinding!.scope.setSearch('Word 0');
+      await settle();
+      await top();
+      final speed = key('collection-speed-targetToNative');
+      for (var i = 0; i < 30 && speed.hitTestable().evaluate().isEmpty; i++) {
+        final viewport = tester.getRect(find.byType(Scrollable).first);
+        await tester.dragFrom(
+          Offset(viewport.center.dx, viewport.bottom - 24),
+          const Offset(0, -60),
+        );
+        await tester.pumpAndSettle();
+      }
+      await tap(speed);
+      await tap(find.text(copy.text('learn.startSpeed')));
+      await tap(key('review-reveal-target'));
+      await tap(key('speed-grade-correct'));
+      await review.waitUntil(
+        tester,
+        () => find.byType(SpeedSessionRoute).evaluate().isEmpty,
+      );
+      await settle();
+      detail().queryBinding!.scope.setSearch('');
+      await settle();
+      await top();
+      expect(key('speed-completion-notice'), findsOneWidget);
+      expect(key('piko-celebration'), findsOneWidget);
+      expect(key('piko-reading'), findsNothing);
+      await collapse();
+      expect(key('speed-completion-notice'), findsOneWidget);
+      expect(key('piko-celebration'), findsNothing);
+      final completionCredits = await review.rows(db, 'statistics_activity');
+      expect(
+        completionCredits.where((row) => row['mode'] == 'speed'),
+        hasLength(1),
+      );
+      expect(await longTerm(), beforeCompletion);
+      await tap(find.byTooltip(copy.text('speed.dismissCompletion')));
+      expect(key('speed-completion-notice'), findsNothing);
+      await top();
+      expect(key('piko-reading'), findsOneWidget);
+      expect(await longTerm(), beforeCompletion);
+      expect(await review.rows(db, 'statistics_activity'), completionCredits);
       step('real pending retry distinguishes settled zero');
       await fixture.review(rating: LearningRating.again, at: clock.now());
       await fixture.review(
@@ -463,6 +520,7 @@ void main() {
         'cancellation preserves exact data, selection and scroll',
         'loading/error/retry without fabricated zero',
         'real keyboard retains raw text and cursor',
+        'one committed Speed notice survives compact transition without art or duplicate credit',
         'pending retry is not settled no-work',
         'reopened database exact',
       ];

@@ -44,7 +44,30 @@ void main() {
             w is PikoIconButton &&
             w.semanticLabel == 'Dismiss completion message',
       );
-      await tap(tester, dismiss);
+      final expandedDismiss = tester.widget<PikoIconButton>(dismiss).focusNode!;
+      expandedDismiss.requestFocus();
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pumpAndSettle();
+      expect(key('collection-review-compact').hitTestable(), findsOneWidget);
+      expect(key('speed-completion-notice'), findsOneWidget);
+      expect(find.text('Speed complete · 1 word'), findsOneWidget);
+      expect(key('piko-celebration'), findsNothing);
+      expect(
+        tester.widget<PikoIconButton>(dismiss).focusNode!.hasFocus,
+        isTrue,
+      );
+      position.jumpTo(0);
+      await tester.pumpAndSettle();
+      expect(expandedDismiss.hasFocus, isTrue);
+      expect(key('piko-celebration'), findsOneWidget);
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pumpAndSettle();
+      await tester.tap(dismiss);
+      await tester.pumpAndSettle();
+      expect(key('speed-completion-notice'), findsNothing);
       expect(key('piko-celebration'), findsNothing);
       tester
           .state<ScrollableState>(find.byType(Scrollable).first)

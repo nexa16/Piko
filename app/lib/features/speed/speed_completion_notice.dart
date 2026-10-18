@@ -13,10 +13,12 @@ class SpeedCompletionNotice extends StatelessWidget {
     required this.count,
     required this.onDismiss,
     this.showArtwork = true,
+    this.dismissFocusNode,
   }) : assert(count > 0);
   final int count;
   final VoidCallback onDismiss;
   final bool showArtwork;
+  final FocusNode? dismissFocusNode;
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
@@ -42,6 +44,7 @@ class SpeedCompletionNotice extends StatelessWidget {
             const PikoCelebration(),
           ],
           PikoIconButton(
+            focusNode: dismissFocusNode,
             semanticLabel: copy.text('speed.dismissCompletion'),
             icon: const PikoIcon(PikoIconName.x),
             onPressed: onDismiss,
