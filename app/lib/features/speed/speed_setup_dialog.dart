@@ -20,6 +20,14 @@ typedef SpeedSessionFactory =
       required int poolSize,
     });
 
+typedef SelectedSpeedSessionFactory =
+    Future<SpeedLearningSession> Function({
+      required String collectionId,
+      required LearningDirection direction,
+      required List<String> orderedEntryIds,
+      required int poolSize,
+    });
+
 /// Setup returns only the configured pool size; dismissal returns no launch.
 Future<int?> showSpeedSetup(
   BuildContext context, {
@@ -47,12 +55,18 @@ class SpeedSetupDialog extends StatefulWidget {
     required this.collection,
     required this.direction,
     required this.eligibleCount,
+    this.selectionDetails,
+    this.onStart,
+    this.busy = false,
     super.key,
   }) : assert(eligibleCount >= 0);
 
   final CollectionRecord collection;
   final LearningDirection direction;
   final int eligibleCount;
+  final Widget? selectionDetails;
+  final ValueChanged<int>? onStart;
+  final bool busy;
 
   @override
   State<SpeedSetupDialog> createState() => _SpeedSetupDialogState();
@@ -72,13 +86,19 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
   }
 
   void _start() {
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (!mounted || widget.busy || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     final size = _poolSize;
     if (size == null || widget.eligibleCount == 0) {
       setState(() => _edited = true);
       return;
     }
-    Navigator.of(context).pop(size);
+    if (widget.onStart != null) {
+      widget.onStart!(size);
+    } else {
+      Navigator.of(context).pop(size);
+    }
   }
 
   @override
@@ -90,7 +110,7 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
-    final valid = _poolSize != null && widget.eligibleCount > 0;
+    final valid = !widget.busy && _poolSize != null && widget.eligibleCount > 0;
     final gap = d.dimension('spacing.3');
     return PikoDialog(
       purpose: PikoDialogPurpose.form,
@@ -111,15 +131,20 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
             style: TextStyle(color: d.color('muted')),
           ),
           SizedBox(height: gap),
-          Text(
-            widget.eligibleCount == 1
-                ? copy.text('r2.speedNewOne')
-                : copy.text('r2.speedNewCount', {
-                    'count': widget.eligibleCount,
-                  }),
-            key: const ValueKey('speed-new-count'),
-            style: TextStyle(fontWeight: d.weight('components.buttons.weight')),
-          ),
+          if (widget.selectionDetails != null)
+            widget.selectionDetails!
+          else
+            Text(
+              widget.eligibleCount == 1
+                  ? copy.text('r2.speedNewOne')
+                  : copy.text('r2.speedNewCount', {
+                      'count': widget.eligibleCount,
+                    }),
+              key: const ValueKey('speed-new-count'),
+              style: TextStyle(
+                fontWeight: d.weight('components.buttons.weight'),
+              ),
+            ),
           SizedBox(height: gap),
           PikoField(
             label: copy.text('r2.pool'),
@@ -127,11 +152,14 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
               label: copy.text('r2.pool'),
               child: TextField(
                 key: const ValueKey('speed-pool-size'),
+                readOnly: widget.busy,
                 controller: _pool,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 decoration: pikoInputDecoration(
-                  error: _edited && !valid ? copy.text('r2.poolInvalid') : null,
+                  error: _edited && _poolSize == null
+                      ? copy.text('r2.poolInvalid')
+                      : null,
                 ),
                 onChanged: (_) => setState(() => _edited = true),
                 onSubmitted: (_) => _start(),

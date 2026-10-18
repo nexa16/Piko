@@ -81,6 +81,7 @@ class SelectionHarness {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.ensureVisible(key('collection-${fixture.owner.id}'));
     await tester.tap(key('collection-${fixture.owner.id}'));
     await tester.pumpAndSettle();
   }

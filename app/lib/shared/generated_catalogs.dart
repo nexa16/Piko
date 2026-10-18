@@ -1882,6 +1882,46 @@ const copyCatalog = <String, Object?>{
 "de": "Wiederholungs-Countdown",
 "en": "Retry countdown",
 },
+"selectedSpeed.action": <String, Object?>{
+"de": "Intensiv · {count} ausgewählt",
+"en": "Speed · {count} selected",
+},
+"selectedSpeed.changed": <String, Object?>{
+"de": "Die Auswahl hat sich geändert. Prüfe die aktualisierten Zahlen vor dem Start.",
+"en": "The selection has changed. Check the updated counts before starting.",
+},
+"selectedSpeed.checking": <String, Object?>{
+"de": "Auswahl wird geprüft …",
+"en": "Checking selection…",
+},
+"selectedSpeed.direction": <String, Object?>{
+"de": "Richtung fürs Intensivlernen",
+"en": "Speed direction",
+},
+"selectedSpeed.failed": <String, Object?>{
+"de": "Diese Auswahl konnte nicht vorbereitet werden. Auswahl und Poolgröße bleiben erhalten. Versuche es erneut.",
+"en": "Could not prepare this selection. Your selection and pool size are retained. Try again.",
+},
+"selectedSpeed.hidden": <String, Object?>{
+"de": "Enthalten, aber in der Liste ausgeblendet: {count}",
+"en": "Included but hidden in the list: {count}",
+},
+"selectedSpeed.inactive": <String, Object?>{
+"de": "Ausgeschlossene inaktive Vokabeln: {count}",
+"en": "Excluded inactive words: {count}",
+},
+"selectedSpeed.included": <String, Object?>{
+"de": "Ausgewählte aktive Vokabeln: {count}",
+"en": "Selected active words: {count}",
+},
+"selectedSpeed.independent": <String, Object?>{
+"de": "Übe ausgewählte Vokabeln, auch bereits gelernte. Der Langzeit-Lernfortschritt bleibt unverändert.",
+"en": "Practice selected words, including previously learned words. Long-term progress stays unchanged.",
+},
+"selectedSpeed.missing": <String, Object?>{
+"de": "Nicht mehr verfügbar: {count}",
+"en": "No longer available: {count}",
+},
 "selection.all": <String, Object?>{
 "de": "Alle auswählen",
 "en": "Select all",

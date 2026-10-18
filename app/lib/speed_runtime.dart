@@ -4,7 +4,7 @@ import 'data/local/sqlite_learning_repository.dart';
 import 'features/speed/speed_learning_session.dart';
 import 'features/speed/speed_session.dart';
 
-enum SpeedLaunchFailure { noNewVocabulary }
+enum SpeedLaunchFailure { noNewVocabulary, noSelectedVocabulary }
 
 /// Runtime composition between the pure round and its per-item transaction.
 final class PikoSpeedRuntime {
@@ -44,12 +44,61 @@ final class PikoSpeedRuntime {
     );
     final eligible = await source.newSpeedItems();
     if (eligible.isEmpty) throw SpeedLaunchFailure.noNewVocabulary;
+    return _session(source, eligible, poolSize);
+  }
+
+  /// Explicit practice preserves the caller's current display order and admits
+  /// reviewed/completed words. Activity and ownership remain authoritative.
+  Future<SpeedLearningSession> prepareSelected({
+    required String collectionId,
+    required LearningDirection direction,
+    required List<String> orderedEntryIds,
+    required int poolSize,
+  }) {
+    final ordered = List<String>.unmodifiable(orderedEntryIds.toSet());
+    final future = () async {
+      final source = await learning.forCollection(
+        collectionId: collectionId,
+        direction: direction,
+        entryIds: ordered.toSet(),
+      );
+      final items = {
+        for (final item in await source.items()) item.entryId: item,
+      };
+      final active = await source.activeEntryIds(
+        expectedEntryIds: ordered.toSet(),
+      );
+      final eligible = [
+        for (final id in ordered)
+          if (active.contains(id)) items[id]!,
+      ];
+      if (eligible.isEmpty) throw SpeedLaunchFailure.noSelectedVocabulary;
+      final session = await _session(source, eligible, poolSize);
+      if (session.error != null || session.state!.entryIds.isEmpty) {
+        final error = session.error ?? SpeedLaunchFailure.noSelectedVocabulary;
+        await session.stop();
+        session.dispose();
+        throw error;
+      }
+      return session;
+    }();
+    onPendingWrites?.call(
+      future.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+    );
+    return future;
+  }
+
+  Future<SpeedLearningSession> _session(
+    CollectionReviewGateway source,
+    List<LearningItemRecord> eligible,
+    int poolSize,
+  ) async {
     final originals = {for (final item in eligible) item.entryId: item};
     final completedAt = <String, DateTime>{};
     final session = SpeedLearningSession(
       initial: SpeedSession.start(
-        collectionId: collectionId,
-        direction: direction,
+        collectionId: source.collectionId,
+        direction: source.direction,
         eligibleEntryIds: eligible.map((item) => item.entryId),
         poolSize: poolSize,
       ),

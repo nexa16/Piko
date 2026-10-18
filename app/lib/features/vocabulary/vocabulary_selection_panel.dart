@@ -12,10 +12,12 @@ class VocabularySelectionPanel extends StatelessWidget {
     required this.selection,
     required this.matchingIds,
     required this.enabled,
+    this.speedAction,
   });
   final VocabularySelection selection;
   final List<String> matchingIds;
   final bool enabled;
+  final Widget? speedAction;
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
@@ -95,6 +97,7 @@ class VocabularySelectionPanel extends StatelessWidget {
                       spacing: gap,
                       runSpacing: gap,
                       children: [
+                        ?speedAction,
                         PikoButton(
                           key: const ValueKey('vocabulary-select-all'),
                           label: copy.text('selection.all'),

@@ -119,7 +119,7 @@ Hold a collapsed vocabulary card to start selection, then tap cards to toggle th
 
 Changing search/filter can hide selected words without deselecting them. The selection summary reports hidden selections. Use **Clear selection** to end selection explicitly; leaving the Collection also clears it.
 
-Selection in this build only selects words. It has no bulk edit/delete/export operation and does not launch learning from the selected set. It does not change Active/Inactive, saved filters or learning progress.
+Use **Speed · selected** in the selection controls to practice the selected active words, including hidden and previously learned words. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit/delete/export operation and does not change Active/Inactive or saved filters.
 
 <img src="images/10-hidden-selection.png" width="320" alt="Filtered Food word selected with summary showing four selected and three hidden">
 
@@ -153,6 +153,8 @@ Ordinary product emulator capture · [Full image](images/14-long-term-answer.png
 ## Speed learning
 
 Use a Collection's directional **Speed** action when eligible active words are available. The default pool comes from new words matching the current scope; temporary selection does not replace it. Read the setup's word count, direction and rules. Set **Maximum words per pass** and choose **Start Speed**.
+
+For selected practice, use the separate selection action. A single preferred direction opens setup directly; when both directions are enabled, choose one. Start rechecks the whole selected set in the current Collection sort order, including hidden words. Inactive or deleted words are excluded. Changed counts remain visible for review before starting; failures retain setup and pool size for retry. No eligible words means no start. Previously reviewed or Speed-completed words remain eligible for this explicit practice.
 
 Reveal each answer and choose Correct or Incorrect. A word finishes after a consecutive correct streak: one correct with no errors, two after one error, three after two, and four after three or more. An error resets that word's streak. Completed words leave the pool; waiting words enter as space becomes available. A short numbers game can interrupt unfinished work between passes. The session ends without an extra game once all work is complete.
 

@@ -21,7 +21,8 @@ import '../learning/review_launch.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_entry_count.dart';
 import 'collection_query_binding.dart';
-import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import '../speed/speed_setup_dialog.dart'
+    show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import 'package:flutter/foundation.dart';
 import '../settings/preferred_direction_controller.dart';
 import '../statistics/statistics_binding.dart';
@@ -42,6 +43,7 @@ class CollectionsHome extends StatefulWidget {
     this.queryBindingFactory,
     this.detailReviewSessionFactory,
     this.speedSessionFactory,
+    this.selectedSpeedSessionFactory,
     this.categoriesRepository,
     this.onOpenSettings,
     this.directionBinding,
@@ -63,6 +65,7 @@ class CollectionsHome extends StatefulWidget {
   queryBindingFactory;
   final ReviewSessionFactory? detailReviewSessionFactory;
   final SpeedSessionFactory? speedSessionFactory;
+  final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
@@ -120,6 +123,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
+          selectedSpeedSessionFactory: widget.selectedSpeedSessionFactory,
           categoriesRepository: widget.categoriesRepository,
           directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,

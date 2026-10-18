@@ -1656,6 +1656,16 @@ globalThis.PIKO_COPY = {
       "en": "Speed complete · 1 word",
       "de": "Intensivlernen abgeschlossen · 1 Vokabel"
     },
+    "selectedSpeed.action": { "en": "Speed · {count} selected", "de": "Intensiv · {count} ausgewählt" },
+    "selectedSpeed.direction": { "en": "Speed direction", "de": "Richtung fürs Intensivlernen" },
+    "selectedSpeed.included": { "en": "Selected active words: {count}", "de": "Ausgewählte aktive Vokabeln: {count}" },
+    "selectedSpeed.hidden": { "en": "Included but hidden in the list: {count}", "de": "Enthalten, aber in der Liste ausgeblendet: {count}" },
+    "selectedSpeed.inactive": { "en": "Excluded inactive words: {count}", "de": "Ausgeschlossene inaktive Vokabeln: {count}" },
+    "selectedSpeed.missing": { "en": "No longer available: {count}", "de": "Nicht mehr verfügbar: {count}" },
+    "selectedSpeed.checking": { "en": "Checking selection…", "de": "Auswahl wird geprüft …" },
+    "selectedSpeed.changed": { "en": "The selection has changed. Check the updated counts before starting.", "de": "Die Auswahl hat sich geändert. Prüfe die aktualisierten Zahlen vor dem Start." },
+    "selectedSpeed.failed": { "en": "Could not prepare this selection. Your selection and pool size are retained. Try again.", "de": "Diese Auswahl konnte nicht vorbereitet werden. Auswahl und Poolgröße bleiben erhalten. Versuche es erneut." },
+    "selectedSpeed.independent": { "en": "Practice selected words, including previously learned words. Long-term progress stays unchanged.", "de": "Übe ausgewählte Vokabeln, auch bereits gelernte. Der Langzeit-Lernfortschritt bleibt unverändert." },
     "speed.dismissCompletion": {
       "en": "Dismiss completion message",
       "de": "Abschlussmeldung schließen"

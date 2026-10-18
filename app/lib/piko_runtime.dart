@@ -374,6 +374,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             reviewSessionFactory: _reviewSession,
             detailReviewSessionFactory: _detailReviewSession,
             speedSessionFactory: speedRuntime.prepare,
+            selectedSpeedSessionFactory: speedRuntime.prepareSelected,
             queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,

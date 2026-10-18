@@ -37,7 +37,9 @@ import 'collection_search_field.dart';
 import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
-import '../speed/speed_setup_dialog.dart' show SpeedSessionFactory;
+import '../speed/selected_speed_launch.dart';
+import '../speed/speed_setup_dialog.dart'
+    show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import '../categories/category_management.dart';
 import '../settings/preferred_direction_controller.dart';
 
@@ -72,6 +74,7 @@ class CollectionDetail extends StatefulWidget {
     this.categoryManagementBuilder,
     this.queryBinding,
     this.speedSessionFactory,
+    this.selectedSpeedSessionFactory,
     this.categoriesRepository,
     this.directionBinding,
     super.key,
@@ -94,6 +97,7 @@ class CollectionDetail extends StatefulWidget {
   /// Runtime-owned; this route listens but never disposes the shared projection.
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
+  final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
@@ -942,6 +946,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
     if (oldWidget.reviewSessionFactory != widget.reviewSessionFactory ||
         oldWidget.speedSessionFactory != widget.speedSessionFactory ||
+        oldWidget.selectedSpeedSessionFactory !=
+            widget.selectedSpeedSessionFactory ||
         oldWidget.queryBinding != widget.queryBinding ||
         oldWidget.reviewMembershipLoader != widget.reviewMembershipLoader ||
         oldWidget.reviewCountPolicy != widget.reviewCountPolicy ||
@@ -1382,6 +1388,77 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             children: [
               Expanded(child: page),
               VocabularySelectionPanel(
+                speedAction:
+                    widget.selectedSpeedSessionFactory == null ||
+                        widget.vocabularyRepository == null ||
+                        _lastReadyCollection == null
+                    ? null
+                    : SelectedSpeedLaunch(
+                        key: ValueKey(
+                          'selected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
+                        ),
+                        collection: _lastReadyCollection!,
+                        selection: _selection,
+                        directions: _directions,
+                        factory: widget.selectedSpeedSessionFactory!,
+                        vocabularyRepository: widget.vocabularyRepository!,
+                        categoriesRepository: widget.categoriesRepository,
+                        enabled:
+                            ready &&
+                            _directionReady &&
+                            !_openingReview &&
+                            !_openingEntry &&
+                            _deleteRequest == null &&
+                            _renameRequest == null &&
+                            (_mutations?.isBusy != true || _openingSpeed) &&
+                            (widget.queryBinding!.ready || _openingSpeed) &&
+                            widget.queryBinding!.scope.viewReady &&
+                            !widget.queryBinding!.scope.viewPending,
+                        beforeLaunch: () async {
+                          barrierForBuild.freeze();
+                          await barrierForBuild.drain();
+                          await mutationsForBuild?.awaitPending();
+                        },
+                        loadScope: (selected) async {
+                          final binding = widget.queryBinding!;
+                          final snapshot = await binding.service.query(
+                            collectionId: binding.collectionId,
+                            at: binding.clock.now().toUtc(),
+                            search: binding.scope.search,
+                            filters: binding.scope.filters,
+                          );
+                          return SelectedSpeedScope(
+                            snapshot,
+                            selected,
+                            binding.scope.view.sort,
+                          );
+                        },
+                        onBusyChanged: (busy) {
+                          if (!mounted ||
+                              identityForBuild != _identity ||
+                              reviewIdentityForBuild != _reviewIdentity) {
+                            return;
+                          }
+                          setState(() {
+                            _openingSpeed = busy;
+                            if (busy) {
+                              _speedCompletedCount = null;
+                              _heldLearningSnapshot ??=
+                                  widget.queryBinding!.snapshot;
+                            } else {
+                              _heldLearningSnapshot = null;
+                            }
+                          });
+                          if (!busy) barrierForBuild.release();
+                        },
+                        onPendingWrites: registerForBuild,
+                        onSessionClosed: widget.queryBinding!.refresh,
+                        onCompleted: (count) {
+                          if (mounted) {
+                            setState(() => _speedCompletedCount = count);
+                          }
+                        },
+                      ),
                 selection: _selection,
                 matchingIds:
                     widget.queryBinding!.snapshot?.entries
