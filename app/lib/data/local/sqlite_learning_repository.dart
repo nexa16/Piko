@@ -12,6 +12,7 @@ import '../../core/learning_day.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
+import 'sqlite_statistics_repository.dart';
 
 part 'sqlite_review_correction.dart';
 part 'sqlite_speed_completion.dart';
@@ -686,6 +687,9 @@ final class SqliteLearningRepository implements RegularReviewWriter {
       } else {
         retryNext = null;
       }
+      await SqliteStatisticsRepository(
+        database,
+      ).recordRegular(event.id, reviewedAt);
       return RegularReviewReceipt(
         prior: transition.prior,
         next: LearningItemRecord(

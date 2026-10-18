@@ -24,7 +24,8 @@ final class SpeedCompletionResult {
 abstract interface class SpeedCompletionWriter {
   /// Capture [expectedPrior] at launch and retain one UTC [completedAt] for this
   /// item's accepted completion, including retries. Identical committed requests
-  /// are idempotent; a later different studied state is never reset again.
+  /// are idempotent across date/timezone changes. Speed preserves Long-term
+  /// scheduling/history/retries; a new completion date can earn fresh credit.
   Future<SpeedCompletionResult> completeSpeedItem({
     required LearningItemRecord expectedPrior,
     required int errors,

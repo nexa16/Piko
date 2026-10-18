@@ -50,6 +50,16 @@ const allowedColumns = <String, Set<String>>{
     'speed_completed',
   },
   'regular_reviews': {'id', 'item_id', 'generation', 'reviewed_at', 'rating'},
+  // STATS-005–010: deletion-independent activity, fixed coverage/date assignment
+  // and replay protection. No word text, collection names or error attempts.
+  'statistics_origins': {'singleton', 'started_at', 'learning_date'},
+  'statistics_activity': {'credit_key', 'mode', 'occurred_at', 'learning_date'},
+  'speed_completion_receipts': {
+    'entry_id',
+    'direction',
+    'completed_at',
+    'learning_date',
+  },
   'retry_obligations': {
     'id',
     'item_id',
@@ -114,7 +124,7 @@ Future<void> assertInventory(PikoDatabase db) async {
 
 void main() {
   test(
-    'DATA-005 real reinforcement retains only current state and regular history across reopen',
+    'DATA-005 reinforcement retains current state, regular history and one minimal statistics credit across reopen',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'piko-minimal-data-',
@@ -138,6 +148,8 @@ void main() {
         await session.submitAnswerNow(session.current!, AnswerGrade.incorrect);
         final firstHistory = await rows(db, 'regular_reviews');
         expect(firstHistory, hasLength(1));
+        final firstCredit = await rows(db, 'statistics_activity');
+        expect(firstCredit, hasLength(1));
         for (var attempt = 0; attempt < 3; attempt++) {
           final currentRound = (await source.retryState(
             at: clock.now(),
@@ -150,8 +162,10 @@ void main() {
             attempt == 2 ? AnswerGrade.correct : AnswerGrade.incorrect,
           );
           expect(await rows(db, 'regular_reviews'), firstHistory);
+          expect(await rows(db, 'statistics_activity'), firstCredit);
         }
         expect(await rows(db, 'retry_obligations'), isEmpty);
+        expect(await rows(db, 'speed_completion_receipts'), isEmpty);
         expect(await rows(db, 'scope_answer_ordinals'), hasLength(1));
         expect((await rows(db, 'scope_answer_ordinals')).single['ordinal'], 4);
         expect(await rows(db, 'app_settings'), [

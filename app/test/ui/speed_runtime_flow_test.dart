@@ -5,7 +5,6 @@ import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collections_home.dart';
-import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/learning/review_summary_dialog.dart';
 import 'package:piko/features/speed/speed_numbers_break.dart';
 import 'package:piko/features/speed/speed_session.dart';
@@ -39,7 +38,7 @@ Finder speedAction(LearningDirection direction) =>
 void main() {
   for (final errors in [false, true]) {
     testWidgets(
-      'SPEED-006 real runtime ${errors ? "errored reverse completion resets only studied direction" : "zero-error completion preserves full FSRS"} through binding invalidation',
+      'SPEED-006 real runtime ${errors ? "errored reverse completion preserves full Long-term state" : "zero-error completion preserves full FSRS"} through binding invalidation',
       (tester) async {
         final clock = MutablePikoClock(instant);
         final db = RuntimeDatabase(clock);
@@ -230,20 +229,10 @@ void main() {
           expect(other.generation, oppositeBefore.generation);
           expect(other.reviewRevision, oppositeBefore.reviewRevision);
           expect(other.speedCompleted, oppositeBefore.speedCompleted);
-          expect(studied.generation, prior.generation + (errors ? 1 : 0));
-          expect(studied.reviewRevision, errors ? 0 : prior.reviewRevision);
+          expect(studied.generation, prior.generation);
+          expect(studied.reviewRevision, prior.reviewRevision);
           expect(studied.formatVersion, prior.formatVersion);
-          expect(
-            studied.cardJson,
-            errors
-                ? LearningCardCodec.encode(
-                    LearningScheduler().initialCard(
-                      itemId: prior.id,
-                      at: clock.now(),
-                    ),
-                  )
-                : prior.cardJson,
-          );
+          expect(studied.cardJson, prior.cardJson);
           for (final table in before.keys.where(
             (table) => table != 'learning_items',
           )) {
@@ -253,15 +242,7 @@ void main() {
           final afterItems = (after['learning_items']! as List).cast<Map>();
           expect(afterItems, [
             for (final row in beforeItems)
-              row['id'] != studied.id
-                  ? row
-                  : {
-                      ...row,
-                      'speed_completed': 1,
-                      if (errors) 'generation': prior.generation + 1,
-                      if (errors) 'review_revision': 0,
-                      if (errors) 'card_json': studied.cardJson,
-                    },
+              row['id'] != studied.id ? row : {...row, 'speed_completed': 1},
           ]);
         } finally {
           removeObservers?.call();

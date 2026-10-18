@@ -181,10 +181,6 @@ class _SpeedLaunchState extends State<SpeedLaunch> {
         collection: initialSnapshot.collection,
         direction: direction,
         eligibleCount: count,
-        hasLearningProgress: initialSnapshot
-            .directions[direction]!
-            .newSpeedItems
-            .any((item) => item.card.lastReview != null),
         canRestoreFocus: canLaunch,
         onRouteCreated: (route) {
           openedSetup = route;

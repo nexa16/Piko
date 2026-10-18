@@ -69,7 +69,7 @@ void main() {
   );
 
   test(
-    'abandoned errored word writes nothing; a completed errored word resets only studied generation',
+    'abandoned errored word writes nothing; a completed errored word preserves its Long-term state',
     () async {
       final f = Fixture();
       await f.initialize();
@@ -119,7 +119,7 @@ void main() {
       final after = await f.db.select(f.db.learningItems).get();
       final completed = after.singleWhere((item) => item.speedCompleted);
       expect(completed.direction, LearningDirection.nativeToTarget.name);
-      expect(completed.generation, 1);
+      expect(completed.generation, 0);
       expect(completed.reviewRevision, 0);
       expect(await f.db.select(f.db.regularReviews).get(), isEmpty);
       await session.stop();

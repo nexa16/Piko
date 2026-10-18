@@ -18,6 +18,23 @@ final class DeviceLearningDayCalendar implements LearningDayCalendar {
 
 /// Device-local boundary by default, persisted as an immutable UTC deadline.
 abstract final class LearningDay {
+  /// A civil date, assigned once using the timezone at the accepted instant.
+  static LearningDate dateFor(
+    DateTime instant, {
+    LearningDayCalendar calendar = const DeviceLearningDayCalendar(),
+  }) {
+    if (!instant.isUtc) {
+      throw ArgumentError.value(instant, 'instant', 'Must be UTC');
+    }
+    final local = calendar.localDateTime(instant);
+    final civil = DateTime.utc(
+      local.year,
+      local.month,
+      local.day - (local.hour < 4 ? 1 : 0),
+    );
+    return LearningDate(civil.year, civil.month, civil.day);
+  }
+
   static DateTime nextBoundaryUtc(
     DateTime instant, {
     LearningDayCalendar calendar = const DeviceLearningDayCalendar(),
@@ -44,4 +61,45 @@ abstract final class LearningDay {
     }
     return boundary;
   }
+}
+
+/// Calendar coordinates, not an instant or a duration in a device timezone.
+final class LearningDate implements Comparable<LearningDate> {
+  factory LearningDate(int year, int month, int day) {
+    final civil = DateTime.utc(year, month, day);
+    if (year < 1 ||
+        year > 9999 ||
+        civil.year != year ||
+        civil.month != month ||
+        civil.day != day) {
+      throw const FormatException('Invalid learning date');
+    }
+    return LearningDate._(year, month, day);
+  }
+  const LearningDate._(this.year, this.month, this.day);
+  factory LearningDate.parse(String key) {
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(key)) {
+      throw const FormatException('Invalid learning date key');
+    }
+    final fields = key.split('-').map(int.parse).toList();
+    return LearningDate(fields[0], fields[1], fields[2]);
+  }
+  final int year, month, day;
+  String get key =>
+      '${year.toString().padLeft(4, '0')}-'
+      '${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+  DateTime get civilUtc => DateTime.utc(year, month, day);
+  LearningDate shifted(int days) {
+    final civil = DateTime.utc(year, month, day + days);
+    return LearningDate(civil.year, civil.month, civil.day);
+  }
+
+  @override
+  int compareTo(LearningDate other) => key.compareTo(other.key);
+  @override
+  bool operator ==(Object other) => other is LearningDate && key == other.key;
+  @override
+  int get hashCode => Object.hash(year, month, day);
+  @override
+  String toString() => key;
 }

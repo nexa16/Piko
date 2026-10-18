@@ -5,7 +5,6 @@ import '../../data/learning_item.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
-import '../../ui/components/piko_icon.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
 import 'speed_learning_session.dart';
@@ -27,7 +26,6 @@ Future<int?> showSpeedSetup(
   required CollectionRecord collection,
   required LearningDirection direction,
   required int eligibleCount,
-  bool hasLearningProgress = false,
   bool Function()? canRestoreFocus,
   ValueChanged<ModalRoute<int>>? onRouteCreated,
 }) {
@@ -40,7 +38,6 @@ Future<int?> showSpeedSetup(
       collection: collection,
       direction: direction,
       eligibleCount: eligibleCount,
-      hasLearningProgress: hasLearningProgress,
     ),
   );
 }
@@ -50,14 +47,12 @@ class SpeedSetupDialog extends StatefulWidget {
     required this.collection,
     required this.direction,
     required this.eligibleCount,
-    this.hasLearningProgress = false,
     super.key,
   }) : assert(eligibleCount >= 0);
 
   final CollectionRecord collection;
   final LearningDirection direction;
   final int eligibleCount;
-  final bool hasLearningProgress;
 
   @override
   State<SpeedSetupDialog> createState() => _SpeedSetupDialogState();
@@ -126,59 +121,6 @@ class _SpeedSetupDialogState extends State<SpeedSetupDialog> {
             style: TextStyle(fontWeight: d.weight('components.buttons.weight')),
           ),
           SizedBox(height: gap),
-          if (widget.hasLearningProgress) ...[
-            Container(
-              key: const ValueKey('speed-reset-warning'),
-              padding: EdgeInsets.all(gap),
-              decoration: BoxDecoration(
-                color: PikoTheme.warningBackground,
-                border: Border.all(
-                  color: d.color('danger'),
-                  width: d.dimension('states.borderWidth'),
-                ),
-                borderRadius: BorderRadius.circular(
-                  d.dimension('components.fields.radius'),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      IconTheme(
-                        data: IconThemeData(color: d.color('danger')),
-                        child: const PikoIcon(PikoIconName.alertTriangle),
-                      ),
-                      SizedBox(width: d.dimension('spacing.2')),
-                      Expanded(
-                        child: Text(
-                          copy.text('r2.speedResetWarningTitle'),
-                          style: TextStyle(
-                            color: d.color('danger'),
-                            fontWeight: d.weight('components.buttons.weight'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: d.dimension('spacing.2')),
-                  Text(
-                    copy.text('r2.speedResetWarning'),
-                    style: TextStyle(
-                      color: d.color('ink'),
-                      fontSize: d.dimension('typography.small'),
-                      height: d.dimension(
-                        'components.collectionReview.titleLineHeight',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: gap),
-          ],
           PikoField(
             label: copy.text('r2.pool'),
             child: Semantics(

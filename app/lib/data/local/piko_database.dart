@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import '../../core/clock.dart';
+import '../../core/learning_day.dart';
+import 'statistics_tables.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
 import '../preferred_direction.dart';
@@ -285,15 +287,23 @@ class VocabularyOrderSequence extends Table {
     CategoryDimensions,
     CategoryValues,
     VocabularyCategoryAssignments,
+    StatisticsOrigins,
+    StatisticsActivity,
+    SpeedCompletionReceipts,
   ],
 )
 class PikoDatabase extends _$PikoDatabase {
-  PikoDatabase(super.executor, {this.clock = const SystemPikoClock()});
+  PikoDatabase(
+    super.executor, {
+    this.clock = const SystemPikoClock(),
+    this.learningDayCalendar = const DeviceLearningDayCalendar(),
+  });
   final PikoClock clock;
+  final LearningDayCalendar learningDayCalendar;
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -406,6 +416,12 @@ class PikoDatabase extends _$PikoDatabase {
             await m.addColumn(collections, collections.automaticHintDefault);
             await m.addColumn(collections, collections.hintDefaultOfferHandled);
           }
+        }
+        if (from < 17) {
+          await m.createTable(statisticsOrigins);
+          await m.createTable(statisticsActivity);
+          await m.createTable(speedCompletionReceipts);
+          await m.createIndex(statisticsActivityDate);
         }
       });
     },
