@@ -196,7 +196,11 @@ void main() {
           'rawTextSelectionFocusRetained': true,
         });
         await binding.convertFlutterSurfaceToImage();
-        final png = await binding.takeScreenshot('entry-examples-anchor');
+        // Android image conversion requires a rendered frame before capture.
+        await tester.pump();
+        final png = await binding
+            .takeScreenshot('entry-examples-anchor')
+            .timeout(const Duration(seconds: 20));
         await File(
           '${directory.path}/entry-examples-anchor.png',
         ).writeAsBytes(png, flush: true);
