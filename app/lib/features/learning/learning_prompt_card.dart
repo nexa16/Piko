@@ -242,6 +242,7 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
     if (edits != null && widget.collection != null) {
       return PikoCard(
         key: const ValueKey('learning-answer-editor'),
+        role: PikoCardRole.input,
         child: SavedVocabularyEditor(
           collection: widget.collection!,
           repository: widget.repository,

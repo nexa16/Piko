@@ -3,6 +3,7 @@ import '../../data/collections_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
+import '../../ui/components/piko_form.dart';
 import '../../ui/piko_theme.dart';
 
 class CreateCollectionDialog extends StatefulWidget {
@@ -91,34 +92,43 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
             },
     );
     return PikoDialog(
+      presentation: PikoDialogPresentation.groupedForm,
       title: copy.text('dialog.newCollection'),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          language('collection.targetLanguage', target, (value) {
-            if (value == target) return;
-            target = value;
-            if (automaticName) name.text = copy.text(target.copyKey);
-          }),
-          SizedBox(height: pikoDesign.dimension('spacing.4')),
-          language(
-            'collection.nativeLanguage',
-            native,
-            (value) => native = value,
-            options: const [
-              VocabularyLanguage.german,
-              VocabularyLanguage.english,
-              VocabularyLanguage.french,
-              VocabularyLanguage.korean,
+          PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: language('collection.targetLanguage', target, (value) {
+                  if (value == target) return;
+                  target = value;
+                  if (automaticName) name.text = copy.text(target.copyKey);
+                }),
+              ),
+              PikoFormFieldRow(
+                child: language(
+                  'collection.nativeLanguage',
+                  native,
+                  (value) => native = value,
+                  options: const [
+                    VocabularyLanguage.german,
+                    VocabularyLanguage.english,
+                    VocabularyLanguage.french,
+                    VocabularyLanguage.korean,
+                  ],
+                ),
+              ),
+              PikoFormFieldRow(
+                child: PikoTextField(
+                  label: copy.text('collection.name'),
+                  controller: name,
+                  onChanged: (_) => automaticName = false,
+                  enabled: !submitting,
+                ),
+              ),
             ],
-          ),
-          SizedBox(height: pikoDesign.dimension('spacing.4')),
-          PikoTextField(
-            label: copy.text('collection.name'),
-            controller: name,
-            onChanged: (_) => automaticName = false,
-            enabled: !submitting,
           ),
           if (error != null)
             Semantics(
