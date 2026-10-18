@@ -73,7 +73,16 @@ void main() {
     }
 
     Future<void> start() async {
-      await tap(key('collection-speed-targetToNative'));
+      final expanded = key('collection-speed-targetToNative');
+      await tester.ensureVisible(expanded);
+      await tester.pumpAndSettle();
+      // Enlarged text can collapse the header while revealing the large action.
+      // Activate the actual persistent compact action in that representation.
+      await tap(
+        expanded.hitTestable().evaluate().isNotEmpty
+            ? expanded
+            : key('collection-speed-compact'),
+      );
       await tap(find.text(copy.text('learn.startSpeed')));
     }
 
