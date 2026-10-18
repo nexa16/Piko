@@ -32,8 +32,12 @@ void main() {
       final scroll = tester
           .state<ScrollableState>(find.byType(Scrollable).first)
           .position;
-      await tester.ensureVisible(key('collection-speed-targetToNative'));
+      scroll.jumpTo(0);
       await tester.pumpAndSettle();
+      expect(
+        key('collection-speed-targetToNative').hitTestable(),
+        findsOneWidget,
+      );
       final offset = scroll.pixels;
       final savedSelection = selection.ids;
       await tester.tap(key('collection-speed-targetToNative'));

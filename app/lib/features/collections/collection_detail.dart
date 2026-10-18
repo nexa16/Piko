@@ -43,6 +43,7 @@ import 'collection_search_field.dart';
 import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
+import '../speed/speed_direction_actions.dart';
 import '../speed/speed_completion_notice.dart';
 import '../speed/selected_speed_launch.dart';
 import '../speed/speed_setup_dialog.dart'
@@ -1694,7 +1695,6 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     required int reviewIdentityForBuild,
     required CollectionVocabularyMutations? mutationsForBuild,
   }) {
-    final copy = PikoCopyScope.of(context);
     final selectedCount =
         widget.queryBinding?.snapshot?.selected(_scopeIds).entries.length ?? 0;
     return Focus(
@@ -1702,25 +1702,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       canRequestFocus: false,
       child: SelectedSpeedLaunch(
         availabilityChanges: widget.queryBinding,
-        actionBuilder: (context, open) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final direction in _directions)
-              PikoButton(
-                key: ValueKey('collection-speed-${direction.name}'),
-                label: copy.text('r2.speedDirectionCount', {
-                  'direction': reviewDirectionLabel(
-                    _lastReadyCollection!,
-                    direction,
-                  ),
-                  'count': selectedCount,
-                }),
-                variant: PikoButtonVariant.speed,
-                onPressed: open == null || selectedCount == 0
-                    ? null
-                    : () => open(direction),
-              ),
-          ],
+        actionBuilder: (context, open) => SpeedDirectionActions(
+          collection: _lastReadyCollection!,
+          counts: {
+            for (final direction in _directions) direction: selectedCount,
+          },
+          onPressed: open == null ? null : (direction) => open(direction),
         ),
         eligibleCount: selectedCount,
         key: _selectedSpeedKey,

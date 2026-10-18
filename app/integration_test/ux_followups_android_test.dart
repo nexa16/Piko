@@ -138,8 +138,8 @@ void main() {
         final ack = File('${directory.path}/ack-$phase');
         final end = DateTime.now().add(const Duration(seconds: 90));
         while (!await ack.exists() && DateTime.now().isBefore(end)) {
+          // DocumentsUI can pause Flutter frames. Wait on wall time only.
           await Future<void>.delayed(const Duration(milliseconds: 200));
-          await tester.pump(const Duration(milliseconds: 100));
         }
         expect(await ack.exists(), true, reason: 'Native phase $phase');
         await tester.pumpAndSettle();

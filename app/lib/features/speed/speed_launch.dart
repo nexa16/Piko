@@ -9,7 +9,7 @@ import '../../data/learning_item.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
-import '../../ui/components/piko_icon.dart';
+import 'speed_direction_actions.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/piko_theme.dart';
 import '../learning/review_launch.dart' show reviewDirectionLabel;
@@ -365,54 +365,19 @@ class SpeedLaunchState extends State<SpeedLaunch> {
         )
         .toList();
     if (available.isEmpty) return const SizedBox.shrink();
-    Widget action(LearningDirection direction) {
-      final count = widget.snapshot.directions[direction]!.newSpeedItems.length;
-      final label = reviewDirectionLabel(widget.snapshot.collection, direction);
-      final activate = widget.enabled && !_opening
-          ? () => _open(direction)
-          : null;
-      return Semantics(
-        button: true,
-        enabled: activate != null,
-        label: count == 1
-            ? copy.text('r2.speedDirectionOne', {'direction': label})
-            : copy.text('r2.speedDirectionAction', {
-                'direction': label,
-                'count': count,
-              }),
-        onTap: activate,
-        child: ExcludeSemantics(
-          child: PikoButton(
-            key: ValueKey('collection-speed-${direction.name}'),
-            label:
-                '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': count})}',
-            variant: PikoButtonVariant.speed,
-            icon: const PikoIcon(PikoIconName.zap),
-            expandLabel: true,
-            labelAlignment: TextAlign.left,
-            onPressed: activate,
-          ),
-        ),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        IntrinsicHeight(
-          child: Row(
-            key: const ValueKey('collection-speed-actions'),
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: action(available.first)),
-              SizedBox(width: d.dimension('spacing.2')),
-              Expanded(
-                child: available.length > 1
-                    ? action(available[1])
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+        SpeedDirectionActions(
+          collection: widget.snapshot.collection,
+          counts: {
+            for (final direction in available)
+              direction:
+                  widget.snapshot.directions[direction]!.newSpeedItems.length,
+          },
+          onPressed: widget.enabled && !_opening
+              ? (direction) => _open(direction)
+              : null,
         ),
         if (_opening && !_launched) Text(copy.text('learn.preparing')),
         if (_error != null) ...[

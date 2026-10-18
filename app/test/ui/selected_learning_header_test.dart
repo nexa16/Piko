@@ -5,6 +5,7 @@ import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/learning/review_session_route.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_icon.dart';
 import '../data/speed_eligibility_test.dart' show completeSnapshot;
 import 'vocabulary_selection_test.dart' show SelectionHarness, key;
 
@@ -37,11 +38,20 @@ void main() {
       expect(tester.widget<PikoButton>(forward).label, contains('0'));
       expect(tester.widget<PikoButton>(reverse).label, contains('1'));
       for (final name in ['targetToNative', 'nativeToTarget']) {
-        expect(
-          tester.widget<PikoButton>(key('collection-speed-$name')).label,
-          contains('1'),
-        );
+        final action = tester.widget<PikoButton>(key('collection-speed-$name'));
+        expect(action.label, contains('1'));
+        expect(action.label, contains('Speed'));
+        expect((action.icon as PikoIcon).name, PikoIconName.zap);
       }
+      final speedForward = tester.getRect(
+        key('collection-speed-targetToNative'),
+      );
+      final speedReverse = tester.getRect(
+        key('collection-speed-nativeToTarget'),
+      );
+      expect(speedReverse.top, speedForward.top);
+      expect(speedReverse.left - speedForward.right, 8);
+      expect(speedForward.height, greaterThanOrEqualTo(48));
       expect(find.byKey(const ValueKey('selected-speed-launch')), findsNothing);
       expect(await completeSnapshot(h.db), before);
       await tester.ensureVisible(reverse);
