@@ -204,8 +204,10 @@ void main() {
         await tester.enterText(custom, '?! ');
         await tap(button('language.customSave'));
         expect(find.text(copy.text('language.customRequired')), findsOneWidget);
-        await tester.enterText(custom, '  Unser Dialekt!  ');
+        await reveal(custom);
         await tester.tap(custom);
+        await tester.pumpAndSettle();
+        await tester.enterText(custom, '  Unser Dialekt!  ');
         await tester.pump(const Duration(seconds: 1));
         await native('ime-back');
         await tester.pumpAndSettle();
