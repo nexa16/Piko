@@ -60,6 +60,9 @@ void main() {
       Future<void> reveal(Finder target) async {
         await tester.pumpAndSettle();
         await review.waitUntil(tester, () => target.evaluate().isNotEmpty);
+        if (target.hitTestable().evaluate().isNotEmpty) {
+          return;
+        }
         await tester.ensureVisible(target.last);
         await tester.pumpAndSettle();
         expect(target.last.hitTestable(), findsOneWidget);
@@ -213,14 +216,11 @@ void main() {
         expect(preview.canApply, isTrue);
         await service.applyImport(preview);
         expect(await stored(db), before);
-        final expanded = key('collection-menu');
-        if (expanded.evaluate().isNotEmpty) {
-          await tester.ensureVisible(expanded);
-          await tester.pumpAndSettle();
-        }
-        final compact = key('collection-compact-menu');
         await tap(
-          compact.hitTestable().evaluate().isNotEmpty ? compact : expanded,
+          find
+              .byTooltip(copy.text('settingsPreview.collectionSettings'))
+              .hitTestable()
+              .first,
         );
         await tap(
           find.widgetWithText(PikoFormRow, copy.text('json.importTab')),
