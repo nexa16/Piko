@@ -854,8 +854,8 @@ const copyCatalog = <String, Object?>{
 "en": "Save all Collections and the complete recorded statistics in one JSON file. The Collection importer cannot restore this report. Global settings are not included.",
 },
 "fullExport.failed": <String, Object?>{
-"de": "Sammlungen und Statistik konnten nicht exportiert werden. Deine Daten sind unverändert. Versuche es erneut.",
-"en": "Couldn’t export all Collections and statistics. Your data is unchanged. Try again.",
+"de": "Export fehlgeschlagen. Bitte erneut versuchen.",
+"en": "Export failed. Try again.",
 },
 "fullExport.preparing": <String, Object?>{
 "de": "Export wird vorbereitet…",

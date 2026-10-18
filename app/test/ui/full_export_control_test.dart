@@ -111,6 +111,12 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text(copy.text('fullExport.failed')), findsOneWidget);
         expect(
+          tester
+              .getRect(find.byKey(const ValueKey('full-export-status')))
+              .bottom,
+          lessThanOrEqualTo(800),
+        );
+        expect(
           tester.widget<PikoButton>(exportButton).label,
           copy.text('action.retry'),
         );
@@ -125,6 +131,12 @@ void main() {
         await tester.tap(exportButton);
         await tester.pumpAndSettle();
         expect(find.text(copy.text('json.fileSaved')), findsOneWidget);
+        expect(
+          tester
+              .getRect(find.byKey(const ValueKey('full-export-status')))
+              .bottom,
+          lessThanOrEqualTo(800),
+        );
         expect(service.calls, 3);
         expect(platform.saved, hasLength(1));
         expect(tester.getTopLeft(exportButton).dy, closeTo(top, .5));

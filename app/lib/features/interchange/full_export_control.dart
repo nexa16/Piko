@@ -108,8 +108,6 @@ class _FullExportControlState extends State<FullExportControl> {
               label: copy.text(failed ? 'action.retry' : 'fullExport.action'),
               onPressed: request == null ? start : null,
             ),
-            SizedBox(height: pikoDesign.dimension('spacing.2')),
-            Text(copy.text('fullExport.description')),
             if (message case final key?) ...[
               SizedBox(height: pikoDesign.dimension('spacing.2')),
               Semantics(
@@ -123,6 +121,8 @@ class _FullExportControlState extends State<FullExportControl> {
                 ),
               ),
             ],
+            SizedBox(height: pikoDesign.dimension('spacing.2')),
+            Text(copy.text('fullExport.description')),
           ],
         ),
       ),

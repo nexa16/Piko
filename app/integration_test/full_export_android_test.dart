@@ -172,6 +172,13 @@ void main() {
           expect(media.textScaler.scale(14), closeTo(28, 1));
         }
         final export = key('settings-full-export');
+        void visibleStatus() {
+          expect(
+            tester.getRect(key('full-export-status')).bottom,
+            lessThanOrEqualTo(media.size.height - media.padding.bottom),
+          );
+        }
+
         await tester.ensureVisible(export);
         await tester.pumpAndSettle();
         final baseline = await stored(db);
@@ -190,12 +197,14 @@ void main() {
         await tap(export);
         await idle();
         expect(find.text(copy.text('fullExport.failed')), findsOneWidget);
+        visibleStatus();
         expect(tester.getTopLeft(export).dy, closeTo(top, .5));
         expect(await stored(db), baseline);
         await tap(export);
         await phase('save-cancel');
         await idle();
         expect(find.text(copy.text('fullExport.cancelled')), findsOneWidget);
+        visibleStatus();
         expect(find.text(copy.text('json.fileSaved')), findsNothing);
         expect(tester.widget<PikoButton>(export).focusNode!.hasFocus, isTrue);
         expect(await stored(db), baseline);
@@ -203,6 +212,7 @@ void main() {
         await phase('save-confirm');
         await idle();
         expect(find.text(copy.text('json.fileSaved')), findsOneWidget);
+        visibleStatus();
         expect(tester.widget<PikoButton>(export).focusNode!.hasFocus, isTrue);
         expect(await stored(db), baseline);
         if (config.locale == 'en') {

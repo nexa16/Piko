@@ -7,7 +7,7 @@ globalThis.PIKO_COPY = {
 "fullExport.description": {"en":"Save all Collections and the complete recorded statistics in one JSON file. The Collection importer cannot restore this report. Global settings are not included.","de":"Alle Sammlungen und die vollständige aufgezeichnete Statistik in einer JSON-Datei speichern. Der Sammlungsimport kann diesen Bericht nicht wiederherstellen. Globale Einstellungen sind nicht enthalten."},
 "fullExport.preparing": {"en":"Preparing export…","de":"Export wird vorbereitet…"},
 "fullExport.cancelled": {"en":"Export cancelled. No file was saved.","de":"Export abgebrochen. Es wurde keine Datei gespeichert."},
-"fullExport.failed": {"en":"Couldn’t export all Collections and statistics. Your data is unchanged. Try again.","de":"Sammlungen und Statistik konnten nicht exportiert werden. Deine Daten sind unverändert. Versuche es erneut."},
+"fullExport.failed": {"en":"Export failed. Try again.","de":"Export fehlgeschlagen. Bitte erneut versuchen."},
 "collection.noLearningDirection": {"en":"No direction is available right now.","de":"Gerade ist keine Lernrichtung verfügbar."},
 "collection.compactReview": {"en":"Review, {count} directional items","de":"Wiederholen, {count} Richtungsaufgaben"},
 "collection.compactSpeed": {"en":"Speed, {count} directional items","de":"Intensiv lernen, {count} Richtungsaufgaben"},
