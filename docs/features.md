@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) preserves the earlier documented build and its source identity; its control arrangements can predate the grouped Settings and editing surfaces described here.
 
 ## Contents
 

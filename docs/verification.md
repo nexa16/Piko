@@ -2,7 +2,21 @@
 
 The [manifest](build-manifest.json) identifies the exact normal APK, committed application source, configuration and original captures. This page separates ordinary-product observation, instrumented checks and remaining acceptance gaps.
 
-## Ordinary-product observation
+## Settings and input alignment
+
+The current source adds shared grouped Settings/forms, global-to-Collection Settings navigation, focused category management and saved-word dialogs, while retaining the manual entry session and its saved history. The gallery and manifest below still identify the earlier ordinary-product capture build; instrumented audit images are not substituted for those product captures.
+
+The complete host suite passes **1,288 tests** and analysis reports no issues. Shared generator tests pass **22/22**, documentation checker tests **6/6**, and generated adapters are current. An isolated extra-parent-padding fixture is rejected by the independent geometry assertion; normal application source is not modified for that check.
+
+The revised Android audit records **48 English states** at normal size and **22 German states at 320dp/200% text**. It measures **165 form-row instances** against the shared inset/target/icon-alignment contract. Both Settings entrances, category Properties Save/reopen and Value validation/create/rename/delete, saved vocabulary/category child return, Delete/Undo, manual confirmation/history/revisit/discard, list tools, transfer errors/export, learning answer editing and statistics navigation are exercised with isolated data. Labels pass; German target checks pass. A normal-size JSON target warning is caused by partial scroll clipping; after reveal its actual target measures 153.12 × 48dp. The separate numbers/A–J Android supplement passes wrong-input, keyboard, exit/restart, completion and Long-term preservation checks. Protected production files remain unchanged in all three runs.
+
+Final product code is frozen at `044d20b`; audit-only source checkpoints are `cc8d8bc` for English and `7e62174` for German and games. Their application, assets, Android and canonical copy/design inputs are identical. Important normal-size and targeted enlarged images are visually inspected. Long German words at 200% can use the accepted final-resort character wrapping; no accessibility font reduction is applied.
+
+The normal `main.dart` release-mode local development candidate uses build9 and the unchanged signing certificate. Direct in-place installation, cold launch and the real Settings/Android-Back path pass. Protected database/sentinel hashes remain exact, and the restored installed APK matches the candidate checksum. No uninstall or data reset was used.
+
+This is broad app-family coverage, not every native failure/restart/device combination. The Speed setup and inner JSON-form rollout remain identified follow-ups under their existing contracts. A standalone Activity Chevron still inherits the platform default icon color; shared default-icon mapping remains a separate follow-up. Physical-phone acceptance, TalkBack and native transport combinations remain separate. The published-capture coverage percentages and observations below are historical and are not claimed for the changed source.
+
+## Published-capture baseline
 
 The selected release-mode development APK uses `main.dart` / `MainActivity`, build 8 and the existing Android debug certificate. Package, SDK, signing and ARM/ARM64/x86_64 support were inspected. The installed `base.apk` has the same SHA-256 as the preserved candidate.
 
@@ -21,7 +35,7 @@ The retained synthetic French/German Collection contains three words imported th
 
 All ten published images are original full English captures at normal text size, including system UI. Some states are intentionally scrolled. The manifest records their exact candidate identity and metadata. No fresh gallery image or ordinary-product replay is claimed for every learning, import/export or minigame scenario.
 
-## Instrumented Android coverage
+## Published-capture Android coverage
 
 Checked-in fixtures use isolated synthetic stores and protect production files. Evidence remains tied to its actual revision; instrumented images are not published as ordinary-product screenshots.
 
@@ -36,7 +50,7 @@ Checked-in fixtures use isolated synthetic stores and protect production files. 
 
 The first final Android invocation stopped in read-only preflight because the installed release APK did not allow private-file inspection. After compatible debug replacement, both final runs pass. No destructive fallback was attempted. TalkBack and physical-phone acceptance remain untested.
 
-## Host and source checks
+## Published-capture host and source checks
 
 The full final Flutter run passes **1,280 tests**. `flutter analyze` reports no issues. Generated shared adapters are current; all **28** shared-generator/documentation-checker tests pass. An earlier preliminary run was deliberately interrupted to correct a stale Settings test fixture while retaining the full-export assertions; the subsequent complete run passes. A first Node invocation hit the Windows sandbox's filesystem restriction; the permitted frozen-source rerun passes.
 
