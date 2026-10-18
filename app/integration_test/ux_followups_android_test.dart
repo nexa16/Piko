@@ -399,7 +399,8 @@ void main() {
         final pool = key('speed-pool-size');
         await reveal(pool);
         await tester.tap(pool);
-        await tester.enterText(pool, '0');
+        // Start with an empty connection; Android enters the invalid boundary 0.
+        await tester.enterText(pool, '');
         await tester.pumpAndSettle();
         expect(
           tester.widget<PikoButton>(button('learn.startSpeed')).onPressed,
