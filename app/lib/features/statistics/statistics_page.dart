@@ -10,6 +10,7 @@ import '../../ui/piko_theme.dart';
 import 'statistics_binding.dart';
 import 'statistics_calendar.dart';
 import 'statistics_widgets.dart';
+import 'statistics_action.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key, required this.binding});
@@ -189,14 +190,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       gap(),
-                      PikoButton(
+                      StatisticsAction(
                         key: const ValueKey('statistics-calendar-toggle'),
                         label: copy.text(
                           calendar
                               ? 'statistics.recent'
                               : 'statistics.calendar',
                         ),
-                        variant: PikoButtonVariant.tint,
+                        tint: true,
                         onPressed: ready
                             ? () => setState(() => calendar = !calendar)
                             : null,

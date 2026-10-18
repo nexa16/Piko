@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,7 +26,7 @@ import 'package:piko/features/statistics/statistics_page.dart';
 import 'package:piko/main.dart';
 import 'package:piko/platform/device_clock_changes.dart';
 import 'package:piko/shared/catalogs.dart';
-import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/features/statistics/statistics_action.dart';
 import 'support/round2_catalogue_fixture.dart';
 
 class _Clock implements PikoClock {
@@ -353,7 +354,7 @@ void main() {
           );
           expect(
             tester
-                .widget<PikoButton>(
+                .widget<StatisticsAction>(
                   find.byKey(const ValueKey('statistics-next')),
                 )
                 .onPressed,
@@ -369,6 +370,32 @@ void main() {
           final selectedMonth = tester
               .widget<Text>(find.byKey(const ValueKey('statistics-month')))
               .data;
+          final navigationFocus = Focus.of(
+            tester.element(find.text(copy.text('statistics.previous'))),
+          );
+          navigationFocus.requestFocus();
+          await tester.pump();
+          delayed.gate = Completer<void>();
+          currentBinding.refresh();
+          await tester.pumpAndSettle();
+          expect(FocusManager.instance.primaryFocus, navigationFocus);
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          expect(
+            tester
+                .widget<Text>(find.byKey(const ValueKey('statistics-month')))
+                .data,
+            selectedMonth,
+          );
+          delayed.gate!.complete();
+          delayed.gate = null;
+          await tester.pumpAndSettle();
+          expect(FocusManager.instance.primaryFocus, navigationFocus);
+          records.add({
+            'stage': 'disabled-calendar-focus',
+            'locale': locale,
+            'focusRetained': true,
+            'activationBlocked': true,
+          });
           await anchored('statistics-help');
           final focus = Focus.of(
             tester.element(find.text(copy.text('statistics.rules'))),
@@ -418,7 +445,15 @@ void main() {
             find.byKey(const ValueKey('statistics-reminder')),
             findsNothing,
           );
-          if (!enlarged) await capture('statistics-speed');
+          if (!enlarged) {
+            Scrollable.of(
+              tester.element(
+                find.byKey(const ValueKey('statistics-speed-mode')),
+              ),
+            ).position.jumpTo(0);
+            await tester.pumpAndSettle();
+            await capture('statistics-speed');
+          }
           expect(tester.takeException(), isNull);
           await tester.pumpWidget(const SizedBox());
         }
@@ -450,9 +485,13 @@ void main() {
         // The host changes only this isolated emulator's timezone and acknowledges
         // after restoring it. Protected broadcasts cannot be simulated by the app.
         final nativeEvents = <String>[];
-        nativeClock = deviceClockChanges().listen(
-          (_) => nativeEvents.add(DateTime.now().toUtc().toIso8601String()),
-        );
+        final nativeDates = <String>[
+          LearningDay.dateFor(DateTime.now().toUtc()).key,
+        ];
+        nativeClock = deviceClockChanges().listen((_) {
+          nativeEvents.add(DateTime.now().toUtc().toIso8601String());
+          nativeDates.add(LearningDay.dateFor(DateTime.now().toUtc()).key);
+        });
         await Future<void>.delayed(const Duration(milliseconds: 500));
         await File(
           '${directory.path}/clock-ready',
@@ -473,15 +512,24 @@ void main() {
           isNotEmpty,
           reason: 'Actual Android timezone broadcast',
         );
+        expect(
+          nativeDates.toSet().length,
+          greaterThan(1),
+          reason: 'Device calendar actually follows the changed timezone',
+        );
         records.add({
           'stage': 'native-system-clock-broadcast',
           'events': nativeEvents,
+          'learningDates': nativeDates,
         });
+        await File(
+          '${directory.path}/assertions.json',
+        ).writeAsString(jsonEncode(records), flush: true);
         passed = true;
       } finally {
         await tester.pumpWidget(const SizedBox());
         binding?.dispose();
-        await nativeClock?.cancel();
+        await nativeClock?.cancel().timeout(const Duration(seconds: 10));
         await db.close();
         await File('${directory.path}/manifest.json').writeAsString(
           const JsonEncoder.withIndent('  ').convert({

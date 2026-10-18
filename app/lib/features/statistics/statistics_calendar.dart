@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/learning_day.dart';
 import '../../data/statistics_repository.dart';
 import '../../shared/copy_scope.dart';
-import '../../ui/components/piko_button.dart';
+import 'statistics_action.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_interaction_anchor.dart';
@@ -128,10 +128,10 @@ class StatisticsCalendar extends StatelessWidget {
       children: [
         PikoField(
           label: copy.text('statistics.month'),
-          child: PikoButton(
+          child: StatisticsAction(
             key: const ValueKey('statistics-month-jump'),
             label: monthLabel,
-            variant: PikoButtonVariant.primaryOutline,
+            field: true,
             onPressed: !ready
                 ? null
                 : () async {
@@ -150,10 +150,10 @@ class StatisticsCalendar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: PikoButton(
+                child: StatisticsAction(
                   key: const ValueKey('statistics-previous'),
                   label: copy.text('statistics.previous'),
-                  variant: PikoButtonVariant.ghost,
+
                   onPressed: ready && (month.year > 1 || month.month > 1)
                       ? () => onMonth(DateTime.utc(month.year, month.month - 1))
                       : null,
@@ -161,10 +161,10 @@ class StatisticsCalendar extends StatelessWidget {
               ),
               SizedBox(width: gap),
               Expanded(
-                child: PikoButton(
+                child: StatisticsAction(
                   key: const ValueKey('statistics-next'),
                   label: copy.text('statistics.next'),
-                  variant: PikoButtonVariant.ghost,
+
                   onPressed: ready && !next.isAfter(currentMonth)
                       ? () => onMonth(next)
                       : null,

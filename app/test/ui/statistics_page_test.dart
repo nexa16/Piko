@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/core/learning_day.dart';
@@ -8,7 +9,7 @@ import 'package:piko/features/statistics/statistics_page.dart';
 import 'package:piko/features/statistics/statistics_widgets.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/shared/copy_scope.dart';
-import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/features/statistics/statistics_action.dart';
 import 'package:piko/ui/piko_theme.dart';
 import '../support/mutable_clock.dart';
 import '../data/statistics_test.dart' show OffsetCalendar;
@@ -109,6 +110,8 @@ void main() {
           findsOneWidget,
         );
         final semantics = tester.ensureSemantics();
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
         final partial = tester
             .getSemantics(
               find.byKey(const ValueKey('statistics-day-2026-10-15')),
@@ -142,7 +145,9 @@ void main() {
         semantics.dispose();
         expect(
           tester
-              .widget<PikoButton>(find.byKey(const ValueKey('statistics-next')))
+              .widget<StatisticsAction>(
+                find.byKey(const ValueKey('statistics-next')),
+              )
               .onPressed,
           isNull,
         );
@@ -239,7 +244,7 @@ void main() {
       );
       expect(
         tester
-            .widget<PikoButton>(
+            .widget<StatisticsAction>(
               find.byKey(const ValueKey('statistics-previous')),
             )
             .onPressed,
@@ -315,6 +320,47 @@ void main() {
       expect(find.byKey(const ValueKey('statistics-star')), findsOneWidget);
       expect(find.byKey(const ValueKey('statistics-reminder')), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
+      binding.dispose();
+      await repo.events.close();
+    },
+  );
+
+  testWidgets(
+    'calendar navigation focus survives an explicitly disabled refresh',
+    (tester) async {
+      final repo = ControlledStatistics();
+      final binding = StatisticsBinding(
+        repository: repo,
+        clock: MutablePikoClock(now),
+        calendar: OffsetCalendar(),
+      );
+      await mount(tester, StatisticsPage(binding: binding));
+      await settle(tester, repo, sample(now));
+      await activate(tester, 'statistics-calendar-toggle');
+      final previous = find.text(
+        const PikoCopy('en').text('statistics.previous'),
+      );
+      await tester.ensureVisible(previous);
+      final focus = Focus.of(tester.element(previous));
+      focus.requestFocus();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, focus);
+      final month = tester
+          .widget<Text>(find.byKey(const ValueKey('statistics-month')))
+          .data;
+      binding.refresh();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, focus);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('statistics-month')))
+            .data,
+        month,
+      );
+      await settle(tester, repo, sample(now));
+      expect(FocusManager.instance.primaryFocus, focus);
+      await tester.pumpWidget(const SizedBox());
       binding.dispose();
       await repo.events.close();
     },

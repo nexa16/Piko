@@ -6,6 +6,7 @@ import '../../ui/components/piko_icon.dart';
 import '../../ui/components/piko_heading_action.dart';
 import '../../ui/piko_theme.dart';
 import 'statistics_binding.dart';
+import 'statistics_action.dart';
 
 class StatisticsStatus extends StatelessWidget {
   const StatisticsStatus({super.key, required this.binding});
@@ -193,31 +194,12 @@ class StatisticsSummary extends StatelessWidget {
       ],
     );
     if (!home) return StatisticsSurface(color: 'tint', child: body);
-    // One full-card target; the visible numbers remain available to semantics.
-    return Semantics(
-      button: true,
-      enabled: onOpen != null,
+    return StatisticsAction(
+      key: const ValueKey('statistics-open'),
       label: copy.text('statistics.openStats'),
-      child: Material(
-        color: pikoDesign.color('tint'),
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: PikoTheme.border),
-          borderRadius: BorderRadius.circular(
-            pikoDesign.dimension('radii.card'),
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          key: const ValueKey('statistics-open'),
-          onTap: onOpen,
-          child: Padding(
-            padding: EdgeInsets.all(
-              pikoDesign.dimension('components.statistics.padding'),
-            ),
-            child: body,
-          ),
-        ),
-      ),
+      tint: true,
+      onPressed: onOpen,
+      child: body,
     );
   }
 }
