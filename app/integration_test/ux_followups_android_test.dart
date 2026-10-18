@@ -16,6 +16,7 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/collection_compact_action.dart';
 import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/statistics/statistics_widgets.dart';
 import 'package:piko/features/learning/review_session_route.dart';
@@ -78,6 +79,7 @@ void main() {
           );
       Future<void> reveal(Finder target) async {
         await tester.pumpAndSettle();
+        if (target.hitTestable().evaluate().isNotEmpty) return;
         if (target.evaluate().isNotEmpty) {
           await Scrollable.ensureVisible(
             tester.element(target.first),
@@ -191,6 +193,21 @@ void main() {
             .position
             .jumpTo(0);
         await tester.pumpAndSettle();
+      }
+
+      Future<void> launchDirection(
+        String mode,
+        LearningDirection direction,
+      ) async {
+        await top();
+        final expanded = key('collection-$mode-${direction.name}');
+        if (expanded.hitTestable().evaluate().isNotEmpty) {
+          await tap(expanded);
+          return;
+        }
+        await tap(key('collection-$mode-compact'));
+        final choice = key('learning-direction-${direction.name}');
+        if (choice.evaluate().isNotEmpty) await tap(choice);
       }
 
       try {
@@ -308,22 +325,44 @@ void main() {
         detail.queryBinding!.scope.setSearch('nothing matches');
         await tester.pumpAndSettle();
         await top();
-        for (final direction in LearningDirection.values) {
+        if (key(
+          'collection-review-compact',
+        ).hitTestable().evaluate().isNotEmpty) {
+          final review = tester.widget<CollectionCompactAction>(
+            key('collection-review-compact'),
+          );
+          expect(review.count, '0');
+          expect(review.onPressed, isNull);
           expect(
             tester
-                .widget<PikoButton>(key('collection-review-${direction.name}'))
-                .onPressed,
-            isNull,
+                .widget<CollectionCompactAction>(
+                  key('collection-speed-compact'),
+                )
+                .count,
+            '2',
           );
-          expect(
-            tester
-                .widget<PikoButton>(key('collection-speed-${direction.name}'))
-                .label,
-            contains('1'),
-          );
+          manifest['selectedHeaderVariant'] = 'compact';
+        } else {
+          for (final direction in LearningDirection.values) {
+            expect(
+              tester
+                  .widget<PikoButton>(
+                    key('collection-review-${direction.name}'),
+                  )
+                  .onPressed,
+              isNull,
+            );
+            expect(
+              tester
+                  .widget<PikoButton>(key('collection-speed-${direction.name}'))
+                  .label,
+              contains('1'),
+            );
+          }
+          manifest['selectedHeaderVariant'] = 'expanded';
         }
         await record('hidden-selection-zero-longterm');
-        await tap(key('collection-speed-targetToNative'));
+        await launchDirection('speed', LearningDirection.targetToNative);
         expect(find.byType(SpeedSetupDialog), findsOneWidget);
         await record('selected-speed-setup');
         final pool = key('speed-pool-size');
@@ -348,7 +387,7 @@ void main() {
         await tester.longPress(selectCard);
         await tester.pumpAndSettle();
         await top();
-        await tap(key('collection-review-nativeToTarget'));
+        await launchDirection('review', LearningDirection.nativeToTarget);
         expect(find.byType(ReviewSessionRoute), findsOneWidget);
         final route = tester.widget<ReviewSessionRoute>(
           find.byType(ReviewSessionRoute),
