@@ -60,47 +60,51 @@ class AiConnectionControl extends StatelessWidget {
     listenable: access,
     builder: (context, _) {
       final copy = PikoCopyScope.of(context);
-      return PikoCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(copy.text('ai.connectionTitle')),
-            SizedBox(height: pikoDesign.dimension('spacing.2')),
-            Text(
-              copy.text(
-                !access.configured
-                    ? 'ai.unavailable'
-                    : access.enabled
-                    ? 'ai.connected'
-                    : 'ai.disconnected',
+      return Padding(
+        padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.4')),
+        child: PikoCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(copy.text('ai.connectionTitle')),
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              Text(
+                copy.text(
+                  !access.configured
+                      ? 'ai.unavailable'
+                      : access.enabled
+                      ? 'ai.connected'
+                      : 'ai.disconnected',
+                ),
               ),
-            ),
-            if (access.error case final error?)
-              Semantics(
-                liveRegion: true,
-                child: Text(copy.text(aiFailureKey(error))),
+              if (access.error case final error?)
+                Semantics(
+                  liveRegion: true,
+                  child: Text(copy.text(aiFailureKey(error))),
+                ),
+              SizedBox(height: pikoDesign.dimension('spacing.2')),
+              PikoButton(
+                key: const ValueKey('ai-connection'),
+                label: copy.text(
+                  access.busy
+                      ? 'ai.connecting'
+                      : access.enabled
+                      ? 'ai.disconnect'
+                      : 'ai.enable',
+                ),
+                onPressed: !access.configured || access.busy
+                    ? null
+                    : () async {
+                        if (ModalRoute.of(context)?.isCurrent != true) return;
+                        if (access.enabled) {
+                          await access.disconnect();
+                        } else {
+                          await connectAi(context, access);
+                        }
+                      },
               ),
-            PikoButton(
-              key: const ValueKey('ai-connection'),
-              label: copy.text(
-                access.busy
-                    ? 'ai.connecting'
-                    : access.enabled
-                    ? 'ai.disconnect'
-                    : 'ai.enable',
-              ),
-              onPressed: !access.configured || access.busy
-                  ? null
-                  : () async {
-                      if (ModalRoute.of(context)?.isCurrent != true) return;
-                      if (access.enabled) {
-                        await access.disconnect();
-                      } else {
-                        await connectAi(context, access);
-                      }
-                    },
-            ),
-          ],
+            ],
+          ),
         ),
       );
     },
