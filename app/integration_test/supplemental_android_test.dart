@@ -74,6 +74,17 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      Future<void> type(Finder field, String value) async {
+        await reveal(field);
+        await tester.tap(field.last);
+        await tester.pumpAndSettle();
+        await tester.enterText(field.last, value);
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(field.last).controller!.text, value);
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+      }
+
       Future<void> close() async =>
           tap(find.byTooltip(copy.text('common.close')).last);
       Future<void> record(String id) async {
@@ -227,7 +238,7 @@ void main() {
         );
         expect(find.byType(VocabularyJsonPage), findsOneWidget);
         await record('json-input');
-        await tester.enterText(key('json-input'), '{broken');
+        await type(key('json-input'), '{broken');
         await tap(button('json.analyze'));
         expect(find.text(copy.text('json.invalidSyntax')), findsWidgets);
         await record('json-invalid');
@@ -238,7 +249,7 @@ void main() {
           'nativeText': 'neues Dateiwort',
           'hint': {'text': 'fresh'},
         });
-        await tester.enterText(key('json-input'), jsonEncode(payload));
+        await type(key('json-input'), jsonEncode(payload));
         await tap(button('json.analyze'));
         await record('json-review');
         await tap(button('json.apply'));
