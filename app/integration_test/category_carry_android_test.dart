@@ -161,7 +161,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         final firstToggle = key('category-carry-over-${groups[0].id}');
-        await tap(find.text(groups[0].name));
+        await tap(find.widgetWithText(Text, groups[0].name));
         expect(tester.widget<PikoSwitch>(firstToggle).value, isFalse);
         await tap(firstToggle);
         expect(
@@ -172,7 +172,7 @@ void main() {
         await tap(key('collection-menu'));
         await tap(key('collection-menu-categories'));
         for (var i = 0; i < 2; i++) {
-          await tap(find.text(groups[i].name));
+          await tap(find.widgetWithText(Text, groups[i].name));
           final toggle = key('category-carry-over-${groups[i].id}');
           expect(tester.widget<PikoSwitch>(toggle).value, isFalse);
           await tap(toggle);
@@ -202,10 +202,11 @@ void main() {
             await reveal(toggle);
             await capture('carry-settings');
           }
-          await tap(find.text(groups[i].name));
+          await tap(find.widgetWithText(Text, groups[i].name));
         }
         await tap(find.byTooltip(copy.text('common.close')));
         await tap(find.byTooltip(copy.text('action.addEntry')));
+        await tap(button('entry.manualMethod'));
         await review.waitUntil(
           tester,
           () => find.byType(EntrySessionScreen).evaluate().isNotEmpty,
@@ -315,12 +316,16 @@ void main() {
         );
         expect(session.draft.assignments, edited);
         final confirmedIds = session.confirmedEntries.map((e) => e.id).toSet();
+        final confirmedOrder = session.confirmedEntries
+            .map((e) => e.id)
+            .toList();
         await tap(button('entry.complete'));
         await review.waitUntil(
           tester,
           () => find.byType(EntrySessionScreen).evaluate().isEmpty,
         );
         await tap(find.byTooltip(copy.text('action.addEntry')));
+        await tap(button('entry.manualMethod'));
         await review.waitUntil(
           tester,
           () => find.byType(EntrySessionScreen).evaluate().isNotEmpty,
@@ -349,6 +354,22 @@ void main() {
             expect(actual, entry.value, reason: entry.key);
           }
           expect((await review.rows(reopened, 'vocabulary_entries')).length, 4);
+          final reopenedCategories = SqliteCategoriesRepository(reopened);
+          final expectedAssignments = [
+            {
+              ...carried,
+              groups[2].id: {values[2][0].id},
+            },
+            edited,
+          ];
+          for (var i = 0; i < confirmedOrder.length; i++) {
+            expect({
+              for (final group in await reopenedCategories.assignments(
+                confirmedOrder[i],
+              ))
+                group.dimensionId: group.valueIds,
+            }, expectedAssignments[i]);
+          }
           expect(
             (await SqliteCategoriesRepository(
               reopened,
