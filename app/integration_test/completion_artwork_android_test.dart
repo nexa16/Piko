@@ -62,6 +62,7 @@ void main() {
 
       Future<void> capture(String name) async {
         if (config.locale != 'en') return;
+        await settleCatalogueCapture(tester, name);
         if (!converted) {
           await integration.convertFlutterSurfaceToImage();
           await tester.pump();
