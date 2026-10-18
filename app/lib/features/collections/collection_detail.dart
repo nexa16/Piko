@@ -1913,13 +1913,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             widget.selectedSpeedSessionFactory != null &&
             widget.vocabularyRepository != null &&
             _lastReadyCollection != null)
-          _selectedSpeedHeader(
-            ready: enabled,
-            barrierForBuild: _writeBarrier,
-            registerForBuild: widget.onPendingVocabularyWrites,
-            identityForBuild: _identity,
-            reviewIdentityForBuild: _reviewIdentity,
-            mutationsForBuild: _mutations,
+          Padding(
+            padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
+            child: _selectedSpeedHeader(
+              ready: enabled,
+              barrierForBuild: _writeBarrier,
+              registerForBuild: widget.onPendingVocabularyWrites,
+              identityForBuild: _identity,
+              reviewIdentityForBuild: _reviewIdentity,
+              mutationsForBuild: _mutations,
+            ),
           )
         else if (widget.speedSessionFactory != null)
           Padding(
