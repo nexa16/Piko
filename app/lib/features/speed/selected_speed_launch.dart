@@ -67,6 +67,8 @@ class SelectedSpeedLaunch extends StatefulWidget {
     this.onCompleted,
     this.onSessionClosed,
     this.enabled = true,
+    this.actionBuilder,
+    this.eligibleCount = 0,
   });
   final CollectionRecord collection;
   final VocabularySelection selection;
@@ -81,11 +83,14 @@ class SelectedSpeedLaunch extends StatefulWidget {
   final ValueChanged<int>? onCompleted;
   final VoidCallback? onSessionClosed;
   final bool enabled;
+  final int eligibleCount;
+  final Widget Function(BuildContext, void Function(LearningDirection?)?)?
+  actionBuilder;
   @override
-  State<SelectedSpeedLaunch> createState() => _SelectedSpeedLaunchState();
+  SelectedSpeedLaunchState createState() => SelectedSpeedLaunchState();
 }
 
-class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
+class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
   final _focus = FocusNode();
   bool _opening = false, _launched = false;
   int _generation = 0;
@@ -118,7 +123,9 @@ class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
     }
   }
 
-  Future<void> _open() async {
+  void openMerged() => unawaited(_open());
+
+  Future<void> _open([LearningDirection? chosen]) async {
     final owner = ModalRoute.of(context);
     if (_opening ||
         !widget.enabled ||
@@ -128,16 +135,15 @@ class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
       return;
     }
     final generation = _generation;
-    final selected = widget.selection.ids;
     final busy = widget.onBusyChanged;
     bool current() => mounted && generation == _generation;
     setState(() => _opening = true);
     busy(true);
     SpeedLearningSession? prepared;
     try {
-      var direction = widget.directions.length == 1
-          ? widget.directions.single
-          : null;
+      var direction =
+          chosen ??
+          (widget.directions.length == 1 ? widget.directions.single : null);
       if (direction == null) {
         direction = await showPikoDialog<LearningDirection>(
           context,
@@ -157,7 +163,14 @@ class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
                 ))
                   PikoButton(
                     key: ValueKey('selected-speed-direction-${value.name}'),
-                    label: reviewDirectionLabel(widget.collection, value),
+                    label: PikoCopyScope.of(dialogContext)
+                        .text('r2.speedDirectionCount', {
+                          'direction': reviewDirectionLabel(
+                            widget.collection,
+                            value,
+                          ),
+                          'count': widget.eligibleCount,
+                        }),
                     onPressed: () => Navigator.of(dialogContext).pop(value),
                   ),
               ],
@@ -187,7 +200,7 @@ class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
           load: () async {
             await before();
             if (!current()) throw StateError('Selection owner changed');
-            final scope = await load(selected);
+            final scope = await load(widget.selection.ids);
             if (scope.collection.id != widget.collection.id) {
               throw StateError('Selection owner changed');
             }
@@ -261,21 +274,31 @@ class _SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
   }
 
   @override
-  Widget build(BuildContext context) => PikoButton(
-    key: const ValueKey('selected-speed-launch'),
-    focusNode: _focus,
-    variant: PikoButtonVariant.speed,
-    label: PikoCopyScope.of(
-      context,
-    ).text('selectedSpeed.action', {'count': widget.selection.ids.length}),
-    onPressed:
+  Widget build(BuildContext context) =>
+      widget.actionBuilder?.call(
+        context,
         widget.enabled &&
-            !_opening &&
-            widget.directions.isNotEmpty &&
-            widget.selection.ids.isNotEmpty
-        ? _open
-        : null,
-  );
+                !_opening &&
+                widget.selection.ids.isNotEmpty &&
+                widget.eligibleCount > 0
+            ? (direction) => unawaited(_open(direction))
+            : null,
+      ) ??
+      PikoButton(
+        key: const ValueKey('selected-speed-launch'),
+        focusNode: _focus,
+        variant: PikoButtonVariant.speed,
+        label: PikoCopyScope.of(
+          context,
+        ).text('selectedSpeed.action', {'count': widget.selection.ids.length}),
+        onPressed:
+            widget.enabled &&
+                !_opening &&
+                widget.directions.isNotEmpty &&
+                widget.selection.ids.isNotEmpty
+            ? _open
+            : null,
+      );
 }
 
 class _SelectedSetup extends StatefulWidget {

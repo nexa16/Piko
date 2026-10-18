@@ -44,6 +44,7 @@ class CollectionsHome extends StatefulWidget {
     this.detailReviewSessionFactory,
     this.speedSessionFactory,
     this.selectedSpeedSessionFactory,
+    this.selectedReviewSessionFactory,
     this.categoriesRepository,
     this.onOpenSettings,
     this.directionBinding,
@@ -66,6 +67,7 @@ class CollectionsHome extends StatefulWidget {
   final ReviewSessionFactory? detailReviewSessionFactory;
   final SpeedSessionFactory? speedSessionFactory;
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
+  final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
@@ -124,6 +126,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
           selectedSpeedSessionFactory: widget.selectedSpeedSessionFactory,
+          selectedReviewSessionFactory: widget.selectedReviewSessionFactory,
           categoriesRepository: widget.categoriesRepository,
           directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,

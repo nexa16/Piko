@@ -22,6 +22,13 @@ typedef ReviewSessionFactory =
       LearningDirection direction,
     );
 
+typedef SelectedReviewSessionFactory =
+    Future<DueLearningSession> Function(
+      String collectionId,
+      LearningDirection direction,
+      Set<String> entryIds,
+    );
+
 enum ReviewLaunchPresentation { plain, collectionQuick, collectionCard }
 
 String reviewDirectionLabel(
@@ -48,6 +55,7 @@ class ReviewLaunch extends StatefulWidget {
     required this.onBusyChanged,
     this.enabled = true,
     this.showMascot = true,
+    this.showZero = false,
     this.presentation = ReviewLaunchPresentation.plain,
     this.dueCount,
     this.onSessionClosed,
@@ -72,6 +80,7 @@ class ReviewLaunch extends StatefulWidget {
   final ValueChanged<bool> onBusyChanged;
   final bool enabled;
   final bool showMascot;
+  final bool showZero;
   final ReviewLaunchPresentation presentation;
   final int? dueCount;
   final VoidCallback? onSessionClosed;
@@ -320,13 +329,15 @@ class ReviewLaunchState extends State<ReviewLaunch> {
     final copy = PikoCopyScope.of(context);
     final activate = widget.enabled && !_opening ? _open : null;
     final counts = widget.directionCounts;
-    if (counts != null && counts.values.every((count) => count <= 0)) {
+    if (!widget.showZero &&
+        counts != null &&
+        counts.values.every((count) => count <= 0)) {
       return const SizedBox.shrink();
     }
     if (counts != null &&
         widget.presentation == ReviewLaunchPresentation.collectionCard) {
       final available = LearningDirection.values
-          .where((direction) => (counts[direction] ?? 0) > 0)
+          .where((direction) => widget.showZero || (counts[direction] ?? 0) > 0)
           .where(widget.allowedDirections.contains)
           .toList();
       return Column(
@@ -370,7 +381,9 @@ class ReviewLaunchState extends State<ReviewLaunch> {
                 variant: direction == available.first
                     ? PikoButtonVariant.reviewPrimary
                     : PikoButtonVariant.reviewSecondary,
-                onPressed: activate == null ? null : () => _open(direction),
+                onPressed: activate == null || (counts[direction] ?? 0) == 0
+                    ? null
+                    : () => _open(direction),
               ),
             ),
           if (_launchError != null) Text(copy.text('learn.prepareFailed')),

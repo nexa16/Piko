@@ -273,6 +273,25 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     );
   }
 
+  Future<DueLearningSession> _selectedReviewSession(
+    String collectionId,
+    LearningDirection direction,
+    Set<String> entryIds,
+  ) async {
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+      entryIds: Set.unmodifiable(entryIds),
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
+      onPendingWrites: trackWrites,
+      presentationActive: false,
+    );
+  }
+
   Future<DueLearningSession> _detailReviewSession(
     String collectionId,
     LearningDirection direction,
@@ -395,6 +414,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             detailReviewSessionFactory: _detailReviewSession,
             speedSessionFactory: speedRuntime.prepare,
             selectedSpeedSessionFactory: speedRuntime.prepareSelected,
+            selectedReviewSessionFactory: _selectedReviewSession,
             queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,

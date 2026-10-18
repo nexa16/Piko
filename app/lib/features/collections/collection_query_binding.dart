@@ -109,7 +109,7 @@ final class CollectionQueryBinding extends ChangeNotifier
           ),
         );
       }
-      final boundary = value.nextChangeAt;
+      final boundary = value.allNextChangeAt;
       if (boundary != null) {
         final delay = boundary.difference(clock.now().toUtc());
         _timer = Timer(delay.isNegative ? Duration.zero : delay, refresh);
