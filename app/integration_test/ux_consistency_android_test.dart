@@ -325,7 +325,7 @@ void main() {
           // Collection/category definitions separately require confirmation.
           await tap(button('vocab.undo'));
           await record('vocabulary-restored-after-undo');
-          await tap(button('action.addEntry'));
+          await tap(find.byTooltip(copy.text('action.addEntry')));
           await record('entry-method');
           await tap(button('entry.manualMethod'));
           expect(find.byType(EntrySessionScreen), findsOneWidget);
