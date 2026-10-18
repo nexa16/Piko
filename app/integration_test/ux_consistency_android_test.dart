@@ -171,7 +171,7 @@ void main() {
               if (text.data != null) text.data,
           ],
         });
-        if (capture && config.locale == 'en') {
+        if (capture) {
           await settleCatalogueCapture(tester, id);
           if (!converted) {
             await integration.convertFlutterSurfaceToImage();
@@ -544,6 +544,22 @@ void main() {
           await tap(key('collection-menu-delete'));
           await record('delete-collection-confirmation');
           await tap(button('action.cancel'));
+        }
+        if (config.locale == 'de') {
+          await tap(key('vocabulary-${fixture.entry.id}'));
+          await record('saved-vocabulary-editor-de200', capture: true);
+          await tap(key('category-picker-${fixture.entry.id}-${topic.id}'));
+          await record('category-assignment-de200', capture: true);
+          await close();
+          await record('category-return-to-saved-editor-de200');
+          await close();
+          await tap(find.byTooltip(copy.text('action.addEntry')));
+          await record('entry-method-de200');
+          await tap(nav('entry.manualMethod'));
+          expect(find.byType(EntrySessionScreen), findsOneWidget);
+          await record('new-vocabulary-editor-de200', capture: true);
+          await pageBack();
+          expect(find.byType(EntrySessionScreen), findsNothing);
         }
         for (final table in protected.keys) {
           final after = await review.rows(db, table);
