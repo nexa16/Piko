@@ -57,7 +57,10 @@ void main() {
       await repo.renameDimension(id: group.id, name: 'Renamed');
       expect((await repo.dimensionById(group.id))!.carryOver, isTrue);
       expect((await repo.dimensionById(other.id))!.carryOver, isFalse);
-      final pref = (await rows(f.db, 'category_group_preferences')).single;
+      final pref = (await rows(
+        f.db,
+        'category_group_preferences',
+      )).singleWhere((r) => r['dimension_id'] == group.id);
       expect(pref['custom_value_order'], 1);
       expect(pref['carry_over'], 1);
       await repo.replaceAssignments(
@@ -85,10 +88,9 @@ void main() {
         carryOver: false,
       );
       expect(
-        (await rows(
-          f.db,
-          'category_group_preferences',
-        )).single['custom_value_order'],
+        (await rows(f.db, 'category_group_preferences')).singleWhere(
+          (r) => r['dimension_id'] == group.id,
+        )['custom_value_order'],
         1,
       );
       expect(ids(await repo.values(group.id)), ids(values.reversed.toList()));
@@ -109,7 +111,17 @@ void main() {
         expect(await rows(f.db, table), original[table]);
       }
       await repo.deleteDimension(group.id);
-      expect(await rows(f.db, 'category_group_preferences'), isEmpty);
+      expect(
+        (await rows(
+          f.db,
+          'category_group_preferences',
+        )).where((r) => r['dimension_id'] == group.id),
+        isEmpty,
+      );
+      expect(
+        (await rows(f.db, 'category_group_preferences')).single['dimension_id'],
+        other.id,
+      );
       expect((await repo.dimensionById(other.id))!.carryOver, isFalse);
     },
   );
@@ -158,8 +170,12 @@ void main() {
         for (final table in before.keys) {
           final actual = (after[table] as List)
               .map(
-                (row) =>
-                    Map<String, Object?>.from(row as Map)..remove('carry_over')..remove('target_language_name')..remove('native_language_name')..remove('hint_key'),
+                (row) => Map<String, Object?>.from(row as Map)
+                  ..remove('tag_color_role')
+                  ..remove('carry_over')
+                  ..remove('target_language_name')
+                  ..remove('native_language_name')
+                  ..remove('hint_key'),
               )
               .toList();
           expect(actual, before[table], reason: table);

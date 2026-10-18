@@ -4,6 +4,7 @@ import '../../core/learning_day.dart';
 import 'statistics_tables.dart';
 import '../../features/learning/learning_scheduler.dart';
 import '../learning_item.dart';
+import '../category_tag_roles.dart';
 import '../preferred_direction.dart';
 import '../vocabulary_normalization.dart';
 
@@ -137,6 +138,7 @@ class CategoryValues extends Table {
 
 /// Local presentation choices, deliberately absent from Collection interchange.
 class CategoryGroupPreferences extends Table {
+  TextColumn get tagColorRole => text().nullable()();
   TextColumn get dimensionId =>
       text().references(CategoryDimensions, #id, onDelete: KeyAction.cascade)();
   BoolColumn get customValueOrder =>
@@ -318,7 +320,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -444,6 +446,22 @@ class PikoDatabase extends _$PikoDatabase {
           await m.addColumn(collections, collections.nativeLanguageName);
         }
         if (from < 20 && from >= 4) await _upgradeVocabularySenseKeys(m);
+        if (from >= 18 && from < 21)
+          await m.addColumn(
+            categoryGroupPreferences,
+            categoryGroupPreferences.tagColorRole,
+          );
+        if (from < 21) {
+          final groups = await customSelect(
+            'SELECT id, collection_id FROM category_dimensions ORDER BY collection_id, position, id',
+          ).get();
+          for (final group in groups) {
+            await assignCategoryTagColor(
+              group.read<String>('id'),
+              group.read<String>('collection_id'),
+            );
+          }
+        }
         if (from == 18) {
           await m.addColumn(
             categoryGroupPreferences,
@@ -456,6 +474,21 @@ class PikoDatabase extends _$PikoDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Called inside group creation or the upgrade transaction, never while rendering.
+  Future<void> assignCategoryTagColor(String id, String collectionId) async {
+    final used = await customSelect(
+      'SELECT p.tag_color_role FROM category_dimensions d LEFT JOIN category_group_preferences p ON p.dimension_id = d.id WHERE d.collection_id = ? AND d.id <> ? ORDER BY d.position, d.id',
+      variables: [Variable(collectionId), Variable(id)],
+    ).get();
+    final role = allocateCategoryTagRole(
+      used.map((r) => r.readNullable<String>('tag_color_role')),
+    );
+    await customStatement(
+      'INSERT INTO category_group_preferences (dimension_id, tag_color_role) VALUES (?, ?) ON CONFLICT(dimension_id) DO UPDATE SET tag_color_role = excluded.tag_color_role',
+      [id, role],
+    );
+  }
 
   Future<void> _initializePreferredDirection(PreferredDirection value) =>
       customStatement(
