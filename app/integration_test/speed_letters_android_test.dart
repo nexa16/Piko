@@ -74,8 +74,10 @@ void main() {
 
     Future<void> start() async {
       final expanded = key('collection-speed-targetToNative');
-      await tester.ensureVisible(expanded);
-      await tester.pumpAndSettle();
+      if (expanded.evaluate().isNotEmpty) {
+        await tester.ensureVisible(expanded);
+        await tester.pumpAndSettle();
+      }
       // Enlarged text can collapse the header while revealing the large action.
       // Activate the actual persistent compact action in that representation.
       await tap(
