@@ -186,7 +186,7 @@ Speed shows today's successful word-direction completions, counted once per word
 <a id="transfer"></a>
 ## JSON import and export
 
-Open **More options → JSON import / export** in the destination/source Collection. The Import and Export tabs operate on that one Collection.
+Open the Collection gear → **Collection Settings → Data → JSON import / export** in the destination/source Collection. **New → Import** is an alternate entrance to the same Collection-scoped import. The Import and Export tabs operate on that one Collection.
 
 ### Export a Collection
 
