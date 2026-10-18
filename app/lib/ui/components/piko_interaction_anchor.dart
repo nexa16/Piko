@@ -114,6 +114,11 @@ class _RegionState extends State<PikoAnchorRegion> {
     return Focus(
       canRequestFocus: false,
       includeSemantics: false,
+      onFocusChange: (focused) {
+        if (!focused) return;
+        final focusContext = FocusManager.instance.primaryFocus?.context;
+        if (focusContext != null) PikoAnchorRegion.capture(focusContext);
+      },
       onKeyEvent: (_, event) {
         if (event is KeyDownEvent &&
             (event.logicalKey == LogicalKeyboardKey.enter ||

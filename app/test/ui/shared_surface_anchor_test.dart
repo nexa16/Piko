@@ -10,6 +10,7 @@ import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 import 'package:piko/ui/components/piko_interaction_anchor.dart';
 import 'package:piko/ui/components/piko_page.dart';
+import 'package:piko/ui/components/piko_field.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import '../features/entry_session_category_test.dart' show EntryCategoryFixture;
 import 'entry_keyboard_layout_test.dart' show scrollActionIntoView;
@@ -17,6 +18,64 @@ import 'entry_keyboard_layout_test.dart' show scrollActionIntoView;
 import 'collection_inline_edit_test.dart' show LiveVocabulary, owner;
 
 void main() {
+  testWidgets('keyboard field focus replaces an older control anchor', (
+    tester,
+  ) async {
+    final gap = ValueNotifier(100.0);
+    final focus = FocusNode();
+    final input = TextEditingController(text: 'retained');
+    addTearDown(gap.dispose);
+    addTearDown(focus.dispose);
+    addTearDown(input.dispose);
+    await tester.pumpWidget(
+      PikoApp(
+        home: Scaffold(
+          body: PikoPage(
+            child: ValueListenableBuilder<double>(
+              valueListenable: gap,
+              builder: (context, value, _) => Column(
+                children: [
+                  const SizedBox(height: 300),
+                  PikoButton(label: 'Earlier action', onPressed: () {}),
+                  SizedBox(height: value),
+                  PikoTextField(
+                    key: const ValueKey('focused-anchor-field'),
+                    label: 'Word',
+                    controller: input,
+                    focusNode: focus,
+                  ),
+                  const SizedBox(height: 1800),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .jumpTo(200);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Earlier action'));
+    focus.requestFocus();
+    await tester.pumpAndSettle();
+    final field = find.byKey(const ValueKey('focused-anchor-field'));
+    final top = tester.getTopLeft(field).dy;
+    input.selection = const TextSelection(baseOffset: 1, extentOffset: 4);
+    gap.value += 140;
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(field).dy, closeTo(top, .1));
+    expect(input.text, 'retained');
+    expect(
+      input.selection,
+      const TextSelection(baseOffset: 1, extentOffset: 4),
+    );
+    expect(focus.hasFocus, isTrue);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'manual entry disclosures preserve header, raw text and selection',
     (tester) async {
