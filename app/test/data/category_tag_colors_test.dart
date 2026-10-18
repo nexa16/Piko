@@ -125,8 +125,9 @@ void main() {
       );
       for (final row in before.entries) {
         if (!row.key.startsWith('category_') &&
-            row.key != 'vocabulary_category_assignments')
+            row.key != 'vocabulary_category_assignments') {
           expect((await stored(f.db))[row.key], row.value, reason: row.key);
+        }
       }
       expect(
         await f.db.customSelect('PRAGMA foreign_key_check').get(),
@@ -146,13 +147,14 @@ void main() {
       await f.initialize();
       await f.review();
       final r = SqliteCategoriesRepository(db);
-      for (var i = 0; i < 13; i++)
+      for (var i = 0; i < 13; i++) {
         await r.createDimension(
           collectionId: f.owner.id,
           name: 'Group $i',
           mode: CategoryMode.multiple,
           carryOver: i == 0,
         );
+      }
       final before = {
         for (final table in db.allTables)
           table.actualTableName:
@@ -174,7 +176,7 @@ void main() {
         'ALTER TABLE category_group_preferences DROP COLUMN tag_color_role',
       );
       raw.execute('PRAGMA user_version=20');
-      raw.dispose();
+      raw.close();
       db = PikoDatabase(NativeDatabase(file));
       expect(
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(

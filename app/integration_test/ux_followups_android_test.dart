@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:piko/data/categories_repository.dart';
 import 'package:piko/data/category_tag_roles.dart';
 import 'package:piko/data/learning_item.dart';
+import 'package:piko/data/local/sqlite_full_export_service.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
 import 'package:piko/data/preferred_direction.dart';
 import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
@@ -32,6 +34,7 @@ import 'review_correction_android_test.dart' as review;
 import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 import 'support/round2_catalogue_fixture.dart';
 import '../test/ui/selected_speed_launch_test.dart' as failure_cases;
+import '../test/ui/json_transfer_test.dart' as transfer_fault_cases;
 
 void main() {
   final integration = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -155,7 +158,24 @@ void main() {
 
       Future<void> native(String phase) async {
         await File('${directory.path}/phase.json').writeAsString(
-          jsonEncode({'phase': phase, 'run': config.runId}),
+          jsonEncode({
+            'phase': phase,
+            'run': config.runId,
+            if (phase == 'ime-back')
+              'x':
+                  (tester.getCenter(key('speed-pool-size')).dx *
+                          View.of(
+                            tester.element(key('speed-pool-size')),
+                          ).devicePixelRatio)
+                      .round(),
+            if (phase == 'ime-back')
+              'y':
+                  (tester.getCenter(key('speed-pool-size')).dy *
+                          View.of(
+                            tester.element(key('speed-pool-size')),
+                          ).devicePixelRatio)
+                      .round(),
+          }),
           flush: true,
         );
         final ack = File('${directory.path}/ack-$phase');
@@ -369,6 +389,28 @@ void main() {
           tester.widget<TextField>(input).controller!.text,
           ' {broken raw draft ',
         );
+        final validWire = await SqliteVocabularyJsonService(
+          db,
+        ).exportCollection(f.owner.id);
+        await File(
+          '${directory.path}/valid-input.json',
+        ).writeAsString(validWire, flush: true);
+        for (final problem in [
+          ('file-invalid-utf8', 'json.invalidUtf8'),
+          ('file-too-large', 'json.tooLarge'),
+        ]) {
+          await tap(button('json.file'));
+          await native(problem.$1);
+          expect(find.text(copy.text(problem.$2)), findsWidgets);
+          expect(
+            tester.widget<TextField>(input).controller!.text,
+            ' {broken raw draft ',
+          );
+          await record(problem.$1);
+        }
+        await tap(button('json.file'));
+        await native('file-valid-retry');
+        expect(tester.widget<TextField>(input).controller!.text, validWire);
         if (!await Clipboard.hasStrings()) {
           final wire = await SqliteVocabularyJsonService(
             db,
@@ -381,17 +423,62 @@ void main() {
           expect(tester.widget<TextField>(input).controller!.text, wire);
           await Clipboard.setData(const ClipboardData(text: ''));
           manifest['nativeClipboard'] =
-              'real UI copy/read exact bytes; initially empty; cleared';
+              'real UI copy/read exact bytes; no prior plain-text clip; cleared';
         } else {
           manifest['nativeClipboard'] =
               'not run: pre-existing clipboard retained without reading';
         }
         await record('json-return-transport');
+        final invalidRow = jsonDecode(validWire) as Map<String, dynamic>;
+        ((invalidRow['collections'] as List).single['entries'] as List)
+            .first['categoryAssignments'] = [
+          {'dimensionId': List.filled(120, 'x').join(), 'valueIds': []},
+        ];
+        await reveal(input);
+        await tester.enterText(input, jsonEncode(invalidRow));
+        await tap(button('json.analyze'));
+        await record('json-long-row-errors');
+        await reveal(input);
+        await tester.enterText(input, validWire);
+        await tap(button('json.analyze'));
+        await record('json-review');
+        await tap(button('json.apply'));
+        await record('json-confirmation');
+        await tap(button('action.cancel'));
+        expect(tester.widget<TextField>(input).controller!.text, validWire);
+        await tap(button('json.apply'));
+        await tap(
+          find.descendant(
+            of: find.byType(PikoDialog).last,
+            matching: button('json.apply'),
+          ),
+        );
+        await record('json-applied-result');
         expect(await stored(db), before);
         expect(
           await db.customSelect('PRAGMA foreign_key_check').get(),
           isEmpty,
         );
+        await tap(find.byTooltip(copy.text('common.close')));
+        await tap(find.byTooltip(copy.text('common.back')));
+        await tap(find.byTooltip(copy.text('common.back')));
+        await tap(find.byTooltip(copy.text('nav.settings')));
+        await tap(
+          find.widgetWithText(PikoFormRow, copy.text('fullExport.action')),
+        );
+        await native('full-export-cancel');
+        expect(find.text(copy.text('fullExport.cancelled')), findsOneWidget);
+        await File('${directory.path}/expected-full-export.json').writeAsString(
+          await SqliteFullExportService(db).exportAll(),
+          flush: true,
+        );
+        await tap(
+          find.widgetWithText(PikoFormRow, copy.text('fullExport.action')),
+        );
+        await native('full-export-save');
+        expect(find.text(copy.text('json.fileSaved')), findsOneWidget);
+        await record('global-full-export-saved');
+        expect(await stored(db), before);
         await tester.pumpWidget(
           PikoApp(
             locale: Locale(config.locale),
@@ -442,5 +529,6 @@ void main() {
   );
   // Production setup/controller widgets, with synthetic held/failing factories.
   // These exercise Android pending/Back/failure/retry without OS fault injection.
-  failure_cases.main();
+  failure_cases.main();`n  transfer_fault_cases.main();
 }
+
