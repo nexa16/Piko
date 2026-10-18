@@ -10,6 +10,7 @@ globalThis.PIKO_DESIGN = {
   layout: {pagePadding:24,mobilePadding:18,pageTop:20,mobileBreakpoint:680},
   states: {borderWidth:1,borderInkOpacity:0.14,disabledOpacity:0.5,focusWidth:3,focusOffset:3,pressedOpacity:0.12,hoverOpacity:0.08,focusOpacity:0.12,selectionOpacity:0.24,warningOpacity:0.12},
   components: {
+    statistics: {contentWidth:480,padding:20,gap:12,todaySize:52,todayLineHeight:1.15,averageSize:36.4,badgeSize:20.8,mascotSize:64,barHeight:8,calendarGap:4,calendarWeekdaySize:10,calendarDaySize:12,calendarCountSize:14},
     collectionList: {outlineOpacity:0.32,dividerOpacity:0.2},
     categoryPicker: {listHeight:264},
     speedGame: {columns:5},

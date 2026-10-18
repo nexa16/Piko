@@ -1,6 +1,6 @@
 # Technical reference
 
-This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout section describes subsequent source changes. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
+This reference describes application behavior and its source boundaries. Immutable source links and the [build manifest](build-manifest.json) identify the documented gallery build; the interaction-layout and statistics sections, schema 17 and Speed preservation describe subsequent source changes. Their current source links are relative to this checkout. [Verification coverage](verification.md) states what was actually exercised. End-user instructions belong to the [feature guide](features.md).
 
 ## Contents
 
@@ -11,6 +11,7 @@ This reference describes application behavior and its source boundaries. Immutab
 - [Queries, categories and selection](#queries)
 - [Learning, retry and correction](#learning)
 - [Speed state](#speed)
+- [Statistics](#statistics)
 - [JSON interchange](#interchange)
 - [Shared resources](#resources)
 
@@ -37,7 +38,7 @@ These changes are newer than the gallery APK. Source: [shared anchoring](../app/
 <a id="storage"></a>
 ## Storage and migrations
 
-Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **16**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
+Drift opens the `piko` SQLite database in the platform application-support directory. The schema version is **17**, distinct from the JSON interchange version and APK version. Domain repositories own transactional writes and invariant checks. Foreign-key validation and explicit ownership guards prevent cross-Collection references.
 
 | Stored area | Responsibility |
 | --- | --- |
@@ -96,9 +97,22 @@ Sources: [`LearningScheduler`](https://github.com/nexa16/Piko/blob/0afecdbc083c0
 
 `SpeedSession` is an immutable in-memory fixed-direction pool/pass model. Eligible IDs arrive from the authoritative Collection query. Errors determine required consecutive correct answers, capped at four; Incorrect clears the streak. Completion admits waiting words, and pass boundaries can invoke the numbers minigame while unfinished work remains. There is no final unnecessary minigame.
 
-`SpeedLearningSession` coordinates memory transitions with durable per-word completion. The persistence operation is guarded/idempotent. Error-free completion retains the existing directional card; completion after error starts a fresh generation for that direction and clears incompatible retry state. The other direction is preserved. The session's unfinished pool, streaks and number-game state are not a durable resume record. This build does not implement selection-driven Speed launch or persistent Speed statistics.
+`SpeedLearningSession` coordinates memory transitions with durable per-word completion. The persistence operation is guarded/idempotent. Every completion retains both directional cards, generations, review revisions, review history, retry obligations and answer ordinals exactly. Only the Speed completion marker and independent statistics records may change. The session's unfinished pool, streaks and number-game state are not a durable resume record. Selection-driven Speed launch is not yet implemented.
 
-Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_learning_session.dart), [`Speed completion`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/data/local/sqlite_speed_completion.dart).
+Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/0afecdbc083c00bd34ce8f70c31473725af58377/app/lib/features/speed/speed_learning_session.dart), [`current Speed completion`](../app/lib/data/local/sqlite_speed_completion.dart).
+
+<a id="statistics"></a>
+## Statistics
+
+Schema 17 additively creates independent statistics origin, activity-credit and Speed-receipt tables without foreign keys to vocabulary or Collections. The first successful statistics read or learning write initializes one immutable UTC start and assigned learning date. Migration does not reconstruct prior activity. Regular answers insert their event credit inside the existing learning transaction; grade correction retains that credit. Failed writes roll back learning, initialization and statistics together.
+
+A Speed request freezes the vocabulary UUID, direction and completion UTC instant across retries. Its receipt retains the originally assigned date across timezone changes. Daily credit is separately unique by UUID, direction and learning date, independent of generation or an already-true completion marker. A new completion on another date can earn credit. Storage contains no vocabulary text, Collection names or error-attempt history. Deletion/Undo/import cannot fabricate or remove credit.
+
+The read transaction supplies coverage, totals and history in one committed snapshot. Civil learning dates use device-local 04:00 calendar boundaries, including DST. Dates before coverage are unavailable except for actual later-committed activity assigned to an earlier date, which creates partial coverage there. Future buckets survive clock rollback but remain hidden. The current date, active-day average and uncapped streak are derived without rewriting stored dates.
+
+One runtime-owned binding refreshes after activity, on page open/resume, at the next local boundary and through Android TIME_SET/TIMEZONE_CHANGED/DATE_CHANGED broadcasts. Generation checks discard superseded reads. Loading and failed-refresh state remains explicit; view mode, calendar month and focus belong to the persistent page state. Other platforms use open/resume and boundary refresh. The approved statistics artwork and composition use the shared copy/design catalogs.
+
+Sources: [statistics repository](../app/lib/data/local/sqlite_statistics_repository.dart), [projection](../app/lib/data/statistics_repository.dart), [refresh binding](../app/lib/features/statistics/statistics_binding.dart), [Android bridge](../app/android/app/src/main/kotlin/io/github/nexa16/piko/MainActivity.kt).
 
 <a id="interchange"></a>
 ## JSON interchange

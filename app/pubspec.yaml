@@ -20,6 +20,7 @@ dependencies:
   flutter_svg: 2.3.0
   fsrs: 2.0.1
   file_picker: 13.1.0
+  intl: 0.20.2
 
 dev_dependencies:
   integration_test:
@@ -58,3 +59,4 @@ flutter:
     - assets/fonts/NotoSansKR-OFL.txt
     - assets/generated/lucide/
     - assets/brand/piko-reading.png
+    - assets/brand/piko-star.png

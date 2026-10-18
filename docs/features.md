@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes the APK selected in the [build manifest](build-manifest.json). [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the earlier gallery APK; its screenshots do not yet show the statistics additions. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows the same ordinary application.
 
 ## Contents
 
@@ -13,6 +13,7 @@ Piko stores vocabulary on the device and offers self-assessed Long-term and Spee
 - [Temporary selection](#selection)
 - [Long-term learning](#long-term)
 - [Speed learning](#speed)
+- [Statistics](#statistics)
 - [JSON import and export](#transfer)
 - [Settings](#settings)
 - [Glossary](#glossary)
@@ -151,17 +152,30 @@ Ordinary product emulator capture · [Full image](images/14-long-term-answer.png
 <a id="speed"></a>
 ## Speed learning
 
-Use a Collection's directional **Speed** action when eligible active words are available. The default pool comes from new words matching the current scope; temporary selection does not replace it. Read the setup's word count, direction and rules, plus its progress-reset warning when shown. Set **Maximum words per pass** and choose **Start Speed**.
+Use a Collection's directional **Speed** action when eligible active words are available. The default pool comes from new words matching the current scope; temporary selection does not replace it. Read the setup's word count, direction and rules. Set **Maximum words per pass** and choose **Start Speed**.
 
 Reveal each answer and choose Correct or Incorrect. A word finishes after a consecutive correct streak: one correct with no errors, two after one error, three after two, and four after three or more. An error resets that word's streak. Completed words leave the pool; waiting words enter as space becomes available. A short numbers game can interrupt unfinished work between passes. The session ends without an extra game once all work is complete.
 
-Speed completion persists word-by-word. Completing without errors preserves the direction's long-term progress. Completing after an error resets long-term progress in that direction, as the setup warns; the opposite direction remains unchanged. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
+Speed completion persists word-by-word. Completing a word preserves Long-term scheduling, history and pending repetitions in both directions, including after errors. Each completed word direction contributes at most once to that learning day's Speed statistics. Leaving before a word completes does not count that unfinished word as complete. In-memory pool/streak state is not a resumable saved session.
 
 <img src="images/12-speed-setup.png" width="320" alt="Speed setup with French to German direction, four new words and pass-size field">
 
 Ordinary product emulator capture · [Full image](images/12-speed-setup.png) · [Capture metadata: `12-speed-setup`](build-manifest.json)
 
 [Speed images](screenshots.md#speed) · [Speed state and persistence](technical.md#speed)
+
+<a id="statistics"></a>
+## Statistics
+
+Home shows **Activity** above Collections. Open its card for **Statistics**, with Long-term selected initially and a separate Speed view. Activity remains accessible after deleting all Collections if recorded learning remains. A new installation with no Collections or activity keeps the ordinary empty Home.
+
+**Vocabulary learned** counts successfully saved regular Long-term answers, including repeated words and both directions. It does not measure distinct words or mastery. Grade correction keeps the original credit; retry answers do not add another regular answer. The streak counts consecutive learning days with at least one regular answer. With no answer today, yesterday's streak remains open and a reminder appears. The average uses positive-count active days within the last 30 learning days, including today; it is absent when there are none.
+
+Daily activity starts with seven recent days. **Show calendar** opens a Monday-first month calendar; browse previous months or choose a month and year. Future months are unavailable. A dash means unrecorded history, zero means a recorded idle day, and an asterisk marks partial coverage. **Statistics recorded since** identifies the start; earlier activity is not reconstructed from old or imported learning.
+
+A learning day changes at local **04:00**. Saved activity retains its assigned date through later timezone changes. A backwards clock change temporarily hides future-dated activity. Statistics refresh after learning, opening, resuming, system clock changes and the day boundary. Loading and errors have explicit status; a failed refresh labels retained values as potentially out of date and offers retry.
+
+Speed shows today's successful word-direction completions, counted once per word, direction and learning day. Repeated completion can count on another day. Unfinished words contribute nothing; completed words keep their credit when a session is abandoned. Speed does not change the Long-term average or streak. Deleting vocabulary or Collections does not delete already recorded statistics.
 
 <a id="transfer"></a>
 ## JSON import and export
@@ -198,7 +212,7 @@ From Home, open **Settings**. Choose **App language** → English or Deutsch. Th
 
 **Learning direction** selects Target → Native, Native → Target, or Both directions separately. It affects eligible launch choices; it does not merge the two directions' progress. **Show examples on questions** changes question-side presentation while preserving stored examples.
 
-Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Detailed statistics, account/sync controls and a developer-settings interface are not available tasks in this build.
+Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
 
 <img src="images/20-settings.png" width="320" alt="English Settings with app language, learning direction and question-example controls">
 

@@ -1,6 +1,6 @@
 # Piko
 
-Piko is a local-first Flutter vocabulary app with English and German interface languages. Organize words in Collections, add examples and hints, and practice with Long-term or Speed learning. Vocabulary and learning state stay on the device.
+Piko is a local-first Flutter vocabulary app with English and German interface languages. Organize words in Collections, add examples and hints, and practice with Long-term or Speed learning. Vocabulary, learning state and daily statistics stay on the device.
 
 - [Feature guide](docs/features.md) — pages, tasks, terminology and current limitations
 - [Product screenshots](docs/screenshots.md) — authentic ordinary-app captures with synthetic content

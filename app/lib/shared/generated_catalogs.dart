@@ -186,6 +186,21 @@ const designCatalog = <String, Object?>{
 "speedGame": <String, Object?>{
 "columns": 5,
 },
+"statistics": <String, Object?>{
+"averageSize": 36.4,
+"badgeSize": 20.8,
+"barHeight": 8,
+"calendarCountSize": 14,
+"calendarDaySize": 12,
+"calendarGap": 4,
+"calendarWeekdaySize": 10,
+"contentWidth": 480,
+"gap": 12,
+"mascotSize": 64,
+"padding": 20,
+"todayLineHeight": 1.15,
+"todaySize": 52,
+},
 "swipe": <String, Object?>{
 "axisDominance": 1.5,
 "revealDistance": 60,
@@ -2026,6 +2041,190 @@ const copyCatalog = <String, Object?>{
 "speed.rulesTitle": <String, Object?>{
 "de": "Regeln",
 "en": "Rules",
+},
+"statistics.activity": <String, Object?>{
+"de": "Lernaktivität",
+"en": "Activity",
+},
+"statistics.average": <String, Object?>{
+"de": "Durchschnittlich gelernte Vokabeln pro aktivem Lerntag",
+"en": "Average vocabulary learned per active day",
+},
+"statistics.boundary": <String, Object?>{
+"de": "Ein Lerntag dauert von 04:00 bis 04:00 Uhr Ortszeit.",
+"en": "A learning day runs from 04:00 to 04:00 local time.",
+},
+"statistics.calendar": <String, Object?>{
+"de": "Kalender anzeigen",
+"en": "Show calendar",
+},
+"statistics.calendarNote": <String, Object?>{
+"de": "Zahlen zeigen gelernte Vokabeln. Ein Strich bedeutet: nicht erfasst; zukünftige Tage bleiben leer. Ein Stern kennzeichnet einen teilweise erfassten Tag.",
+"en": "Numbers show vocabulary learned. A dash means not recorded; future days are blank. An asterisk marks a partially recorded day.",
+},
+"statistics.completed": <String, Object?>{
+"de": "Heute abgeschlossene Vokabeln",
+"en": "Completed words today",
+},
+"statistics.count": <String, Object?>{
+"de": "{count} gelernte Vokabeln",
+"en": "{count} vocabulary learned",
+},
+"statistics.coverage": <String, Object?>{
+"de": "Statistik erfasst seit {date}",
+"en": "Statistics recorded since {date}",
+},
+"statistics.coverageHelp": <String, Object?>{
+"de": "Der Verlauf beginnt mit der ersten Einrichtung der Statistik. Der erste Tag ist nur teilweise erfasst. Frühere Lernaktivität und importierte Lernstände werden nicht nachträglich gezählt. Historische Datumszuordnungen bleiben bei Uhrzeit- oder Zeitzonenänderungen erhalten. Speed zählt jede erfolgreich abgeschlossene Vokabelrichtung einmal pro Lerntag.",
+"en": "History starts when statistics are first initialized. The first day is only partially recorded. Earlier activity and imported learning are not reconstructed. Historical dates stay fixed when your clock or timezone changes. Speed counts each successfully completed vocabulary direction once per learning day.",
+},
+"statistics.dayLabel": <String, Object?>{
+"de": "{date}: {value}. {coverage}",
+"en": "{date}: {value}. {coverage}",
+},
+"statistics.days": <String, Object?>{
+"de": "{count} Tage",
+"en": "{count} days",
+},
+"statistics.error": <String, Object?>{
+"de": "Die Statistik konnte nicht geladen werden. Bitte versuche es erneut.",
+"en": "Statistics could not be loaded. Please try again.",
+},
+"statistics.future": <String, Object?>{
+"de": "Zukünftiger Tag",
+"en": "Future day",
+},
+"statistics.history": <String, Object?>{
+"de": "Tägliche Lernaktivität",
+"en": "Daily activity",
+},
+"statistics.invalidMonth": <String, Object?>{
+"de": "Wähle einen gültigen Monat zwischen dem Jahr 1 und dem aktuellen Monat.",
+"en": "Choose an existing month between year 1 and the current month.",
+},
+"statistics.jump": <String, Object?>{
+"de": "Monat und Jahr wählen",
+"en": "Choose month and year",
+},
+"statistics.loading": <String, Object?>{
+"de": "Statistik wird geladen…",
+"en": "Loading statistics…",
+},
+"statistics.month": <String, Object?>{
+"de": "Monat",
+"en": "Month",
+},
+"statistics.next": <String, Object?>{
+"de": "Nächster Monat",
+"en": "Next month",
+},
+"statistics.noAverage": <String, Object?>{
+"de": "Noch keine aktiven Lerntage",
+"en": "No active learning days yet",
+},
+"statistics.normal": <String, Object?>{
+"de": "Langzeitlernen",
+"en": "Long-term",
+},
+"statistics.nothing": <String, Object?>{
+"de": "Hier beginnt deine Lernaktivität",
+"en": "Your activity starts here",
+},
+"statistics.nothingBody": <String, Object?>{
+"de": "Mit einer regulären Langzeitwiederholung beginnst du deinen Verlauf und deine Lernserie.",
+"en": "Complete a regular Long-term review to start your history and streak.",
+},
+"statistics.open": <String, Object?>{
+"de": "Halte deine Lernserie aufrecht",
+"en": "Keep your streak going",
+},
+"statistics.openBody": <String, Object?>{
+"de": "Wiederhole heute, um deine Lernserie zu behalten.",
+"en": "Review today to keep your streak.",
+},
+"statistics.openStats": <String, Object?>{
+"de": "Statistik öffnen",
+"en": "Open statistics",
+},
+"statistics.partial": <String, Object?>{
+"de": "Teilweise erfasst",
+"en": "Partially recorded",
+},
+"statistics.previous": <String, Object?>{
+"de": "Vorheriger Monat",
+"en": "Previous month",
+},
+"statistics.recent": <String, Object?>{
+"de": "Zurück zu den letzten Tagen",
+"en": "Back to recent days",
+},
+"statistics.recorded": <String, Object?>{
+"de": "Erfasst",
+"en": "Recorded",
+},
+"statistics.refreshing": <String, Object?>{
+"de": "Statistik wird aktualisiert. Die angezeigten Werte stammen aus der letzten erfolgreichen Aktualisierung.",
+"en": "Updating statistics. The values shown are from the last successful update.",
+},
+"statistics.reviews": <String, Object?>{
+"de": "Gelernte Vokabeln",
+"en": "Vocabulary learned",
+},
+"statistics.rules": <String, Object?>{
+"de": "So entstehen diese Zahlen",
+"en": "How these numbers work",
+},
+"statistics.rulesBody": <String, Object?>{
+"de": "Gelernte Vokabeln zählt reguläre Langzeitantworten, auch dieselbe Vokabel mehrfach und beide Richtungen. Gemeint sind weder unterschiedliche Vokabeln noch dauerhaftes Beherrschen. Wiederholungsversuche und Speed zählen nicht für Durchschnitt und Lernserie. Ein Lerntag dauert von 04:00 bis 04:00 Uhr; bei 0 Antworten heute bleibt die gestrige Serie bis zum Tagesende bestehen.",
+"en": "Vocabulary learned counts regular Long-term review answers, including repeated vocabulary and both directions. It does not mean distinct words or permanent mastery. Retries and Speed are excluded from the average and streak. A day runs from 04:00 to 04:00; a zero-review today keeps yesterday’s streak until that day ends.",
+},
+"statistics.speed": <String, Object?>{
+"de": "Speed",
+"en": "Speed",
+},
+"statistics.speedBody": <String, Object?>{
+"de": "Speed verlängert deine Langzeitlernserie nicht und verändert deren Durchschnitt nicht.",
+"en": "Speed activity does not extend your Long-term streak or change its average.",
+},
+"statistics.speedTitle": <String, Object?>{
+"de": "Speed-Lernaktivität",
+"en": "Speed activity",
+},
+"statistics.stale": <String, Object?>{
+"de": "Die Statistik konnte nicht aktualisiert werden. Die angezeigten Werte sind möglicherweise veraltet.",
+"en": "Statistics could not be updated. The values shown may be out of date.",
+},
+"statistics.streak": <String, Object?>{
+"de": "Lernserie",
+"en": "Learning streak",
+},
+"statistics.subtitle": <String, Object?>{
+"de": "Dein Lernen, Tag für Tag.",
+"en": "Your learning, day by day.",
+},
+"statistics.title": <String, Object?>{
+"de": "Statistik",
+"en": "Statistics",
+},
+"statistics.today": <String, Object?>{
+"de": "Heute",
+"en": "Today",
+},
+"statistics.unavailable": <String, Object?>{
+"de": "Nicht erfasst",
+"en": "Not recorded",
+},
+"statistics.window": <String, Object?>{
+"de": "Letzte 30 Tage",
+"en": "Past 30 days",
+},
+"statistics.year": <String, Object?>{
+"de": "Jahr",
+"en": "Year",
+},
+"statistics.yesterday": <String, Object?>{
+"de": "Gestern",
+"en": "Yesterday",
 },
 "stats.activity": <String, Object?>{
 "de": "Lernaktivität",
