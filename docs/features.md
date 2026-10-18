@@ -31,7 +31,7 @@ Reading Piko appears beside the first available Review action, including when Sp
 
 Use the heading's rename control to change its name; save or cancel that edit explicitly. The Collection **More options** menu contains JSON import/export, Collection Settings, category editing and Collection deletion. Confirming deletion removes that Collection and its associated vocabulary/learning. Export anything you want to retain before deleting it; Collection deletion has no vocabulary-style Undo.
 
-The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for the narrower Collection JSON operation.
+The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
 <img src="images/06-collection-list.png" width="320" alt="French Collection with four due words, Speed action, search and independent list controls">
 
@@ -200,6 +200,12 @@ On the Export tab, use **Copy JSON** or **Save JSON file** to generate and keep 
 
 Export includes vocabulary, categories, optional content, activity and associated directional learning. It is not an app-wide backup. In particular, importing this export does not restore learning progress; keep that distinction in mind before deleting anything or moving devices.
 
+### Export all Collections and statistics
+
+From global **Settings**, choose **Export all Collections**. Choose a destination in Android's save dialog for `piko-full-export.json`. The file includes every Collection and the complete recorded daily statistics, including counts retained after Collection deletion. It uses a consistent snapshot; global settings and unfinished drafts are excluded.
+
+This is a report, not a restore file: the Collection importer rejects it. Saving can be retried after an error; canceling the system dialog does not report success or change local data. The existing single-Collection export remains separate and contains no statistics.
+
 ### Check and apply an import
 
 1. Use **Choose JSON file**, **Paste from clipboard**, or edit **Paste or edit JSON**. **Copy example JSON** supplies synthetic structure for the Collection's language pair.
@@ -209,7 +215,7 @@ Export includes vocabulary, categories, optional content, activity and associate
 
 Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Schema versions 1–4 are accepted. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word pairs block the batch.
 
-Existing learning is preserved. Imported learning data is ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
+Existing learning is preserved. Imported learning and statistics data are ignored; new entries receive fresh learning state. When Activity is absent or unselected, existing words keep their activity and new words are Active. Imported Collection identity/name does not rename or replace the destination Collection. A stale preview after another change requires **Check JSON** again. Failed apply saves no partial batch.
 
 <img src="images/05-import-preview.png" width="320" alt="Import preview with three new words, zero errors and Import vocabulary action">
 

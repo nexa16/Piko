@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
+import 'data/local/sqlite_full_export_service.dart';
 import 'data/collections_repository.dart';
 import 'data/local/database_connection.dart';
 import 'data/local/piko_database.dart';
@@ -67,6 +68,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
+  late final fullExportService = SqliteFullExportService(database);
   late final collectionQuery = SqliteCollectionQueryService(database);
   StatisticsBinding? _statistics;
   late final speedRuntime = PikoSpeedRuntime(
@@ -172,6 +174,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
           directionBinding: _directionBinding,
           settingsRepository: settings,
           registerPending: trackWrites,
+          fullExportService: fullExportService,
+          fullExportPlatform: widget.jsonPlatform,
         ),
       ),
     );

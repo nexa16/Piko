@@ -841,6 +841,26 @@ const copyCatalog = <String, Object?>{
 "de": "Änderungen nicht gespeichert",
 "en": "Changes not saved",
 },
+"fullExport.action": <String, Object?>{
+"de": "Alle Sammlungen exportieren",
+"en": "Export all Collections",
+},
+"fullExport.cancelled": <String, Object?>{
+"de": "Export abgebrochen. Es wurde keine Datei gespeichert.",
+"en": "Export cancelled. No file was saved.",
+},
+"fullExport.description": <String, Object?>{
+"de": "Alle Sammlungen und die vollständige aufgezeichnete Statistik in einer JSON-Datei speichern. Der Sammlungsimport kann diesen Bericht nicht wiederherstellen. Globale Einstellungen sind nicht enthalten.",
+"en": "Save all Collections and the complete recorded statistics in one JSON file. The Collection importer cannot restore this report. Global settings are not included.",
+},
+"fullExport.failed": <String, Object?>{
+"de": "Sammlungen und Statistik konnten nicht exportiert werden. Deine Daten sind unverändert. Versuche es erneut.",
+"en": "Couldn’t export all Collections and statistics. Your data is unchanged. Try again.",
+},
+"fullExport.preparing": <String, Object?>{
+"de": "Export wird vorbereitet…",
+"en": "Preparing export…",
+},
 "header.choose": <String, Object?>{
 "de": "Lernrichtung wählen",
 "en": "Choose learning direction",

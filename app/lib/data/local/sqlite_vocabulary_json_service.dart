@@ -37,7 +37,14 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
   String sampleJson() => VocabularyJsonFormat.sample;
 
   @override
-  Future<String> exportCollection(
+  Future<String> exportCollection(String collectionId) async =>
+      const JsonEncoder.withIndent(
+        '  ',
+      ).convert(await exportCollectionDocument(collectionId));
+
+  /// Shared payload builder. An enclosing report transaction keeps all nested
+  /// reads on the same committed snapshot without JSON encode/decode copies.
+  Future<Map<String, Object?>> exportCollectionDocument(
     String collectionId,
   ) => database.transaction(() async {
     final collection = await (database.select(
@@ -276,6 +283,6 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         },
       ],
     };
-    return const JsonEncoder.withIndent('  ').convert(document);
+    return document;
   });
 }

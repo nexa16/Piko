@@ -44,14 +44,25 @@ final class SqliteStatisticsRepository implements StatisticsRepository {
   }
 
   @override
-  Future<StatisticsSnapshot> snapshot({
-    required DateTime at,
-  }) => database.transaction(() async {
+  Future<StatisticsSnapshot> snapshot({required DateTime at}) =>
+      database.transaction(() async {
+        return _read(at, await _initialize());
+      });
+
+  /// Export must not initialize coverage or invent history as a read side effect.
+  Future<StatisticsSnapshot?> recordedSnapshot({required DateTime at}) =>
+      database.transaction(() async {
+        final origin = await database
+            .select(database.statisticsOrigins)
+            .getSingleOrNull();
+        return origin == null ? null : _read(at, origin);
+      });
+
+  Future<StatisticsSnapshot> _read(DateTime at, StatisticsOrigin origin) async {
     final today = LearningDay.dateFor(
       at,
       calendar: database.learningDayCalendar,
     );
-    final origin = await _initialize();
     final rows = await database
         .customSelect(
           'SELECT learning_date, '
@@ -74,7 +85,7 @@ final class SqliteStatisticsRepository implements StatisticsRepository {
           ),
       },
     );
-  });
+  }
 
   /// Called inside the learning write transaction; nested writes share rollback.
   Future<void> recordRegular(String eventId, DateTime at) =>

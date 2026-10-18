@@ -37,6 +37,7 @@ final class SystemVocabularyJsonPlatform implements VocabularyJsonPlatform {
     this.clipboardRead = _clipboardRead,
     this.clipboardWrite = _clipboardWrite,
   });
+  const SystemVocabularyJsonPlatform.fullExport() : this(save: _saveFull);
   final Future<JsonFileInput?> Function() pick;
   final Future<bool> Function(Uint8List bytes) save;
   final Future<String?> Function() clipboardRead;
@@ -54,9 +55,14 @@ final class SystemVocabularyJsonPlatform implements VocabularyJsonPlatform {
     );
   }
 
-  static Future<bool> _save(Uint8List bytes) async =>
+  static Future<bool> _save(Uint8List bytes) =>
+      _saveNamed(bytes, 'piko-vocabulary.json');
+  static Future<bool> _saveFull(Uint8List bytes) =>
+      _saveNamed(bytes, 'piko-full-export.json');
+
+  static Future<bool> _saveNamed(Uint8List bytes, String name) async =>
       await FilePicker.saveFile(
-        fileName: 'piko-vocabulary.json',
+        fileName: name,
         bytes: bytes,
         mimeType: 'application/json',
         type: FileType.custom,
