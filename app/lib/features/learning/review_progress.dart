@@ -3,6 +3,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/piko_theme.dart';
 import 'learning_session_progress.dart';
 import 'learning_progress_bar.dart';
+import 'metric_label_wrapping.dart';
 
 /// Binding context and determinate unique-item success, independent of attempts.
 class ReviewProgress extends StatelessWidget {
@@ -52,7 +53,7 @@ class ReviewProgress extends StatelessWidget {
                         key: const ValueKey('review-completed-group'),
                       ),
                       Text(
-                        _keepFinalWordsTogether(
+                        keepMetricTailTogether(
                           copy.text('learn.firstTryGroup', {
                             'correct': progress.firstTryCorrect,
                           }),
@@ -81,13 +82,4 @@ class ReviewProgress extends StatelessWidget {
       ),
     );
   }
-}
-
-// Keep the final label words on one line (for example, "Versuch richtig")
-// without changing the catalog wording or the complete counter semantics.
-String _keepFinalWordsTogether(String label) {
-  final lastSpace = label.lastIndexOf(' ');
-  return lastSpace < 0
-      ? label
-      : label.replaceRange(lastSpace, lastSpace + 1, '\u00a0');
 }
