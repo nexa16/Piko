@@ -22,3 +22,6 @@ research-private/
 
 # Supabase CLI local cache
 /supabase/.temp/
+
+# Private owner attachments supplied through Codex
+/.codex-remote-attachments/
