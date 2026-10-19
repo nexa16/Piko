@@ -72,7 +72,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
                   : 'collection.countRefreshing',
             )
           : ' ';
-      return Column(
+      final content = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -116,6 +116,14 @@ class CollectionReviewEntryPoint extends StatelessWidget {
             ),
         ],
       );
+      return presentation == ReviewLaunchPresentation.collectionQuick
+          ? SizedBox(
+              width: pikoDesign.dimension(
+                'components.collectionReview.quickWidth',
+              ),
+              child: content,
+            )
+          : content;
     },
   );
 }
