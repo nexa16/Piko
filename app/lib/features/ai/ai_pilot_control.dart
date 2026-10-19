@@ -40,6 +40,14 @@ class _AiPilotControlState extends State<AiPilotControl> {
       );
       if (!mounted) return;
       if (operation == 'withdraw') {
+        final days = result['backupExpiryDays'];
+        if (result['withdrawn'] != true ||
+            result['livePayloadsDeleted'] != true ||
+            days is! int ||
+            days < 0 ||
+            days > 7) {
+          throw AiFailure.invalidResponse;
+        }
         withdrawn = true;
         notice = null;
       } else {

@@ -5,6 +5,7 @@ import 'package:piko/main.dart';
 import 'package:piko/data/ai/ai_contract.dart';
 import 'package:piko/data/local/sqlite_ai_service.dart';
 import 'package:piko/features/ai/ai_page.dart';
+import 'package:piko/features/ai/ai_pilot_control.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
@@ -16,7 +17,11 @@ import 'ai_page_test.dart' show tapVisible;
 class PilotFixtureProvider
     implements AiProvider, AiPilotAccess, CancelableAiProvider {
   final calls = <AiRequest>[], events = <String>[];
-  bool consented = false, withdrawn = false, fail = false, delay = false;
+  bool consented = false,
+      withdrawn = false,
+      fail = false,
+      delay = false,
+      malformedWithdrawal = false;
   Completer<Map<String, Object?>>? pending;
   @override
   Future<Map<String, Object?>> generate(AiRequest r) async {
@@ -58,7 +63,13 @@ class PilotFixtureProvider
     if (operation == 'withdraw') {
       withdrawn = true;
       consented = false;
-      return {'withdrawn': true};
+      return malformedWithdrawal
+          ? {}
+          : {
+              'withdrawn': true,
+              'livePayloadsDeleted': true,
+              'backupExpiryDays': 7,
+            };
     }
     if (withdrawn) throw AiFailure.accessDenied;
     if (operation == 'consent') {
@@ -89,6 +100,36 @@ class PilotFixtureProvider
 }
 
 void main() {
+  testWidgets(
+    'withdrawal is never announced as deleted after incomplete server acknowledgment',
+    (t) async {
+      final p = PilotFixtureProvider()..malformedWithdrawal = true,
+          copy = PikoCopy('en');
+      var ready = true;
+      await t.pumpWidget(
+        PikoApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiPilotControl(
+                provider: p,
+                onReady: (v) => ready = v,
+                onWithdraw: () => ready = false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      await tapVisible(t, find.byKey(const ValueKey('ai-pilot-withdraw')));
+      expect(ready, false);
+      expect(find.text(copy.text('ai.pilotWithdrawn')), findsNothing);
+      expect(find.text(copy.text('ai.withdrawPending')), findsOneWidget);
+      p.malformedWithdrawal = false;
+      await tapVisible(t, find.byKey(const ValueKey('ai-pilot-withdraw')));
+      expect(find.text(copy.text('ai.pilotWithdrawn')), findsOneWidget);
+    },
+  );
+
   for (final locale in ['en', 'de']) {
     testWidgets(
       'pilot $locale 320dp/200% consent, preserved failed/canceled preview, explicit replacement and adoption',
