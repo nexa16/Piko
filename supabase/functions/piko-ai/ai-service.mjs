@@ -97,7 +97,7 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
      if(!Number.isInteger(admitted.maxOutputTokens)||admitted.maxOutputTokens<1||admitted.maxOutputTokens>128000)throw new AiServiceError('unavailable');
      const body=modelBody(input,admitted.maxOutputTokens);
      await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:input.requestId,p_stage:'sent',
-       p_payload:{request:input,providerBody:body,promptVersion:'piko-vocabulary-r2',schemaVersion:1,appVersion:req.headers.get('X-Piko-App-Version')??'unknown'}});
+       p_payload:{request:input,providerBody:body,promptVersion:'piko-vocabulary-r3',schemaVersion:1,appVersion:req.headers.get('X-Piko-App-Version')??'unknown'}});
      let response;
      try{response=await provider(api,body);}catch(error){
        await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:input.requestId,p_stage:'error',p_payload:{code:'provider_outcome_unknown'}});

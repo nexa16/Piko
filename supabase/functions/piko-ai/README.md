@@ -14,6 +14,8 @@ Before setting `deployment_verified`, verify actual prices/tax/FX/fees, Free-pla
 
 ## Consent and private analysis
 
+Generation/gap responses constrain saved-entry edits to category assignments; an empty saved inventory permits no edits. New cards carry their examples and other content directly. This request-specific schema does not impose a card quantity, alter review corrections or replace the app's independent validation.
+
 Authenticated POST control operations use `?pilot=notice|consent|withdraw|feedback|adoption`; ordinary clients have no table/RPC grants. Consent requires the current notice version and an invited identity. Withdrawal remains available when AI dispatch is disabled, immediately revokes that identity and deletes its live payloads. Keep the endpoint/Auth path available after pilot expiry so withdrawal can finish. Admin revocation also blocks dispatch/status/logging; daily cleanup removes its content. No cross-tester payload read endpoint exists.
 
 Accounting receipts contain only operational metadata. The separate private payload store captures the actual request/provider body, actual output (including invalid paid outcomes), refinement lineage, version information and reported adoption/optional feedback. Nothing is printed to application logs. Client adoption is reported after the local atomic commit; delivery failure means unknown adoption, never an excuse to repeat the local write. Retained context excludes learning/statistics and unrelated Collections. Regression records require explicit human de-identification review; app/server roles cannot create or read them.
