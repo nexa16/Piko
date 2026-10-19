@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { createAiHandler, AiServiceError } from './ai-service.mjs';
+import { createAnonymousAuthenticator } from './ai-auth.mjs';
 
 // Public app keys never grant AI access. Auth is verified against the project;
 // the atomic service-role RPC separately checks the operator owner allowlist.
@@ -15,11 +16,7 @@ const safeCodes = new Set(['access_denied','limit','expired','replay','invalid_r
 Deno.serve(createAiHandler({
   enabled: enabled && client !== null,
   providerKey,
-  authenticate: async (jwt: string) => {
-    const { data, error } = await client!.auth.getUser(jwt);
-    if (error || !data.user?.is_anonymous) return null;
-    return data.user.id;
-  },
+  authenticate: createAnonymousAuthenticator(client),
   rpc: async (name: string, args: Record<string, unknown>) => {
     const { data, error } = await client!.rpc(name, args);
     if (error) throw new AiServiceError(safeCodes.has(error.message) ? error.message : 'unavailable');
