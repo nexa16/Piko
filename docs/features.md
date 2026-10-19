@@ -42,7 +42,7 @@ Ordinary product emulator capture · [Full image](images/r7-collection.png) · [
 <a id="add-vocabulary"></a>
 ## Add vocabulary
 
-1. Open a Collection and choose **+ New** in its Vocabulary area (accessible name **Add Entry**), then **Manual entry** in the Add vocabulary chooser.
+1. Open a Collection and choose **+ New** in its Vocabulary area (accessible name **Add Entry**), then **Enter manually** in the Add vocabulary chooser. An empty Collection instead shows one **Add first word** action below its explanation. The chooser also offers **Import JSON** and, in an enabled private AI build, **Generate with AI**.
 2. Enter a target word and its native translation in the new vocabulary card. Both are required.
 3. Add optional content or categories as needed, then confirm with **Save & Next**. This creates a saved word and another draft for continuing entry.
 4. Choose **Finish** to leave the session. If an unconfirmed draft remains, choose whether to continue editing or discard it. Already saved words remain saved.

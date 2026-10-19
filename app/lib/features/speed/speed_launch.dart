@@ -32,6 +32,8 @@ class SpeedLaunch extends StatefulWidget {
     this.onSessionClosed,
     this.onCompleted,
     this.enabled = true,
+    this.countsUnknown = false,
+    this.recheckCounts = false,
     this.scopeIdentity,
     this.availabilityChanges,
     this.allowedDirections = const {
@@ -52,6 +54,7 @@ class SpeedLaunch extends StatefulWidget {
   final VoidCallback? onSessionClosed;
   final ValueChanged<int>? onCompleted;
   final bool enabled;
+  final bool countsUnknown, recheckCounts;
   final Set<LearningDirection> allowedDirections;
 
   /// Stable query intent, independent of passive result refreshes. A Detail
@@ -138,6 +141,8 @@ class SpeedLaunchState extends State<SpeedLaunch> {
         !widget.enabled ||
         ownerRoute?.isCurrent != true ||
         (direction != null &&
+            !widget.countsUnknown &&
+            !widget.recheckCounts &&
             (widget.snapshot.directions[direction]?.newSpeedItems.length ??
                     0) ==
                 0)) {
@@ -359,9 +364,14 @@ class SpeedLaunchState extends State<SpeedLaunch> {
         .where(
           (direction) =>
               widget.allowedDirections.contains(direction) &&
-              (widget.snapshot.directions[direction]?.newSpeedItems.length ??
-                      0) >
-                  0,
+              (widget.countsUnknown ||
+                  (widget
+                              .snapshot
+                              .directions[direction]
+                              ?.newSpeedItems
+                              .length ??
+                          0) >
+                      0),
         )
         .toList();
     if (available.isEmpty) return const SizedBox.shrink();
@@ -370,10 +380,13 @@ class SpeedLaunchState extends State<SpeedLaunch> {
       children: [
         SpeedDirectionActions(
           collection: widget.snapshot.collection,
+          countsUnknown: widget.countsUnknown,
+          recheckCounts: widget.recheckCounts,
           counts: {
             for (final direction in available)
               direction:
-                  widget.snapshot.directions[direction]!.newSpeedItems.length,
+                  widget.snapshot.directions[direction]?.newSpeedItems.length ??
+                  0,
           },
           onPressed: widget.enabled && !_opening
               ? (direction) => _open(direction)

@@ -1001,6 +1001,14 @@ const copyCatalog = <String, Object?>{
 "de": "Intensiv lernen, {count} Richtungsaufgaben",
 "en": "Speed, {count} directional items",
 },
+"collection.countRefreshing": <String, Object?>{
+"de": "Zahlen werden aktualisiert · zuletzt bekannte Werte",
+"en": "Updating counts · last known values",
+},
+"collection.countStale": <String, Object?>{
+"de": "Zahlen konnten nicht aktualisiert werden · zuletzt bekannte Werte",
+"en": "Counts could not update · last known values",
+},
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
 "en": "Created {name}",
@@ -1228,6 +1236,18 @@ const copyCatalog = <String, Object?>{
 "entry.manualMethod": <String, Object?>{
 "de": "Manuell eingeben",
 "en": "Manual entry",
+},
+"entry.methodAi": <String, Object?>{
+"de": "Mit AI generieren",
+"en": "Generate with AI",
+},
+"entry.methodJson": <String, Object?>{
+"de": "JSON importieren",
+"en": "Import JSON",
+},
+"entry.methodManual": <String, Object?>{
+"de": "Manuell eingeben",
+"en": "Enter manually",
 },
 "entry.nativePlaceholder": <String, Object?>{
 "de": "Übersetzung in der Muttersprache",

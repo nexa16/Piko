@@ -4,6 +4,7 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_celebration.dart';
 import '../../ui/piko_theme.dart';
 import 'learning_session_progress.dart';
+import 'metric_label_wrapping.dart';
 
 /// Presentation only: caller owns completion, navigation and immutable counts.
 class ReviewSummaryDialog extends StatelessWidget {
@@ -35,7 +36,7 @@ class ReviewSummaryDialog extends StatelessWidget {
             ),
             SizedBox(height: d.dimension('spacing.2')),
             Text(
-              label,
+              key == 'first-try' ? keepMetricTailTogether(label) : label,
               style: TextStyle(
                 fontSize: d.dimension('typography.label'),
                 height: d.dimension('components.reviewSummary.labelLineHeight'),

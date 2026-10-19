@@ -39,6 +39,9 @@ final class CollectionQueryBinding extends ChangeNotifier
   final void Function(Future<void>)? onPendingWrites;
   late final StreamSubscription<void> _subscription;
   CollectionQuerySnapshot? snapshot;
+
+  /// Count-only projection: unlike retained list rows, never crosses query scope.
+  CollectionQuerySnapshot? countSnapshot;
   Object? error;
   bool loading = false, _disposed = false, _active = true;
   int _generation = 0;
@@ -73,6 +76,10 @@ final class CollectionQueryBinding extends ChangeNotifier
   }
 
   void refresh() {
+    if (_lastSearch != scope.search ||
+        !identical(_lastFilters, scope.filters)) {
+      countSnapshot = null;
+    }
     _lastSearch = scope.search;
     _lastFilters = scope.filters;
     if (_disposed || !_active) return;
@@ -95,6 +102,7 @@ final class CollectionQueryBinding extends ChangeNotifier
       );
       if (!_current(generation)) return;
       snapshot = value;
+      countSnapshot = value;
       final view = scope.view;
       if (view.grouping != null &&
           !value.categoryDimensions.any((d) => d.id == view.grouping) &&

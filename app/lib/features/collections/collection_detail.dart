@@ -259,6 +259,81 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       widget.queryBinding?.ready == true &&
       widget.queryBinding!.snapshot!.allEntries.isEmpty;
   CollectionQuerySnapshot? _heldLearningSnapshot;
+  Object? _heldCountScope;
+  Object? _countScope;
+  Set<LearningDirection> _lastCountDirections = const {
+    LearningDirection.targetToNative,
+    LearningDirection.nativeToTarget,
+  };
+  Set<LearningDirection> get _countDirections =>
+      _directionReady ? _directions : _lastCountDirections;
+  CollectionQuerySnapshot? _lastCountProjection;
+
+  CollectionQuerySnapshot? _displayCounts() {
+    final binding = widget.queryBinding!;
+    final ids = _scopeIds.toList()..sort();
+    if (_directionReady) _lastCountDirections = _directions;
+    final directions = _countDirections.map((d) => d.name).toList()..sort();
+    final intent = (
+      widget.collectionId,
+      binding,
+      binding.scope.search,
+      binding.scope.filters,
+      _selectedScopeActive,
+      ids.join('|'),
+      directions.join('|'),
+      _directionReady,
+    );
+    if (_countScope != intent) {
+      _countScope = intent;
+      _lastCountProjection = null;
+    }
+    if (_directionReady && binding.ready && binding.countSnapshot != null) {
+      _lastCountProjection = _learningSnapshot(binding.countSnapshot!);
+    }
+    if (_learningBusy &&
+        _heldLearningSnapshot != null &&
+        _heldCountScope == _countScope) {
+      return _learningSnapshot(_heldLearningSnapshot!);
+    }
+    return _lastCountProjection;
+  }
+
+  Widget _countFeedback({bool withRetry = true}) {
+    final binding = widget.queryBinding!, copy = PikoCopyScope.of(context);
+    final known = _displayCounts() != null;
+    final status = binding.error != null
+        ? copy.text(
+            known ? 'collection.countStale' : 'collection.reviewLoadFailed',
+          )
+        : binding.loading
+        ? copy.text(
+            known ? 'collection.countRefreshing' : 'collection.reviewLoading',
+          )
+        : ' ';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            status,
+            style: TextStyle(
+              fontSize: pikoDesign.dimension('typography.small'),
+              color: pikoDesign.color('muted'),
+            ),
+          ),
+        ),
+        if (withRetry && binding.error != null)
+          PikoButton(
+            label: copy.text('action.retry'),
+            variant: PikoButtonVariant.ghost,
+            onPressed: binding.loading ? null : binding.refresh,
+          ),
+      ],
+    );
+  }
+
   bool get _learningBusy => _openingReview || _openingSpeed;
   bool _mutationWasBusy = false;
   int _reviewIdentity = 0;
@@ -1027,7 +1102,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         return;
       }
       await Navigator.of(context).push<Object?>(
-        MaterialPageRoute<Object?>(builder: (context) => builder(context, record)),
+        MaterialPageRoute<Object?>(
+          builder: (context) => builder(context, record),
+        ),
       );
     } finally {
       barrier.release();
@@ -1056,18 +1133,18 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               PikoNavigationRow(
-                title: copy.text('entry.manualMethod'),
+                title: copy.text('entry.methodManual'),
                 onTap: () => Navigator.of(context).pop('manual'),
               ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
               if (widget.interchangeBuilder != null)
                 PikoNavigationRow(
-                  title: copy.text('json.importTab'),
+                  title: copy.text('entry.methodJson'),
                   onTap: () => Navigator.of(context).pop('import'),
                 ),
               if (widget.aiBuilder != null)
                 PikoNavigationRow(
-                  title: copy.text('ai.action.generate'),
+                  title: copy.text('entry.methodAi'),
                   onTap: () => Navigator.of(context).pop('ai'),
                 ),
             ],
@@ -1379,8 +1456,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                                   _heldSelectionIds ??= _selection.ids;
                                 }
                                 _speedCompletedCount = null;
+                                _heldCountScope = _countScope;
                                 _heldLearningSnapshot ??=
-                                    widget.queryBinding!.snapshot;
+                                    widget.queryBinding!.countSnapshot;
                               }
                               if (speed) {
                                 _openingSpeed = busy;
@@ -1557,6 +1635,57 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                                 ],
                               );
                             }
+                            if (_genuinelyEmpty) {
+                              final enabled =
+                                  _deleteRequest == null &&
+                                  _renameRequest == null &&
+                                  !_openingEntry &&
+                                  !_learningBusy &&
+                                  _mutations?.isBusy != true;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  heading,
+                                  SizedBox(
+                                    height: pikoDesign.dimension('spacing.2'),
+                                  ),
+                                  Text(copy.text('collection.empty')),
+                                  SizedBox(
+                                    height: pikoDesign.dimension('spacing.3'),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Tooltip(
+                                      message: copy.text('action.addEntry'),
+                                      excludeFromSemantics: true,
+                                      child: Semantics(
+                                        label: copy.text('action.addEntry'),
+                                        button: true,
+                                        enabled: enabled,
+                                        onTap: enabled ? _openEntry : null,
+                                        child: ExcludeSemantics(
+                                          child: PikoButton(
+                                            key: const ValueKey(
+                                              'collection-empty-add',
+                                            ),
+                                            label: copy.text(
+                                              'collection.addFirstWord',
+                                            ),
+                                            icon: const PikoIcon(
+                                              PikoIconName.plus,
+                                            ),
+                                            variant: PikoButtonVariant.primary,
+                                            onPressed: enabled
+                                                ? _openEntry
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
                             return PikoHeadingAction(
                               heading: heading,
                               gap: pikoDesign.dimension(
@@ -1652,7 +1781,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 ),
               ),
               if (_lastReadyCollection != null &&
-                  widget.vocabularyRepository != null)
+                  widget.vocabularyRepository != null &&
+                  !(_genuinelyEmpty && widget.entrySessionFactory != null))
                 CollectionVocabulary(
                   sliver: true,
                   key: ValueKey('collection-vocabulary-${widget.collectionId}'),
@@ -1743,21 +1873,33 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     required int reviewIdentityForBuild,
     required CollectionVocabularyMutations? mutationsForBuild,
   }) {
-    final selectedCount =
-        widget.queryBinding?.snapshot?.selected(_scopeIds).entries.length ?? 0;
+    final projected = _displayCounts();
+    final unknown = projected == null;
+    final selectedCount = projected?.entries.length ?? 0;
     return Focus(
       focusNode: _expandedSpeedFocus,
       canRequestFocus: false,
       child: SelectedSpeedLaunch(
         availabilityChanges: widget.queryBinding,
+        scopeIdentity: (
+          widget.collectionId,
+          widget.queryBinding,
+          _selectedScopeActive,
+          (_scopeIds.toList()..sort()).join('|'),
+          widget.queryBinding!.scope.search,
+          widget.queryBinding!.scope.filters,
+        ),
         actionBuilder: (context, open) => SpeedDirectionActions(
           collection: _lastReadyCollection!,
+          countsUnknown: unknown,
+          recheckCounts: !widget.queryBinding!.ready,
           counts: {
-            for (final direction in _directions) direction: selectedCount,
+            for (final direction in _countDirections) direction: selectedCount,
           },
           onPressed: open == null ? null : (direction) => open(direction),
         ),
         eligibleCount: selectedCount,
+        recheckCounts: !widget.queryBinding!.ready || unknown,
         key: _selectedSpeedKey,
         collection: _lastReadyCollection!,
         selection: _selection,
@@ -1773,7 +1915,6 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             _deleteRequest == null &&
             _renameRequest == null &&
             (_mutations?.isBusy != true || _openingSpeed) &&
-            (widget.queryBinding!.ready || _openingSpeed) &&
             widget.queryBinding!.scope.viewReady &&
             !widget.queryBinding!.scope.viewPending,
         beforeLaunch: () async {
@@ -1806,7 +1947,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             if (busy) {
               if (_selection.active) _heldSelectionIds ??= _selection.ids;
               _speedCompletedCount = null;
-              _heldLearningSnapshot ??= widget.queryBinding!.snapshot;
+              _heldCountScope = _countScope;
+              _heldLearningSnapshot ??= widget.queryBinding!.countSnapshot;
             } else {
               _heldSelectionIds = null;
               _heldLearningSnapshot = null;
@@ -1832,40 +1974,30 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }) {
     final binding = widget.queryBinding!;
     final copy = PikoCopyScope.of(context);
-    if (!binding.ready && !_learningBusy) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            copy.text(
-              binding.error == null
-                  ? 'collection.reviewLoading'
-                  : 'collection.reviewLoadFailed',
-            ),
-          ),
-          if (binding.error != null)
-            PikoButton(
-              label: copy.text('action.retry'),
-              onPressed: binding.loading ? null : binding.refresh,
-              variant: PikoButtonVariant.ghost,
-            ),
-        ],
-      );
-    }
-    final snapshot = _learningSnapshot(
-      _heldLearningSnapshot ?? binding.snapshot!,
-    );
-    if (!_selectedScopeActive &&
-        (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty)) {
-      return const SizedBox.shrink();
-    }
+    final projected = _displayCounts();
+    final unknown = projected == null;
+    final snapshot =
+        projected ??
+        CollectionQuerySnapshot(
+          collection: _lastReadyCollection!,
+          allEntries: const [],
+          entries: const [],
+          categoryDimensions: const [],
+          categoryValues: const {},
+          assignments: const {},
+          directions: const {},
+        );
+    final emptyScope =
+        !unknown &&
+        !_selectedScopeActive &&
+        (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty);
     final counts = {
-      for (final entry in snapshot.directions.entries)
-        if (_directions.contains(entry.key)) entry.key: entry.value.dueCount,
+      for (final direction in _countDirections)
+        direction: snapshot.directions[direction]?.dueCount ?? 0,
     };
     final total = counts.values.fold<int>(0, (a, b) => a + b);
-    final Widget normal;
-    if (total == 0 && !_openingReview && !_selectedScopeActive) {
+    Widget normal;
+    if (!unknown && total == 0 && !_openingReview && !_selectedScopeActive) {
       final pending = snapshot.directions.entries.any(
         (direction) =>
             _directions.contains(direction.key) &&
@@ -1889,7 +2021,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             (direction) =>
                 snapshot.directions[direction]!.newSpeedItems.isEmpty,
           );
-      normal = !_directionReady
+      normal = emptyScope
+          ? const SizedBox.shrink()
+          : !_directionReady
           ? const SizedBox.shrink()
           : sleeping
           ? Row(
@@ -1904,6 +2038,50 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               ],
             )
           : message;
+      // Keep a hidden launch owner for the compact action: a same-scope
+      // cached zero may become eligible while a passive refresh is pending.
+      if (widget.reviewSessionFactory != null) {
+        normal = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            normal,
+            Offstage(
+              offstage: true,
+              child: ReviewLaunch(
+                key: _reviewLaunchKey,
+                collection: snapshot.collection,
+                factory: widget.reviewSessionFactory!,
+                vocabularyRepository: widget.vocabularyRepository!,
+                categoriesRepository: widget.categoriesRepository,
+                beforeLaunch: beforeLaunch,
+                onPendingWrites: widget.onPendingVocabularyWrites,
+                onBusyChanged: (busy) => onBusyChanged(false, busy),
+                enabled: enabled && _directionReady && !_openingSpeed,
+                presentation: ReviewLaunchPresentation.collectionCard,
+                dueCount: total,
+                directionCounts: counts,
+                allowedDirections: _countDirections,
+                availabilityChanges: binding,
+                scopeIdentity: (
+                  binding,
+                  _selectedScopeActive,
+                  _scopeIds.join('|'),
+                  binding.scope.search,
+                  binding.scope.filters,
+                ),
+                directionCountsLoader: () async {
+                  final fresh = await _loadLearningSnapshot();
+                  return {
+                    for (final direction in _directions)
+                      direction: fresh.directions[direction]?.dueCount ?? 0,
+                  };
+                },
+                onSessionClosed: binding.refresh,
+              ),
+            ),
+          ],
+        );
+      }
     } else if (widget.reviewSessionFactory != null) {
       normal = ReviewLaunch(
         key: _reviewLaunchKey,
@@ -1912,19 +2090,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             ? _selectedReviewSession
             : widget.reviewSessionFactory!,
         showZero: _selectedScopeActive,
+        countsUnknown: unknown,
+        recheckCounts: !binding.ready,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
-        enabled:
-            enabled &&
-            _directionReady &&
-            !_openingSpeed &&
-            (binding.ready || _openingReview),
+        enabled: enabled && _directionReady && !_openingSpeed,
         presentation: ReviewLaunchPresentation.collectionCard,
-        showMascot:
-            _speedCompletedCount == null && _directionReady && binding.ready,
+        showMascot: _speedCompletedCount == null && _directionReady,
         dueCount: total,
         directionCounts: counts,
         availabilityChanges: binding,
@@ -1935,7 +2110,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           binding.scope.search,
           binding.scope.filters,
         ),
-        allowedDirections: _directions,
+        allowedDirections: _countDirections,
         directionCountsLoader: () async {
           final fresh = await _loadLearningSnapshot();
           return {
@@ -1981,8 +2156,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               child: SpeedLaunch(
                 key: _speedLaunchKey,
                 snapshot: snapshot,
+                countsUnknown: unknown,
+                recheckCounts: !binding.ready,
                 availabilityChanges: binding,
-                allowedDirections: _directions,
+                allowedDirections: _countDirections,
                 scopeIdentity: (
                   binding,
                   binding.scope.search,
@@ -1998,11 +2175,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 onCompleted: (count) {
                   if (mounted) setState(() => _speedCompletedCount = count);
                 },
-                enabled:
-                    enabled &&
-                    _directionReady &&
-                    !_openingReview &&
-                    (binding.ready || _openingSpeed),
+                enabled: enabled && _directionReady && !_openingReview,
                 snapshotLoader: () => binding.service.query(
                   collectionId: binding.collectionId,
                   at: binding.clock.now().toUtc(),
@@ -2012,6 +2185,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               ),
             ),
           ),
+        if (!emptyScope) _countFeedback(),
       ],
     );
   }
@@ -2024,12 +2198,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
     final binding = widget.queryBinding!;
-    final rawSnapshot = _heldLearningSnapshot ?? binding.snapshot;
-    final snapshot = rawSnapshot == null
-        ? null
-        : _learningSnapshot(rawSnapshot);
-    final resolved =
-        ready && _directionReady && (binding.ready || _learningBusy);
+    final snapshot = _displayCounts();
+    final resolved = ready && _directionReady && snapshot != null;
     final directionError =
         !_directionReady && widget.directionBinding?.value?.error != null;
     final failed =
@@ -2041,7 +2211,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         ? _directions.fold<int>(
             0,
             (sum, direction) =>
-                sum + (snapshot?.directions[direction]?.dueCount ?? 0),
+                sum + (snapshot.directions[direction]?.dueCount ?? 0),
           )
         : null;
     final speedCount = resolved
@@ -2049,7 +2219,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             0,
             (sum, direction) =>
                 sum +
-                (snapshot?.directions[direction]?.newSpeedItems.length ?? 0),
+                (snapshot.directions[direction]?.newSpeedItems.length ?? 0),
           )
         : null;
     final waiting =
@@ -2057,10 +2227,11 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         reviewCount == 0 &&
         _directions.any(
           (direction) =>
-              (snapshot?.directions[direction]?.pendingRetryCount ?? 0) > 0,
+              (snapshot.directions[direction]?.pendingRetryCount ?? 0) > 0,
         );
     final enabled =
-        resolved &&
+        ready &&
+        _directionReady &&
         !_learningBusy &&
         !_openingEntry &&
         _deleteRequest == null &&
@@ -2077,7 +2248,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             speed ? 'collection.compactSpeed' : 'collection.compactReview',
             {'count': count},
           );
-    final total = snapshot?.allEntries.length;
+    final total = binding.snapshot?.allEntries.length;
     return ColoredBox(
       color: d.color('bg'),
       child: Padding(
@@ -2152,7 +2323,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                     focusNode: _compactReviewFocus,
                     onPressed:
                         enabled &&
-                            (reviewCount ?? 0) > 0 &&
+                            ((reviewCount ?? 0) > 0 || !binding.ready) &&
                             widget.reviewSessionFactory != null
                         ? () => _reviewLaunchKey.currentState?.openMerged()
                         : null,
@@ -2168,7 +2339,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                     focusNode: _compactSpeedFocus,
                     onPressed:
                         enabled &&
-                            (speedCount ?? 0) > 0 &&
+                            ((speedCount ?? 0) > 0 || !binding.ready) &&
                             (widget.speedSessionFactory != null ||
                                 _selectedScopeActive &&
                                     widget.selectedSpeedSessionFactory != null)
@@ -2192,6 +2363,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 color: d.color('muted'),
               ),
             ),
+            _countFeedback(withRetry: false),
             if (_speedCompletedCount != null && ready)
               SpeedCompletionNotice(
                 count: _speedCompletedCount!,

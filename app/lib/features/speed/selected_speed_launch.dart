@@ -68,9 +68,11 @@ class SelectedSpeedLaunch extends StatefulWidget {
     this.onCompleted,
     this.onSessionClosed,
     this.enabled = true,
+    this.recheckCounts = false,
     this.actionBuilder,
     this.eligibleCount = 0,
     this.availabilityChanges,
+    this.scopeIdentity,
   });
   final CollectionRecord collection;
   final VocabularySelection selection;
@@ -85,8 +87,10 @@ class SelectedSpeedLaunch extends StatefulWidget {
   final ValueChanged<int>? onCompleted;
   final VoidCallback? onSessionClosed;
   final bool enabled;
+  final bool recheckCounts;
   final int eligibleCount;
   final Listenable? availabilityChanges;
+  final Object? scopeIdentity;
   final Widget Function(BuildContext, void Function(LearningDirection?)?)?
   actionBuilder;
   @override
@@ -95,7 +99,7 @@ class SelectedSpeedLaunch extends StatefulWidget {
 
 class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
   final _focus = FocusNode();
-  bool _opening = false, _launched = false;
+  bool _opening = false, _launched = false, _launchFailed = false;
   int _generation = 0;
   ModalRoute<dynamic>? _dialog;
   void _closeDialog() {
@@ -113,7 +117,8 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
         oldWidget.factory != widget.factory ||
         oldWidget.vocabularyRepository != widget.vocabularyRepository ||
         (!_launched &&
-            (oldWidget.enabled && !widget.enabled ||
+            (oldWidget.scopeIdentity != widget.scopeIdentity ||
+                oldWidget.enabled && !widget.enabled ||
                 !setEquals(oldWidget.directions, widget.directions)))) {
       _generation++;
       _closeDialog();
@@ -141,10 +146,34 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
     final generation = _generation;
     final busy = widget.onBusyChanged;
     bool current() => mounted && generation == _generation;
-    setState(() => _opening = true);
+    setState(() {
+      _opening = true;
+      _launchFailed = false;
+    });
     busy(true);
     SpeedLearningSession? prepared;
     try {
+      int? checkedCount;
+      if (widget.recheckCounts) {
+        final checking = Completer<void>();
+        widget.onPendingWrites?.call(checking.future);
+        try {
+          await widget.beforeLaunch();
+          if (!mounted || !current() || !widget.enabled) return;
+          final verified = await widget.loadScope(widget.selection.ids);
+          if (!mounted ||
+              !current() ||
+              !widget.enabled ||
+              verified.collection.id != widget.collection.id ||
+              verified.orderedIds.isEmpty) {
+            return;
+          }
+          checkedCount = verified.orderedIds.length;
+        } finally {
+          checking.complete();
+        }
+      }
+      if (!mounted || !current() || owner?.isCurrent != true) return;
       var direction =
           chosen ??
           (widget.directions.length == 1 ? widget.directions.single : null);
@@ -159,9 +188,11 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
             ).text('selectedSpeed.direction'),
             initial: {
               for (final d in widget.directions)
-                d: widget.eligibleCount > 0
-                    ? widget.eligibleCount
-                    : widget.selection.ids.length,
+                d:
+                    checkedCount ??
+                    (widget.eligibleCount > 0
+                        ? widget.eligibleCount
+                        : widget.selection.ids.length),
             },
             changes: Listenable.merge([
               widget.selection,
@@ -256,6 +287,8 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
         if (result != null) widget.onCompleted?.call(result.completedCount);
         widget.onSessionClosed?.call();
       }
+    } catch (_) {
+      if (current()) setState(() => _launchFailed = true);
     } finally {
       if (prepared != null) {
         await prepared.stop();
@@ -289,31 +322,50 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      widget.actionBuilder?.call(
-        context,
-        widget.enabled &&
-                !_opening &&
-                widget.selection.ids.isNotEmpty &&
-                widget.eligibleCount > 0
-            ? (direction) => unawaited(_open(direction))
-            : null,
-      ) ??
-      PikoButton(
-        key: const ValueKey('selected-speed-launch'),
-        focusNode: _focus,
-        variant: PikoButtonVariant.speed,
-        label: PikoCopyScope.of(
+  Widget build(BuildContext context) {
+    final action =
+        widget.actionBuilder?.call(
           context,
-        ).text('selectedSpeed.action', {'count': widget.selection.ids.length}),
-        onPressed:
-            widget.enabled &&
-                !_opening &&
-                widget.directions.isNotEmpty &&
-                widget.selection.ids.isNotEmpty
-            ? _open
-            : null,
-      );
+          widget.enabled &&
+                  !_opening &&
+                  widget.selection.ids.isNotEmpty &&
+                  (widget.eligibleCount > 0 || widget.recheckCounts)
+              ? (direction) => unawaited(_open(direction))
+              : null,
+        ) ??
+        PikoButton(
+          key: const ValueKey('selected-speed-launch'),
+          focusNode: _focus,
+          variant: PikoButtonVariant.speed,
+          label: PikoCopyScope.of(context).text('selectedSpeed.action', {
+            'count': widget.selection.ids.length,
+          }),
+          onPressed:
+              widget.enabled &&
+                  !_opening &&
+                  widget.directions.isNotEmpty &&
+                  widget.selection.ids.isNotEmpty
+              ? _open
+              : null,
+        );
+    final copy = PikoCopyScope.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        action,
+        if (_launchFailed) ...[
+          Text(copy.text('learn.prepareFailed')),
+          PikoButton(
+            key: const ValueKey('selected-speed-retry'),
+            label: copy.text('action.retry'),
+            onPressed: widget.enabled && !_opening
+                ? () => unawaited(_open())
+                : null,
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _SelectedSetup extends StatefulWidget {

@@ -4,3 +4,13 @@ project_id = "piko-owner-ai"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/piko-ai/index.ts"
+
+# Optional private AI access; ordinary local app flows never require Auth.
+[auth]
+enable_anonymous_sign_ins = true
+jwt_expiry = 900
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+[auth.rate_limit]
+anonymous_users = 10

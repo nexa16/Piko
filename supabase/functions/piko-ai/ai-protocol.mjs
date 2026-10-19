@@ -25,6 +25,8 @@ Systematically cover relevant ordinary concepts and genuinely distinct lexical m
 Compare all supplied saved and previously proposed meanings, including inactive entries. Rephrased Hints, a to marker, changed articles/spelling or another example do not prove a fresh meaning. A real new sense may reuse a pair only with a meaningful distinction and fresh card identity.
 Use actual retained category groups/values/modes. Reuse fitting definitions, avoid equivalent duplicate groups. Propose new groups/values only when individually permitted, with unique operation IDs and reasons; assignments depend on separately approved definitions. Never rename/delete/merge saved definitions. New generated cards use the retained AI-generated Source when available; missing/customized Source is a limitation, not permission to recreate a removed group silently. Existing cards can receive category additions only: Multiple retains all assignments; empty Single can be filled; occupied Single and every saved acquisition Source remain protected. No existing lexical fields, Hints, examples, activity, dates, IDs or learning may change through generate/gaps. A matching saved meaning should receive relevant Topic membership instead of becoming a duplicate card. Existing additions use edits with field assignments, containing only proposed additions.
 
+New-card target/native text, Hint, examples and assignments belong only inside that cards item. Never repeat them as edits. edits entryId always names an actually supplied saved context entry, never a newly proposed card ID. For an empty saved inventory, return edits as an empty array; new-card examples still belong in cards[].examples.
+
 HINTS:
 Context is the anchor plus all direct same-target OR same-native matches in this Collection, never fuzzy/prefix/transitive expansion. The target subset may be smaller than context. Return exactly one hint edit for each targeted ID and none for context-only IDs. Use change with a nonempty Hint, keep, noHintNeeded with null, or unresolved with a concrete reason. These meanings must distinguish one another without inventing a different sense or repairing contradictory pairs. A duplicate covered new-draft sense is unresolved. Do not add cards, examples, lexical changes or categories. All new-draft and related changes remain staged until the new card is successfully saved. A partial set of resolved meanings may keep other targeted members unresolved without another paid request.
 
@@ -42,10 +44,17 @@ Use requestId unchanged. IDs in processedIds name only supplied entries actually
 
 export function modelBody(input,maxOutputTokens){
  const {issuedAt,...content}=input;
+ const schema=structuredClone(responseSchema);
+ if(['generate','gaps'].includes(input.action)){
+   // These actions can only add categories to saved entries. A new card's
+   // complete content is already represented by cards, including its examples.
+   schema.properties.edits.items.properties.field.enum=['assignments'];
+   if(input.context.entries.length===0)schema.properties.edits.maxItems=0;
+ }
  return {model:'gpt-6.1-sol',service_tier:'default',reasoning:{effort:'low'},
    store:false,background:true,max_output_tokens:maxOutputTokens,instructions,
    input:[{role:'user',content:JSON.stringify(content)}],
-   text:{format:{type:'json_schema',name:'piko_vocabulary_actions_v1',strict:true,schema:responseSchema}}};
+   text:{format:{type:'json_schema',name:'piko_vocabulary_actions_v1',strict:true,schema}}};
 }
 const allowed=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(k=>keys.includes(k));
 export function validateInput(v){

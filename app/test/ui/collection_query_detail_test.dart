@@ -236,7 +236,8 @@ void main() {
       service.gate = Completer<CollectionQuerySnapshot>();
       binding.refresh();
       await tester.pump();
-      expect(find.text('A repetition is waiting for you.'), findsNothing);
+      expect(find.text('A repetition is waiting for you.'), findsOneWidget);
+      expect(find.text('Updating counts · last known values'), findsOneWidget);
       service.gate!.complete(projection());
       await tester.pumpAndSettle();
     },

@@ -84,10 +84,30 @@ Finder key(String key) => find.byKey(ValueKey(key));
 final compactReview = key('collection-review-compact');
 final compactSpeed = key('collection-speed-compact');
 
+class CountingProjectionService extends ProjectionService {
+  CountingProjectionService(super.value);
+  int reads = 0;
+  @override
+  Future<CollectionQuerySnapshot> query({
+    required String collectionId,
+    required DateTime at,
+    Map<String, Set<String>> filters = const {},
+    String search = '',
+  }) {
+    reads++;
+    return super.query(
+      collectionId: collectionId,
+      at: at,
+      filters: filters,
+      search: search,
+    );
+  }
+}
+
 class HeaderHarness {
   final vocabulary = LiveVocabulary()..records = words;
   final scope = CollectionViewScope();
-  final service = ProjectionService(headerProjection());
+  final service = CountingProjectionService(headerProjection());
   final reviews = <LearningDirection>[];
   final speed = <LearningDirection>[];
   final locale = InterfaceLocaleController();
@@ -122,9 +142,12 @@ class HeaderHarness {
     String language = 'en',
     double scale = 1,
     String name = 'Words',
+    bool nativeView = false,
   }) async {
-    tester.view.physicalSize = const Size(320, 800);
-    tester.view.devicePixelRatio = 1;
+    if (!nativeView) {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+    }
     locale.value = Locale(language);
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox());
@@ -339,16 +362,16 @@ void main() {
       final gate = h.service.gate = Completer<CollectionQuerySnapshot>();
       h.binding.refresh();
       await tester.pump();
-      expect(tester.widget<CollectionCompactAction>(compactReview).count, '…');
+      expect(tester.widget<CollectionCompactAction>(compactReview).count, '19');
       expect(action.focusNode.hasFocus, isTrue);
       expect(
         tester.widget<CollectionCompactAction>(compactReview).onPressed,
-        isNull,
+        isNotNull,
       );
       gate.completeError(StateError('synthetic read failure'));
       await tester.pumpAndSettle();
       h.service.gate = null;
-      expect(tester.widget<CollectionCompactAction>(compactReview).count, '!');
+      expect(tester.widget<CollectionCompactAction>(compactReview).count, '19');
       expect(action.focusNode.hasFocus, isTrue);
       expect(h.position(tester).pixels, closeTo(offset, .5));
       h.service.value = headerProjection(
@@ -538,4 +561,248 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'refresh keeps last-known directional actions and launch owners, failure remains visibly stale',
+    (tester) async {
+      final h = HeaderHarness();
+      await h.mount(tester);
+      final reviewOwner = tester.state(find.byType(ReviewLaunch));
+      final speedOwner = tester.state(find.byType(SpeedLaunch));
+      final reviewRect = tester.getRect(
+        key('collection-review-targetToNative'),
+      );
+      final gate = Completer<CollectionQuerySnapshot>();
+      h.service.gate = gate;
+      h.binding.refresh();
+      await tester.pump();
+      expect(
+        tester.getRect(key('collection-review-targetToNative')),
+        reviewRect,
+      );
+      expect(tester.state(find.byType(ReviewLaunch)), same(reviewOwner));
+      expect(tester.state(find.byType(SpeedLaunch)), same(speedOwner));
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '19',
+      );
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-speed-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '7',
+      );
+      expect(find.text('Updating counts · last known values'), findsWidgets);
+      gate.completeError(StateError('local read failed'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '19',
+      );
+      expect(
+        find.text('Counts could not update · last known values'),
+        findsWidgets,
+      );
+      expect(h.reviews, isEmpty);
+      expect(h.speed, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'changed scope shows unknown instead of another scope count and rejects late completion',
+    (tester) async {
+      final h = HeaderHarness();
+      await h.mount(tester);
+      final obsolete = Completer<CollectionQuerySnapshot>();
+      h.service.gate = obsolete;
+      h.binding.refresh();
+      await tester.pump();
+      final current = Completer<CollectionQuerySnapshot>();
+      h.service.gate = current;
+      h.scope.setSearch('different');
+      await tester.pump();
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '…',
+      );
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-speed-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '…',
+      );
+      obsolete.complete(headerProjection(forward: 99));
+      await tester.pump();
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '…',
+      );
+      current.complete(
+        headerProjection(
+          forward: 2,
+          reverse: 1,
+          speedForward: 1,
+          speedReverse: 0,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '3',
+      );
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-speed-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '1',
+      );
+      expect(h.reviews, isEmpty);
+      expect(h.speed, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'rapid refreshing review taps recheck once and current zero never invokes session factory',
+    (tester) async {
+      final h = HeaderHarness();
+      await h.mount(tester);
+      final gate = Completer<CollectionQuerySnapshot>();
+      h.service.gate = gate;
+      h.binding.refresh();
+      await tester.pump();
+      final action = key('collection-review-targetToNative');
+      final before = h.service.reads;
+      await tester.tap(action);
+      await tester.pump();
+      await tester.tap(action);
+      await tester.pump();
+      expect(h.service.reads, before + 1);
+      expect(h.reviews, isEmpty);
+      gate.complete(
+        headerProjection(
+          forward: 0,
+          reverse: 0,
+          speedForward: 0,
+          speedReverse: 0,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(h.reviews, isEmpty);
+      expect(h.speed, isEmpty);
+      expect(find.byType(LearningDirectionChoice), findsNothing);
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .count,
+        '0',
+      );
+      expect(
+        tester
+            .widget<CollectionCompactAction>(
+              find.byKey(
+                const ValueKey('collection-review-compact'),
+                skipOffstage: false,
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+    },
+  );
+
+  testWidgets(
+    'compact cached zero still checks current local eligibility during refresh',
+    (tester) async {
+      final h = HeaderHarness();
+      await h.mount(tester);
+      h.service.value = headerProjection(
+        forward: 0,
+        reverse: 0,
+        speedForward: 0,
+        speedReverse: 0,
+      );
+      await h.refresh(tester);
+      await h.collapse(tester);
+      expect(tester.widget<CollectionCompactAction>(compactReview).count, '0');
+      expect(
+        tester.widget<CollectionCompactAction>(compactReview).onPressed,
+        isNull,
+      );
+      final gate = Completer<CollectionQuerySnapshot>();
+      h.service.gate = gate;
+      h.binding.refresh();
+      await tester.pump();
+      expect(
+        tester.widget<CollectionCompactAction>(compactReview).onPressed,
+        isNotNull,
+      );
+      await tester.tap(compactReview);
+      await tester.pump();
+      gate.complete(
+        headerProjection(
+          forward: 1,
+          reverse: 0,
+          speedForward: 0,
+          speedReverse: 0,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(h.reviews, [LearningDirection.targetToNative]);
+    },
+  );
 }

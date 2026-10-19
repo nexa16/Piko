@@ -93,7 +93,7 @@ final class CollectionReviewCount extends ChangeNotifier {
     final generation = ++_generation;
     _loading = true;
     _error = null;
-    _value = null;
+    // A refresh does not erase the last successful value for this owner scope.
     notifyListeners();
     try {
       final loaded = await loader(

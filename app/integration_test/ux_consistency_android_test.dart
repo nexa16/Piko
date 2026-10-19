@@ -445,7 +445,7 @@ void main() {
           await record('vocabulary-restored-after-undo');
           await tap(find.byTooltip(copy.text('action.addEntry')));
           await record('entry-method');
-          await tap(nav('entry.manualMethod'));
+          await tap(nav('entry.methodManual'));
           expect(find.byType(EntrySessionScreen), findsOneWidget);
           await record('new-vocabulary-editor', capture: true);
           final target = find.descendant(
@@ -477,7 +477,7 @@ void main() {
           await record('entry-session-revisit', capture: true);
           await pageBack();
           await tap(find.byTooltip(copy.text('action.addEntry')));
-          await tap(nav('entry.manualMethod'));
+          await tap(nav('entry.methodManual'));
           await tester.enterText(
             find.descendant(
               of: key('draft-target'),
@@ -555,7 +555,7 @@ void main() {
           await close();
           await tap(find.byTooltip(copy.text('action.addEntry')));
           await record('entry-method-de200');
-          await tap(nav('entry.manualMethod'));
+          await tap(nav('entry.methodManual'));
           expect(find.byType(EntrySessionScreen), findsOneWidget);
           await record('new-vocabulary-editor-de200', capture: true);
           await pageBack();

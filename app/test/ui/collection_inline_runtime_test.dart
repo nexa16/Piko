@@ -119,7 +119,14 @@ void main() {
         PikoApp(home: PikoRuntime(databaseFactory: () => db)),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(ValueKey('collection-${owner.id}')));
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byKey(ValueKey('collection-${owner.id}')),
+              matching: find.text(owner.name),
+            )
+            .hitTestable(),
+      );
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.byKey(ValueKey('vocabulary-${entry.id}')),

@@ -59,7 +59,13 @@ void main() {
         expect(find.byType(CollectionSettingsOverview), findsOneWidget);
         await press(tester, find.byTooltip(copy.text('common.back')));
         await press(tester, find.byTooltip(copy.text('common.back')));
-        await press(tester, find.byKey(ValueKey('collection-${h.f.owner.id}')));
+        await press(
+          tester,
+          find.descendant(
+            of: find.byKey(ValueKey('collection-${h.f.owner.id}')),
+            matching: find.text(h.f.owner.name),
+          ),
+        );
         await h.flush(tester);
         for (
           var i = 0;

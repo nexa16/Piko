@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {createAiHandler,AiServiceError} from './ai-service.mjs';
+import {modelBody,responseSchema} from './ai-protocol.mjs';
 const owner='00000000-0000-4000-8000-000000000001';
 const base='https://synthetic.supabase.co/functions/v1/piko-ai';
 function input(){return {requestId:randomUUID(),issuedAt:new Date().toISOString(),action:'generate',scope:'ordinary',goal:'Hotel B1',allowNewGroups:true,allowNewValues:true,
@@ -51,6 +52,29 @@ test('one fixed Sol low/background/store-false call follows full-context reserva
  const context=JSON.parse(body.input[0].content);assert.equal(context.issuedAt,undefined);assert.equal(context.goal,v.goal);
  assert.ok(f.rpcs.find(c=>c.name==='piko_ai_admit').args.p_input_bytes>JSON.stringify(v).length);
  assert.equal(response.headers.get('Cache-Control'),'no-store');
+});
+
+test('generation schema keeps all new-card content in cards, with no saved-entry edits for an empty inventory',()=>{
+ for(const action of ['generate','gaps']){
+  const v={...input(),action};
+  const schema=modelBody(v,32000).text.format.schema;
+  assert.equal(schema.properties.edits.maxItems,0);
+  assert.deepEqual(schema.properties.edits.items.properties.field.enum,['assignments']);
+  assert.equal(schema.properties.cards.items.properties.examples.minItems,1);
+  assert.equal(schema.properties.cards.maxItems,undefined);
+ }
+});
+
+test('saved-entry generation permits category additions without changing review schema or quantity policy',()=>{
+ const v=input();v.context.entries=[{id:'saved-entry',target:'coffee',native:'Kaffee',hint:null,assignments:{}}];
+ const generation=modelBody(v,32000).text.format.schema;
+ assert.equal(generation.properties.edits.maxItems,undefined);
+ assert.deepEqual(generation.properties.edits.items.properties.field.enum,['assignments']);
+ const review=modelBody({...v,action:'review'},32000).text.format.schema;
+ assert.ok(review.properties.edits.items.properties.field.enum.includes('examples'));
+ assert.ok(responseSchema.properties.edits.items.properties.field.enum.includes('examples'));
+ assert.equal(responseSchema.properties.edits.maxItems,undefined);
+ assert.equal(generation.properties.cards.maxItems,undefined);
 });
 test('status polling and duplicate POST retrieve the same owned response without another generation',async()=>{
  const f=fixture(),v=input(),started=await (await f.send(v)).json();assert.match(started.requestDigest,/^[a-f0-9]{64}$/);

@@ -71,12 +71,13 @@ void main() {
         barrier.complete();
         await h.finish(tester);
 
-        expect(h.selections, [LearningDirection.nativeToTarget]);
+        // A fresh zero result refuses launch before creating any session. The
+        // prior empty-session route expectation predates F29's checked starts.
+        expect(h.calls, 0);
+        expect(h.selections, isEmpty);
+        expect(h.sessions, isEmpty);
         expect(find.byType(ReviewDirectionDialog), findsNothing);
-        expect(find.byType(ReviewSessionRoute), findsOneWidget);
-        expect(find.byKey(const ValueKey('review-no-due')), findsOneWidget);
-        expect(find.text('Nothing due right now'), findsOneWidget);
-        expect(find.text('DE → FR'), findsOneWidget);
+        expect(find.byType(ReviewSessionRoute), findsNothing);
         expect(find.byKey(const ValueKey('review-prompt')), findsNothing);
         expect(
           find.byKey(const ValueKey('review-grade-correct')),
@@ -86,20 +87,10 @@ void main() {
           find.byKey(const ValueKey('review-grade-incorrect')),
           findsNothing,
         );
-        final emptySession = h.sessions.single;
-        expect(emptySession.members, isEmpty);
-        expect(emptySession.progress.completed, 0);
-        expect(emptySession.progress.total, 0);
         expect(await tester.runAsync(() => snapshot(f)), afterCompetingChange);
 
-        await tester.tap(launch.button('Back'));
-        await h.finish(tester);
-        expect(find.byType(ReviewSessionRoute), findsNothing);
-        expect(emptySession.isStopped, isTrue);
-        expect(await tester.runAsync(() => snapshot(f)), afterCompetingChange);
-
-        // Returning work is another external change, not a side effect of the
-        // empty launch. The same displayed directional action can now succeed.
+        // Returning work is another external change, never a launch side effect.
+        // The same displayed directional action can now succeed after rechecking.
         await tester.runAsync(() async {
           final reverse = await f.current(null, true);
           await f.learning.saveCard(reverse.id, reverse.card..due = instant);
@@ -107,11 +98,9 @@ void main() {
         final beforeRetry = await tester.runAsync(() => snapshot(f));
         await tester.tap(action);
         await h.finish(tester);
-        expect(h.selections, [
-          LearningDirection.nativeToTarget,
-          LearningDirection.nativeToTarget,
-        ]);
-        expect(h.sessions.last, isNot(same(emptySession)));
+        expect(h.calls, 1);
+        expect(h.selections, [LearningDirection.nativeToTarget]);
+        expect(h.sessions, hasLength(1));
         expect(h.sessions.last.members.single.entryId, f.entry.id);
         expect(find.byType(ReviewSessionRoute), findsOneWidget);
         expect(find.byKey(const ValueKey('review-no-due')), findsNothing);

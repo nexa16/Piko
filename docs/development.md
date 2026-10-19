@@ -103,7 +103,7 @@ flutter drive --use-existing-app=<forwarded-vm-service-url> --driver=test_driver
 
 Use the fixture's isolated storage and preservation protocol. Keep a private before/after inventory and a pre-existing sentinel. Restore a compatible normal APK through direct in-place installation and verify its cold launch and retained sentinel. A new empty database is not preservation evidence. Never run integration fixtures on a personal device without explicit approval.
 
-Relevant fixtures include `round5_android_test.dart` for editor/content/activity learning integration, `retry_expiry_android_test.dart` for isolated retry expiry, `offline_vocabulary_android_test.dart` for repository persistence and `piko_icon_android_test.dart` for packaged SVG rendering. Older inline-edit fixtures retain earlier interaction assumptions; inspect the selected contract before using them as acceptance. Fixture captures must not be published as ordinary-product screenshots.
+Relevant fixtures include `count_refresh_android_test.dart` for production header/launch widgets under delayed, failed and obsolete reads using actual native dimensions and isolated in-memory fixtures; `round5_android_test.dart` for editor/content/activity learning integration, `retry_expiry_android_test.dart` for isolated retry expiry, `offline_vocabulary_android_test.dart` for repository persistence and `piko_icon_android_test.dart` for packaged SVG rendering. Older inline-edit fixtures retain earlier interaction assumptions; inspect the selected contract before using them as acceptance. Fixture captures must not be published as ordinary-product screenshots.
 
 ### Termination durability exception
 

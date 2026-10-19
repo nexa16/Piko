@@ -118,7 +118,16 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(action('review', LearningDirection.targetToNative), findsNothing);
+      // Unknown preferences retain the F29 action shell without allowing a
+      // launch or inventing a settled zero count.
+      for (final direction in LearningDirection.values) {
+        final review = action('review', direction);
+        expect(review, findsOneWidget);
+        expect(tester.widget<PikoButton>(review).onPressed, isNull);
+      }
+      expect(find.textContaining('…'), findsWidgets);
+      expect(reviews, isEmpty);
+      expect(speed.requests, isEmpty);
       expect(find.byKey(ValueKey('vocabulary-status-${one.id}')), findsNothing);
       await preference.load();
       await tester.pumpAndSettle();

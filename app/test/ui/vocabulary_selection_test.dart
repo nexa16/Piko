@@ -82,7 +82,14 @@ class SelectionHarness {
     );
     await tester.pumpAndSettle();
     await tester.ensureVisible(key('collection-${fixture.owner.id}'));
-    await tester.tap(key('collection-${fixture.owner.id}'));
+    await tester.tap(
+      find
+          .descendant(
+            of: key('collection-${fixture.owner.id}'),
+            matching: find.text(fixture.owner.name),
+          )
+          .hitTestable(),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -99,8 +106,14 @@ class SelectionHarness {
         scrollable: find.byType(Scrollable).first,
       );
     }
-    await tester.ensureVisible(finder);
-    await tester.pumpAndSettle();
+    // A pinned header may cover an item aligned to the viewport's leading edge.
+    // Center the actual target and require a real hit before the caller acts.
+    for (var attempt = 0; attempt < 4; attempt++) {
+      await Scrollable.ensureVisible(tester.element(finder), alignment: .5);
+      await tester.pumpAndSettle();
+      if (finder.hitTestable().evaluate().isNotEmpty) break;
+    }
+    expect(finder.hitTestable(), findsOneWidget);
   }
 
   Future<void> start(WidgetTester tester) async {
@@ -279,7 +292,7 @@ void main() {
   });
 
   testWidgets(
-    'native text long-press and invalid raw editor guard selection entry',
+    'text long-press and invalid modal draft preserve background selection and data',
     (tester) async {
       final h = SelectionHarness();
       await h.mount(tester);
@@ -295,21 +308,20 @@ void main() {
       await tester.longPress(field);
       await tester.pumpAndSettle();
       expect(h.selection(tester).active, isFalse);
+      // Collapse the text selection before checking modal/background isolation.
+      await tester.tap(field);
+      await tester.pumpAndSettle();
       await tester.enterText(field, '   ');
       await tester.pumpAndSettle();
-      final others = tester
-          .widget<CollectionDetail>(find.byType(CollectionDetail))
-          .queryBinding!
-          .snapshot!
-          .allEntries;
-      final second = key(
-        'vocabulary-${others.firstWhere((row) => row.id != h.fixture.entry.id).id}',
-      );
-      await h.reveal(tester, second);
-      await tester.longPress(second);
+      // Saved editing is modal. Background cards are intentionally unreachable;
+      // exercise the real barrier instead of claiming a missed card long press
+      // delivered an event. Keep the dirty modal and exact stored data intact.
+      expect(find.byType(ModalBarrier), findsWidgets);
+      expect(card.hitTestable(), findsNothing);
+      await tester.longPressAt(const Offset(4, 450));
       await tester.pumpAndSettle();
       expect(h.selection(tester).active, isFalse);
-      await h.reveal(tester, card);
+      expect(find.byType(ModalBarrier), findsWidgets);
       expect(tester.widget<TextField>(field).controller!.text, '   ');
       expect(await h.json.exportCollection(h.fixture.owner.id), h.before);
     },

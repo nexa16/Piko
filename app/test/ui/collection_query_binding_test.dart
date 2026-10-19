@@ -219,4 +219,52 @@ void main() {
       await changes.close();
     },
   );
+
+  testWidgets(
+    'count projection retains same-scope success/error but never borrows changed scope or late results',
+    (tester) async {
+      final query = Query(),
+          scope = CollectionViewScope(),
+          changes = StreamController<void>.broadcast();
+      final binding = CollectionQueryBinding(
+        collectionId: 'c',
+        service: query,
+        scope: scope,
+        invalidations: changes.stream,
+      );
+      final first = snapshot(), current = snapshot();
+      expect(binding.countSnapshot, isNull);
+      query.calls[0].result.complete(first);
+      await tester.pump();
+      binding.refresh();
+      expect(binding.countSnapshot, same(first));
+      query.calls[1].result.completeError(StateError('read'));
+      await tester.pump();
+      expect(binding.countSnapshot, same(first));
+      expect(binding.ready, isFalse);
+      binding.refresh();
+      scope.setSearch('different');
+      expect(binding.countSnapshot, isNull);
+      expect(
+        binding.snapshot,
+        same(first),
+      ); // List anchoring has separate ownership.
+      query.calls[3].result.complete(current);
+      await tester.pump();
+      query.calls[2].result.complete(first);
+      await tester.pump();
+      expect(binding.countSnapshot, same(current));
+      scope.setFilters({
+        'd': {'v'},
+      });
+      expect(binding.countSnapshot, isNull);
+      query.calls.last.result.completeError(StateError('new scope failed'));
+      await tester.pump();
+      expect(binding.countSnapshot, isNull);
+      expect(binding.error, isA<StateError>());
+      binding.dispose();
+      scope.dispose();
+      await changes.close();
+    },
+  );
 }

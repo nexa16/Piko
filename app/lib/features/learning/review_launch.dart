@@ -1,6 +1,6 @@
 import '../../data/categories_repository.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
 import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../data/learning_item.dart';
@@ -56,6 +56,8 @@ class ReviewLaunch extends StatefulWidget {
     this.enabled = true,
     this.showMascot = true,
     this.showZero = false,
+    this.countsUnknown = false,
+    this.recheckCounts = false,
     this.presentation = ReviewLaunchPresentation.plain,
     this.dueCount,
     this.onSessionClosed,
@@ -81,6 +83,7 @@ class ReviewLaunch extends StatefulWidget {
   final bool enabled;
   final bool showMascot;
   final bool showZero;
+  final bool countsUnknown, recheckCounts;
   final ReviewLaunchPresentation presentation;
   final int? dueCount;
   final VoidCallback? onSessionClosed;
@@ -126,7 +129,12 @@ class ReviewLaunchState extends State<ReviewLaunch> {
     if (oldWidget.collection.id != widget.collection.id ||
         oldWidget.factory != widget.factory ||
         oldWidget.vocabularyRepository != widget.vocabularyRepository ||
-        (!_launched && oldWidget.scopeIdentity != widget.scopeIdentity)) {
+        (!_launched &&
+            (oldWidget.scopeIdentity != widget.scopeIdentity ||
+                !setEquals(
+                  oldWidget.allowedDirections,
+                  widget.allowedDirections,
+                )))) {
       final wasOpening = _opening;
       _identity++;
       _opening = false;
@@ -196,17 +204,13 @@ class ReviewLaunchState extends State<ReviewLaunch> {
               explicit ??
               (available?.length == 1 ? available!.single.key : null);
           if (direction != null) {
-            if (!widget.allowedDirections.contains(direction)) return;
+            if (!widget.allowedDirections.contains(direction) ||
+                (counts != null && (counts[direction] ?? 0) <= 0)) {
+              return;
+            }
             session = await factory(collection.id, direction);
           } else if (available?.isEmpty == true) {
-            if (liveChoice) return;
-            // The launch was valid when offered. Let authoritative preparation
-            // resolve this race into its existing no-due / retry-wait state.
-            final original = widget.directionCounts?.entries
-                .where((entry) => entry.value > 0)
-                .firstOrNull;
-            if (original == null) return;
-            session = await factory(collection.id, original.key);
+            return; // A stale displayed count never authorizes a zero-work session.
           }
         } finally {
           done.complete();
@@ -330,6 +334,7 @@ class ReviewLaunchState extends State<ReviewLaunch> {
     final activate = widget.enabled && !_opening ? _open : null;
     final counts = widget.directionCounts;
     if (!widget.showZero &&
+        !widget.countsUnknown &&
         counts != null &&
         counts.values.every((count) => count <= 0)) {
       return const SizedBox.shrink();
@@ -337,7 +342,12 @@ class ReviewLaunchState extends State<ReviewLaunch> {
     if (counts != null &&
         widget.presentation == ReviewLaunchPresentation.collectionCard) {
       final available = LearningDirection.values
-          .where((direction) => widget.showZero || (counts[direction] ?? 0) > 0)
+          .where(
+            (direction) =>
+                widget.showZero ||
+                widget.countsUnknown ||
+                (counts[direction] ?? 0) > 0,
+          )
           .where(widget.allowedDirections.contains)
           .toList();
       return Column(
@@ -357,7 +367,7 @@ class ReviewLaunchState extends State<ReviewLaunch> {
                     widget.collection,
                     direction,
                   ),
-                  'count': counts[direction]!,
+                  'count': widget.countsUnknown ? '…' : counts[direction]!,
                 }),
                 expandLabel: true,
                 labelAlignment: TextAlign.start,
@@ -381,7 +391,11 @@ class ReviewLaunchState extends State<ReviewLaunch> {
                 variant: direction == available.first
                     ? PikoButtonVariant.reviewPrimary
                     : PikoButtonVariant.reviewSecondary,
-                onPressed: activate == null || (counts[direction] ?? 0) == 0
+                onPressed:
+                    activate == null ||
+                        (!widget.recheckCounts &&
+                            !widget.countsUnknown &&
+                            (counts[direction] ?? 0) == 0)
                     ? null
                     : () => _open(direction),
               ),
@@ -426,7 +440,7 @@ class ReviewLaunchState extends State<ReviewLaunch> {
               ),
             ),
             child: Text(
-              '${widget.dueCount!}',
+              widget.countsUnknown ? '…' : '${widget.dueCount!}',
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: pikoDesign.dimension(
