@@ -1,3 +1,10 @@
+import 'data/ai/ai_connection_controller.dart';
+import 'platform/ai_credential_vault.dart';
+import 'features/ai/ai_entry_session_coordinator.dart';
+import 'data/ai/ai_contract.dart';
+import 'data/ai/managed_ai_provider.dart';
+import 'data/local/sqlite_ai_service.dart';
+import 'features/ai/ai_page.dart';
 import 'dart:async';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
@@ -49,6 +56,7 @@ class PikoRuntime extends StatefulWidget {
     this.databaseFactory,
     this.settingsRepositoryFactory,
     this.jsonPlatform,
+    this.aiProvider,
   });
 
   /// Test/composition injection; the runtime owns the returned database.
@@ -57,6 +65,7 @@ class PikoRuntime extends StatefulWidget {
   /// Composition seam; uses the same runtime-owned database, never a second store.
   final SettingsRepository Function(PikoDatabase)? settingsRepositoryFactory;
   final VocabularyJsonPlatform? jsonPlatform;
+  final AiProvider? aiProvider;
   @override
   State<PikoRuntime> createState() => _PikoRuntimeState();
 }
@@ -65,8 +74,40 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   late final database =
       widget.databaseFactory?.call() ??
       PikoDatabase(LazyDatabase(() async => openPikoDatabase()));
-  late final collections = SqliteCollectionsRepository(database);
-  late final vocabulary = SqliteVocabularyRepository(database);
+  late final collections = SqliteCollectionsRepository(
+    database,
+    interfaceLanguage: () => _language?.locale.value.languageCode ?? 'en',
+  );
+  late final vocabulary = SqliteVocabularyRepository(
+    database,
+    ai: pikoAiEnabled ? AiSupport(aiService, aiProvider) : null,
+  );
+  late final aiService = SqliteAiService(database);
+  late final aiAccess = AiConnectionController(
+    configuration: AiConnectionConfiguration.environment,
+    vault: const AndroidAiCredentialVault(),
+    gateway: SupabaseAiAuthGateway(AiConnectionConfiguration.environment),
+  );
+  late final aiProvider =
+      widget.aiProvider ??
+      ManagedAiProvider(
+        endpoint: AiConnectionConfiguration.environment.available
+            ? Uri.tryParse(AiConnectionConfiguration.environment.endpoint)
+            : null,
+        publishableKey: AiConnectionConfiguration.environment.publishableKey,
+        access: aiAccess,
+      );
+  Widget _aiPage(BuildContext context, CollectionRecord collection) =>
+      !pikoAiEnabled
+      ? const SizedBox.shrink()
+      : AiPage(
+          service: aiService,
+          provider: aiProvider,
+          collectionId: collection.id,
+          collectionName: collection.name,
+          registerPending: trackWrites,
+        );
+
   late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
   late final jsonService = SqliteVocabularyJsonService(database);
@@ -181,6 +222,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
               vocabularyRepository: vocabulary,
               categoriesRepository: categories,
               interchangeBuilder: _interchange,
+              aiBuilder: pikoAiEnabled ? _aiPage : null,
               onPendingVocabularyWrites: trackWrites,
             ),
           ),
@@ -243,15 +285,26 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   EntrySessionResources _entrySession(String collectionId) {
     final deletion = SqliteVocabularyDeletionService(database);
+    late final EntrySessionController session;
+    final coordinator = pikoAiEnabled
+        ? AiEntrySessionCoordinator(
+            support: vocabulary.ai!,
+            repository: vocabulary,
+            session: () => session,
+          )
+        : null;
+    session = EntrySessionController(
+      collectionId: collectionId,
+      repository: vocabulary,
+      deletionService: deletion,
+      clock: database.clock,
+      confirmDraft: coordinator?.confirm,
+    );
     return EntrySessionResources(
+      aiCoordinator: coordinator,
       categoriesRepository: categories,
       onPendingWrites: trackWrites,
-      session: EntrySessionController(
-        collectionId: collectionId,
-        repository: vocabulary,
-        deletionService: deletion,
-        clock: database.clock,
-      ),
+      session: session,
       deletionService: deletion,
     );
   }
@@ -263,6 +316,25 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     final source = await learning.forCollection(
       collectionId: collectionId,
       direction: direction,
+    );
+    return DueLearningSession.start(
+      source: source,
+      cutoff: database.clock.now().toUtc(),
+      clock: database.clock,
+      onPendingWrites: trackWrites,
+      presentationActive: false,
+    );
+  }
+
+  Future<DueLearningSession> _selectedReviewSession(
+    String collectionId,
+    LearningDirection direction,
+    Set<String> entryIds,
+  ) async {
+    final source = await learning.forCollection(
+      collectionId: collectionId,
+      direction: direction,
+      entryIds: Set.unmodifiable(entryIds),
     );
     return DueLearningSession.start(
       source: source,
@@ -323,6 +395,10 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   @override
   void dispose() {
+    if (widget.aiProvider == null && pikoAiEnabled) {
+      aiProvider.close();
+      aiAccess.dispose();
+    }
     _statistics?.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();
@@ -387,6 +463,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             repository: collections,
             entrySessionFactory: _entrySession,
             interchangeBuilder: _interchange,
+            aiBuilder: pikoAiEnabled ? _aiPage : null,
             vocabularyRepository: vocabulary,
             categoriesRepository: categories,
             onPendingVocabularyWrites: trackWrites,
@@ -395,6 +472,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             detailReviewSessionFactory: _detailReviewSession,
             speedSessionFactory: speedRuntime.prepare,
             selectedSpeedSessionFactory: speedRuntime.prepareSelected,
+            selectedReviewSessionFactory: _selectedReviewSession,
             queryBindingFactory: _collectionBinding,
             reviewMembershipLoader: _reviewDueMemberships,
             reviewCountPolicy: CollectionReviewCountPolicy.dueDirectionCards,

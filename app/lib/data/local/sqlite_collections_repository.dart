@@ -1,10 +1,12 @@
+import 'sqlite_category_defaults.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
 import '../collections_repository.dart';
 import 'piko_database.dart';
 
 final class SqliteCollectionsRepository implements CollectionsRepository {
-  SqliteCollectionsRepository(this.database);
+  SqliteCollectionsRepository(this.database, {this.interfaceLanguage});
+  final String Function()? interfaceLanguage;
   final PikoDatabase database;
 
   @override
@@ -92,23 +94,30 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
       throw CollectionValidation.sameLanguage;
     }
     final id = const Uuid().v4();
-    await database
-        .into(database.collections)
-        .insert(
-          CollectionsCompanion.insert(
-            id: id,
-            name: trimmed,
-            targetLanguage: targetLanguage.code,
-            nativeLanguage: nativeLanguage.code,
-            targetLanguageName: Value(targetLanguage.customName),
-            nativeLanguageName: Value(nativeLanguage.customName),
-          ),
-        );
-    return CollectionRecord(
-      id: id,
-      name: trimmed,
-      targetLanguage: targetLanguage,
-      nativeLanguage: nativeLanguage,
-    );
+    return database.transaction(() async {
+      await database
+          .into(database.collections)
+          .insert(
+            CollectionsCompanion.insert(
+              id: id,
+              name: trimmed,
+              targetLanguage: targetLanguage.code,
+              nativeLanguage: nativeLanguage.code,
+              targetLanguageName: Value(targetLanguage.customName),
+              nativeLanguageName: Value(nativeLanguage.customName),
+            ),
+          );
+      if (interfaceLanguage != null) {
+        await SqliteCategoryDefaults(
+          database,
+        ).initialize(id, interfaceLanguage!());
+      }
+      return CollectionRecord(
+        id: id,
+        name: trimmed,
+        targetLanguage: targetLanguage,
+        nativeLanguage: nativeLanguage,
+      );
+    });
   }
 }

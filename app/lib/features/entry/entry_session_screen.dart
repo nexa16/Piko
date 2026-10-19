@@ -1,3 +1,6 @@
+import '../../data/ai/ai_contract.dart';
+import '../ai/ai_entry_session_coordinator.dart';
+import '../ai/ai_related_hints_control.dart';
 import '../../ui/components/piko_switch.dart';
 import 'dart:math' as math;
 
@@ -34,6 +37,7 @@ class EntrySessionScreen extends StatefulWidget {
     this.onOpenInterchange,
     this.onPendingWrites,
     this.categoriesRepository,
+    this.aiCoordinator,
     super.key,
   });
   final CollectionRecord collection;
@@ -41,6 +45,7 @@ class EntrySessionScreen extends StatefulWidget {
   final Future<VocabularyJsonReturn?> Function()? onOpenInterchange;
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
+  final AiEntrySessionCoordinator? aiCoordinator;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
@@ -131,6 +136,79 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     draftFocusRequested = activeId == draftId;
     session.addListener(changed);
     loadContentDefault();
+  }
+
+  Widget? _aiHints(String id, bool draft, EntryDraft values, bool enabled) {
+    final coordinator = widget.aiCoordinator;
+    if (coordinator == null || !coordinator.support.service.enabled) {
+      return null;
+    }
+    return AnimatedBuilder(
+      animation: coordinator,
+      builder: (context, _) {
+        final anchor = draft
+            ? coordinator.anchor(values)
+            : AiEntry(
+                VocabularyRecord(
+                  id: id,
+                  collectionId: widget.collection.id,
+                  targetText: values.targetText,
+                  nativeText: values.nativeText,
+                  content: values.content,
+                  active: values.active,
+                ),
+                values.assignments,
+              );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AiRelatedHintsControl(
+              support: coordinator.support,
+              anchor: anchor,
+              collectionName: widget.collection.name,
+              enabled: enabled,
+              registerPending: widget.onPendingWrites,
+              settleAnchor: () async {
+                await session.awaitSavedEdits();
+                if (draft) return coordinator.anchor(session.draft);
+                if (session.savedEntryState(id).error != null) {
+                  throw AiFailure.dependency;
+                }
+                return (await coordinator.support.service.snapshot(
+                  widget.collection.id,
+                )).entries.singleWhere((e) => e.record.id == id);
+              },
+              onStaged: draft ? coordinator.stage : null,
+              onApplied: draft
+                  ? null
+                  : (result) async {
+                      session.adoptCommittedHints(result.updatedEntries);
+                    },
+            ),
+            if (draft && coordinator.staged != null)
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      PikoCopyScope.of(context).text(
+                        coordinator.matchesDraft
+                            ? 'ai.hintsStaged'
+                            : 'ai.error.stale',
+                      ),
+                    ),
+                    PikoButton(
+                      label: PikoCopyScope.of(context).text('ai.discardHints'),
+                      variant: PikoButtonVariant.ghost,
+                      onPressed: enabled ? coordinator.discard : null,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   void loadContentDefault() {
@@ -910,6 +988,7 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
   String errorKey(Object error) =>
       vocabularyContentErrorKey(error) ??
       switch (error) {
+        AiFailure() => 'ai.error.${error.name}',
         VocabularyValidation.requiredTarget => 'entry.requiredTarget',
         VocabularyValidation.requiredNative => 'entry.requiredNative',
         VocabularyValidation.duplicatePair => 'vocab.inlineDuplicate',
@@ -1199,6 +1278,16 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                           if (session.supportsContent)
                             VocabularyContentEditor(
                               value: values.content,
+                              relatedHints: _aiHints(
+                                id,
+                                draft,
+                                values,
+                                active &&
+                                    !session.isBusy &&
+                                    !exitDraining &&
+                                    exitRequest == null &&
+                                    session.contentReady,
+                              ),
                               collectionId: widget.collection.id,
                               preferences: session.hintPreferences,
                               error: error,

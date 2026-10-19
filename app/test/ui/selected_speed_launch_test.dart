@@ -119,6 +119,13 @@ class Harness {
   }
 
   Future<void> start(WidgetTester tester, {String language = 'en'}) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 60 && tester.view.viewInsets.bottom > 0; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(tester.view.viewInsets.bottom, 0);
     final button = find.text(PikoCopy(language).text('learn.startSpeed'));
     await tester.ensureVisible(button);
     await tester.tap(button);
@@ -171,7 +178,7 @@ void main() {
       expect(h.selection.ids.length, 4);
       await h.open(tester);
       final reverse = find.byKey(
-        const ValueKey('selected-speed-direction-nativeToTarget'),
+        const ValueKey('learning-direction-nativeToTarget'),
       );
       await tester.ensureVisible(reverse);
       await tester.tap(reverse);
@@ -246,7 +253,7 @@ void main() {
       await h.start(tester);
       await h.start(tester);
       expect(h.requests.length, 1);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.tap(find.byTooltip(PikoCopy('en').text('common.close')));
       await tester.pumpAndSettle();
       h.gate!.complete();
       await tester.pumpAndSettle();

@@ -8,6 +8,8 @@ final class CategoryDimensionRecord {
     required this.mode,
     required this.position,
     this.carryOver = false,
+    this.tagColorRole,
+    this.acquisitionSource = false,
   });
   final String id;
   final String collectionId;
@@ -15,6 +17,8 @@ final class CategoryDimensionRecord {
   final CategoryMode mode;
   final int position;
   final bool carryOver;
+  final String? tagColorRole;
+  final bool acquisitionSource;
 }
 
 final class CategoryValueRecord {

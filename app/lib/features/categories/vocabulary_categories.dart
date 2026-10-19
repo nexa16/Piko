@@ -1,3 +1,4 @@
+import '../../ui/components/piko_category_tag.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../data/categories_repository.dart';
@@ -255,27 +256,12 @@ class _VocabularyCategoriesState extends State<VocabularyCategories> {
           in definitions[dimension.id] ?? const <CategoryValueRecord>[])
         if (assigned[dimension.id]?.contains(value.id) == true &&
             (editable || !widget.excludedValues.contains(value.id)))
-          Container(
+          PikoCategoryTag(
             key: ValueKey(
               'category-label-${widget.entryId ?? 'draft'}-${value.id}',
             ),
-            padding: EdgeInsets.symmetric(
-              horizontal: design.dimension('spacing.2'),
-              vertical: design.dimension('spacing.1'),
-            ),
-            decoration: BoxDecoration(
-              color: design.color(widget.goldTags ? 'gold' : 'tint'),
-              borderRadius: BorderRadius.circular(
-                design.dimension('components.buttons.radius'),
-              ),
-            ),
-            child: Text(
-              value.name,
-              style: TextStyle(
-                color: design.color(widget.goldTags ? 'ink' : 'primary'),
-                fontSize: design.dimension('typography.small'),
-              ),
-            ),
+            group: dimension,
+            label: value.name,
           ),
     ];
     final all = [for (final dimension in dims) ...chips(dimension)];

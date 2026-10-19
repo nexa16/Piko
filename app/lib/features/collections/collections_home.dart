@@ -33,6 +33,7 @@ class CollectionsHome extends StatefulWidget {
     required this.repository,
     this.entrySessionFactory,
     this.interchangeBuilder,
+    this.aiBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -44,6 +45,7 @@ class CollectionsHome extends StatefulWidget {
     this.detailReviewSessionFactory,
     this.speedSessionFactory,
     this.selectedSpeedSessionFactory,
+    this.selectedReviewSessionFactory,
     this.categoriesRepository,
     this.onOpenSettings,
     this.directionBinding,
@@ -54,6 +56,7 @@ class CollectionsHome extends StatefulWidget {
   final CollectionsRepository repository;
   final EntrySessionFactory? entrySessionFactory;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
+  final Widget Function(BuildContext, CollectionRecord)? aiBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -66,6 +69,7 @@ class CollectionsHome extends StatefulWidget {
   final ReviewSessionFactory? detailReviewSessionFactory;
   final SpeedSessionFactory? speedSessionFactory;
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
+  final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final VoidCallback? onOpenSettings;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
@@ -119,11 +123,13 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           collectionId: collection.id,
           entrySessionFactory: widget.entrySessionFactory,
           interchangeBuilder: widget.interchangeBuilder,
+          aiBuilder: widget.aiBuilder,
           reviewSessionFactory:
               widget.detailReviewSessionFactory ?? widget.reviewSessionFactory,
           queryBinding: queryBinding,
           speedSessionFactory: widget.speedSessionFactory,
           selectedSpeedSessionFactory: widget.selectedSpeedSessionFactory,
+          selectedReviewSessionFactory: widget.selectedReviewSessionFactory,
           categoriesRepository: widget.categoriesRepository,
           directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,

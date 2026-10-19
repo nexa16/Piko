@@ -424,8 +424,19 @@ void main() {
         for (final table in tables) {
           expect(
             (await stored(db))[table],
-            [for(final row in before[table]!) {...row, if(table=='collections') ...{'target_language_name':null,'native_language_name':null}, if(table=='vocabulary_entries') 'hint_key':''}],
-            reason: '$table retains old fields exactly and adds only language/Hint metadata',
+            [
+              for (final row in before[table]!)
+                {
+                  ...row,
+                  if (table == 'collections') ...{
+                    'target_language_name': null,
+                    'native_language_name': null,
+                  },
+                  if (table == 'vocabulary_entries') 'hint_key': '',
+                },
+            ],
+            reason:
+                '$table retains old fields exactly and adds only language/Hint metadata',
           );
         }
         expect(
@@ -533,7 +544,7 @@ void main() {
           (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
             'user_version',
           ),
-          20,
+          db.schemaVersion,
         );
       } finally {
         await db.close();

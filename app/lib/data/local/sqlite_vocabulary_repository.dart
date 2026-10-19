@@ -1,3 +1,5 @@
+import '../ai/ai_contract.dart';
+import 'sqlite_category_defaults.dart';
 import 'sqlite_vocabulary_content.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
@@ -21,10 +23,13 @@ final class _OpeningSnapshot implements CategorizedVocabularyOpeningSnapshot {
 final class SqliteVocabularyRepository
     implements
         VocabularyContentRepository,
+        AiSupportedVocabularyRepository,
         EntryConfirmationRepository,
         QuestionExamplesRepository,
         CollectionHintPreferences {
-  SqliteVocabularyRepository(this.database);
+  SqliteVocabularyRepository(this.database, {this.ai});
+  @override
+  final AiSupport? ai;
   final PikoDatabase database;
   final _issuer = Object();
   @override
@@ -183,7 +188,9 @@ final class SqliteVocabularyRepository
         collectionId: collectionId,
         targetText: targetText,
         nativeText: nativeText,
-        assignments: requested,
+        assignments: await SqliteCategoryDefaults(
+          database,
+        ).manualAssignments(collectionId, requested),
         content: content,
         makeHintVisibilityDefault: makeHintVisibilityDefault,
         active: active,
@@ -198,7 +205,7 @@ final class SqliteVocabularyRepository
         for (final group in groups)
           if (group.carryOver && committed.containsKey(group.id))
             group.id: committed[group.id]!,
-      });
+      }, assignments: committed);
     });
   }
 

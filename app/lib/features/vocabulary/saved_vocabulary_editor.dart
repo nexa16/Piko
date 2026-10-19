@@ -1,3 +1,5 @@
+import '../../data/ai/ai_contract.dart';
+import '../ai/ai_related_hints_control.dart';
 import '../../ui/components/piko_switch.dart';
 import 'package:flutter/material.dart';
 import '../../data/categories_repository.dart';
@@ -62,6 +64,10 @@ class SavedVocabularyEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     final error = edits.error;
+    final ai = repository is AiSupportedVocabularyRepository
+        ? (repository as AiSupportedVocabularyRepository).ai
+        : null;
+
     bool admitted() => !busy && ModalRoute.of(context)?.isCurrent != false;
     void register() => onPendingWrites?.call(edits.awaitSavedEdits());
     Widget field(bool first) => PikoTextField(
@@ -138,6 +144,37 @@ class SavedVocabularyEditor extends StatelessWidget {
         if (edits.supportsContent)
           VocabularyContentEditor(
             value: edits.draft.content,
+            relatedHints: ai == null
+                ? null
+                : AiRelatedHintsControl(
+                    support: ai,
+                    collectionName: collection.name,
+                    enabled: !busy,
+                    registerPending: onPendingWrites,
+                    anchor: AiEntry(
+                      VocabularyRecord(
+                        id: edits.entryId,
+                        collectionId: collection.id,
+                        targetText: edits.draft.targetText,
+                        nativeText: edits.draft.nativeText,
+                        content: edits.draft.content,
+                        active: edits.draft.active,
+                      ),
+                      edits.draft.assignments,
+                    ),
+                    settleAnchor: () async {
+                      await edits.awaitSavedEdits();
+                      if (edits.error != null || edits.hasUncommittedChanges) {
+                        throw AiFailure.dependency;
+                      }
+                      return (await ai.service.snapshot(collection.id)).entries
+                          .singleWhere((e) => e.record.id == edits.entryId);
+                    },
+                    onApplied: (_) async {
+                      onCollapse();
+                    },
+                  ),
+
             makeDefault: false,
             enabled: !busy,
             error: error,

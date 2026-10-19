@@ -486,7 +486,7 @@ void main() {
     (tester) async {
       final h = HeaderHarness();
       await h.mount(tester);
-      tester.view.physicalSize = const Size(320, 260);
+      tester.view.physicalSize = const Size(320, 120);
       await tester.pumpAndSettle();
       final first = key('vocabulary-word-0');
       await tester.scrollUntilVisible(

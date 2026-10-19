@@ -4980,6 +4980,17 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CategoryGroupPreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _tagColorRoleMeta = const VerificationMeta(
+    'tagColorRole',
+  );
+  @override
+  late final GeneratedColumn<String> tagColorRole = GeneratedColumn<String>(
+    'tag_color_role',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dimensionIdMeta = const VerificationMeta(
     'dimensionId',
   );
@@ -5024,11 +5035,28 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _acquisitionSourceMeta = const VerificationMeta(
+    'acquisitionSource',
+  );
+  @override
+  late final GeneratedColumn<bool> acquisitionSource = GeneratedColumn<bool>(
+    'acquisition_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("acquisition_source" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
+    tagColorRole,
     dimensionId,
     customValueOrder,
     carryOver,
+    acquisitionSource,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5042,6 +5070,15 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('tag_color_role')) {
+      context.handle(
+        _tagColorRoleMeta,
+        tagColorRole.isAcceptableOrUnknown(
+          data['tag_color_role']!,
+          _tagColorRoleMeta,
+        ),
+      );
+    }
     if (data.containsKey('dimension_id')) {
       context.handle(
         _dimensionIdMeta,
@@ -5068,6 +5105,15 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         carryOver.isAcceptableOrUnknown(data['carry_over']!, _carryOverMeta),
       );
     }
+    if (data.containsKey('acquisition_source')) {
+      context.handle(
+        _acquisitionSourceMeta,
+        acquisitionSource.isAcceptableOrUnknown(
+          data['acquisition_source']!,
+          _acquisitionSourceMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5080,6 +5126,10 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
   }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CategoryGroupPreference(
+      tagColorRole: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tag_color_role'],
+      ),
       dimensionId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}dimension_id'],
@@ -5092,6 +5142,10 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
         DriftSqlType.bool,
         data['${effectivePrefix}carry_over'],
       )!,
+      acquisitionSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}acquisition_source'],
+      )!,
     );
   }
 
@@ -5103,28 +5157,40 @@ class $CategoryGroupPreferencesTable extends CategoryGroupPreferences
 
 class CategoryGroupPreference extends DataClass
     implements Insertable<CategoryGroupPreference> {
+  final String? tagColorRole;
   final String dimensionId;
   final bool customValueOrder;
   final bool carryOver;
+  final bool acquisitionSource;
   const CategoryGroupPreference({
+    this.tagColorRole,
     required this.dimensionId,
     required this.customValueOrder,
     required this.carryOver,
+    required this.acquisitionSource,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || tagColorRole != null) {
+      map['tag_color_role'] = Variable<String>(tagColorRole);
+    }
     map['dimension_id'] = Variable<String>(dimensionId);
     map['custom_value_order'] = Variable<bool>(customValueOrder);
     map['carry_over'] = Variable<bool>(carryOver);
+    map['acquisition_source'] = Variable<bool>(acquisitionSource);
     return map;
   }
 
   CategoryGroupPreferencesCompanion toCompanion(bool nullToAbsent) {
     return CategoryGroupPreferencesCompanion(
+      tagColorRole: tagColorRole == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tagColorRole),
       dimensionId: Value(dimensionId),
       customValueOrder: Value(customValueOrder),
       carryOver: Value(carryOver),
+      acquisitionSource: Value(acquisitionSource),
     );
   }
 
@@ -5134,34 +5200,45 @@ class CategoryGroupPreference extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CategoryGroupPreference(
+      tagColorRole: serializer.fromJson<String?>(json['tagColorRole']),
       dimensionId: serializer.fromJson<String>(json['dimensionId']),
       customValueOrder: serializer.fromJson<bool>(json['customValueOrder']),
       carryOver: serializer.fromJson<bool>(json['carryOver']),
+      acquisitionSource: serializer.fromJson<bool>(json['acquisitionSource']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'tagColorRole': serializer.toJson<String?>(tagColorRole),
       'dimensionId': serializer.toJson<String>(dimensionId),
       'customValueOrder': serializer.toJson<bool>(customValueOrder),
       'carryOver': serializer.toJson<bool>(carryOver),
+      'acquisitionSource': serializer.toJson<bool>(acquisitionSource),
     };
   }
 
   CategoryGroupPreference copyWith({
+    Value<String?> tagColorRole = const Value.absent(),
     String? dimensionId,
     bool? customValueOrder,
     bool? carryOver,
+    bool? acquisitionSource,
   }) => CategoryGroupPreference(
+    tagColorRole: tagColorRole.present ? tagColorRole.value : this.tagColorRole,
     dimensionId: dimensionId ?? this.dimensionId,
     customValueOrder: customValueOrder ?? this.customValueOrder,
     carryOver: carryOver ?? this.carryOver,
+    acquisitionSource: acquisitionSource ?? this.acquisitionSource,
   );
   CategoryGroupPreference copyWithCompanion(
     CategoryGroupPreferencesCompanion data,
   ) {
     return CategoryGroupPreference(
+      tagColorRole: data.tagColorRole.present
+          ? data.tagColorRole.value
+          : this.tagColorRole,
       dimensionId: data.dimensionId.present
           ? data.dimensionId.value
           : this.dimensionId,
@@ -5169,72 +5246,99 @@ class CategoryGroupPreference extends DataClass
           ? data.customValueOrder.value
           : this.customValueOrder,
       carryOver: data.carryOver.present ? data.carryOver.value : this.carryOver,
+      acquisitionSource: data.acquisitionSource.present
+          ? data.acquisitionSource.value
+          : this.acquisitionSource,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('CategoryGroupPreference(')
+          ..write('tagColorRole: $tagColorRole, ')
           ..write('dimensionId: $dimensionId, ')
           ..write('customValueOrder: $customValueOrder, ')
-          ..write('carryOver: $carryOver')
+          ..write('carryOver: $carryOver, ')
+          ..write('acquisitionSource: $acquisitionSource')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(dimensionId, customValueOrder, carryOver);
+  int get hashCode => Object.hash(
+    tagColorRole,
+    dimensionId,
+    customValueOrder,
+    carryOver,
+    acquisitionSource,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CategoryGroupPreference &&
+          other.tagColorRole == this.tagColorRole &&
           other.dimensionId == this.dimensionId &&
           other.customValueOrder == this.customValueOrder &&
-          other.carryOver == this.carryOver);
+          other.carryOver == this.carryOver &&
+          other.acquisitionSource == this.acquisitionSource);
 }
 
 class CategoryGroupPreferencesCompanion
     extends UpdateCompanion<CategoryGroupPreference> {
+  final Value<String?> tagColorRole;
   final Value<String> dimensionId;
   final Value<bool> customValueOrder;
   final Value<bool> carryOver;
+  final Value<bool> acquisitionSource;
   final Value<int> rowid;
   const CategoryGroupPreferencesCompanion({
+    this.tagColorRole = const Value.absent(),
     this.dimensionId = const Value.absent(),
     this.customValueOrder = const Value.absent(),
     this.carryOver = const Value.absent(),
+    this.acquisitionSource = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoryGroupPreferencesCompanion.insert({
+    this.tagColorRole = const Value.absent(),
     required String dimensionId,
     this.customValueOrder = const Value.absent(),
     this.carryOver = const Value.absent(),
+    this.acquisitionSource = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : dimensionId = Value(dimensionId);
   static Insertable<CategoryGroupPreference> custom({
+    Expression<String>? tagColorRole,
     Expression<String>? dimensionId,
     Expression<bool>? customValueOrder,
     Expression<bool>? carryOver,
+    Expression<bool>? acquisitionSource,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (tagColorRole != null) 'tag_color_role': tagColorRole,
       if (dimensionId != null) 'dimension_id': dimensionId,
       if (customValueOrder != null) 'custom_value_order': customValueOrder,
       if (carryOver != null) 'carry_over': carryOver,
+      if (acquisitionSource != null) 'acquisition_source': acquisitionSource,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   CategoryGroupPreferencesCompanion copyWith({
+    Value<String?>? tagColorRole,
     Value<String>? dimensionId,
     Value<bool>? customValueOrder,
     Value<bool>? carryOver,
+    Value<bool>? acquisitionSource,
     Value<int>? rowid,
   }) {
     return CategoryGroupPreferencesCompanion(
+      tagColorRole: tagColorRole ?? this.tagColorRole,
       dimensionId: dimensionId ?? this.dimensionId,
       customValueOrder: customValueOrder ?? this.customValueOrder,
       carryOver: carryOver ?? this.carryOver,
+      acquisitionSource: acquisitionSource ?? this.acquisitionSource,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5242,6 +5346,9 @@ class CategoryGroupPreferencesCompanion
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (tagColorRole.present) {
+      map['tag_color_role'] = Variable<String>(tagColorRole.value);
+    }
     if (dimensionId.present) {
       map['dimension_id'] = Variable<String>(dimensionId.value);
     }
@@ -5250,6 +5357,9 @@ class CategoryGroupPreferencesCompanion
     }
     if (carryOver.present) {
       map['carry_over'] = Variable<bool>(carryOver.value);
+    }
+    if (acquisitionSource.present) {
+      map['acquisition_source'] = Variable<bool>(acquisitionSource.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -5260,9 +5370,11 @@ class CategoryGroupPreferencesCompanion
   @override
   String toString() {
     return (StringBuffer('CategoryGroupPreferencesCompanion(')
+          ..write('tagColorRole: $tagColorRole, ')
           ..write('dimensionId: $dimensionId, ')
           ..write('customValueOrder: $customValueOrder, ')
           ..write('carryOver: $carryOver, ')
+          ..write('acquisitionSource: $acquisitionSource, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11528,16 +11640,20 @@ typedef $$CategoryValuesTableProcessedTableManager =
     >;
 typedef $$CategoryGroupPreferencesTableCreateCompanionBuilder =
     CategoryGroupPreferencesCompanion Function({
+      Value<String?> tagColorRole,
       required String dimensionId,
       Value<bool> customValueOrder,
       Value<bool> carryOver,
+      Value<bool> acquisitionSource,
       Value<int> rowid,
     });
 typedef $$CategoryGroupPreferencesTableUpdateCompanionBuilder =
     CategoryGroupPreferencesCompanion Function({
+      Value<String?> tagColorRole,
       Value<String> dimensionId,
       Value<bool> customValueOrder,
       Value<bool> carryOver,
+      Value<bool> acquisitionSource,
       Value<int> rowid,
     });
 
@@ -11583,6 +11699,11 @@ class $$CategoryGroupPreferencesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get tagColorRole => $composableBuilder(
+    column: $table.tagColorRole,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get customValueOrder => $composableBuilder(
     column: $table.customValueOrder,
     builder: (column) => ColumnFilters(column),
@@ -11590,6 +11711,11 @@ class $$CategoryGroupPreferencesTableFilterComposer
 
   ColumnFilters<bool> get carryOver => $composableBuilder(
     column: $table.carryOver,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11626,6 +11752,11 @@ class $$CategoryGroupPreferencesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get tagColorRole => $composableBuilder(
+    column: $table.tagColorRole,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get customValueOrder => $composableBuilder(
     column: $table.customValueOrder,
     builder: (column) => ColumnOrderings(column),
@@ -11633,6 +11764,11 @@ class $$CategoryGroupPreferencesTableOrderingComposer
 
   ColumnOrderings<bool> get carryOver => $composableBuilder(
     column: $table.carryOver,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -11669,6 +11805,11 @@ class $$CategoryGroupPreferencesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get tagColorRole => $composableBuilder(
+    column: $table.tagColorRole,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get customValueOrder => $composableBuilder(
     column: $table.customValueOrder,
     builder: (column) => column,
@@ -11676,6 +11817,11 @@ class $$CategoryGroupPreferencesTableAnnotationComposer
 
   GeneratedColumn<bool> get carryOver =>
       $composableBuilder(column: $table.carryOver, builder: (column) => column);
+
+  GeneratedColumn<bool> get acquisitionSource => $composableBuilder(
+    column: $table.acquisitionSource,
+    builder: (column) => column,
+  );
 
   $$CategoryDimensionsTableAnnotationComposer get dimensionId {
     final $$CategoryDimensionsTableAnnotationComposer composer =
@@ -11741,26 +11887,34 @@ class $$CategoryGroupPreferencesTableTableManager
               ),
           updateCompanionCallback:
               ({
+                Value<String?> tagColorRole = const Value.absent(),
                 Value<String> dimensionId = const Value.absent(),
                 Value<bool> customValueOrder = const Value.absent(),
                 Value<bool> carryOver = const Value.absent(),
+                Value<bool> acquisitionSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion(
+                tagColorRole: tagColorRole,
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
                 carryOver: carryOver,
+                acquisitionSource: acquisitionSource,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                Value<String?> tagColorRole = const Value.absent(),
                 required String dimensionId,
                 Value<bool> customValueOrder = const Value.absent(),
                 Value<bool> carryOver = const Value.absent(),
+                Value<bool> acquisitionSource = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CategoryGroupPreferencesCompanion.insert(
+                tagColorRole: tagColorRole,
                 dimensionId: dimensionId,
                 customValueOrder: customValueOrder,
                 carryOver: carryOver,
+                acquisitionSource: acquisitionSource,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

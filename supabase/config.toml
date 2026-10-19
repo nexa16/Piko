@@ -1,0 +1,6 @@
+project_id = "piko-owner-ai"
+
+[functions.piko-ai]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/piko-ai/index.ts"

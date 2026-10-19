@@ -31,6 +31,7 @@ import '../../ui/components/piko_field.dart';
 import '../../ui/piko_theme.dart';
 import '../entry/entry_session_route.dart';
 import '../learning/review_launch.dart';
+import '../learning/due_learning_session.dart';
 import '../vocabulary/collection_vocabulary.dart';
 import '../vocabulary/collection_vocabulary_mutations.dart';
 import 'collection_write_barrier.dart';
@@ -42,6 +43,7 @@ import 'collection_search_field.dart';
 import 'collection_scroll_physics.dart';
 import 'filter_selection_dialog.dart';
 import '../speed/speed_launch.dart';
+import '../speed/speed_direction_actions.dart';
 import '../speed/speed_completion_notice.dart';
 import '../speed/selected_speed_launch.dart';
 import '../speed/speed_setup_dialog.dart'
@@ -71,6 +73,7 @@ class CollectionDetail extends StatefulWidget {
     required this.collectionId,
     this.entrySessionFactory,
     this.interchangeBuilder,
+    this.aiBuilder,
     this.vocabularyRepository,
     this.onPendingVocabularyWrites,
     this.vocabularyMutationsFactory,
@@ -82,6 +85,7 @@ class CollectionDetail extends StatefulWidget {
     this.queryBinding,
     this.speedSessionFactory,
     this.selectedSpeedSessionFactory,
+    this.selectedReviewSessionFactory,
     this.categoriesRepository,
     this.directionBinding,
     this.settingsOnly = false,
@@ -92,6 +96,7 @@ class CollectionDetail extends StatefulWidget {
   final String collectionId;
   final EntrySessionFactory? entrySessionFactory;
   final Widget Function(BuildContext, CollectionRecord)? interchangeBuilder;
+  final Widget Function(BuildContext, CollectionRecord)? aiBuilder;
   final VocabularyRepository? vocabularyRepository;
   final ValueChanged<Future<void>>? onPendingVocabularyWrites;
   final CollectionVocabularyMutationsFactory? vocabularyMutationsFactory;
@@ -107,6 +112,7 @@ class CollectionDetail extends StatefulWidget {
   final CollectionQueryBinding? queryBinding;
   final SpeedSessionFactory? speedSessionFactory;
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
+  final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
@@ -128,6 +134,45 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   var _reviewLaunchKey = GlobalKey<ReviewLaunchState>();
   var _speedLaunchKey = GlobalKey<SpeedLaunchState>();
   Object? _launchKeysIdentity;
+  var _selectedSpeedKey = GlobalKey<SelectedSpeedLaunchState>();
+  double _selectionPanelHeight = 0;
+  bool _lastSelectionNonempty = false, _retainSelectionOffset = false;
+  Set<String>? _heldSelectionIds;
+  bool get _selectedScopeActive =>
+      _selection.active || _heldSelectionIds != null;
+  Set<String> get _scopeIds =>
+      _selection.active ? _selection.ids : _heldSelectionIds ?? const {};
+
+  CollectionQuerySnapshot _learningSnapshot(CollectionQuerySnapshot snapshot) =>
+      _selectedScopeActive ? snapshot.selected(_scopeIds) : snapshot;
+  Future<CollectionQuerySnapshot> _loadLearningSnapshot() async {
+    final b = widget.queryBinding!;
+    final fresh = await b.service.query(
+      collectionId: b.collectionId,
+      at: b.clock.now().toUtc(),
+      search: _selectedScopeActive ? '' : b.scope.search,
+      filters: _selectedScopeActive ? const {} : b.scope.filters,
+    );
+    return _learningSnapshot(fresh);
+  }
+
+  Future<DueLearningSession> _selectedReviewSession(
+    String id,
+    LearningDirection direction,
+  ) async {
+    final fresh = await _loadLearningSnapshot();
+    if (!_selectedScopeActive ||
+        !_directions.contains(direction) ||
+        (fresh.directions[direction]?.dueCount ?? 0) == 0) {
+      throw StateError('Selected review unavailable');
+    }
+    return widget.selectedReviewSessionFactory!(
+      id,
+      direction,
+      fresh.entries.map((e) => e.id).toSet(),
+    );
+  }
+
   bool _headerCompact = false;
 
   void _headerChanged(bool compact) {
@@ -511,6 +556,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           vocabularyRepository: widget.vocabularyRepository,
           onPendingVocabularyWrites: widget.onPendingVocabularyWrites,
           interchangeBuilder: widget.interchangeBuilder,
+          aiBuilder: widget.aiBuilder,
           categoriesRepository: widget.categoriesRepository,
           categoryManagementBuilder: widget.categoryManagementBuilder,
           settingsOnly: true,
@@ -640,6 +686,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               ),
                             );
                           },
+                  ),
+                ],
+              ),
+            if (widget.aiBuilder != null)
+              PikoFormSection(
+                title: copy.text('ai.title'),
+                children: [
+                  PikoNavigationRow(
+                    title: copy.text('ai.preview'),
+                    onTap: available() ? _openAi : null,
                   ),
                 ],
               ),
@@ -954,8 +1010,36 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
+  Future<void> _openAi() async {
+    final record = _currentCollection, builder = widget.aiBuilder;
+    if (record == null || builder == null || _openingEntry || _learningBusy) {
+      return;
+    }
+    final barrier = _writeBarrier, owner = _identity;
+    setState(() => _openingEntry = true);
+    barrier.freeze();
+    try {
+      await barrier.drain();
+      await _mutations?.awaitPending();
+      if (!mounted ||
+          owner != _identity ||
+          ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
+      await Navigator.of(context).push<Object?>(
+        MaterialPageRoute<Object?>(builder: (context) => builder(context, record)),
+      );
+    } finally {
+      barrier.release();
+      if (mounted && owner == _identity) {
+        setState(() => _openingEntry = false);
+        widget.queryBinding?.refresh();
+      }
+    }
+  }
+
   Future<void> _openEntry() async {
-    if (widget.interchangeBuilder == null) {
+    if (widget.interchangeBuilder == null && widget.aiBuilder == null) {
       await _openManualEntry();
       return;
     }
@@ -976,10 +1060,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 onTap: () => Navigator.of(context).pop('manual'),
               ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
-              PikoNavigationRow(
-                title: copy.text('json.importTab'),
-                onTap: () => Navigator.of(context).pop('import'),
-              ),
+              if (widget.interchangeBuilder != null)
+                PikoNavigationRow(
+                  title: copy.text('json.importTab'),
+                  onTap: () => Navigator.of(context).pop('import'),
+                ),
+              if (widget.aiBuilder != null)
+                PikoNavigationRow(
+                  title: copy.text('ai.action.generate'),
+                  onTap: () => Navigator.of(context).pop('ai'),
+                ),
             ],
           ),
         );
@@ -988,6 +1078,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     if (method == 'manual') await _openManualEntry();
     if (method == 'import') await _openInterchange();
+    if (method == 'ai') await _openAi();
   }
 
   Future<void> _openManualEntry() async {
@@ -1153,12 +1244,18 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }
 
   Widget _build(BuildContext context) {
+    final nonempty = _selection.ids.isNotEmpty;
+    if (_lastSelectionNonempty != nonempty) {
+      _retainSelectionOffset = !nonempty;
+      _lastSelectionNonempty = nonempty;
+    }
     final copy = PikoCopyScope.of(context);
     final launchIdentity = (widget.collectionId, _identity, _reviewIdentity);
     if (_launchKeysIdentity != launchIdentity) {
       _launchKeysIdentity = launchIdentity;
       _reviewLaunchKey = GlobalKey<ReviewLaunchState>();
       _speedLaunchKey = GlobalKey<SpeedLaunchState>();
+      _selectedSpeedKey = GlobalKey<SelectedSpeedLaunchState>();
     }
     final barrierForBuild = _writeBarrier;
     final registerForBuild = widget.onPendingVocabularyWrites;
@@ -1278,6 +1375,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               reviewIdentityForBuild == _reviewIdentity) {
                             setState(() {
                               if (busy) {
+                                if (_selection.active) {
+                                  _heldSelectionIds ??= _selection.ids;
+                                }
                                 _speedCompletedCount = null;
                                 _heldLearningSnapshot ??=
                                     widget.queryBinding!.snapshot;
@@ -1288,6 +1388,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                                 _openingReview = busy;
                               }
                               if (!_learningBusy) {
+                                _heldSelectionIds = null;
                                 _heldLearningSnapshot = null;
                               }
                             });
@@ -1387,7 +1488,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             safeAreaBottom: widget.queryBinding == null,
             key: ValueKey('collection-page-${widget.collectionId}'),
             interactionAnchor: _interactionAnchor,
-            physics: const CollectionScrollPhysics(),
+            physics: CollectionScrollPhysics(
+              retainSelectionOffset: () => _retainSelectionOffset,
+              onUserScroll: () => _retainSelectionOffset = false,
+            ),
             slivers: [
               if (widget.queryBinding != null)
                 PikoCollapsingHeader(
@@ -1569,94 +1673,153 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   mutations: _mutations,
                   selection: widget.queryBinding == null ? null : _selection,
                 ),
+              if (widget.queryBinding != null)
+                SliverToBoxAdapter(
+                  child: _selection.active && _selection.ids.isEmpty
+                      ? VocabularySelectionPanel(
+                          selection: _selection,
+                          matchingIds:
+                              widget.queryBinding!.snapshot?.entries
+                                  .map((e) => e.id)
+                                  .toList() ??
+                              const [],
+                          enabled: _queryControlsAvailable,
+                        )
+                      : SizedBox(
+                          key: const ValueKey('selection-end-clearance'),
+                          height: _selection.ids.isNotEmpty
+                              ? _selectionPanelHeight
+                              : MediaQuery.paddingOf(context).bottom,
+                        ),
+                ),
             ],
           );
           if (widget.queryBinding == null) return page;
-          return Column(
-            children: [
-              Expanded(child: page),
-              VocabularySelectionPanel(
-                speedAction:
-                    widget.selectedSpeedSessionFactory == null ||
-                        widget.vocabularyRepository == null ||
-                        _lastReadyCollection == null
-                    ? null
-                    : SelectedSpeedLaunch(
-                        key: ValueKey(
-                          'selected-speed-${widget.collectionId}-$_identity-$_reviewIdentity',
-                        ),
-                        collection: _lastReadyCollection!,
-                        selection: _selection,
-                        directions: _directions,
-                        factory: widget.selectedSpeedSessionFactory!,
-                        vocabularyRepository: widget.vocabularyRepository!,
-                        categoriesRepository: widget.categoriesRepository,
-                        enabled:
-                            ready &&
-                            _directionReady &&
-                            !_openingReview &&
-                            !_openingEntry &&
-                            _deleteRequest == null &&
-                            _renameRequest == null &&
-                            (_mutations?.isBusy != true || _openingSpeed) &&
-                            (widget.queryBinding!.ready || _openingSpeed) &&
-                            widget.queryBinding!.scope.viewReady &&
-                            !widget.queryBinding!.scope.viewPending,
-                        beforeLaunch: () async {
-                          barrierForBuild.freeze();
-                          await barrierForBuild.drain();
-                          await mutationsForBuild?.awaitPending();
-                        },
-                        loadScope: (selected) async {
-                          final binding = widget.queryBinding!;
-                          final snapshot = await binding.service.query(
-                            collectionId: binding.collectionId,
-                            at: binding.clock.now().toUtc(),
-                            search: binding.scope.search,
-                            filters: binding.scope.filters,
-                          );
-                          return SelectedSpeedScope(
-                            snapshot,
-                            selected,
-                            binding.scope.view.sort,
-                          );
-                        },
-                        onBusyChanged: (busy) {
-                          if (!mounted ||
-                              identityForBuild != _identity ||
-                              reviewIdentityForBuild != _reviewIdentity) {
-                            return;
-                          }
+          return Listener(
+            onPointerDown: (_) => _retainSelectionOffset = false,
+            onPointerSignal: (_) => _retainSelectionOffset = false,
+            child: Stack(
+              children: [
+                Positioned.fill(child: page),
+                if (_selection.ids.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: VocabularySelectionPanel(
+                      selection: _selection,
+                      matchingIds:
+                          widget.queryBinding!.snapshot?.entries
+                              .map((e) => e.id)
+                              .toList() ??
+                          const [],
+                      enabled: _queryControlsAvailable,
+                      onHeightChanged: (height) {
+                        if (mounted &&
+                            (_selectionPanelHeight - height).abs() > .1) {
                           setState(() {
-                            _openingSpeed = busy;
-                            if (busy) {
-                              _speedCompletedCount = null;
-                              _heldLearningSnapshot ??=
-                                  widget.queryBinding!.snapshot;
-                            } else {
-                              _heldLearningSnapshot = null;
+                            if (height < _selectionPanelHeight) {
+                              _retainSelectionOffset = true;
                             }
+                            _selectionPanelHeight = height;
                           });
-                          if (!busy) barrierForBuild.release();
-                        },
-                        onPendingWrites: registerForBuild,
-                        onSessionClosed: widget.queryBinding!.refresh,
-                        onCompleted: (count) {
-                          if (mounted) {
-                            setState(() => _speedCompletedCount = count);
-                          }
-                        },
-                      ),
-                selection: _selection,
-                matchingIds:
-                    widget.queryBinding!.snapshot?.entries
-                        .map((entry) => entry.id)
-                        .toList() ??
-                    const [],
-                enabled: _queryControlsAvailable,
-              ),
-            ],
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
           );
+        },
+      ),
+    );
+  }
+
+  Widget _selectedSpeedHeader({
+    required bool ready,
+    required CollectionWriteBarrier barrierForBuild,
+    required ValueChanged<Future<void>>? registerForBuild,
+    required int identityForBuild,
+    required int reviewIdentityForBuild,
+    required CollectionVocabularyMutations? mutationsForBuild,
+  }) {
+    final selectedCount =
+        widget.queryBinding?.snapshot?.selected(_scopeIds).entries.length ?? 0;
+    return Focus(
+      focusNode: _expandedSpeedFocus,
+      canRequestFocus: false,
+      child: SelectedSpeedLaunch(
+        availabilityChanges: widget.queryBinding,
+        actionBuilder: (context, open) => SpeedDirectionActions(
+          collection: _lastReadyCollection!,
+          counts: {
+            for (final direction in _directions) direction: selectedCount,
+          },
+          onPressed: open == null ? null : (direction) => open(direction),
+        ),
+        eligibleCount: selectedCount,
+        key: _selectedSpeedKey,
+        collection: _lastReadyCollection!,
+        selection: _selection,
+        directions: _directions,
+        factory: widget.selectedSpeedSessionFactory!,
+        vocabularyRepository: widget.vocabularyRepository!,
+        categoriesRepository: widget.categoriesRepository,
+        enabled:
+            ready &&
+            _directionReady &&
+            !_openingReview &&
+            !_openingEntry &&
+            _deleteRequest == null &&
+            _renameRequest == null &&
+            (_mutations?.isBusy != true || _openingSpeed) &&
+            (widget.queryBinding!.ready || _openingSpeed) &&
+            widget.queryBinding!.scope.viewReady &&
+            !widget.queryBinding!.scope.viewPending,
+        beforeLaunch: () async {
+          barrierForBuild.freeze();
+          await barrierForBuild.drain();
+          await mutationsForBuild?.awaitPending();
+        },
+        loadScope: (selected) async {
+          final binding = widget.queryBinding!;
+          final snapshot = await binding.service.query(
+            collectionId: binding.collectionId,
+            at: binding.clock.now().toUtc(),
+            search: binding.scope.search,
+            filters: binding.scope.filters,
+          );
+          return SelectedSpeedScope(
+            snapshot,
+            selected,
+            binding.scope.view.sort,
+          );
+        },
+        onBusyChanged: (busy) {
+          if (!mounted ||
+              identityForBuild != _identity ||
+              reviewIdentityForBuild != _reviewIdentity) {
+            return;
+          }
+          setState(() {
+            _openingSpeed = busy;
+            if (busy) {
+              if (_selection.active) _heldSelectionIds ??= _selection.ids;
+              _speedCompletedCount = null;
+              _heldLearningSnapshot ??= widget.queryBinding!.snapshot;
+            } else {
+              _heldSelectionIds = null;
+              _heldLearningSnapshot = null;
+            }
+          });
+          if (!busy) barrierForBuild.release();
+        },
+        onPendingWrites: registerForBuild,
+        onSessionClosed: widget.queryBinding!.refresh,
+        onCompleted: (count) {
+          if (mounted) {
+            setState(() => _speedCompletedCount = count);
+          }
         },
       ),
     );
@@ -1689,8 +1852,11 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         ],
       );
     }
-    final snapshot = _heldLearningSnapshot ?? binding.snapshot!;
-    if (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty) {
+    final snapshot = _learningSnapshot(
+      _heldLearningSnapshot ?? binding.snapshot!,
+    );
+    if (!_selectedScopeActive &&
+        (snapshot.allEntries.isEmpty || snapshot.entries.isEmpty)) {
       return const SizedBox.shrink();
     }
     final counts = {
@@ -1699,7 +1865,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     };
     final total = counts.values.fold<int>(0, (a, b) => a + b);
     final Widget normal;
-    if (total == 0 && !_openingReview) {
+    if (total == 0 && !_openingReview && !_selectedScopeActive) {
       final pending = snapshot.directions.entries.any(
         (direction) =>
             _directions.contains(direction.key) &&
@@ -1742,7 +1908,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       normal = ReviewLaunch(
         key: _reviewLaunchKey,
         collection: snapshot.collection,
-        factory: widget.reviewSessionFactory!,
+        factory: _selectedScopeActive
+            ? _selectedReviewSession
+            : widget.reviewSessionFactory!,
+        showZero: _selectedScopeActive,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
         beforeLaunch: beforeLaunch,
@@ -1759,15 +1928,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         dueCount: total,
         directionCounts: counts,
         availabilityChanges: binding,
-        scopeIdentity: (binding, binding.scope.search, binding.scope.filters),
+        scopeIdentity: (
+          binding,
+          _selectedScopeActive,
+          _scopeIds.join('|'),
+          binding.scope.search,
+          binding.scope.filters,
+        ),
         allowedDirections: _directions,
         directionCountsLoader: () async {
-          final fresh = await binding.service.query(
-            collectionId: binding.collectionId,
-            at: binding.clock.now().toUtc(),
-            search: binding.scope.search,
-            filters: binding.scope.filters,
-          );
+          final fresh = await _loadLearningSnapshot();
           return {
             for (final entry in fresh.directions.entries)
               if (_directions.contains(entry.key))
@@ -1787,7 +1957,22 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           canRequestFocus: false,
           child: normal,
         ),
-        if (widget.speedSessionFactory != null)
+        if (_selectedScopeActive &&
+            widget.selectedSpeedSessionFactory != null &&
+            widget.vocabularyRepository != null &&
+            _lastReadyCollection != null)
+          Padding(
+            padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
+            child: _selectedSpeedHeader(
+              ready: enabled,
+              barrierForBuild: _writeBarrier,
+              registerForBuild: widget.onPendingVocabularyWrites,
+              identityForBuild: _identity,
+              reviewIdentityForBuild: _reviewIdentity,
+              mutationsForBuild: _mutations,
+            ),
+          )
+        else if (widget.speedSessionFactory != null)
           Padding(
             padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
             child: Focus(
@@ -1839,7 +2024,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
     final binding = widget.queryBinding!;
-    final snapshot = _heldLearningSnapshot ?? binding.snapshot;
+    final rawSnapshot = _heldLearningSnapshot ?? binding.snapshot;
+    final snapshot = rawSnapshot == null
+        ? null
+        : _learningSnapshot(rawSnapshot);
     final resolved =
         ready && _directionReady && (binding.ready || _learningBusy);
     final directionError =
@@ -1981,8 +2169,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                     onPressed:
                         enabled &&
                             (speedCount ?? 0) > 0 &&
-                            widget.speedSessionFactory != null
-                        ? () => _speedLaunchKey.currentState?.openMerged()
+                            (widget.speedSessionFactory != null ||
+                                _selectedScopeActive &&
+                                    widget.selectedSpeedSessionFactory != null)
+                        ? () => _selectedScopeActive
+                              ? _selectedSpeedKey.currentState?.openMerged()
+                              : _speedLaunchKey.currentState?.openMerged()
                         : null,
                   ),
                 ),

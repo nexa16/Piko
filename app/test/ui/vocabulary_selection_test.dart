@@ -143,7 +143,7 @@ void main() {
       expect(h.selection(tester).ids, isEmpty);
       expect(indicator, findsOneWidget);
       expect(tester.getRect(card), rect);
-      await tester.tap(key('vocabulary-clear-selection'));
+      h.selection(tester).clear();
       await tester.pumpAndSettle();
       expect(indicator, findsNothing);
       expect(tester.getTopLeft(text), textOrigin);
@@ -152,7 +152,8 @@ void main() {
       await tester.pumpAndSettle();
       final scrollRect = tester.getRect(find.byType(Scrollable).first);
       final panelRect = tester.getRect(key('vocabulary-selection-panel'));
-      expect(scrollRect.bottom, lessThan(panelRect.top));
+      expect(scrollRect.bottom, greaterThan(panelRect.top));
+      expect(scrollRect.bottom, 900);
       final entries = tester
           .widget<CollectionDetail>(find.byType(CollectionDetail))
           .queryBinding!
@@ -162,7 +163,7 @@ void main() {
       await h.reveal(tester, last);
       expect(
         tester.getRect(last).bottom,
-        lessThanOrEqualTo(scrollRect.bottom + .1),
+        lessThanOrEqualTo(panelRect.top + .1),
       );
       expect(await h.json.exportCollection(h.fixture.owner.id), h.before);
     },
@@ -315,7 +316,7 @@ void main() {
   );
 
   testWidgets(
-    'German narrow enlarged panel stays outside the scroll viewport',
+    'German narrow enlarged panel overlays the full viewport with reachable controls',
     (tester) async {
       final h = SelectionHarness();
       await h.mount(tester, locale: 'de', width: 320, scale: 2);
@@ -336,7 +337,8 @@ void main() {
             tester.getSize(key('collection-compact-header')).height,
         greaterThanOrEqualTo(48),
       );
-      expect(viewport.bottom, lessThan(panel.top));
+      expect(viewport.bottom, 900);
+      expect(panel.top, lessThan(viewport.bottom));
       expect(panel.left, greaterThanOrEqualTo(0));
       expect(panel.right, lessThanOrEqualTo(320));
       expect(panel.bottom, lessThanOrEqualTo(900));

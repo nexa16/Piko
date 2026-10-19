@@ -28,28 +28,56 @@ class PikoFormSection extends StatelessWidget {
     required this.title,
     required this.children,
     super.key,
-  });
+  }) : explanation = null;
+  const PikoFormSection.explanation({
+    required this.title,
+    required String text,
+    super.key,
+  }) : explanation = text,
+       children = const [];
+  final String? explanation;
   final String title;
   final List<Widget> children;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.6')),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            pikoDesign.dimension('spacing.4'),
-            0,
-            pikoDesign.dimension('spacing.4'),
-            pikoDesign.dimension('spacing.2'),
+  Widget build(BuildContext context) => explanation != null
+      ? Padding(
+          padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.6')),
+          child: PikoFormGroup(
+            children: [
+              PikoFormFieldRow(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleSmall),
+                    SizedBox(height: pikoDesign.dimension('spacing.4')),
+                    Text(explanation!),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: Text(title, style: Theme.of(context).textTheme.titleSmall),
-        ),
-        PikoFormGroup(children: children),
-      ],
-    ),
-  );
+        )
+      : Padding(
+          padding: EdgeInsets.only(bottom: pikoDesign.dimension('spacing.6')),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  pikoDesign.dimension('spacing.4'),
+                  0,
+                  pikoDesign.dimension('spacing.4'),
+                  pikoDesign.dimension('spacing.2'),
+                ),
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              PikoFormGroup(children: children),
+            ],
+          ),
+        );
 }
 
 class PikoFormGroup extends StatelessWidget {

@@ -26,7 +26,7 @@ import 'support/entry_termination_fixture.dart' show hydratedRuntimeCopy;
 import 'support/round2_catalogue_fixture.dart';
 
 void main() {
-  final integration = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   testWidgets(
     'selected Speed on native Collection preserves cancellation, ordering and reopened learning',
     (tester) async {
@@ -52,6 +52,7 @@ void main() {
       var passed = false;
       Finder key(String value) => find.byKey(ValueKey(value));
       Future<void> reveal(Finder finder) async {
+        if (finder.hitTestable().evaluate().isNotEmpty) return;
         if (finder.evaluate().isEmpty) {
           tester
               .state<ScrollableState>(find.byType(Scrollable).first)
@@ -82,6 +83,26 @@ void main() {
           .selection!;
       CollectionDetail detail() =>
           tester.widget<CollectionDetail>(find.byType(CollectionDetail));
+      Future<void> openSelected() async {
+        final directions = detail().directionBinding!.value!.value.directions;
+        final chosen = directions.length == 1
+            ? directions.single
+            : LearningDirection.targetToNative;
+        final scroll = tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position;
+        scroll.jumpTo(0);
+        await tester.pumpAndSettle();
+        final expanded = key('collection-speed-${chosen.name}');
+        if (expanded.hitTestable().evaluate().isNotEmpty) {
+          await tap(expanded);
+        } else {
+          await tap(key('collection-speed-compact'));
+          final choice = key('learning-direction-${chosen.name}');
+          if (choice.evaluate().isNotEmpty) await tap(choice);
+        }
+      }
+
       Future<Map<String, Object?>> learning(PikoDatabase store) async => {
         for (final table in [
           'learning_items',
@@ -173,14 +194,15 @@ void main() {
         final scroll = tester
             .state<ScrollableState>(find.byType(Scrollable).first)
             .position;
+        scroll.jumpTo(0);
+        await tester.pumpAndSettle();
         final offset = scroll.pixels;
-        await tap(key('selected-speed-launch'));
+        await openSelected();
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         expect(selected.ids.length, 3);
         expect(scroll.pixels, closeTo(offset, .1));
-        await tap(key('selected-speed-launch'));
-        await tap(key('selected-speed-direction-targetToNative'));
+        await openSelected();
         expect(
           find.text(copy.text('selectedSpeed.included', {'count': 2})),
           findsOneWidget,
@@ -245,20 +267,13 @@ void main() {
           await tester.pumpAndSettle();
           scope.setSearch('Zebra');
           await tester.pumpAndSettle();
-          await tap(key('selected-speed-launch'));
+          await openSelected();
           expect(find.byType(SpeedSetupDialog), findsOneWidget);
           if (direction == PreferredDirection.targetToNative) {
             await tester.sendKeyEvent(LogicalKeyboardKey.escape);
             await tester.pumpAndSettle();
             expect(selected.ids, {f.entry.id});
-            await tap(key('selected-speed-launch'));
-            if (config.locale == 'en') {
-              await integration.convertFlutterSurfaceToImage();
-              await tester.pump();
-              await File('${directory.path}/selected-setup.png').writeAsBytes(
-                await integration.takeScreenshot('selected-setup'),
-              );
-            }
+            await openSelected();
           }
           await tap(find.text(copy.text('learn.startSpeed')));
           await tap(key('review-reveal-target'));

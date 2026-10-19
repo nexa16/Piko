@@ -32,11 +32,15 @@ void main() {
       final scroll = tester
           .state<ScrollableState>(find.byType(Scrollable).first)
           .position;
+      scroll.jumpTo(0);
+      await tester.pumpAndSettle();
+      expect(
+        key('collection-speed-targetToNative').hitTestable(),
+        findsOneWidget,
+      );
       final offset = scroll.pixels;
       final savedSelection = selection.ids;
-      await tester.tap(key('selected-speed-launch'));
-      await tester.pumpAndSettle();
-      await tester.tap(key('selected-speed-direction-targetToNative'));
+      await tester.tap(key('collection-speed-targetToNative'));
       await tester.pumpAndSettle();
       expect(find.text('Selected active words: 2'), findsOneWidget);
       expect(find.text('Included but hidden in the list: 1'), findsOneWidget);
@@ -44,9 +48,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(selection.ids, savedSelection);
       expect(scroll.pixels, closeTo(offset, .1));
-      await tester.tap(key('selected-speed-launch'));
-      await tester.pumpAndSettle();
-      await tester.tap(key('selected-speed-direction-targetToNative'));
+      await tester.tap(key('collection-speed-targetToNative'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Start Speed'));
       await tester.tap(find.text('Start Speed'));

@@ -19,3 +19,6 @@ research-private/
 # Original handoff and local-only planning references
 /docs/HANDOFF.md
 /.local/
+
+# Supabase CLI local cache
+/supabase/.temp/

@@ -66,6 +66,9 @@ void main() {
   testWidgets(
     'Detail changes directional launch owners, compact counts and statuses live without altering snapshot',
     (tester) async {
+      tester.view.physicalSize = const Size(800, 450);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final repository = HeldDirectionSettings('both');
       final preference = PreferredDirectionController(
         repository: repository,
@@ -174,6 +177,11 @@ void main() {
         1,
         1,
       ]);
+      final scroll = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      scroll.jumpTo(scroll.maxScrollExtent);
+      await tester.pumpAndSettle();
       for (final mode in ['review', 'speed']) {
         final compact = find.byKey(ValueKey('collection-$mode-compact'));
         expect(compact.hitTestable(), findsOneWidget);

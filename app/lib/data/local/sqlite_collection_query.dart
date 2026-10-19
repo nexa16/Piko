@@ -151,6 +151,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
           row.read<int>('item_id'): row.read<String>('expires_at'),
       };
       final directions = <LearningDirection, CollectionDirectionSnapshot>{};
+      final allDirections = <LearningDirection, CollectionDirectionSnapshot>{};
       for (final direction in LearningDirection.values) {
         // Missing/corrupt learning never becomes a successful zero-work state,
         // even when the current filters hide the damaged vocabulary.
@@ -166,6 +167,11 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
                 .containsAll(entryIds)) {
           throw CollectionQueryFailure.incompleteLearning;
         }
+        allDirections[direction] = CollectionDirectionSnapshot(
+          review: await unfiltered.dueMemberships(at: at),
+          newSpeedItems: const [],
+          items: allItems,
+        );
         final scoped = await learning.forCollection(
           collectionId: collectionId,
           direction: direction,
@@ -215,6 +221,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
         categoryValues: values,
         assignments: assignments,
         directions: directions,
+        allDirections: allDirections,
       );
     });
   }
