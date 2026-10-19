@@ -1133,18 +1133,18 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               PikoNavigationRow(
-                title: copy.text('entry.manualMethod'),
+                title: copy.text('entry.methodManual'),
                 onTap: () => Navigator.of(context).pop('manual'),
               ),
               SizedBox(height: pikoDesign.dimension('spacing.2')),
               if (widget.interchangeBuilder != null)
                 PikoNavigationRow(
-                  title: copy.text('json.importTab'),
+                  title: copy.text('entry.methodJson'),
                   onTap: () => Navigator.of(context).pop('import'),
                 ),
               if (widget.aiBuilder != null)
                 PikoNavigationRow(
-                  title: copy.text('ai.action.generate'),
+                  title: copy.text('entry.methodAi'),
                   onTap: () => Navigator.of(context).pop('ai'),
                 ),
             ],
@@ -1635,6 +1635,57 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                                 ],
                               );
                             }
+                            if (_genuinelyEmpty) {
+                              final enabled =
+                                  _deleteRequest == null &&
+                                  _renameRequest == null &&
+                                  !_openingEntry &&
+                                  !_learningBusy &&
+                                  _mutations?.isBusy != true;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  heading,
+                                  SizedBox(
+                                    height: pikoDesign.dimension('spacing.2'),
+                                  ),
+                                  Text(copy.text('collection.empty')),
+                                  SizedBox(
+                                    height: pikoDesign.dimension('spacing.3'),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Tooltip(
+                                      message: copy.text('action.addEntry'),
+                                      excludeFromSemantics: true,
+                                      child: Semantics(
+                                        label: copy.text('action.addEntry'),
+                                        button: true,
+                                        enabled: enabled,
+                                        onTap: enabled ? _openEntry : null,
+                                        child: ExcludeSemantics(
+                                          child: PikoButton(
+                                            key: const ValueKey(
+                                              'collection-empty-add',
+                                            ),
+                                            label: copy.text(
+                                              'collection.addFirstWord',
+                                            ),
+                                            icon: const PikoIcon(
+                                              PikoIconName.plus,
+                                            ),
+                                            variant: PikoButtonVariant.primary,
+                                            onPressed: enabled
+                                                ? _openEntry
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
                             return PikoHeadingAction(
                               heading: heading,
                               gap: pikoDesign.dimension(
@@ -1730,7 +1781,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 ),
               ),
               if (_lastReadyCollection != null &&
-                  widget.vocabularyRepository != null)
+                  widget.vocabularyRepository != null &&
+                  !(_genuinelyEmpty && widget.entrySessionFactory != null))
                 CollectionVocabulary(
                   sliver: true,
                   key: ValueKey('collection-vocabulary-${widget.collectionId}'),

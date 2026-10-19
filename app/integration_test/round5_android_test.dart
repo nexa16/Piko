@@ -287,7 +287,7 @@ void main() {
         await tap(find.byTooltip(copy.text('common.close')));
         // New-entry confirmation keeps the Collection default and creates Active.
         await tap(button(copy.text('action.new')));
-        await tap(find.text(copy.text('entry.manualMethod')));
+        await tap(find.text(copy.text('entry.methodManual')));
         await present(find.byType(EntrySessionScreen));
         await tester.enterText(key('draft-target'), 'eau');
         await tester.enterText(key('draft-native'), 'Wasser');

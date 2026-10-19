@@ -217,7 +217,7 @@ void main() {
         }
         await tap(find.byTooltip(copy.text('common.close')));
         await tap(find.byTooltip(copy.text('action.addEntry')));
-        await tap(button('entry.manualMethod'));
+        await tap(button('entry.methodManual'));
         await review.waitUntil(
           tester,
           () => find.byType(EntrySessionScreen).evaluate().isNotEmpty,
@@ -340,7 +340,7 @@ void main() {
           () => find.byType(EntrySessionScreen).evaluate().isEmpty,
         );
         await tap(find.byTooltip(copy.text('action.addEntry')));
-        await tap(button('entry.manualMethod'));
+        await tap(button('entry.methodManual'));
         await review.waitUntil(
           tester,
           () => find.byType(EntrySessionScreen).evaluate().isNotEmpty,

@@ -7,6 +7,9 @@ import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
 import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/collection_search_field.dart';
+import 'package:piko/features/entry/entry_session_route.dart';
+import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/features/interchange/vocabulary_json_page.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
@@ -56,11 +59,78 @@ void main() {
           }
           await tester.tap(find.byKey(ValueKey('collection-${collection.id}')));
           await flush(tester, db);
-          await tester.tap(find.byTooltip(copy.text('action.addEntry')));
+          final addFirst = find.byKey(const ValueKey('collection-empty-add'));
+          final explanation = find.text(copy.text('collection.empty'));
+          final heading = find.text(copy.text('collection.vocabulary'));
+          expect(addFirst, findsOneWidget);
+          expect(explanation, findsOneWidget);
+          expect(find.byType(CollectionSearchField), findsNothing);
+          expect(
+            find.byKey(const ValueKey('collection-filters')),
+            findsNothing,
+          );
+          expect(
+            tester.getRect(explanation).top,
+            greaterThanOrEqualTo(tester.getRect(heading).bottom),
+          );
+          expect(
+            tester.getRect(addFirst).top,
+            greaterThanOrEqualTo(tester.getRect(explanation).bottom),
+          );
+          expect(
+            tester.widget<PikoButton>(addFirst).variant,
+            PikoButtonVariant.primary,
+          );
+          final beforeLearning = await tester.runAsync(
+            () async =>
+                (await db.customSelect('SELECT * FROM learning_items').get())
+                    .map((r) => r.data)
+                    .toList(),
+          );
+          await tester.tap(addFirst);
           await tester.pumpAndSettle();
-          expect(find.text(copy.text('entry.manualMethod')), findsOneWidget);
+          expect(find.text(copy.text('entry.methodManual')), findsOneWidget);
+          expect(find.text(copy.text('entry.methodJson')), findsOneWidget);
+          expect(find.text(copy.text('entry.methodAi')), findsNothing);
+          await tester.tap(find.byTooltip(copy.text('common.close')));
+          await flush(tester, db);
+          await tester.tap(addFirst);
+          await tester.pumpAndSettle();
           await tester.tap(
-            find.widgetWithText(PikoNavigationRow, copy.text('json.importTab')),
+            find.widgetWithText(
+              PikoNavigationRow,
+              copy.text('entry.methodManual'),
+            ),
+          );
+          await flush(tester, db);
+          expect(find.byType(EntrySessionRoute), findsOneWidget);
+          await tester.binding.handlePopRoute();
+          await flush(tester, db);
+          expect(find.byType(EntrySessionRoute), findsNothing);
+          expect(
+            (await tester.runAsync(
+              () => SqliteVocabularyRepository(
+                db,
+              ).watchByCollection(collection.id).first,
+            ))!,
+            isEmpty,
+          );
+          expect(
+            await tester.runAsync(
+              () async =>
+                  (await db.customSelect('SELECT * FROM learning_items').get())
+                      .map((r) => r.data)
+                      .toList(),
+            ),
+            beforeLearning,
+          );
+          await tester.tap(addFirst);
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.widgetWithText(
+              PikoNavigationRow,
+              copy.text('entry.methodJson'),
+            ),
           );
           await flush(tester, db);
           expect(find.byType(VocabularyJsonPage), findsOneWidget);
@@ -68,7 +138,7 @@ void main() {
           final input = find.byKey(const ValueKey('json-input'));
           await tester.enterText(input, '  incomplete raw JSON  ');
           await pressJson(tester, 'json.expandInput', language: language);
-          await pressJson(tester,'json.analyze',language:language);
+          await pressJson(tester, 'json.analyze', language: language);
           final group = find.byKey(const ValueKey('json-group-example'));
           await tester.ensureVisible(group);
           await tester.tap(group);
@@ -103,8 +173,8 @@ void main() {
             'schemaVersion': 5,
             'collections': [
               {
-                'targetLanguage': {'kind':'catalog','id':'fr'},
-                'nativeLanguage': {'kind':'catalog','id':'de'},
+                'targetLanguage': {'kind': 'catalog', 'id': 'fr'},
+                'nativeLanguage': {'kind': 'catalog', 'id': 'de'},
                 'entries': [
                   {'targetText': 'One', 'nativeText': 'Eins'},
                 ],
@@ -130,9 +200,23 @@ void main() {
             language: language,
           );
           await flush(tester, db);
-          await tester.tap(find.byTooltip(copy.text('common.back')));
+          final settingsBack = find.byTooltip(copy.text('common.back'));
+          await tester.ensureVisible(settingsBack);
+          await tester.pumpAndSettle();
+          expect(settingsBack.hitTestable(), findsOneWidget);
+          await tester.tap(settingsBack);
           await flush(tester, db);
           expect(find.byType(CollectionDetail), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('collection-empty-add')),
+            findsNothing,
+          );
+          expect(find.text(copy.text('collection.empty')), findsNothing);
+          expect(find.byType(CollectionSearchField), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('collection-filters')),
+            findsOneWidget,
+          );
           expect(tester.takeException(), isNull);
         } finally {
           await tester.pumpWidget(const SizedBox());

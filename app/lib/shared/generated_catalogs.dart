@@ -1237,6 +1237,18 @@ const copyCatalog = <String, Object?>{
 "de": "Manuell eingeben",
 "en": "Manual entry",
 },
+"entry.methodAi": <String, Object?>{
+"de": "Mit AI generieren",
+"en": "Generate with AI",
+},
+"entry.methodJson": <String, Object?>{
+"de": "JSON importieren",
+"en": "Import JSON",
+},
+"entry.methodManual": <String, Object?>{
+"de": "Manuell eingeben",
+"en": "Enter manually",
+},
 "entry.nativePlaceholder": <String, Object?>{
 "de": "Übersetzung in der Muttersprache",
 "en": "Native translation",
