@@ -1,6 +1,20 @@
 # Documentation verification
 
-The [manifest](build-manifest.json) identifies the exact normal APK, committed application source, configuration and original captures. This page separates ordinary-product observation, instrumented checks and remaining acceptance gaps.
+The [manifest](build-manifest.json) identifies the historical gallery's normal APK, committed application source, configuration and original captures. This page separates current verification from those historical baselines; older captures are not relabeled as a newer candidate.
+
+## Current development verification
+
+The current app checkpoint is `4eef86b` (development build15), with backend correction `8dcc9cc`. Ordinary builds keep AI disabled; a separately configured private build exercises the managed provider. These are development candidates, not a store release.
+
+The full host run at `0ab8a74` recorded 1,390 passes and five failures. Explicit fixture repairs were followed by 14 passing affected tests and seven passing selection checks; the later progress/summary wrapping change passed 44 affected tests. This is a full run plus focused repairs, not a fully passing full rerun. Shared Node checks passed 110 tests; the backend passed 49 tests. Analysis and generated-source/documentation checks passed at their recorded checkpoints.
+
+Actual Android checks cover EN/DE progress and summary wrapping, the shared add-method chooser, the empty Collection's first-save transition, native JSON clipboard input and genuine document-provider write failures/retries. Normal in-place updates and restoration preserve all 17 application tables, identities, learning, settings and a separate sentinel on an isolated synthetic installation. The existing protected Play-image database could not be inspected; preservation there is not inferred.
+
+The focused `count_refresh_android_test.dart` entry runs three native scenarios using production header/launch widgets with isolated read barriers: retained geometry/counts after delayed or failed refresh, rejection of obsolete scope results and one authoritative eligibility read after rapid taps. All three and runner teardown passed; the 13 original header tests also passed. A first attempt to reuse the entire host geometry suite on Android failed because its fixed viewport assumptions did not represent native insets. The focused entry uses actual Android dimensions and does not relax the behavioral assertions.
+
+Private managed-provider Android checks exercise generation, prompt refinement, selective adoption, review correction, related-card Hints and category additions, followed by real learning and reopen. Offline and service-budget failures preserve raw input and saved data; withdrawal revokes the synthetic identity and deletes its live analysis payloads while retaining accounting. Language quality was reviewed only for the small synthetic EN/DE sample. One generation response was correctly rejected before a request-specific server schema correction; a gap response explicitly remained partial. Neither schema validity nor this sample establishes general linguistic quality or complete coverage. Independent verification of every provider-managed internal copy/backup remains a limitation.
+
+The following sections retain earlier source-bound baselines and gallery evidence. They do not replace the current checkpoint above.
 
 ## Language identity and current JSON interchange
 
@@ -72,4 +86,4 @@ The documentation validator checks source links, anchors, image checksums and me
 
 ## Limits
 
-Physical-phone install/update and owner acceptance remain open. There is no complete TalkBack, OS/keyboard/locale or fresh-machine matrix, and no release/store readiness claim. Source-bound package checks do not imply that every scenario was replayed in the final ordinary-product capture session. The deferred AI package is absent from this candidate.
+Physical-phone install/update coverage remains unverified; owner manual functional testing is optional. There is no complete TalkBack, OS/keyboard/locale or fresh-machine matrix, and no release/store readiness claim. Source-bound checks do not imply that every scenario was replayed in the historical ordinary-product gallery. The historical Recents duplication cause, an older instrumented discard-dialog transient and the complete historical preview palette matrix remain unresolved.

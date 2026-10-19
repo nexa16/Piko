@@ -142,9 +142,12 @@ class HeaderHarness {
     String language = 'en',
     double scale = 1,
     String name = 'Words',
+    bool nativeView = false,
   }) async {
-    tester.view.physicalSize = const Size(320, 800);
-    tester.view.devicePixelRatio = 1;
+    if (!nativeView) {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+    }
     locale.value = Locale(language);
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox());
