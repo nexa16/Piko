@@ -14,6 +14,28 @@ class SyntheticAccess implements AiAccess {
   }
 }
 
+class StoppableSyntheticAccess extends SyntheticAccess
+    implements AiPilotLocalStop {
+  bool stopped = false;
+  int withdrawalTokens = 0;
+  @override
+  Future<String?> accessToken() async {
+    if (stopped) throw AiFailure.accessDenied;
+    return super.accessToken();
+  }
+
+  @override
+  Future<void> stopPilotLocally() async {
+    stopped = true;
+  }
+
+  @override
+  Future<String?> withdrawalAccessToken() async {
+    withdrawalTokens++;
+    return 'synthetic-withdrawal-session';
+  }
+}
+
 AiRequest request({String goal = 'Hotel B1'}) => AiRequest(
   id: '00000000-0000-4000-8000-000000000001',
   action: AiAction.generate,
@@ -130,6 +152,61 @@ void main() {
     r.response.write(jsonEncode(value));
     await r.response.close();
   }
+
+  test(
+    'real TLS pilot controls remain explicit and failed withdrawal blocks later generation while retry uses retained identity',
+    () async {
+      final access = StoppableSyntheticAccess(), operations = <String>[];
+      var rejectWithdrawal = true;
+      final host = await server((r) async {
+        final operation = r.uri.queryParameters['pilot'];
+        expect(r.method, 'POST');
+        expect(operation, isNotNull);
+        operations.add(operation!);
+        final data = jsonDecode(await utf8.decoder.bind(r).join()) as Map;
+        if (operation == 'withdraw') {
+          expect(
+            r.headers.value(HttpHeaders.authorizationHeader),
+            'Bearer synthetic-withdrawal-session',
+          );
+          await respond(
+            r,
+            rejectWithdrawal ? 503 : 200,
+            rejectWithdrawal ? {'code': 'unavailable'} : {'withdrawn': true},
+          );
+        } else {
+          expect(
+            r.headers.value(HttpHeaders.authorizationHeader),
+            'Bearer synthetic-owner-session',
+          );
+          if (operation == 'consent') expect(data['version'], 'synthetic-v2');
+          await respond(r, 200, {
+            'version': 'synthetic-v2',
+            'consented': operation == 'consent',
+          });
+        }
+      });
+      final p = ManagedAiProvider(
+        endpoint: host.uri,
+        access: access,
+        enabled: true,
+        client: host.client,
+      );
+      addTearDown(p.close);
+      expect((await p.pilot('notice'))['consented'], false);
+      expect(
+        (await p.pilot('consent', {'version': 'synthetic-v2'}))['consented'],
+        true,
+      );
+      await expectLater(p.pilot('withdraw'), throwsA(AiFailure.unavailable));
+      expect(access.stopped, true);
+      await expectLater(p.generate(request()), throwsA(AiFailure.accessDenied));
+      rejectWithdrawal = false;
+      expect((await p.pilot('withdraw'))['withdrawn'], true);
+      expect(operations, ['notice', 'consent', 'withdraw', 'withdraw']);
+      expect(access.withdrawalTokens, 2);
+    },
+  );
 
   test(
     'disabled path rejects before credentials or any HTTP request',
