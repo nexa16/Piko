@@ -37,8 +37,9 @@ Future<void> tapVisible(WidgetTester t, Finder f) async {
       if (t.view.viewInsets.bottom == 0) {
         stable ??= DateTime.now();
         if (DateTime.now().difference(stable) >=
-            const Duration(milliseconds: 200))
+            const Duration(milliseconds: 200)) {
           break;
+        }
       } else {
         stable = null;
       }
