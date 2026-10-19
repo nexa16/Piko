@@ -262,4 +262,46 @@ void main() {
       expect(timers.last.isActive, isFalse);
     },
   );
+
+  test(
+    'same-scope refresh and failure retain last successful count; fresh zero replaces it',
+    () async {
+      final calls = <Completer<Iterable<ReviewDueMembership>>>[];
+      final count = CollectionReviewCount(
+        collectionId: 'owner',
+        policy: CollectionReviewCountPolicy.dueDirectionCards,
+        loader: ({required collectionId, required at}) {
+          final call = Completer<Iterable<ReviewDueMembership>>();
+          calls.add(call);
+          return call.future;
+        },
+      );
+      addTearDown(count.dispose);
+      final initial = count.refresh();
+      expect(count.value, isNull);
+      calls[0].complete([
+        membership(
+          entry: 'one',
+          item: 1,
+          direction: LearningDirection.targetToNative,
+          regularDue: true,
+        ),
+      ]);
+      await initial;
+      final failed = count.refresh();
+      expect(count.loading, isTrue);
+      expect(count.value, 1);
+      expect(count.directionCounts[LearningDirection.targetToNative], 1);
+      calls[1].completeError(StateError('local unavailable'));
+      await failed;
+      expect(count.value, 1);
+      expect(count.error, isA<StateError>());
+      final zero = count.refresh();
+      expect(count.value, 1);
+      calls[2].complete(const []);
+      await zero;
+      expect(count.value, 0);
+      expect(count.error, isNull);
+    },
+  );
 }

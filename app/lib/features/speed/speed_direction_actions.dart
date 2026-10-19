@@ -14,10 +14,13 @@ class SpeedDirectionActions extends StatelessWidget {
     required this.collection,
     required this.counts,
     this.onPressed,
+    this.countsUnknown = false,
+    this.recheckCounts = false,
   });
   final CollectionRecord collection;
   final Map<LearningDirection, int> counts;
   final ValueChanged<LearningDirection>? onPressed;
+  final bool countsUnknown, recheckCounts;
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context), d = pikoDesign;
@@ -28,7 +31,8 @@ class SpeedDirectionActions extends StatelessWidget {
     Widget action(LearningDirection direction) {
       final count = counts[direction]!;
       final label = reviewDirectionLabel(collection, direction);
-      final activate = count > 0 && onPressed != null
+      final activate =
+          (count > 0 || countsUnknown || recheckCounts) && onPressed != null
           ? () => onPressed!(direction)
           : null;
       return Semantics(
@@ -38,14 +42,14 @@ class SpeedDirectionActions extends StatelessWidget {
             ? copy.text('r2.speedDirectionOne', {'direction': label})
             : copy.text('r2.speedDirectionAction', {
                 'direction': label,
-                'count': count,
+                'count': countsUnknown ? '…' : count,
               }),
         onTap: activate,
         child: ExcludeSemantics(
           child: PikoButton(
             key: ValueKey('collection-speed-${direction.name}'),
             label:
-                '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': count})}',
+                '${copy.text('action.speed')}\n${copy.text('r2.speedDirectionCount', {'direction': label, 'count': countsUnknown ? '…' : count})}',
             variant: PikoButtonVariant.speed,
             icon: const PikoIcon(PikoIconName.zap),
             expandLabel: true,

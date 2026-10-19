@@ -460,6 +460,8 @@ globalThis.PIKO_COPY = {
 "view.collapseAll":{"en":"Collapse all","de":"Alle einklappen"},
 "view.expandAll":{"en":"Expand all","de":"Alle ausklappen"},
     "entry.chooseMethod":{"en":"Add vocabulary","de":"Vokabeln hinzufügen"},
+    "collection.countRefreshing":{"en":"Updating counts · last known values","de":"Zahlen werden aktualisiert · zuletzt bekannte Werte"},
+    "collection.countStale":{"en":"Counts could not update · last known values","de":"Zahlen konnten nicht aktualisiert werden · zuletzt bekannte Werte"},
     "entry.manualMethod":{"en":"Manual entry","de":"Manuell eingeben"},
     "template.topic":{"en":"Topic","de":"Thema"},
     "template.food":{"en":"Food","de":"Essen"},

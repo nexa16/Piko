@@ -1001,6 +1001,14 @@ const copyCatalog = <String, Object?>{
 "de": "Intensiv lernen, {count} Richtungsaufgaben",
 "en": "Speed, {count} directional items",
 },
+"collection.countRefreshing": <String, Object?>{
+"de": "Zahlen werden aktualisiert · zuletzt bekannte Werte",
+"en": "Updating counts · last known values",
+},
+"collection.countStale": <String, Object?>{
+"de": "Zahlen konnten nicht aktualisiert werden · zuletzt bekannte Werte",
+"en": "Counts could not update · last known values",
+},
 "collection.created": <String, Object?>{
 "de": "{name} erstellt",
 "en": "Created {name}",

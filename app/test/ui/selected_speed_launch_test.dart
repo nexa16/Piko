@@ -25,7 +25,7 @@ class Harness {
   final requests = <(LearningDirection, List<String>, int)>[];
   final busy = <bool>[];
   final sessions = <SpeedLearningSession>[];
-  bool failDrain = false, failFactory = false;
+  bool failDrain = false, failFactory = false, recheckCounts = false;
   Completer<void>? gate;
   final pending = <Future<void>>[];
   SelectedSpeedScope scope(Set<String> ids) => SelectedSpeedScope(
@@ -74,6 +74,7 @@ class Harness {
         home: Scaffold(
           body: SelectedSpeedLaunch(
             collection: owner,
+            recheckCounts: recheckCounts,
             selection: selection,
             directions: directions,
             loadScope: (ids) async => scope(ids),
@@ -261,6 +262,97 @@ void main() {
       expect(h.sessions.single.isStopped, isTrue);
       expect(find.byType(SpeedSessionRoute), findsNothing);
       expect(h.selection.ids.length, 4);
+    },
+  );
+  testWidgets(
+    'held selected-Speed eligibility cannot retarget a changed UUID scope',
+    (tester) async {
+      final h = Harness();
+      final gate = Completer<SelectedSpeedScope>();
+      final requested = <Set<String>>[];
+      final initial = h.selection.ids;
+      Future<SpeedLearningSession> prepare({
+        required String collectionId,
+        required LearningDirection direction,
+        required List<String> orderedEntryIds,
+        required int poolSize,
+      }) async {
+        throw StateError('Stale selection must never prepare a session');
+      }
+
+      await tester.pumpWidget(
+        PikoApp(
+          home: Scaffold(
+            body: ListenableBuilder(
+              listenable: h.selection,
+              builder: (context, _) => SelectedSpeedLaunch(
+                collection: owner,
+                selection: h.selection,
+                directions: h.directions,
+                scopeIdentity: (h.selection.ids.toList()..sort()).join('|'),
+                eligibleCount: 2,
+                recheckCounts: true,
+                vocabularyRepository: h.repository,
+                beforeLaunch: () async {},
+                onBusyChanged: h.busy.add,
+                loadScope: (ids) {
+                  requested.add(ids);
+                  return gate.future;
+                },
+                factory: prepare,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('selected-speed-launch')));
+      await tester.pump();
+      expect(requested, [initial]);
+      h.selection.toggle('b');
+      await tester.pump();
+      gate.complete(h.scope(initial));
+      await tester.pumpAndSettle();
+      expect(find.byType(SpeedSetupDialog), findsNothing);
+      expect(find.byType(SpeedSessionRoute), findsNothing);
+      expect(requested, [initial]);
+      expect(h.busy, [true, false]);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      h.selection.dispose();
+    },
+  );
+
+  testWidgets(
+    'refresh eligibility failure remains before setup with explicit safe retry',
+    (tester) async {
+      final h = Harness()
+        ..recheckCounts = true
+        ..failDrain = true;
+      await h.mount(tester);
+      await h.open(tester);
+      expect(find.byType(SpeedSetupDialog), findsNothing);
+      expect(
+        find.text(PikoCopy('en').text('learn.prepareFailed')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('selected-speed-retry')),
+        findsOneWidget,
+      );
+      expect(h.requests, isEmpty);
+      expect(h.selection.ids.length, 4);
+      expect(tester.takeException(), isNull);
+      h.failDrain = false;
+      await tester.tap(find.byKey(const ValueKey('selected-speed-retry')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SpeedSetupDialog), findsOneWidget);
+      expect(h.requests, isEmpty);
+      expect(h.selection.ids.length, 4);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      await Future.wait(h.pending);
     },
   );
 }

@@ -1,4 +1,5 @@
 import '../../data/categories_repository.dart';
+import '../../data/learning_item.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/clock.dart';
@@ -48,43 +49,55 @@ class CollectionReviewEntryPoint extends StatelessWidget {
     policy: policy,
     clock: clock,
     builder: (context, count, retry) {
-      if (count.value != null) {
-        final total = count.directionCounts.values.fold(0, (a, b) => a + b);
-        if (total == 0) {
-          if (presentation == ReviewLaunchPresentation.collectionQuick) {
-            return const SizedBox.shrink();
-          }
-          // A retry obligation is never presented as successful completion.
-          return count.pendingRetryCount > 0
-              ? Text(PikoCopyScope.of(context).text('r2.pending'))
-              : const SizedBox.shrink();
-        }
-        return ReviewLaunch(
-          collection: collection,
-          factory: factory,
-          vocabularyRepository: vocabularyRepository,
-          categoriesRepository: categoriesRepository,
-          beforeLaunch: beforeLaunch,
-          onPendingWrites: onPendingWrites,
-          onBusyChanged: onBusyChanged,
-          presentation: presentation,
-          dueCount: total,
-          directionCounts: count.directionCounts,
-          directionCountsLoader: () async => directionalReviewCounts(
-            await loader(collectionId: collection.id, at: clock.now().toUtc()),
-          ),
-          enabled: enabled,
-          onSessionClosed: retry,
-        );
-      }
       final copy = PikoCopyScope.of(context);
-      final status = count.error == null
-          ? copy.text('collection.reviewLoading')
-          : copy.text('collection.reviewLoadFailed');
-      final content = Column(
+      final unknown = count.value == null;
+      final counts = unknown
+          ? {for (final direction in LearningDirection.values) direction: 0}
+          : count.directionCounts;
+      final total = counts.values.fold<int>(0, (a, b) => a + b);
+      if (!unknown && total == 0 && !count.loading && count.error == null) {
+        return count.pendingRetryCount > 0 &&
+                presentation != ReviewLaunchPresentation.collectionQuick
+            ? Text(copy.text('r2.pending'))
+            : const SizedBox.shrink();
+      }
+      final status = count.error != null
+          ? copy.text(
+              unknown ? 'collection.reviewLoadFailed' : 'collection.countStale',
+            )
+          : count.loading
+          ? copy.text(
+              unknown
+                  ? 'collection.reviewLoading'
+                  : 'collection.countRefreshing',
+            )
+          : ' ';
+      return Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ReviewLaunch(
+            collection: collection,
+            factory: factory,
+            vocabularyRepository: vocabularyRepository,
+            categoriesRepository: categoriesRepository,
+            beforeLaunch: beforeLaunch,
+            onPendingWrites: onPendingWrites,
+            onBusyChanged: onBusyChanged,
+            presentation: presentation,
+            dueCount: total,
+            directionCounts: counts,
+            countsUnknown: unknown,
+            recheckCounts: count.loading || count.error != null,
+            directionCountsLoader: () async => directionalReviewCounts(
+              await loader(
+                collectionId: collection.id,
+                at: clock.now().toUtc(),
+              ),
+            ),
+            enabled: enabled,
+            onSessionClosed: retry,
+          ),
           Semantics(
             liveRegion: true,
             child: Text(
@@ -103,13 +116,6 @@ class CollectionReviewEntryPoint extends StatelessWidget {
             ),
         ],
       );
-      if (presentation == ReviewLaunchPresentation.collectionQuick) {
-        return SizedBox(
-          width: pikoDesign.dimension('components.collectionReview.quickWidth'),
-          child: content,
-        );
-      }
-      return content;
     },
   );
 }
