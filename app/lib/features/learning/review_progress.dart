@@ -52,9 +52,11 @@ class ReviewProgress extends StatelessWidget {
                         key: const ValueKey('review-completed-group'),
                       ),
                       Text(
-                        copy.text('learn.firstTryGroup', {
-                          'correct': progress.firstTryCorrect,
-                        }),
+                        _keepFinalWordsTogether(
+                          copy.text('learn.firstTryGroup', {
+                            'correct': progress.firstTryCorrect,
+                          }),
+                        ),
                         key: const ValueKey('review-first-try-group'),
                       ),
                     ],
@@ -79,4 +81,13 @@ class ReviewProgress extends StatelessWidget {
       ),
     );
   }
+}
+
+// Keep the final label words on one line (for example, "Versuch richtig")
+// without changing the catalog wording or the complete counter semantics.
+String _keepFinalWordsTogether(String label) {
+  final lastSpace = label.lastIndexOf(' ');
+  return lastSpace < 0
+      ? label
+      : label.replaceRange(lastSpace, lastSpace + 1, '\u00a0');
 }

@@ -56,7 +56,7 @@ void main() {
           copy.text('learn.completedGroup', {'completed': 1, 'total': 2}),
         );
         expect(
-          tester.widget<Text>(firstTry).data,
+          tester.widget<Text>(firstTry).data!.replaceAll('\u00a0', ' '),
           copy.text('learn.firstTryGroup', {'correct': 1}),
         );
         expect(tester.getRect(completed).top, greaterThan(direction.bottom));
