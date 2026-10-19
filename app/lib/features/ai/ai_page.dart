@@ -344,60 +344,6 @@ class _AiPageState extends State<AiPage> {
           label: _text('ai.continue'),
           onPressed: controller.continueGeneration,
         ),
-      if (widget.provider is AiPilotAccess && ready)
-        PikoFormSection(
-          title: _text('ai.feedbackTitle'),
-          children: [
-            PikoFormFieldRow(
-              child: PikoField(
-                label: _text('ai.feedback'),
-                child: TextField(
-                  key: const ValueKey('ai-feedback'),
-                  controller: feedback,
-                  enabled: !feedbackBusy && !controller.requesting,
-                  minLines: 2,
-                  maxLines: null,
-                  maxLength: 4000,
-                  decoration: pikoInputDecoration(),
-                  onChanged: (_) => setState(() => feedbackSent = false),
-                ),
-              ),
-            ),
-            PikoFormFieldRow(
-              child: PikoButton(
-                label: _text(
-                  feedbackSent ? 'ai.feedbackSent' : 'ai.feedbackSend',
-                ),
-                onPressed:
-                    feedbackBusy ||
-                        controller.requesting ||
-                        feedback.text.trim().isEmpty
-                    ? null
-                    : () async {
-                        setState(() => feedbackBusy = true);
-                        try {
-                          await (widget.provider as AiPilotAccess)
-                              .pilot('feedback', {
-                                'requestId': plan.request.id,
-                                'text': feedback.text.trim(),
-                              });
-                          if (mounted) setState(() => feedbackSent = true);
-                        } catch (e) {
-                          if (mounted) {
-                            setState(
-                              () => controller.error = e is AiFailure
-                                  ? e
-                                  : AiFailure.unavailable,
-                            );
-                          }
-                        } finally {
-                          if (mounted) setState(() => feedbackBusy = false);
-                        }
-                      },
-              ),
-            ),
-          ],
-        ),
       if (plan.cards.isNotEmpty &&
           plan.request.snapshot.groups
               .where((g) => g.acquisitionSource)
@@ -468,6 +414,60 @@ class _AiPageState extends State<AiPage> {
         ),
         gap,
       ],
+      if (widget.provider is AiPilotAccess && ready)
+        PikoFormSection(
+          title: _text('ai.feedbackTitle'),
+          children: [
+            PikoFormFieldRow(
+              child: PikoField(
+                label: _text('ai.feedback'),
+                child: TextField(
+                  key: const ValueKey('ai-feedback'),
+                  controller: feedback,
+                  enabled: !feedbackBusy && !controller.requesting,
+                  minLines: 2,
+                  maxLines: null,
+                  maxLength: 4000,
+                  decoration: pikoInputDecoration(),
+                  onChanged: (_) => setState(() => feedbackSent = false),
+                ),
+              ),
+            ),
+            PikoFormFieldRow(
+              child: PikoButton(
+                label: _text(
+                  feedbackSent ? 'ai.feedbackSent' : 'ai.feedbackSend',
+                ),
+                onPressed:
+                    feedbackBusy ||
+                        controller.requesting ||
+                        feedback.text.trim().isEmpty
+                    ? null
+                    : () async {
+                        setState(() => feedbackBusy = true);
+                        try {
+                          await (widget.provider as AiPilotAccess)
+                              .pilot('feedback', {
+                                'requestId': plan.request.id,
+                                'text': feedback.text.trim(),
+                              });
+                          if (mounted) setState(() => feedbackSent = true);
+                        } catch (e) {
+                          if (mounted) {
+                            setState(
+                              () => controller.error = e is AiFailure
+                                  ? e
+                                  : AiFailure.unavailable,
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => feedbackBusy = false);
+                        }
+                      },
+              ),
+            ),
+          ],
+        ),
     ];
   }
 

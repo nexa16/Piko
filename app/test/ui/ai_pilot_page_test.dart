@@ -30,11 +30,21 @@ class PilotFixtureProvider
     return envelope(
       r,
       cards: [
-        card(
-          'proposal',
-          target: calls.length == 1 ? 'to learn' : 'to read',
-          native: calls.length == 1 ? 'lernen' : 'lesen',
-        ),
+        {
+          ...card(
+            'proposal',
+            target: calls.length == 1 ? 'to learn' : 'to read',
+            native: calls.length == 1 ? 'lernen' : 'lesen',
+          ),
+          'examples': [
+            calls.length == 1
+                ? {
+                    'target': 'I learn French.',
+                    'native': 'Ich lerne Französisch.',
+                  }
+                : {'target': 'I read a book.', 'native': 'Ich lese ein Buch.'},
+          ],
+        },
       ],
     );
   }
@@ -132,6 +142,13 @@ void main() {
         expect(p.calls, isEmpty);
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-consent')));
         await tapVisible(t, find.byKey(const ValueKey('ai-start')));
+        expect(
+          t.getTopLeft(find.byKey(const ValueKey('ai-feedback'))).dy,
+          greaterThan(
+            t.getTopLeft(find.byKey(const ValueKey('ai-select-proposal'))).dy,
+          ),
+          reason: 'Read the generated content before optional feedback',
+        );
         await tapVisible(t, find.byKey(const ValueKey('ai-select-proposal')));
         final refine = find.byKey(const ValueKey('ai-refinement'));
         await t.ensureVisible(refine);
