@@ -128,12 +128,16 @@ test('regular action emphasis follows visible order, independent of Speed eligib
 });
 test('Speed half-width grid and warning colors consume canonical configuration with readable contrast',()=>{
   const config={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../shared/design-config.js'),'utf8'),config);
-  const p=config.PIKO_DESIGN.previews.round2;
+  const p=config.PIKO_DESIGN.colors;
   const luminance=hex=>{const rgb=hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
-  for(const [bg,fg] of [[p.warningBackground,p.warningText],[p.reviewSecondaryBackground,p.reviewSecondaryText]]){
+  // Match the actual CSS semantic roles, including its 12% danger/surface mix.
+  const mix=(a,b,f)=>'#'+[0,1,2].map(i=>Math.round(parseInt(a.slice(1+i*2,3+i*2),16)*f+parseInt(b.slice(1+i*2,3+i*2),16)*(1-f)).toString(16).padStart(2,'0')).join('');
+  for(const [bg,fg] of [[mix(p.danger,p.surface,.12),p.ink],[p.tint,p.ink]]){
     const a=luminance(bg),b=luminance(fg);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);
   }
   const css=fs.readFileSync(path.join(__dirname,'round2.css'),'utf8');
+  assert.match(css,/--r2-review-secondary-background:var\(--piko-tint\);--r2-review-secondary-text:var\(--piko-ink\)/);
+  assert.match(css,/--r2-warning-background:color-mix\(in srgb,var\(--piko-danger\) 12%,var\(--piko-surface\)\);--r2-warning-border:var\(--piko-danger\);--r2-warning-text:var\(--piko-ink\)/);
   assert.match(css,/\.r2-speed-actions\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css,/\.r2-warning\{[^}]*var\(--r2-warning-border\)/);
   assert.match(css,/\.btn\.r2-speed-action\{background:var\(--piko-tint\);color:var\(--piko-primary\)/);
