@@ -11,6 +11,8 @@ import 'package:piko/data/ai/ai_contract.dart';
 import 'package:piko/data/local/sqlite_ai_service.dart';
 import 'package:piko/features/ai/ai_page.dart';
 import 'package:piko/platform/ai_credential_vault.dart';
+import 'package:piko/shared/catalogs.dart';
+import 'package:piko/ui/components/piko_checkbox.dart';
 import '../test/data/regular_reviews_test.dart' show Fixture;
 import '../test/ui/ai_page_test.dart' as page;
 import '../test/ui/ai_related_hints_test.dart' as hints;
@@ -137,7 +139,28 @@ void main() {
           expect(find.byType(AiPage), findsOneWidget);
           expect(MediaQuery.viewInsetsOf(t.element(goal)).bottom, 0);
           expect(provider.calls, 0);
+          FocusManager.instance.primaryFocus?.unfocus();
+          await t.pumpAndSettle();
+          t
+              .state<ScrollableState>(find.byType(Scrollable).first)
+              .position
+              .jumpTo(0);
+          await t.pumpAndSettle();
           await phase('capture-ai-request');
+          final copy = PikoCopy(config.locale);
+          await page.tapVisible(
+            t,
+            find.byWidgetPredicate(
+              (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
+            ),
+          );
+          await page.tapVisible(t, find.byKey(const ValueKey('ai-start')));
+          expect(provider.calls, 1);
+          await t.ensureVisible(
+            find.byKey(const ValueKey('ai-select-new-card')),
+          );
+          await t.pumpAndSettle();
+          await phase('capture-ai-preview');
         } else {
           expect(find.byType(TextField), findsNothing);
           expect(provider.calls, 0);

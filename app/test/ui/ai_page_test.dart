@@ -26,9 +26,33 @@ class FakeProvider implements AiProvider {
 }
 
 Future<void> tapVisible(WidgetTester t, Finder f) async {
-  await t.ensureVisible(f);
+  FocusManager.instance.primaryFocus?.unfocus();
   await t.pumpAndSettle();
-  await t.tap(f);
+  if (t.binding is LiveTestWidgetsFlutterBinding) {
+    final deadline = DateTime.now().add(const Duration(seconds: 10));
+    DateTime? stable;
+    while (DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await t.pump();
+      if (t.view.viewInsets.bottom == 0) {
+        stable ??= DateTime.now();
+        if (DateTime.now().difference(stable) >=
+            const Duration(milliseconds: 200))
+          break;
+      } else {
+        stable = null;
+      }
+    }
+    expect(
+      t.view.viewInsets.bottom,
+      0,
+      reason: 'Native IME hidden before revealing a control',
+    );
+  }
+  await Scrollable.ensureVisible(t.element(f), alignment: .5);
+  await t.pumpAndSettle();
+  expect(f.hitTestable(), findsOneWidget);
+  await t.tap(f, warnIfMissed: true);
   await t.pumpAndSettle();
 }
 
@@ -95,9 +119,9 @@ void main() {
           2,
         );
         expect(t.takeException(), isNull);
-      await t.pump();
-      await t.pumpWidget(const SizedBox.shrink());
-      await t.pumpAndSettle();
+        await t.pump();
+        await t.pumpWidget(const SizedBox.shrink());
+        await t.pumpAndSettle();
       },
     );
   }
