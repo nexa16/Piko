@@ -23,9 +23,15 @@ class NeverProvider implements AiProvider {
 }
 
 void main() {
-  for (final done in [false, true]) {
+  for (final scenario in [
+    (false, false),
+    (true, false),
+    (false, true),
+    (true, true),
+  ]) {
+    final (done, partial) = scenario;
     test(
-      'staged group Hints share ${done ? 'Done' : 'Add-next'} commit; failure retains draft/choices, Source and later edits remain correct',
+      'staged ${partial ? 'partial' : 'complete'} group Hints share ${done ? 'Done' : 'Add-next'} commit; failure retains draft/choices, Source and later edits remain correct',
       () async {
         final db = PikoDatabase(NativeDatabase.memory());
         addTearDown(db.close);
@@ -79,6 +85,7 @@ void main() {
           request,
           envelope(
             request,
+            complete: !partial,
             edits: [
               edit('new', anchor.record.id, 'hint', 'Flussrand'),
               edit('old', old.id, 'hint', 'Geldinstitut'),
@@ -86,7 +93,17 @@ void main() {
           ),
         );
         final before = await stored(db);
-        await coordinator.stage(AiStagedHints(plan, {'new', 'old'}));
+        if (partial) {
+          await coordinator.stage(AiStagedHints(plan, {'new', 'old'}));
+          await expectLater(
+            done ? session.completeSession() : session.confirmAndNext(),
+            throwsA(AiFailure.dependency),
+          );
+          expect(await stored(db), before);
+        }
+        await coordinator.stage(
+          AiStagedHints(plan, {'new', 'old'}, allowPartial: partial),
+        );
         expect(await stored(db), before);
         await db.customStatement(
           "CREATE TRIGGER fail_joint BEFORE INSERT ON vocabulary_entries BEGIN SELECT RAISE(ABORT,'synthetic'); END",

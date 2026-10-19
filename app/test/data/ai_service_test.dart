@@ -39,7 +39,7 @@ Map<String, Object?> card(
   'native': native,
   'hint': null,
   'examples': [
-    {'target': 'I learn French.', 'native': 'Ich lerne FranzÃ¶sisch.'},
+    {'target': 'I learn French.', 'native': 'Ich lerne Franz\u00f6sisch.'},
   ],
   'assignments': assignments,
   'reason': 'An independent lexical verb.',
