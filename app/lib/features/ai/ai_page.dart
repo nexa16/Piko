@@ -1,3 +1,4 @@
+import 'ai_pilot_control.dart';
 import '../../data/ai/ai_connection_controller.dart';
 import '../../data/ai/managed_ai_provider.dart';
 import 'ai_connection_control.dart';
@@ -57,7 +58,13 @@ class _AiPageState extends State<AiPage> {
     collectionId: widget.collectionId,
     registerPending: widget.registerPending,
   )..addListener(_changed);
-  final goal = TextEditingController();
+  final goal = TextEditingController(),
+      refinement = TextEditingController(),
+      feedback = TextEditingController();
+  bool pilotReady = false, feedbackBusy = false, feedbackSent = false;
+  bool get ready =>
+      consent && (widget.provider is! AiPilotAccess || pilotReady);
+  AiPlan? get displayedPlan => controller.replacement ?? controller.plan;
   late AiAction action = widget.initialAction;
   bool allowGroups = true,
       allowValues = true,
@@ -100,6 +107,8 @@ class _AiPageState extends State<AiPage> {
     controller.removeListener(_changed);
     controller.dispose();
     goal.dispose();
+    refinement.dispose();
+    feedback.dispose();
     super.dispose();
   }
 
@@ -113,7 +122,7 @@ class _AiPageState extends State<AiPage> {
   }
 
   Future<void> _start() async {
-    if (!consent || busy || ModalRoute.of(context)?.isCurrent == false) return;
+    if (!ready || busy || ModalRoute.of(context)?.isCurrent == false) return;
     FocusManager.instance.primaryFocus?.unfocus();
     await controller.start(
       action: action,
@@ -163,7 +172,7 @@ class _AiPageState extends State<AiPage> {
   String _value(Object? value, {String? field}) {
     if (value == null) return _text('ai.noHint');
     if (field == 'assignments' && value is Map) {
-      final plan = controller.plan!;
+      final plan = displayedPlan!;
       final groupNames = {
         for (final g in plan.request.snapshot.groups)
           g.dimension.id: g.dimension.name,
@@ -200,8 +209,15 @@ class _AiPageState extends State<AiPage> {
         child: PikoCheckbox(
           key: ValueKey('ai-select-$id'),
           label: title,
-          value: controller.selected.contains(id),
-          onChanged: busy || controller.applied || !applicable
+          value:
+              controller.replacement == null &&
+              controller.selected.contains(id),
+          onChanged:
+              busy ||
+                  controller.requesting ||
+                  controller.replacement != null ||
+                  controller.applied ||
+                  !applicable
               ? null
               : (v) => controller.choose(id, v),
         ),
@@ -215,14 +231,37 @@ class _AiPageState extends State<AiPage> {
     ],
   );
   List<Widget> _preview() {
-    final plan = controller.plan;
+    final plan = displayedPlan;
     if (plan == null) return [];
     final entries = {
       for (final e in plan.request.snapshot.entries) e.record.id: e,
     };
     final gap = SizedBox(height: pikoDesign.dimension('spacing.4'));
     return [
-      PikoFormHeading(title: _text('ai.preview')),
+      PikoFormHeading(
+        title: _text(
+          controller.replacement == null
+              ? 'ai.preview'
+              : 'ai.replacementPreview',
+        ),
+      ),
+      if (controller.replacement != null) ...[
+        Text(_text('ai.replacementHelp')),
+        PikoButton(
+          key: const ValueKey('ai-use-replacement'),
+          label: _text('ai.useReplacement'),
+          onPressed: controller.error == AiFailure.stale
+              ? null
+              : controller.acceptReplacement,
+        ),
+        PikoButton(
+          key: const ValueKey('ai-keep-previous'),
+          label: _text('ai.keepPrevious'),
+          onPressed: controller.keepPrevious,
+        ),
+      ],
+      if (plan.request.followUp?['instruction'] case final String instruction)
+        Text('${_text('ai.refinementContext')}: $instruction'),
       Text(
         PikoCopyScope.of(context).text('ai.counts', {
           'cards': plan.cards.length,
@@ -237,19 +276,127 @@ class _AiPageState extends State<AiPage> {
       ),
       Text(_text('ai.reviewReminder')),
       gap,
-      if (!plan.complete)
+      if (!plan.complete && controller.replacement == null)
         PikoCheckbox(
           label: _text('ai.partialConsent'),
           value: controller.allowPartial,
-          onChanged: busy
+          onChanged: busy || controller.requesting
               ? null
               : (v) => setState(() => controller.allowPartial = v),
         ),
-      if (controller.canContinue)
+      if (controller.plan != null &&
+          !controller.applied &&
+          (controller.plan!.request.action == AiAction.generate ||
+              controller.plan!.request.action == AiAction.gaps) &&
+          controller.replacement == null)
+        PikoFormSection(
+          title: _text('ai.refineTitle'),
+          children: [
+            PikoFormFieldRow(child: Text(_text('ai.refineHelp'))),
+            PikoFormFieldRow(
+              child: PikoField(
+                label: _text('ai.refinement'),
+                child: TextField(
+                  key: const ValueKey('ai-refinement'),
+                  controller: refinement,
+                  enabled: controller.canReplace,
+                  minLines: 2,
+                  maxLines: null,
+                  decoration: pikoInputDecoration(),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ),
+            PikoFormFieldRow(
+              child: PikoButton(
+                key: const ValueKey('ai-refine'),
+                label: _text('ai.refine'),
+                onPressed:
+                    !ready ||
+                        !controller.canReplace ||
+                        refinement.text.trim().isEmpty
+                    ? null
+                    : () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        controller.replaceGeneration(
+                          instruction: refinement.text,
+                        );
+                      },
+              ),
+            ),
+            PikoFormFieldRow(
+              child: PikoButton(
+                key: const ValueKey('ai-regenerate'),
+                label: _text('ai.regenerate'),
+                onPressed: !ready || !controller.canReplace
+                    ? null
+                    : () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        controller.replaceGeneration();
+                      },
+              ),
+            ),
+          ],
+        ),
+      if (controller.canContinue && ready)
         PikoButton(
           key: const ValueKey('ai-continue'),
           label: _text('ai.continue'),
           onPressed: controller.continueGeneration,
+        ),
+      if (widget.provider is AiPilotAccess && ready)
+        PikoFormSection(
+          title: _text('ai.feedbackTitle'),
+          children: [
+            PikoFormFieldRow(
+              child: PikoField(
+                label: _text('ai.feedback'),
+                child: TextField(
+                  key: const ValueKey('ai-feedback'),
+                  controller: feedback,
+                  enabled: !feedbackBusy && !controller.requesting,
+                  minLines: 2,
+                  maxLines: null,
+                  maxLength: 4000,
+                  decoration: pikoInputDecoration(),
+                  onChanged: (_) => setState(() => feedbackSent = false),
+                ),
+              ),
+            ),
+            PikoFormFieldRow(
+              child: PikoButton(
+                label: _text(
+                  feedbackSent ? 'ai.feedbackSent' : 'ai.feedbackSend',
+                ),
+                onPressed:
+                    feedbackBusy ||
+                        controller.requesting ||
+                        feedback.text.trim().isEmpty
+                    ? null
+                    : () async {
+                        setState(() => feedbackBusy = true);
+                        try {
+                          await (widget.provider as AiPilotAccess)
+                              .pilot('feedback', {
+                                'requestId': plan.request.id,
+                                'text': feedback.text.trim(),
+                              });
+                          if (mounted) setState(() => feedbackSent = true);
+                        } catch (e) {
+                          if (mounted) {
+                            setState(
+                              () => controller.error = e is AiFailure
+                                  ? e
+                                  : AiFailure.unavailable,
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => feedbackBusy = false);
+                        }
+                      },
+              ),
+            ),
+          ],
         ),
       if (plan.cards.isNotEmpty &&
           plan.request.snapshot.groups
@@ -480,6 +627,18 @@ class _AiPageState extends State<AiPage> {
                       consent: consent,
                       enabled: !busy && !controller.requesting,
                     ),
+                  if (widget.provider case final AiPilotAccess pilot)
+                    AiPilotControl(
+                      provider: pilot,
+                      enabled: consent && !busy && !controller.requesting,
+                      onReady: (value) {
+                        if (mounted) setState(() => pilotReady = value);
+                      },
+                      onWithdraw: () {
+                        controller.stopWaiting();
+                        controller.cancel();
+                      },
+                    ),
                 ],
               ),
               if (controller.error != null)
@@ -494,8 +653,9 @@ class _AiPageState extends State<AiPage> {
                 ),
                 onPressed:
                     busy ||
+                        controller.plan != null ||
                         controller.requesting ||
-                        !consent ||
+                        !ready ||
                         (connection != null && !connection!.configured) ||
                         (action == AiAction.generate &&
                             goal.text.trim().isEmpty) ||
@@ -506,7 +666,14 @@ class _AiPageState extends State<AiPage> {
                     ? null
                     : _start,
               ),
-              if (controller.requesting || controller.plan != null)
+              if (controller.requesting)
+                PikoButton(
+                  key: const ValueKey('ai-stop-waiting'),
+                  label: _text('ai.stopWaiting'),
+                  variant: PikoButtonVariant.ghost,
+                  onPressed: controller.stopWaiting,
+                ),
+              if (!controller.requesting && controller.plan != null)
                 PikoButton(
                   label: _text('ai.discard'),
                   variant: PikoButtonVariant.ghost,

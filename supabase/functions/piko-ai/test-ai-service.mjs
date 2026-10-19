@@ -24,7 +24,7 @@ function fixture({enabled=true,authorized=true,deny=null,providerError=false,pro
     const receipt=receipts.get(args.p_request_id);if(!receipt||receipt.hash!==args.p_hash)throw new AiServiceError('expired');currentId=args.p_request_id;
     return {status:'started',responseId:receipt.responseId,cardCeiling:receipt.ceiling};
    }
-   if(name==='piko_ai_settle')return null;
+   if(name==='piko_ai_settle'||name==='piko_ai_capture')return null;
    throw Error('Unexpected RPC');
   },fetchImpl:async(url,options)=>{
    calls.push({url,options});if(options.method==='POST')paid++;
@@ -80,8 +80,8 @@ test('technical 200/1000 admission ceilings are enforced outside the model task'
  const ordinary=fixture({providerMode});assert.equal((await ordinary.send(input())).status,422);
  const broad=fixture({providerMode}),v=input();v.scope='comprehensiveLevel';assert.equal((await broad.send(v)).status,200);
 });
-test('RPC metadata contains no lexical context; wrong receipt digest cannot poll another operation',async()=>{
- const f=fixture(),v=input();await f.send(v);const serialized=JSON.stringify(f.rpcs);assert.ok(!serialized.includes('Hotel'));assert.ok(!serialized.includes('lernen'));
+test('accounting RPC metadata contains no lexical context; consented capture is separate; wrong receipt digest cannot poll another operation',async()=>{
+ const f=fixture(),v=input();await f.send(v);const serialized=JSON.stringify(f.rpcs.filter(c=>c.name!=='piko_ai_capture'));assert.ok(!serialized.includes('Hotel'));assert.ok(!serialized.includes('lernen'));
  assert.equal((await f.poll(v.requestId,'b'.repeat(64))).status,410);assert.equal(f.paid,1);
 });
 test('provider/raw exception details are never echoed into client diagnostics',async()=>{
@@ -101,4 +101,22 @@ test('continuation keeps prior proposals in model context and limits the remaini
  assert.equal(JSON.stringify(sent).includes('cardCeiling'),false);
  const g=fixture(),bad=input();bad.previous={...previous,complete:true};
  assert.equal((await g.send(bad)).status,400);assert.equal(g.paid,0);
+});
+
+test('regenerate/refine are separate paid attempts with replacement context, not continuation quota',async()=>{
+ const f=fixture({providerMode:'completed'}),v=input(),prior=output(randomUUID());
+ v.followUp={kind:'refine',parentRequestId:prior.requestId,rootRequestId:prior.requestId,instruction:'Fewer words; correct spelling',result:prior};
+ assert.equal((await f.send(v)).status,200);assert.equal(f.paid,1);
+ const body=JSON.parse(f.calls[0].options.body),sent=JSON.parse(body.input[0].content);
+ assert.equal(sent.followUp.instruction,v.followUp.instruction);assert.equal(sent.previous,undefined);
+ assert.equal(f.rpcs.find(c=>c.name==='piko_ai_admit').args.p_prior_cards,0);
+ const g=fixture(),r=input();r.followUp={kind:'regenerate',parentRequestId:prior.requestId,rootRequestId:prior.requestId,result:prior};
+ assert.equal((await g.send(r)).status,400);assert.equal(g.paid,0);
+});
+test('consented payload capture precedes paid dispatch and records actual output separately from usage',async()=>{
+ const f=fixture({providerMode:'completed'}),v=input();await f.send(v);
+ const sent=f.rpcs.find(c=>c.name==='piko_ai_capture'&&c.args.p_stage==='sent');
+ assert.deepEqual(sent.args.p_payload.request,v);assert.equal(sent.args.p_payload.providerBody.store,false);
+ const result=f.rpcs.find(c=>c.name==='piko_ai_capture'&&c.args.p_stage==='result');assert.equal(result.args.p_payload.output[0].content[0].type,'output_text');
+ assert.ok(f.rpcs.indexOf(sent)>f.rpcs.findIndex(c=>c.name==='piko_ai_admit'));
 });

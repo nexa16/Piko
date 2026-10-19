@@ -19,7 +19,7 @@ async function decoded(response,limit=maxResponseBytes){
 }
 async function digest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');}
 
-/** All storage access is a privileged server adapter. It persists only metadata.
+/** All storage access is a privileged server adapter. Accounting and private consented payloads are separate.
  * Missing config fails closed. One POST is one paid attempt; GET only polls that
  * exact owned provider response. Unknown POST outcomes never cause a retry. */
 export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetchImpl=fetch}){
@@ -32,6 +32,7 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
  }
  async function result(response,requestId,userId,hash,cardCeiling){
    if(['queued','in_progress'].includes(response.status))return json(202,{requestId,state:'pending',requestDigest:hash});
+   await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:requestId,p_stage:'result',p_payload:response});
    const usage=response.usage;
    if(usage&&Number.isInteger(usage.input_tokens)&&Number.isInteger(usage.output_tokens)&&usage.input_tokens>=0&&usage.output_tokens>=0){
      await rpc('piko_ai_settle',{p_user_id:userId,p_request_id:requestId,p_input_tokens:usage.input_tokens,p_output_tokens:usage.output_tokens});
@@ -50,12 +51,27 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
  }
  return async function handler(req){
    try{
-     if(!enabled||!providerKey||!authenticate||!rpc)throw new AiServiceError('unavailable');
+     const url=new URL(req.url),control=url.searchParams.get('pilot');
+     if((!enabled&&control!=='withdraw')||!authenticate||!rpc)throw new AiServiceError('unavailable');
      if(!['POST','GET'].includes(req.method))return json(405,{code:'invalid_request'});
      const authorization=req.headers.get('Authorization')??'';
      if(!authorization.startsWith('Bearer ')||authorization.length>16000)throw new AiServiceError('access_denied');
      const userId=await authenticate(authorization.slice(7));if(!uuid.test(userId??''))throw new AiServiceError('access_denied');
-     const url=new URL(req.url);
+     if(control!==null){
+       if(req.method!=='POST'||url.searchParams.size!==1||!['notice','consent','withdraw','adoption','feedback'].includes(control))throw new AiServiceError('invalid_request');
+       let data;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBytes(req.body,20000)));}catch{throw new AiServiceError('invalid_request');}
+       if(!data||typeof data!=='object'||Array.isArray(data))throw new AiServiceError('invalid_request');
+       if(['adoption','feedback'].includes(control)){
+         if(!uuid.test(data.requestId??'')||Object.keys(data).some(k=>!['requestId','selected','text'].includes(k)))throw new AiServiceError('invalid_request');
+         if(control==='adoption'&&(!Array.isArray(data.selected)||data.selected.length>2000||data.selected.some(x=>typeof x!=='string'||x.length>2000)||data.text!==undefined))throw new AiServiceError('invalid_request');
+         if(control==='feedback'&&(typeof data.text!=='string'||data.text.length>4000||data.selected!==undefined))throw new AiServiceError('invalid_request');
+         await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:data.requestId,p_stage:control,p_payload:control==='adoption'?{selected:data.selected}:{text:data.text}});
+         return json(200,{recorded:true});
+       }
+       if(Object.keys(data).some(k=>k!=='version')||(control==='consent'&&typeof data.version!=='string'))throw new AiServiceError('invalid_request');
+       return json(200,await rpc('piko_ai_pilot',{p_user_id:userId,p_operation:control,p_version:data.version??null}));
+     }
+     if(!providerKey)throw new AiServiceError('unavailable');
      if(req.method==='GET'){
        const requestId=url.searchParams.get('requestId'),hash=req.headers.get('X-Piko-Request-Digest');
        if(!uuid.test(requestId??'')||!/^[a-f0-9]{64}$/.test(hash??'')||url.searchParams.size!==1)throw new AiServiceError('invalid_request');
@@ -79,7 +95,14 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
        return await result(await provider(api+'/'+encodeURIComponent(admitted.responseId)),input.requestId,userId,hash,admitted.cardCeiling);
      }
      if(!Number.isInteger(admitted.maxOutputTokens)||admitted.maxOutputTokens<1||admitted.maxOutputTokens>128000)throw new AiServiceError('unavailable');
-     const response=await provider(api,modelBody(input,admitted.maxOutputTokens));
+     const body=modelBody(input,admitted.maxOutputTokens);
+     await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:input.requestId,p_stage:'sent',
+       p_payload:{request:input,providerBody:body,promptVersion:'piko-vocabulary-r2',schemaVersion:1,appVersion:req.headers.get('X-Piko-App-Version')??'unknown'}});
+     let response;
+     try{response=await provider(api,body);}catch(error){
+       await rpc('piko_ai_capture',{p_user_id:userId,p_request_id:input.requestId,p_stage:'error',p_payload:{code:'provider_outcome_unknown'}});
+       throw error;
+     }
      if(!/^resp_[a-zA-Z0-9_-]+$/.test(response.id??''))throw new AiServiceError('invalid_response');
      await rpc('piko_ai_attach',{p_user_id:userId,p_request_id:input.requestId,p_response_id:response.id});
      return await result(response,input.requestId,userId,hash,admitted.cardCeiling);

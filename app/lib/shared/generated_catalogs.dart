@@ -545,6 +545,22 @@ const copyCatalog = <String, Object?>{
 "de": "AI ist derzeit nicht verfügbar. Eingaben und gespeicherte Daten bleiben erhalten.",
 "en": "AI is currently unavailable. Your input and saved data are retained.",
 },
+"ai.feedback": <String, Object?>{
+"de": "Was war hilfreich, was sollte besser werden? Keine persönlichen Daten eingeben.",
+"en": "What worked or should improve? Do not include personal data.",
+},
+"ai.feedbackSend": <String, Object?>{
+"de": "Feedback senden",
+"en": "Send feedback",
+},
+"ai.feedbackSent": <String, Object?>{
+"de": "Feedback gesendet",
+"en": "Feedback sent",
+},
+"ai.feedbackTitle": <String, Object?>{
+"de": "Freiwilliges Feedback",
+"en": "Optional feedback",
+},
 "ai.field.assignments": <String, Object?>{
 "de": "Kategorien",
 "en": "Categories",
@@ -580,6 +596,10 @@ const copyCatalog = <String, Object?>{
 "ai.identityReady": <String, Object?>{
 "de": "Dieses Gerät hat eine Zugriffsidentität. Der Piko-Dienst muss den AI-Zugriff zusätzlich freigeben.",
 "en": "This device has an access identity. The Piko service must separately approve its AI access.",
+},
+"ai.keepPrevious": <String, Object?>{
+"de": "Bisherige Antwort behalten",
+"en": "Keep previous result",
 },
 "ai.missingSource": <String, Object?>{
 "de": "Für einige neue Karten ist kein passender AI-Quellenwert verfügbar. Ihre Quelle bleibt ohne Zuordnung, solange du keinen passenden vorgeschlagenen Wert bestätigst.",
@@ -633,13 +653,33 @@ const copyCatalog = <String, Object?>{
 "de": "Ausgewählte Vorschläge dieses ausdrücklich unvollständigen Ergebnisses übernehmen",
 "en": "Adopt selected proposals from this explicitly partial result",
 },
+"ai.pilotAgree": <String, Object?>{
+"de": "Privatem Test und Datenauswertung zustimmen",
+"en": "Agree to the private test and data analysis",
+},
+"ai.pilotDetails": <String, Object?>{
+"de": "Einladungskontakt: {contact}\nVerarbeitung/Speicherung: {processors}\nTestende: {end}",
+"en": "Invitation contact: {contact}\nProcessing/storage: {processors}\nPilot ends: {end}",
+},
+"ai.pilotNotice": <String, Object?>{
+"de": "Einladung und Testdetails prüfen",
+"en": "Check invitation and test details",
+},
+"ai.pilotWithdraw": <String, Object?>{
+"de": "Teilnahme beenden und Inhaltslöschung anfordern",
+"en": "Stop participation and request payload deletion",
+},
+"ai.pilotWithdrawn": <String, Object?>{
+"de": "Teilnahme beendet. Aktive Analyseinhalte wurden gelöscht; verwaltete Kopien verfallen binnen sieben Tagen. Die Aufbewahrung beim Anbieter ist davon getrennt.",
+"en": "Participation stopped. Live analysis payloads were deleted; managed copies expire within seven days. Provider retention is separate.",
+},
 "ai.preview": <String, Object?>{
 "de": "Vorschläge prüfen",
 "en": "Review proposals",
 },
 "ai.privacy": <String, Object?>{
-"de": "Ein ausdrücklicher Auftrag sendet den benötigten Vokabel- und Kategoriekontext dieser Collection an den Piko-AI-Dienst und OpenAI. Eine anonyme Backend-Identität steuert Gerätezugriff und Limits ohne E-Mail oder Passwort. Lernverlauf, Statistik und andere Collections bleiben auf diesem Gerät. Piko führt keinen zusätzlichen Prompt-/Antwortverlauf. Für die asynchrone Verarbeitung hält der Anbieter Antworten ungefähr zehn Minuten vor; zusätzlich gilt die übliche Anbieterverarbeitung. Eine Speicherung von null Tagen wird nicht zugesagt. Das Beenden des Wartens verwirft das Ergebnis; ein bereits übermittelter Versuch kann Kosten verursachen. Lokales Bearbeiten und Lernen funktionieren ohne AI.",
-"en": "An explicit request sends this Collection’s required vocabulary and category context to the Piko AI service and OpenAI. An anonymous backend identity controls device access and limits without email or password. Learning history, statistics and other Collections stay on this device. Piko keeps no separate prompt/result history. For asynchronous processing, the provider temporarily retains responses for about ten minutes; standard provider processing also applies. Zero retention is not promised. Stopping waiting discards the result; an already submitted attempt may incur costs. Local editing and learning work without AI.",
+"de": "Dieser freiwillige private Test dauert 14 Tage mit höchstens fünf eingeladenen Testpersonen und dem Owner. Ein gemeinsames Gesamtlimit von 20 € umfasst AI, Hosting und Gebühren. Jeder zugelassene Auftrag, auch Wiederholung/Verfeinerung oder bezahlter Fehlschlag, zählt; höchstens 20 pro Person und UTC-Tag, zwei pro Minute und einer gleichzeitig. Keine automatische Verlängerung oder Aufladung. Piko und OpenAI verarbeiten die gesendeten Vokabeln, Hinweise, Beispiele und Kategorien dieser Collection. Piko speichert tatsächliche Aufträge, Antworten, Verfeinerungen, Übernahmeauswahl und freiwilliges Feedback privat zur Qualitätsanalyse höchstens 30 Tage einschließlich Kopien; geprüfte bereinigte Regressionsbeispiele/Aggregate höchstens 90 Tage. Zugriff haben nur der Owner und autorisierte Analysewerkzeuge. Keine sensiblen oder identifizierenden Inhalte eingeben; pseudonyme Texte sind nicht automatisch anonym. Lernverlauf, Statistik, Kontakte und andere Collections bleiben auf dem Gerät. Ablehnen lässt manuelles Bearbeiten und Lernen unverändert nutzbar. Beende die Teilnahme hier oder fordere beim Einladungskontakt Inhaltslöschung binnen sieben Tagen an. Minimale Abrechnungs-/Sicherheitsmetadaten bleiben 35 Tage, inaktive Identitäten werden nach 90 Tagen bereinigt. Anbieterfristen sind getrennt: store:false verspricht keine Nullspeicherung; Hintergrundantworten können etwa zehn Minuten, übliche Missbrauchsprüfdaten bis zu 30 Tage mit Ausnahmen verbleiben. Warten beenden storniert keinen bereits bezahlten Versuch. Prüfe vor der Zustimmung den konkreten Kontakt und die Verarbeitung unten.",
+"en": "This optional private test lasts 14 days with at most five invited testers and the owner. One shared €20 total ceiling covers AI, hosting and fees. Each admitted request, including repeat/refinement or paid failure, counts toward the limit; the service allows at most 20 per person per UTC day, two per minute and one at a time. No automatic renewal or top-up. Piko and OpenAI process the sent Collection vocabulary, Hints, examples and categories. Piko privately retains actual requests, results, refinements, adoption choices and optional feedback for quality analysis for at most 30 days including copies; reviewed de-identified regression examples/aggregates for at most 90 days. Access is limited to the owner and authorized analysis tools. Do not enter sensitive or identifying content; pseudonymous text is not necessarily anonymous. Learning history, statistics, contacts and unrelated Collections stay on the device. Participation is voluntary; declining leaves manual editing and learning usable. Stop participation here or contact the invitation contact for payload deletion within seven days. Minimal accounting/security metadata remains 35 days; inactive identity cleanup follows 90 days. Provider retention is separate: store:false does not promise zero retention; background responses may remain about ten minutes and standard abuse monitoring may retain data up to 30 days, with exceptions. Stopping waiting cannot cancel an already paid attempt. Review the actual contact and processors below before agreeing.",
 },
 "ai.privacyTitle": <String, Object?>{
 "de": "Optionaler AI-Zugriff",
@@ -649,9 +689,41 @@ const copyCatalog = <String, Object?>{
 "de": "Vorgeschlagen",
 "en": "Proposed",
 },
+"ai.refine": <String, Object?>{
+"de": "Aktuelle Antwort verfeinern",
+"en": "Refine current answer",
+},
+"ai.refineHelp": <String, Object?>{
+"de": "Verfeinere die aktuelle Antwort, etwa mit mehr oder weniger Vokabeln, einem anderen Schwerpunkt oder Rechtschreibkorrekturen. Neu erzeugen wiederholt den ursprünglichen Auftrag. Jeder Auftrag kann Kosten verursachen.",
+"en": "Refine the current answer, for example with more or fewer words, another focus or spelling corrections. Regenerate repeats the original task. Each request may incur costs.",
+},
+"ai.refineTitle": <String, Object?>{
+"de": "Antwort überarbeiten",
+"en": "Revise this result",
+},
+"ai.refinement": <String, Object?>{
+"de": "Was soll sich ändern?",
+"en": "What should change?",
+},
+"ai.refinementContext": <String, Object?>{
+"de": "Folgeauftrag",
+"en": "Follow-up instruction",
+},
+"ai.regenerate": <String, Object?>{
+"de": "Ursprünglichen Auftrag neu erzeugen",
+"en": "Regenerate original task",
+},
 "ai.relatedCount": <String, Object?>{
 "de": "Weitere direkt verwandte Karten: {count}",
 "en": "Other directly related cards: {count}",
+},
+"ai.replacementHelp": <String, Object?>{
+"de": "Die bisherige Antwort samt Auswahl bleibt erhalten. Prüfe diese Antwort und verwende sie mit einer neuen Auswahl oder behalte die bisherige. Noch wird nichts gespeichert.",
+"en": "Your previous result and choices are retained. Review this answer, then use it with a fresh selection or keep the previous result. Nothing is saved yet.",
+},
+"ai.replacementPreview": <String, Object?>{
+"de": "Neue Antwort prüfen",
+"en": "Replacement preview",
 },
 "ai.request": <String, Object?>{
 "de": "Auftrag",
@@ -673,6 +745,10 @@ const copyCatalog = <String, Object?>{
 "de": "Vorschläge erstellen",
 "en": "Generate proposals",
 },
+"ai.stopWaiting": <String, Object?>{
+"de": "Warten beenden; bisherige Antwort behalten",
+"en": "Stop waiting; keep previous result",
+},
 "ai.title": <String, Object?>{
 "de": "AI-Vokabeln",
 "en": "AI vocabulary",
@@ -680,6 +756,14 @@ const copyCatalog = <String, Object?>{
 "ai.unavailableClassification": <String, Object?>{
 "de": "Nicht verfügbare Zuordnung",
 "en": "Unavailable classification",
+},
+"ai.useReplacement": <String, Object?>{
+"de": "Diese Antwort verwenden",
+"en": "Use this preview",
+},
+"ai.withdrawPending": <String, Object?>{
+"de": "AI-Nutzung ist lokal gestoppt. Die Löschung am Server ist noch nicht bestätigt. Wiederhole diese Aktion mit Verbindung oder nutze den Einladungskontakt.",
+"en": "AI use is stopped locally. Server deletion is not yet confirmed. Retry this action when connected or use the invitation contact.",
 },
 "app.name": <String, Object?>{
 "de": "Piko",

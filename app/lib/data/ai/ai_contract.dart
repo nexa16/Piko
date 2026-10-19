@@ -196,13 +196,17 @@ final class AiRequest {
     Iterable<String> targets = const [],
     this.anchor,
     Map<String, Object?>? previous,
-  }) : previous = previous == null
+    Map<String, Object?>? followUp,
+  }) : followUp = followUp == null
+           ? null
+           : Map.unmodifiable(_freeze(followUp) as Map<String, Object?>),
+       previous = previous == null
            ? null
            : Map.unmodifiable(_freeze(previous) as Map<String, Object?>),
        issuedAt = issuedAt ?? DateTime.now().toUtc(),
        targets = Set.unmodifiable(targets);
   final String id, goal;
-  final Map<String, Object?>? previous;
+  final Map<String, Object?>? previous, followUp;
   final DateTime issuedAt;
   final AiAction action;
   final AiSnapshot snapshot;
@@ -217,6 +221,7 @@ final class AiRequest {
     'action': action.name,
     'goal': goal,
     if (previous != null) 'previous': previous,
+    if (followUp != null) 'followUp': followUp,
     'allowNewGroups': allowGroups,
     'allowNewValues': allowValues,
     'context': snapshot.toJson(
@@ -229,6 +234,13 @@ final class AiRequest {
 
 abstract interface class CancelableAiProvider {
   void cancel(String requestId);
+}
+
+abstract interface class AiPilotAccess {
+  Future<Map<String, Object?>> pilot(
+    String operation, [
+    Map<String, Object?> data = const {},
+  ]);
 }
 
 abstract interface class AiProvider {

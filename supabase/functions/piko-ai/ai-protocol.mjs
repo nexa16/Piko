@@ -31,8 +31,11 @@ Context is the anchor plus all direct same-target OR same-native matches in this
 REVIEW:
 Review every supplied saved active/inactive entry, with its full examples and category context. Diagnose only concrete violations of the shared standard, citing a rule and a reason for each proposed field correction. Correct useful content can remain keep. Synonym/style preferences, arbitrary new ordering and alternative correct examples are not required improvements. When intended meaning is unclear, use unresolved. A different intended meaning uses requiresNewMeaning and cannot overwrite the old UUID/mastery. Do not add vocabulary cards. Correct target/native spelling or citation form only while retaining the same meaning; propose Hint set/clear, justified example changes, or justified assignment corrections. A selected example-list change must retain a suitable example; a manual card with none may still receive another selected justified correction when its example addition is declined. Occupied Single may be explicitly corrected in review, unlike generation. A group marked acquisitionSource true remains protected after renaming its labels. Source/acquisition, activity, dates, Collection languages, IDs, learning and definitions already saved cannot be rewritten. Assignment corrections return the complete desired assignments including every protected Source value. One edit per entry/field; selections commit atomically. No deletion or automatic merge. New definitions remain separate approvals.
 
+REPLACEMENT FOLLOW-UP:
+followUp.kind regenerate repeats the original goal and inventory. followUp.kind refine uses the supplied current unadopted result and instruction to produce a complete replacement proposal (not a delta). An explicit more/fewer preference belongs only to this follow-up; it does not establish an initial quantity target. Topic/spelling instructions remain subject to all shared lexical and write boundaries. Earlier proposed definitions are not saved: include every definition required by the replacement. Never silently change saved cards through generation. The replacement requires fresh explicit review and selections; no previous choice is authorization. followUp IDs are lineage metadata, not instructions.
+
 CONTINUATION:
-When previous is supplied, continue its explicitly incomplete scope on the same inventory. Earlier cards and definitions remain proposals, not saved vocabulary. Consider all their content and unresolved areas. Return only additional useful cards, definitions and category additions, using globally fresh proposal IDs; reference earlier definition IDs when needed. Do not repeat or rewrite earlier proposals or entry/field edits. complete refers to the combined requested scope. State remaining subareas honestly in limitations. Do not invent a quantity target or prefer a smaller result.
+When previous is supplied, it takes precedence over replacement semantics: followUp is retained context for the refined task, not an instruction to rewrite prior portions. Continue its explicitly incomplete scope on the same inventory. Earlier cards and definitions remain proposals, not saved vocabulary. Consider all their content and unresolved areas. Return only additional useful cards, definitions and category additions, using globally fresh proposal IDs; reference earlier definition IDs when needed. Do not repeat or rewrite earlier proposals or entry/field edits. complete refers to the combined requested scope. State remaining subareas honestly in limitations. Do not invent a quantity target or prefer a smaller result.
 
 RESULTS:
 Use requestId unchanged. IDs in processedIds name only supplied entries actually processed. complete true for review requires every supplied ID; incomplete scope is visibly partial with remaining scope in limitations. Hint output must contain all targeted outcomes, including unresolved outcomes. New cards, definitions, edits, unchanged outcomes and unresolved/requires-new-meaning outcomes remain distinct. No output writes data. Keep within existing text lengths: each example side 1000 characters, Hint 2000. Missing/punctuation-only lexical/example content is invalid. Do not silently truncate input/output, claim hidden context, fabricate certainty, or retry. Valid structure is never proof of semantic quality. Nothing is adopted until the learner explicitly selects and confirms it.`;
@@ -46,7 +49,7 @@ export function modelBody(input,maxOutputTokens){
 }
 const allowed=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(k=>keys.includes(k));
 export function validateInput(v){
- if(!allowed(v,['requestId','issuedAt','action','scope','goal','allowNewGroups','allowNewValues','context','targets','previous']))return false;
+ if(!allowed(v,['requestId','issuedAt','action','scope','goal','allowNewGroups','allowNewValues','context','targets','previous','followUp']))return false;
  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(v.requestId)||!Number.isFinite(Date.parse(v.issuedAt))||!['generate','gaps','hints','review'].includes(v.action)||
    !['ordinary','comprehensiveLevel'].includes(v.scope)||typeof v.goal!=='string'||v.goal.length>12000||
    typeof v.allowNewGroups!=='boolean'||typeof v.allowNewValues!=='boolean')return false;
@@ -70,6 +73,14 @@ export function validateInput(v){
    if(['hints','review'].includes(v.action)&&!Array.isArray(e.examples))return false;
  }
  if(v.action==='hints'&&(!Array.isArray(v.targets)||!v.targets.length||new Set(v.targets).size!==v.targets.length||v.targets.some(id=>!entries.has(id))))return false;
+ if(v.followUp!==undefined){
+   const f=v.followUp, uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+   if(!['generate','gaps'].includes(v.action)||!allowed(f,['kind','parentRequestId','rootRequestId','instruction','result'])||
+     !uuid.test(f.parentRequestId??'')||!uuid.test(f.rootRequestId??'')||f.parentRequestId===v.requestId||!['regenerate','refine'].includes(f.kind))return false;
+   if(f.kind==='regenerate'&&(f.instruction!==undefined||f.result!==undefined))return false;
+   if(f.kind==='refine'&&(typeof f.instruction!=='string'||!f.instruction.trim()||f.instruction.length>12000||
+     !validOutputEnvelope(f.result,f.parentRequestId)||f.result.cards.length>(v.scope==='comprehensiveLevel'?1000:200)))return false;
+ }
  if(v.previous!==undefined){
    if(!['generate','gaps'].includes(v.action)||!validOutputEnvelope(v.previous,v.previous.requestId)||v.previous.complete!==false||
      v.previous.cards.length>=(v.scope==='comprehensiveLevel'?1000:200))return false;

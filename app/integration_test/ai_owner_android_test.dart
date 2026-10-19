@@ -18,6 +18,8 @@ import '../test/ui/ai_page_test.dart' as page;
 import '../test/ui/ai_related_hints_test.dart' as hints;
 import '../test/features/ai_entry_session_test.dart' as joint;
 import '../test/features/ai_continuation_test.dart' as portions;
+import '../test/features/ai_refinement_test.dart' as refinements;
+import '../test/ui/ai_pilot_page_test.dart' as pilot;
 import 'support/round2_catalogue_fixture.dart' show CatalogueConfiguration;
 
 void main() {
@@ -26,6 +28,8 @@ void main() {
   hints.main();
   joint.main();
   portions.main();
+  refinements.main();
+  pilot.main();
   testWidgets(
     'owner AI actual Android vault, compile gate, native IME/Back and capture',
     (t) async {
@@ -94,7 +98,7 @@ void main() {
         states.add('native-keystore-roundtrip-own-namespace-only');
         final f = Fixture();
         await f.initialize();
-        final provider = page.FakeProvider();
+        final provider = pilot.PilotFixtureProvider();
         await t.pumpWidget(
           PikoApp(
             locale: Locale(config.locale),
@@ -106,7 +110,7 @@ void main() {
         );
         await t.pumpAndSettle();
         // The ordinary runtime must not send background work in either build.
-        expect(provider.calls, 0);
+        expect(provider.calls.length, 0);
         if (!pikoAiEnabled) {
           expect(find.byKey(const ValueKey('ai-start')), findsNothing);
           states.add('compile-gate-off-runtime-no-dispatch');
@@ -138,7 +142,7 @@ void main() {
           expect((t.widget<TextField>(goal)).controller!.text, 'Hotel');
           expect(find.byType(AiPage), findsOneWidget);
           expect(MediaQuery.viewInsetsOf(t.element(goal)).bottom, 0);
-          expect(provider.calls, 0);
+          expect(provider.calls.length, 0);
           FocusManager.instance.primaryFocus?.unfocus();
           await t.pumpAndSettle();
           t
@@ -154,16 +158,52 @@ void main() {
               (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
             ),
           );
+          await page.tapVisible(
+            t,
+            find.byKey(const ValueKey('ai-pilot-notice')),
+          );
+          await page.tapVisible(
+            t,
+            find.byKey(const ValueKey('ai-pilot-consent')),
+          );
           await page.tapVisible(t, find.byKey(const ValueKey('ai-start')));
-          expect(provider.calls, 1);
+          expect(provider.calls.length, 1);
           await t.ensureVisible(
-            find.byKey(const ValueKey('ai-select-new-card')),
+            find.byKey(const ValueKey('ai-select-proposal')),
           );
           await t.pumpAndSettle();
           await phase('capture-ai-preview');
+          final refinement = find.byKey(const ValueKey('ai-refinement'));
+          await t.ensureVisible(refinement);
+          await t.pumpAndSettle();
+          await phase('ime-refine-back', at: t.getCenter(refinement));
+          await t.pumpAndSettle();
+          expect(
+            t.widget<TextField>(refinement).controller!.text,
+            'Fewer words',
+          );
+          await page.tapVisible(t, find.byKey(const ValueKey('ai-refine')));
+          expect(provider.calls.length, 2);
+          await t.ensureVisible(
+            find.byKey(const ValueKey('ai-use-replacement')),
+          );
+          await t.pumpAndSettle();
+          await phase('capture-ai-replacement');
+          await page.tapVisible(
+            t,
+            find.byKey(const ValueKey('ai-use-replacement')),
+          );
+          expect(
+            t
+                .widget<PikoCheckbox>(
+                  find.byKey(const ValueKey('ai-select-proposal')),
+                )
+                .value,
+            false,
+          );
         } else {
           expect(find.byType(TextField), findsNothing);
-          expect(provider.calls, 0);
+          expect(provider.calls.length, 0);
           await phase('capture-ai-off');
         }
         await t.pumpWidget(const SizedBox.shrink());

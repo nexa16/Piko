@@ -105,7 +105,8 @@ final class SupabaseAiAuthGateway implements AiAuthGateway {
 
 /// No anonymous signup, refresh or provider request occurs on app launch.
 /// Activation happens only at an explicit AI-connect/request boundary.
-final class AiConnectionController extends ChangeNotifier implements AiAccess {
+final class AiConnectionController extends ChangeNotifier
+    implements AiAccess, AiPilotLocalStop {
   AiConnectionController({
     required this.configuration,
     required this.vault,
@@ -122,6 +123,9 @@ final class AiConnectionController extends ChangeNotifier implements AiAccess {
   int _revision = 0;
   Future<void>? _pending;
   String? _serialized;
+  bool _pilotStopped = false;
+  bool _stopped(String? value) =>
+      value != null && (jsonDecode(value) as Map)['pikoPilotWithdrawn'] == true;
   bool get configured => enabled && configuration.available;
   Future<void> loadLocal() async {
     if (!enabled || !configured || _disposed) return;
@@ -130,6 +134,7 @@ final class AiConnectionController extends ChangeNotifier implements AiAccess {
       final saved = await vault.read();
       if (_disposed || owner != _revision) return;
       _serialized = saved;
+      _pilotStopped = _stopped(saved);
       deviceAccessId = saved == null ? null : gateway.inspect(saved).userId;
     } catch (_) {
       if (!_disposed && owner == _revision) error = AiFailure.unavailable;
@@ -151,6 +156,8 @@ final class AiConnectionController extends ChangeNotifier implements AiAccess {
       try {
         final stored = await vault.read();
         if (_disposed || owner != _revision) throw AiFailure.accessDenied;
+        _pilotStopped = _pilotStopped || _stopped(stored);
+        if (_pilotStopped) throw AiFailure.accessDenied;
         final session = await gateway
             .connect(stored)
             .timeout(const Duration(seconds: 30));
@@ -184,7 +191,9 @@ final class AiConnectionController extends ChangeNotifier implements AiAccess {
   @override
   Future<String?> accessToken() async {
     if (!enabled) throw AiFailure.disabled;
-    if (_disconnected || _disposed) throw AiFailure.accessDenied;
+    if (_disconnected || _disposed || _pilotStopped) {
+      throw AiFailure.accessDenied;
+    }
     if (error != null) throw error!;
     if (_serialized != null) {
       final current = Session.fromJson(
@@ -199,13 +208,52 @@ final class AiConnectionController extends ChangeNotifier implements AiAccess {
     return session?.accessToken;
   }
 
+  @override
+  Future<void> stopPilotLocally() async {
+    if (!enabled || _disposed) throw AiFailure.disabled;
+    _pilotStopped = true;
+    ++_revision;
+    final pending = _pending;
+    _pending = null;
+    busy = false;
+    if (pending != null) {
+      try {
+        await pending;
+      } catch (_) {}
+    }
+    final saved = await vault.read();
+    if (saved == null) throw AiFailure.accessDenied;
+    final content = Map<String, dynamic>.from(jsonDecode(saved) as Map)
+      ..['pikoPilotWithdrawn'] = true;
+    _serialized = jsonEncode(content);
+    await vault.write(_serialized!);
+    notifyListeners();
+  }
+
+  @override
+  Future<String?> withdrawalAccessToken() async {
+    if (!enabled || _disposed) throw AiFailure.disabled;
+    final saved = await vault.read();
+    if (saved == null) throw AiFailure.accessDenied;
+    final session = await gateway
+        .connect(saved)
+        .timeout(const Duration(seconds: 30));
+    final content = Map<String, dynamic>.from(
+      jsonDecode(session.serialized) as Map,
+    )..['pikoPilotWithdrawn'] = true;
+    _pilotStopped = true;
+    _serialized = jsonEncode(content);
+    await vault.write(_serialized!);
+    return Session.fromJson(content)?.accessToken;
+  }
+
   Future<void> disconnect() async {
     if (!enabled || _disposed) throw AiFailure.disabled;
     if (busy) throw AiFailure.unavailable;
     ++_revision;
     _disconnected = true;
     await gateway.close();
-    await vault.delete();
+    if (!_pilotStopped) await vault.delete();
     _serialized = null;
     deviceAccessId = null;
     error = null;

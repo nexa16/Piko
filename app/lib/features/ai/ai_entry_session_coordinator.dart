@@ -92,6 +92,16 @@ final class AiEntrySessionCoordinator extends ChangeNotifier {
         throw StateError('New anchor confirmation missing');
       }
       result = saved.confirmation!;
+      if (support.provider is AiPilotAccess) {
+        try {
+          await (support.provider as AiPilotAccess).pilot('adoption', {
+            'requestId': pending.plan.request.id,
+            'selected': pending.selected.toList()..sort(),
+          });
+        } catch (_) {
+          /* Saved local content remains successful if telemetry fails. */
+        }
+      }
     }
     staged = null;
     _draftId = 'draft-${const Uuid().v4()}';

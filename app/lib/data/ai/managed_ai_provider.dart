@@ -7,6 +7,11 @@ abstract interface class AiAccess {
   Future<String?> accessToken();
 }
 
+abstract interface class AiPilotLocalStop {
+  Future<void> stopPilotLocally();
+  Future<String?> withdrawalAccessToken();
+}
+
 final class UnavailableAiAccess implements AiAccess {
   const UnavailableAiAccess();
   @override
@@ -15,7 +20,8 @@ final class UnavailableAiAccess implements AiAccess {
 
 /// One explicit POST followed only by status GETs for that paid attempt. No
 /// replay, fallback model, background restart or automatic paid retry exists.
-final class ManagedAiProvider implements AiProvider, CancelableAiProvider {
+final class ManagedAiProvider
+    implements AiProvider, CancelableAiProvider, AiPilotAccess {
   ManagedAiProvider({
     required this.endpoint,
     required this.access,
@@ -62,10 +68,15 @@ final class ManagedAiProvider implements AiProvider, CancelableAiProvider {
     Stopwatch clock,
   ) async {
     _current(owner);
-    final token = await access.accessToken().timeout(
-      const Duration(seconds: 30),
-      onTimeout: () => throw AiFailure.network,
-    );
+    final token =
+        await (uri.queryParameters['pilot'] == 'withdraw' &&
+                    access is AiPilotLocalStop
+                ? (access as AiPilotLocalStop).withdrawalAccessToken()
+                : access.accessToken())
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () => throw AiFailure.network,
+            );
     _current(owner);
     if (token == null || token.isEmpty) throw AiFailure.accessDenied;
     final request = await _client
@@ -76,6 +87,13 @@ final class ManagedAiProvider implements AiProvider, CancelableAiProvider {
       _outgoing = request;
       request.followRedirects = false;
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      request.headers.set(
+        'X-Piko-App-Version',
+        const String.fromEnvironment(
+          'PIKO_APP_SOURCE',
+          defaultValue: 'development-r2',
+        ),
+      );
       if (publishableKey?.isNotEmpty ?? false) {
         request.headers.set('apikey', publishableKey!);
       }
@@ -114,6 +132,57 @@ final class ManagedAiProvider implements AiProvider, CancelableAiProvider {
     } catch (_) {
       request.abort();
       rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, Object?>> pilot(
+    String operation, [
+    Map<String, Object?> data = const {},
+  ]) async {
+    if (!enabled) throw AiFailure.disabled;
+    if (operation == 'withdraw' && _busy) {
+      ++_revision;
+      _outgoing?.abort();
+      _activeId = null;
+      _busy = false;
+    }
+    if (_closed ||
+        _busy ||
+        endpoint == null ||
+        endpoint!.scheme != 'https' ||
+        endpoint!.hasQuery ||
+        endpoint!.hasFragment ||
+        endpoint!.userInfo.isNotEmpty) {
+      throw AiFailure.unavailable;
+    }
+    if (operation == 'withdraw' && access is AiPilotLocalStop) {
+      await (access as AiPilotLocalStop).stopPilotLocally();
+    }
+    final owner = ++_revision;
+    _busy = true;
+    try {
+      final result = await _http(
+        'POST',
+        endpoint!.replace(queryParameters: {'pilot': operation}),
+        utf8.encode(jsonEncode(data)),
+        null,
+        owner,
+        Stopwatch()..start(),
+      );
+      if (result.$1 != 200) throw AiFailure.invalidResponse;
+      return result.$2;
+    } on SocketException {
+      throw AiFailure.network;
+    } on TimeoutException {
+      throw AiFailure.timeout;
+    } on HttpException {
+      throw AiFailure.network;
+    } finally {
+      if (owner == _revision) {
+        _busy = false;
+        _outgoing = null;
+      }
     }
   }
 

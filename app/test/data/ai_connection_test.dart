@@ -90,6 +90,39 @@ class AuthGateway implements AiAuthGateway {
 
 void main() {
   test(
+    'withdrawal denial survives restart/disconnect and only deletion can refresh its retained session',
+    () async {
+      final v = MemoryVault()..value = session().serialized, g = AuthGateway();
+      final c = AiConnectionController(
+        configuration: config,
+        vault: v,
+        gateway: g,
+        enabled: true,
+      );
+      await c.loadLocal();
+      await c.stopPilotLocally();
+      await expectLater(c.accessToken(), throwsA(AiFailure.accessDenied));
+      await c.disconnect();
+      expect(v.deletes, 0);
+      c.dispose();
+      final resumed = AiConnectionController(
+        configuration: config,
+        vault: v,
+        gateway: g,
+        enabled: true,
+      );
+      addTearDown(resumed.dispose);
+      await resumed.loadLocal();
+      await expectLater(resumed.connect(), throwsA(AiFailure.accessDenied));
+      expect(g.connections, 0);
+      expect(await resumed.withdrawalAccessToken(), isNotNull);
+      expect(g.connections, 1);
+      expect((jsonDecode(v.value!) as Map)['pikoPilotWithdrawn'], true);
+      await expectLater(resumed.accessToken(), throwsA(AiFailure.accessDenied));
+    },
+  );
+
+  test(
     'disabled and unconfigured access never touches credentials or enrolls, including restored token path',
     () async {
       final v = MemoryVault()..value = session().serialized, g = AuthGateway();
@@ -178,6 +211,8 @@ void main() {
       expect(v.deletes, 0);
       expect(v.value, isNotNull);
       v.failRead = false;
+      // A readable session reaches the independent encrypted-vault write fault.
+      v.value = session().serialized;
       v.failWrite = true;
       final old = v.value;
       await expectLater(c.connect(), throwsA(AiFailure.unavailable));

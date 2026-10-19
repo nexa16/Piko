@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test-ai-service.mjs test-ai-admission.mjs"
+    "test": "node --test test-ai-service.mjs test-ai-admission.mjs test-ai-pilot.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10"
