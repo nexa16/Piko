@@ -59,6 +59,7 @@ enum CategoryValidation {
 }
 
 abstract interface class CategoriesRepository {
+  Future<List<CategoryDimensionRecord>> reorderDimensions({required String collectionId, required List<String> orderedIds, List<String>? expectedOrder});
   Future<List<CategoryDimensionRecord>> dimensions(String collectionId);
   Future<CategoryDimensionRecord?> dimensionById(String id);
   Future<List<CategoryValueRecord>> values(String dimensionId);

@@ -7,14 +7,22 @@ final class CollectionRecord {
     required this.name,
     required this.targetLanguage,
     required this.nativeLanguage,
+    this.level = 'A1',
   });
   final String id;
   final String name;
   final VocabularyLanguage targetLanguage;
   final VocabularyLanguage nativeLanguage;
+  final String level;
+  static const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 }
 
-enum CollectionValidation { requiredName, sameLanguage, collectionNotFound }
+enum CollectionValidation { requiredName, sameLanguage, collectionNotFound, invalidLevel }
+
+abstract interface class CollectionLevelRepository {
+  Future<CollectionRecord> setLevel({required String id, required String level});
+  Future<CollectionRecord> createWithLevel({required String name, required VocabularyLanguage targetLanguage, required VocabularyLanguage nativeLanguage, required String level});
+}
 
 abstract interface class CollectionsRepository {
   /// Permanently removes only this Collection and its dependent vocabulary/progress.
