@@ -500,7 +500,8 @@ class _AiPageState extends State<AiPage> {
   }
 
   String _text(String key) => PikoCopyScope.of(context).text(key);
-  bool get busy => controller.applying;
+  bool _staging = false;
+  bool get busy => controller.applying || _staging;
   AiConnectionController? get connection {
     final p = widget.provider;
     return p is ManagedAiProvider && p.access is AiConnectionController
@@ -524,26 +525,56 @@ class _AiPageState extends State<AiPage> {
   }
 
   Future<void> _apply() async {
-    if (!controller.canApply || ModalRoute.of(context)?.isCurrent == false) {
+    if (_staging ||
+        !controller.canApply ||
+        ModalRoute.of(context)?.isCurrent == false) {
       return;
     }
     FocusManager.instance.primaryFocus?.unfocus();
     if (widget.stageOnly) {
-      if (!await widget.service.applicable(
-        controller.plan!.request,
-        currentDraft: widget.anchor,
-      )) {
-        if (mounted) setState(() => controller.error = AiFailure.stale);
-        return;
-      }
-      if (mounted) {
-        Navigator.of(context).pop(
-          AiStagedHints(
-            controller.plan!,
-            controller.selected,
-            allowPartial: controller.allowPartial,
-          ),
+      final plan = controller.plan!,
+          choices = Set<String>.of(controller.selected);
+      final partial = controller.allowPartial, route = ModalRoute.of(context);
+      final navigator = Navigator.of(context);
+      final service = widget.service, anchor = widget.anchor;
+      setState(() => _staging = true);
+      bool current() =>
+          mounted &&
+          route?.isCurrent == true &&
+          identical(ModalRoute.of(context), route) &&
+          identical(controller.plan, plan) &&
+          identical(widget.service, service) &&
+          identical(widget.anchor, anchor) &&
+          widget.stageOnly &&
+          controller.canApply &&
+          controller.allowPartial == partial &&
+          controller.selected.length == choices.length &&
+          controller.selected.containsAll(choices);
+      try {
+        final applicable = await service.applicable(
+          plan.request,
+          currentDraft: anchor,
         );
+        if (!current()) return;
+        if (!applicable) {
+          setState(() => controller.error = AiFailure.stale);
+          return;
+        }
+        navigator.pop(AiStagedHints(plan, choices, allowPartial: partial));
+      } catch (failure) {
+        if (current()) {
+          setState(
+            () => controller.error = failure is AiFailure
+                ? failure
+                : AiFailure.unavailable,
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _staging = false);
+        } else {
+          _staging = false;
+        }
       }
       return;
     }
@@ -896,7 +927,7 @@ class _AiPageState extends State<AiPage> {
                           ? 'ai.stage'
                           : 'ai.apply',
                     ),
-                    onPressed: controller.canApply ? _apply : null,
+                    onPressed: !busy && controller.canApply ? _apply : null,
                   ),
                 ),
               ),
