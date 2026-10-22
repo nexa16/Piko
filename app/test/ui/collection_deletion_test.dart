@@ -6,6 +6,8 @@ import 'package:piko/features/vocabulary/collection_vocabulary_mutations.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/shared/catalogs.dart';
 import '../support/collection_deletion_fixture.dart';
 
 Finder card(String id) => find.byKey(ValueKey('vocabulary-$id'));
@@ -106,6 +108,46 @@ Future<void> swipeDelete(
 }
 
 void main() {
+  testWidgets(
+    'editor Delete Cancel preserves invalid raw draft and title status',
+    (tester) async {
+      final f = CollectionDeletionFixture();
+      await tester.runAsync(f.initialize);
+      await mount(tester, f);
+      final id = f.entries.first.id;
+      await tester.tap(card(id));
+      await tester.pumpAndSettle();
+      await tester.enterText(field(id), '  ');
+      await tester.pumpAndSettle();
+      final controller = tester.widget<TextField>(field(id)).controller!;
+      controller.selection = const TextSelection(
+        baseOffset: 0,
+        extentOffset: 1,
+      );
+      final remove = find.byKey(ValueKey('inline-delete-' + id));
+      await tester.ensureVisible(remove);
+      await tester.pumpAndSettle();
+      await tester.tap(remove);
+      await tester.pumpAndSettle();
+      expect(f.deletion.deletes, 0);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PikoDialog).last,
+          matching: button('Cancel'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(field(id)).controller, same(controller));
+      expect(controller.text, '  ');
+      expect(
+        controller.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 1),
+      );
+      expect(f.deletion.deletes, 0);
+      expect(find.text(PikoCopy('en').text('entry.unsaved')), findsOneWidget);
+    },
+  );
+
   testWidgets(
     'Undo above a raw editor uses the documented short-list scroll-bound fallback',
     (tester) async {
@@ -253,7 +295,14 @@ void main() {
       await tester.ensureVisible(delete);
       await tester.pumpAndSettle();
       await tester.tap(delete);
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PikoDialog).last,
+          matching: button('Delete vocabulary'),
+        ),
+      );
+      await tester.pumpAndSettle();
       expect(f.deletion.deletes, 0);
       expect(tester.widget<TextField>(field(id)).enabled, isFalse);
       gate.complete();

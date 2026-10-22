@@ -7,6 +7,8 @@ import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_button.dart';
 import 'inline_vocabulary_edit_controller.dart';
 import 'saved_vocabulary_editor.dart';
+import 'vocabulary_editor_actions.dart';
+import '../../data/learning_reset.dart';
 
 class VocabularyEditorSourceStatus extends ChangeNotifier {
   Object? error;
@@ -25,6 +27,7 @@ Future<void> showSavedVocabularyDialog(
   required VocabularyRepository repository,
   required String entryId,
   CategoriesRepository? categories,
+  LearningResetRepository? learningReset,
   ValueChanged<Future<void>>? onPendingWrites,
   Future<void> Function(VocabularyRecord)? onDelete,
   ValueChanged<ModalRoute<void>>? onRouteCreated,
@@ -64,6 +67,7 @@ Future<void> showSavedVocabularyDialog(
         repository: repository,
         edits: edits,
         categories: categories,
+        learningReset: learningReset,
         onPendingWrites: onPendingWrites,
         onDelete: onDelete,
         canUse: canUse,
@@ -89,6 +93,7 @@ class _SavedVocabularyDialog extends StatefulWidget {
     required this.repository,
     required this.edits,
     this.categories,
+    this.learningReset,
     this.onPendingWrites,
     this.onDelete,
     this.canUse,
@@ -98,6 +103,7 @@ class _SavedVocabularyDialog extends StatefulWidget {
   final VocabularyRepository repository;
   final InlineVocabularyEditController edits;
   final CategoriesRepository? categories;
+  final LearningResetRepository? learningReset;
   final ValueChanged<Future<void>>? onPendingWrites;
   final Future<void> Function(VocabularyRecord)? onDelete;
   final bool Function()? canUse;
@@ -175,6 +181,17 @@ class _SavedVocabularyDialogState extends State<_SavedVocabularyDialog> {
       builder: (context, _) => PikoDialog(
         presentation: PikoDialogPresentation.groupedForm,
         title: PikoCopyScope.of(context).text('vocab.inlineEdit'),
+        titleContent: VocabularyEditorTitle(
+          title: PikoCopyScope.of(context).text('vocab.inlineEdit'),
+          status: PikoCopyScope.of(context).text(
+            widget.edits.isSaving
+                ? 'entry.saving'
+                : widget.edits.error != null ||
+                      widget.edits.hasUncommittedChanges
+                ? 'entry.unsaved'
+                : 'entry.saved',
+          ),
+        ),
         onClose: close,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -192,6 +209,7 @@ class _SavedVocabularyDialogState extends State<_SavedVocabularyDialog> {
                   ? null
                   : () => close(delete: true),
               categories: widget.categories,
+              learningReset: widget.learningReset,
               onPendingWrites: widget.onPendingWrites,
               busy: closing || widget.canUse?.call() == false,
               showHeader: false,

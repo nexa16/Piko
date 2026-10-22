@@ -24,6 +24,8 @@ import 'vocabulary_learning_status.dart';
 import 'vocabulary_content_editor.dart';
 import 'saved_vocabulary_editor.dart';
 import 'saved_vocabulary_dialog.dart';
+import 'compact_vocabulary_pair.dart';
+import '../../data/learning_reset.dart';
 import 'vocabulary_selection.dart';
 import 'package:flutter/services.dart';
 
@@ -38,6 +40,7 @@ class CollectionVocabulary extends StatefulWidget {
     this.writeBarrier,
     this.queryBinding,
     this.categoriesRepository,
+    this.learningReset,
     this.sliver = false,
     this.selection,
     this.metadataError,
@@ -56,6 +59,7 @@ class CollectionVocabulary extends StatefulWidget {
   final CollectionWriteBarrier? writeBarrier;
   final CollectionQueryBinding? queryBinding;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
 
   /// Production Detail shares a single lazy viewport with its header.
   final bool sliver;
@@ -622,6 +626,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
         repository: widget.repository,
         entryId: id,
         categories: widget.categoriesRepository,
+        learningReset: widget.learningReset,
         onPendingWrites: widget.onPendingWrites,
         sourceStatus: dialogSourceStatus,
         canUse: () =>
@@ -718,29 +723,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             ],
           ] else
             ExcludeSemantics(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      first,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  SizedBox(width: pikoDesign.dimension('spacing.3')),
-                  Expanded(
-                    child: Text(
-                      second,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: pikoDesign.color('muted')),
-                    ),
-                  ),
-                ],
-              ),
+              child: CompactVocabularyPair(first: first, second: second),
             ),
-          if (widget.categoriesRepository != null)
+          if (view.mode == VocabularyViewMode.detailed &&
+              widget.categoriesRepository != null)
             VocabularyCategories(
               goldTags: true,
               collectionId: widget.collection.id,
@@ -767,6 +753,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
             targetFocus: current.targetFocus,
             nativeFocus: current.nativeFocus,
             categories: widget.categoriesRepository,
+            learningReset: widget.learningReset,
             snapshot: widget.queryBinding?.snapshot,
             busy:
                 widget.writeBarrier?.frozen == true ||
@@ -788,7 +775,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         content,
-        if (!record.active)
+        if (view.mode == VocabularyViewMode.detailed && !record.active)
           Padding(
             padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.2')),
             child: Text(
@@ -796,7 +783,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           )
-        else
+        else if (view.mode == VocabularyViewMode.detailed)
           VocabularyLearningStatusView(
             collection: widget.collection,
             entryId: record.id,
@@ -905,7 +892,8 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               borderRadius: BorderRadius.circular(
                 pikoDesign.dimension('radii.card'),
               ),
-              child: PikoCard(
+              child: _VocabularyRowSurface(
+                compact: !expanded && view.mode == VocabularyViewMode.compact,
                 key: ValueKey('vocabulary-${occurrence(record.id, group)}'),
                 focused: focusedId == record.id,
                 selected: selecting && widget.selection!.contains(record.id),
@@ -1157,6 +1145,21 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                     ),
                     child: Row(
                       children: [
+                        if (widget.selection != null)
+                          Checkbox(
+                            key: ValueKey('collection-group-selection-$id'),
+                            tristate: true,
+                            value: widget.selection!.groupState(
+                              item.group.entries.map((entry) => entry.id),
+                            ),
+                            semanticLabel:
+                                item.group.name ?? copy.text('view.unassigned'),
+                            onChanged: actionBusy
+                                ? null
+                                : (_) => widget.selection!.toggleGroup(
+                                    item.group.entries.map((entry) => entry.id),
+                                  ),
+                          ),
                         RotatedBox(
                           quarterTurns: expanded ? 1 : 0,
                           child: const PikoIcon(
@@ -1325,5 +1328,54 @@ class _RetainedVocabularyRowState extends State<_RetainedVocabularyRow>
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
+  }
+}
+
+/// Compact has flat geometry; Detailed retains the established card role.
+class _VocabularyRowSurface extends StatelessWidget {
+  const _VocabularyRowSurface({
+    super.key,
+    required this.compact,
+    required this.focused,
+    required this.selected,
+    required this.selectable,
+    required this.padding,
+    required this.child,
+  });
+  final bool compact, focused, selected, selectable;
+  final EdgeInsets padding;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    if (!compact) {
+      return PikoCard(
+        focused: focused,
+        selected: selected,
+        selectable: selectable,
+        padding: padding,
+        child: child,
+      );
+    }
+    return Container(
+      constraints: BoxConstraints(
+        minHeight: pikoDesign.dimension('controls.largeHeight'),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: pikoDesign.dimension('spacing.4'),
+        vertical: pikoDesign.dimension('spacing.2'),
+      ),
+      decoration: BoxDecoration(
+        color: selected ? pikoDesign.color('tint') : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(color: PikoTheme.border),
+          left: BorderSide(
+            color: focused ? pikoDesign.color('primary') : Colors.transparent,
+            width: pikoDesign.dimension('states.focusWidth'),
+          ),
+        ),
+      ),
+      alignment: Alignment.centerLeft,
+      child: child,
+    );
   }
 }

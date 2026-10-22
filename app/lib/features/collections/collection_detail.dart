@@ -50,6 +50,10 @@ import '../speed/speed_setup_dialog.dart'
     show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import '../categories/category_management.dart';
 import '../categories/category_settings_page.dart';
+import '../../data/learning_reset.dart';
+import '../../data/vocabulary_deletion.dart';
+import '../vocabulary/vocabulary_trash_page.dart';
+import 'collection_level_control.dart';
 import '../settings/preferred_direction_controller.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
@@ -87,6 +91,8 @@ class CollectionDetail extends StatefulWidget {
     this.selectedSpeedSessionFactory,
     this.selectedReviewSessionFactory,
     this.categoriesRepository,
+    this.learningReset,
+    this.vocabularyTrash,
     this.directionBinding,
     this.settingsOnly = false,
     super.key,
@@ -114,6 +120,8 @@ class CollectionDetail extends StatefulWidget {
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
+  final VocabularyTrashService? vocabularyTrash;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
@@ -634,6 +642,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           aiBuilder: widget.aiBuilder,
           categoriesRepository: widget.categoriesRepository,
           categoryManagementBuilder: widget.categoryManagementBuilder,
+          learningReset: widget.learningReset,
+          vocabularyTrash: widget.vocabularyTrash,
           settingsOnly: true,
         ),
       );
@@ -707,6 +717,23 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             ),
             if (loadError != null)
               CollectionLoadFailure(onRetry: () => setState(_watch)),
+            if (widget.repository is CollectionLevelRepository)
+              PikoFormSection(
+                title: copy.text('catPreview.properties'),
+                children: [
+                  CollectionLevelControl(
+                    collection: record,
+                    repository: widget.repository as CollectionLevelRepository,
+                    enabled: ready && !_settingsBusy,
+                    onPendingWrites: widget.onPendingVocabularyWrites,
+                    onBusyChanged: (busy) {
+                      if (mounted && owner == _identity) {
+                        setState(() => _settingsBusy = busy);
+                      }
+                    },
+                  ),
+                ],
+              ),
             if (widget.vocabularyRepository is VocabularyContentRepository &&
                 widget.vocabularyRepository is CollectionHintPreferences)
               PikoFormSection(
@@ -730,38 +757,60 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 ],
               ),
             if (widget.categoriesRepository != null ||
-                widget.categoryManagementBuilder != null)
+                widget.categoryManagementBuilder != null ||
+                widget.vocabularyTrash != null)
               PikoFormSection(
                 title: copy.text('settingsPreview.management'),
                 children: [
-                  PikoNavigationRow(
-                    title: copy.text('catPreview.categories'),
-                    onTap: _settingsBusy || !ready
-                        ? null
-                        : () {
-                            if (!available()) return;
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (context) =>
-                                    widget.categoryManagementBuilder != null
-                                    ? CategoryManagementPage(
-                                        collectionId: record.id,
-                                        collectionName: record.name,
-                                        managementBuilder:
-                                            widget.categoryManagementBuilder,
-                                      )
-                                    : CategorySettingsPage(
-                                        collectionId: record.id,
-                                        collectionName: record.name,
-                                        repository:
-                                            widget.categoriesRepository!,
-                                        onPendingWrites:
-                                            widget.onPendingVocabularyWrites,
-                                      ),
-                              ),
-                            );
-                          },
-                  ),
+                  if (widget.categoriesRepository != null ||
+                      widget.categoryManagementBuilder != null)
+                    PikoNavigationRow(
+                      title: copy.text('catPreview.categories'),
+                      onTap: _settingsBusy || !ready
+                          ? null
+                          : () {
+                              if (!available()) return;
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      widget.categoryManagementBuilder != null
+                                      ? CategoryManagementPage(
+                                          collectionId: record.id,
+                                          collectionName: record.name,
+                                          managementBuilder:
+                                              widget.categoryManagementBuilder,
+                                        )
+                                      : CategorySettingsPage(
+                                          collectionId: record.id,
+                                          collectionName: record.name,
+                                          repository:
+                                              widget.categoriesRepository!,
+                                          onPendingWrites:
+                                              widget.onPendingVocabularyWrites,
+                                        ),
+                                ),
+                              );
+                            },
+                    ),
+                  if (widget.vocabularyTrash != null)
+                    PikoNavigationRow(
+                      key: const ValueKey('collection-trash'),
+                      title: copy.text('collection.trash'),
+                      onTap: available()
+                          ? () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => VocabularyTrashPage(
+                                    collection: record,
+                                    repository: widget.vocabularyTrash!,
+                                    onPendingWrites:
+                                        widget.onPendingVocabularyWrites,
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
+                    ),
                 ],
               ),
             if (widget.aiBuilder != null)
@@ -1869,6 +1918,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   queryBinding: widget.queryBinding,
                   preferredDirections: _directions,
                   categoriesRepository: widget.categoriesRepository,
+                  learningReset: widget.learningReset,
                   onPendingWrites: (work) {
                     // Capture this build's barrier/dependency callback so old
                     // child work is registered with its original storage owner.

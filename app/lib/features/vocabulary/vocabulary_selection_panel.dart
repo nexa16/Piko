@@ -28,45 +28,100 @@ class VocabularySelectionPanel extends StatelessWidget {
     final gap = d.dimension('spacing.2');
     final hidden = selection.hidden(matchingIds);
     final media = MediaQuery.of(context);
-    final controls = Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Semantics(
-          liveRegion: true,
-          child: Text(
-            copy.text('selection.count', {'count': selection.ids.length}),
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-        ),
+    final count = Semantics(
+      liveRegion: true,
+      child: Text(
+        copy.text('selection.count', {'count': selection.ids.length}),
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
+    final buttons = <Widget>[
+      PikoButton(
+        key: const ValueKey('vocabulary-select-all'),
+        label: copy.text('selection.all'),
+        variant: PikoButtonVariant.ghost,
+        onPressed: enabled && matchingIds.any((id) => !selection.contains(id))
+            ? () => selection.selectAll(matchingIds)
+            : null,
+      ),
+      PikoButton(
+        key: const ValueKey('vocabulary-clear-selection'),
+        label: copy.text('selection.clear'),
+        variant: PikoButtonVariant.ghost,
+        onPressed: enabled ? selection.clear : null,
+      ),
+      if (onDelete != null)
         PikoButton(
-          key: const ValueKey('vocabulary-select-all'),
-          label: copy.text('selection.all'),
-          variant: PikoButtonVariant.ghost,
-          onPressed: enabled && matchingIds.any((id) => !selection.contains(id))
-              ? () => selection.selectAll(matchingIds)
-              : null,
+          key: const ValueKey('vocabulary-delete-selection'),
+          label: copy.text('vocab.delete'),
+          variant: PikoButtonVariant.dangerGhost,
+          onPressed: enabled && selection.ids.isNotEmpty ? onDelete : null,
         ),
-        PikoButton(
-          key: const ValueKey('vocabulary-clear-selection'),
-          label: copy.text('selection.clear'),
-          variant: PikoButtonVariant.ghost,
-          onPressed: enabled ? selection.clear : null,
+    ];
+    double textWidth(String label) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: Theme.of(context).textTheme.labelLarge,
         ),
-        if (onDelete != null)
-          PikoButton(
-            key: const ValueKey('vocabulary-delete-selection'),
-            label: copy.text('vocab.delete'),
-            variant: PikoButtonVariant.dangerGhost,
-            onPressed: enabled && selection.ids.isNotEmpty ? onDelete : null,
-          ),
-        if (hidden > 0)
-          Text(
-            copy.text('selection.hidden', {'count': hidden}),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-      ],
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    final controls = LayoutBuilder(
+      builder: (context, constraints) {
+        final labels = [
+          'selection.all',
+          'selection.clear',
+          if (onDelete != null) 'vocab.delete',
+        ];
+        final natural =
+            textWidth(
+              copy.text('selection.count', {'count': selection.ids.length}),
+            ) +
+            labels.fold<double>(
+              0,
+              (sum, key) =>
+                  sum +
+                  textWidth(copy.text(key)) +
+                  2 * d.dimension('components.buttons.padding'),
+            ) +
+            gap * labels.length;
+        final oneLine = natural <= constraints.maxWidth;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (oneLine)
+              Row(
+                children: [
+                  count,
+                  SizedBox(width: gap),
+                  ...buttons,
+                ],
+              )
+            else ...[
+              count,
+              SizedBox(height: gap),
+              Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: buttons,
+              ),
+            ],
+            if (hidden > 0)
+              Text(
+                copy.text('selection.hidden', {'count': hidden}),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
+        );
+      },
     );
     return _PanelMeasure(
       onHeightChanged: onHeightChanged,

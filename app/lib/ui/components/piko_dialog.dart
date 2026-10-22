@@ -144,9 +144,7 @@ class PikoDialog extends StatelessWidget {
           maxWidth: d.dimension('components.dialogs.maxWidth'),
         ),
         insetAnimationDuration: PikoTheme.motion(context),
-        backgroundColor: d.color(
-          presentation == PikoDialogPresentation.groupedForm ? 'bg' : 'surface',
-        ),
+        backgroundColor: d.color('tint'),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(d.dimension('radii.dialog')),
         ),
@@ -188,10 +186,11 @@ class PikoDialog extends StatelessWidget {
                       namesRoute: true,
                       header: true,
                       label: title,
-                      excludeSemantics: true,
                       child: DefaultTextStyle(
                         style: Theme.of(context).textTheme.titleMedium!,
-                        child: titleContent ?? Text(title),
+                        child:
+                            titleContent ??
+                            ExcludeSemantics(child: Text(title)),
                       ),
                     ),
                   ),

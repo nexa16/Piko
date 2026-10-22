@@ -10,6 +10,7 @@ import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_switch.dart';
 import '../../ui/piko_theme.dart';
 import 'category_dimension_form.dart';
+import 'category_order_list.dart';
 
 class CategorySettingsPage extends StatefulWidget {
   const CategorySettingsPage({
@@ -29,7 +30,38 @@ class CategorySettingsPage extends StatefulWidget {
 class _CategorySettingsPageState extends State<CategorySettingsPage> {
   late Stream<List<CategoryDimensionRecord>> groups = widget.repository
       .watchDimensions(widget.collectionId);
-  bool opening = false;
+  bool opening = false, ordering = false;
+  Object? orderError;
+  Future<void> moveGroups(
+    List<CategoryDimensionRecord> current,
+    int from,
+    int to,
+  ) async {
+    if (opening || ordering || from == to) return;
+    final ids = current.map((group) => group.id).toList();
+    final next = [...ids];
+    next.insert(to, next.removeAt(from));
+    setState(() {
+      ordering = true;
+      orderError = null;
+    });
+    try {
+      final operation = widget.repository.reorderDimensions(
+        collectionId: widget.collectionId,
+        expectedOrder: ids,
+        orderedIds: next,
+      );
+      widget.onPendingWrites?.call(
+        operation.then<void>((_) {}, onError: (Object _, StackTrace _) {}),
+      );
+      await operation;
+    } catch (error) {
+      if (mounted) setState(() => orderError = error);
+    } finally {
+      if (mounted) setState(() => ordering = false);
+    }
+  }
+
   @override
   void didUpdateWidget(CategorySettingsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -82,18 +114,38 @@ class _CategorySettingsPageState extends State<CategorySettingsPage> {
                       PikoFormFieldRow(
                         child: Text(copy.text('r2.noCategories')),
                       ),
-                    for (final group in snapshot.data!)
-                      _CategoryOverviewRow(
+                    CategoryOrderList<CategoryDimensionRecord>(
+                      items: snapshot.data!,
+                      id: (group) => group.id,
+                      label: (group) => group.name,
+                      enabled: !opening && !ordering,
+                      onMove: (from, to) =>
+                          moveGroups(snapshot.data!, from, to),
+                      row: (group) => _CategoryOverviewRow(
                         key: ValueKey(group.id),
                         group: group,
                         repository: widget.repository,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => CategoryGroupSettingsPage(
-                              group: group,
-                              repository: widget.repository,
-                              onPendingWrites: widget.onPendingWrites,
+                        onTap: () {
+                          if (opening || ordering) return;
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => CategoryGroupSettingsPage(
+                                group: group,
+                                repository: widget.repository,
+                                onPendingWrites: widget.onPendingWrites,
+                              ),
                             ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (orderError != null)
+                      PikoFormFieldRow(
+                        child: Text(
+                          copy.text(
+                            orderError == CategoryValidation.staleOrder
+                                ? 'category.reorderStale'
+                                : 'category.reorderFailed',
                           ),
                         ),
                       ),
@@ -105,7 +157,7 @@ class _CategorySettingsPageState extends State<CategorySettingsPage> {
               label: copy.text('category.addDimension'),
               icon: const PikoIcon(PikoIconName.plus),
               variant: PikoButtonVariant.ghost,
-              onPressed: opening
+              onPressed: opening || ordering
                   ? null
                   : () async {
                       if (ModalRoute.of(context)?.isCurrent != true) return;
@@ -396,6 +448,28 @@ class _CategoryGroupSettingsPageState extends State<CategoryGroupSettingsPage> {
     }
   }
 
+  Future<void> moveValues(
+    List<CategoryValueRecord> current,
+    int from,
+    int to,
+  ) async {
+    if (busy || from == to) return;
+    final ids = current.map((value) => value.id).toList();
+    final next = [...ids];
+    next.insert(to, next.removeAt(from));
+    try {
+      await write(
+        () => widget.repository.reorderValues(
+          dimensionId: opening.id,
+          expectedOrder: ids,
+          orderedIds: next,
+        ),
+      );
+    } catch (failure) {
+      if (mounted) setState(() => error = failure);
+    }
+  }
+
   Future<void> editValue([CategoryValueRecord? value]) async {
     if (busy || ModalRoute.of(context)?.isCurrent != true) return;
     await showPikoDialog<void>(
@@ -504,8 +578,14 @@ class _CategoryGroupSettingsPageState extends State<CategoryGroupSettingsPage> {
                   return PikoFormSection(
                     title: copy.text('catPreview.values'),
                     children: [
-                      for (final value in snapshot.data!)
-                        PikoFormFieldRow(
+                      CategoryOrderList<CategoryValueRecord>(
+                        items: snapshot.data!,
+                        id: (value) => value.id,
+                        label: (value) => value.name,
+                        enabled: !busy,
+                        onMove: (from, to) =>
+                            moveValues(snapshot.data!, from, to),
+                        row: (value) => PikoFormFieldRow(
                           child: Row(
                             children: [
                               Expanded(child: Text(value.name)),
@@ -527,6 +607,7 @@ class _CategoryGroupSettingsPageState extends State<CategoryGroupSettingsPage> {
                             ],
                           ),
                         ),
+                      ),
                       PikoNavigationRow(
                         title: copy.text('r2.addValue'),
                         onTap: busy ? null : editValue,

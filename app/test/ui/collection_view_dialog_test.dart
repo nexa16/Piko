@@ -5,9 +5,45 @@ import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
 import 'collection_filters_test.dart' show FilterHarness;
 
 void main() {
+  testWidgets('View omits bulk expansion while list entrance remains', (
+    tester,
+  ) async {
+    final h = FilterHarness();
+    await h.mount(tester);
+    await h.scope.saveView(const CollectionViewPreferences(grouping: 'topic'));
+    await tester.pumpWidget(
+      PikoApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              CollectionListMenu(binding: h.binding, enabled: true),
+              CollectionListResults(binding: h.binding, enabled: true),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('collection-toggle-groups')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('collection-list-menu')));
+    await tester.pumpAndSettle();
+    final dialog = find.byType(PikoDialog);
+    expect(
+      find.descendant(of: dialog, matching: find.text('Expand all')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: dialog, matching: find.text('Collapse all')),
+      findsNothing,
+    );
+  });
   for (final language in ['en', 'de']) {
     for (final picker in CollectionViewPicker.values) {
       testWidgets('$language $picker staged picker at 320px/200%', (
@@ -37,6 +73,10 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
+        expect(
+          tester.widget<Dialog>(find.byType(Dialog)).backgroundColor,
+          const Color(0xffE8EFFA),
+        );
         final apply = find.widgetWithText(PikoButton, copy.text('r2.apply'));
         final before = tester.getRect(apply);
         expect(before.bottom, lessThan(900));
