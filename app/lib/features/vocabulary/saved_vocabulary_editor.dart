@@ -16,6 +16,10 @@ import '../../ui/piko_theme.dart';
 import '../categories/vocabulary_categories.dart';
 import 'inline_vocabulary_edit_controller.dart';
 import 'vocabulary_content_editor.dart';
+import 'vocabulary_editor_actions.dart';
+import 'vocabulary_reset_control.dart';
+import '../../data/learning_reset.dart';
+import '../../data/learning_item.dart';
 
 String savedVocabularyErrorKey(Object error) =>
     vocabularyContentErrorKey(error) ??
@@ -41,6 +45,8 @@ class SavedVocabularyEditor extends StatelessWidget {
     required this.nativeFocus,
     required this.onCollapse,
     this.onDelete,
+    this.learningReset,
+    this.onLearningReset,
     this.categories,
     this.snapshot,
     this.busy = false,
@@ -55,6 +61,8 @@ class SavedVocabularyEditor extends StatelessWidget {
   final FocusNode targetFocus, nativeFocus;
   final VoidCallback onCollapse;
   final VoidCallback? onDelete;
+  final LearningResetRepository? learningReset;
+  final ValueChanged<Set<LearningDirection>>? onLearningReset;
   final CategoriesRepository? categories;
   final CollectionQuerySnapshot? snapshot;
   final bool busy, showHeader;
@@ -99,27 +107,15 @@ class SavedVocabularyEditor extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      copy.text('vocab.inlineEdit'),
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        copy.text(
-                          edits.isSaving
-                              ? 'entry.saving'
-                              : error != null || edits.hasUncommittedChanges
-                              ? 'entry.unsaved'
-                              : 'entry.saved',
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
+                child: VocabularyEditorTitle(
+                  title: copy.text('vocab.inlineEdit'),
+                  status: copy.text(
+                    edits.isSaving
+                        ? 'entry.saving'
+                        : error != null || edits.hasUncommittedChanges
+                        ? 'entry.unsaved'
+                        : 'entry.saved',
+                  ),
                 ),
               ),
               PikoIconButton(
@@ -244,6 +240,24 @@ class SavedVocabularyEditor extends StatelessWidget {
               ),
             ],
           ),
+        if (learningReset != null)
+          PikoFormGroup(
+            children: [
+              VocabularyResetControl(
+                entryId: edits.entryId,
+                repository: learningReset!,
+                onLearningReset: onLearningReset,
+                enabled: !busy,
+                beforeReset: () async {
+                  await edits.awaitSavedEdits();
+                  if (edits.error != null || edits.hasUncommittedChanges) {
+                    throw StateError('Unsaved vocabulary');
+                  }
+                },
+                onPendingWrites: onPendingWrites,
+              ),
+            ],
+          ),
         if (onDelete != null)
           PikoFormGroup(
             children: [
@@ -254,24 +268,16 @@ class SavedVocabularyEditor extends StatelessWidget {
                 trailing: const PikoIcon(PikoIconName.trash),
                 onTap: busy
                     ? null
-                    : () {
-                        if (admitted()) onDelete!();
+                    : () async {
+                        if (admitted() &&
+                            await confirmVocabularyDeletion(context) &&
+                            context.mounted &&
+                            admitted()) {
+                          onDelete!();
+                        }
                       },
               ),
             ],
-          ),
-        if (!showHeader)
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              copy.text(
-                edits.isSaving
-                    ? 'entry.saving'
-                    : error != null || edits.hasUncommittedChanges
-                    ? 'entry.unsaved'
-                    : 'entry.saved',
-              ),
-            ),
           ),
         if (error != null)
           Semantics(
