@@ -35,6 +35,12 @@ void main() {
             : original;
         final firstReceipt = await original.delete(f.entry.id);
         await recovery.restoreTrashEntry(f.entry.id);
+        expect(
+          original.canUndo(firstReceipt),
+          crossService,
+          reason:
+              'Same-service recovery retires its handle; another service has no synchronous database notification.',
+        );
         await f.vocabulary.updateWithContent(
           id: f.entry.id,
           targetText: 'Updated',
@@ -63,7 +69,7 @@ void main() {
         expect(firstReceipt.expiresAt, secondReceipt.expiresAt);
         final retained = await rows(f.db, 'vocabulary_trash');
         await expectLater(
-          original.restore(firstReceipt),
+          () => original.restore(firstReceipt),
           throwsA(VocabularyUndoFailure.expired),
         );
         expect(original.canUndo(firstReceipt), false);
@@ -387,7 +393,7 @@ void main() {
         nativeText: 'Zweite',
       );
       final deletion = SqliteVocabularyDeletionService(f.db);
-      await deletion.deleteMany(
+      final receipts = await deletion.deleteMany(
         collectionId: f.owner.id,
         ids: {f.entry.id, second.id},
       );
@@ -405,6 +411,30 @@ void main() {
       expect(await rows(f.db, 'vocabulary_trash'), before);
       expect(await f.vocabulary.watchById(f.entry.id).first, isNull);
       expect(await f.vocabulary.watchById(second.id).first, isNull);
+      expect(receipts.every(deletion.canUndo), true);
+    },
+  );
+
+  test(
+    'Clear trash retires Undo only after commit and preserves handles on failure',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final service = SqliteVocabularyDeletionService(f.db);
+      final receipt = await service.delete(f.entry.id);
+      await f.db.customStatement(
+        "CREATE TRIGGER reject_clear BEFORE DELETE ON vocabulary_trash BEGIN SELECT RAISE(ABORT,'test'); END",
+      );
+      await expectLater(service.clearTrash(f.owner.id), throwsA(anything));
+      expect(service.canUndo(receipt), true);
+      await f.db.customStatement('DROP TRIGGER reject_clear');
+      await service.clearTrash(f.owner.id);
+      expect(service.canUndo(receipt), false);
+      await expectLater(
+        () => service.restore(receipt),
+        throwsA(VocabularyUndoFailure.expired),
+      );
     },
   );
 

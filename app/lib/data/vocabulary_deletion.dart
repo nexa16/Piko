@@ -24,6 +24,8 @@ abstract interface class VocabularyRecoveryWarnings {
 abstract interface class VocabularyDeletionService {
   Future<VocabularyDeletionReceipt> delete(String id);
   Future<VocabularyRecord> restore(VocabularyDeletionReceipt receipt);
+  /// Synchronous handle availability within this service. Another service can
+  /// consume/clear its durable item; restore always revalidates exact identity.
   bool canUndo(VocabularyDeletionReceipt receipt);
 
   /// Caller schedules this at receipt deadlines; operations also sweep lazily.

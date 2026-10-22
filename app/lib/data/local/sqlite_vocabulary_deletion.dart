@@ -410,6 +410,9 @@ final class SqliteVocabularyDeletionService
       await database.transaction(() async {
         _ensureActive();
         if (receipt.forgotten) throw VocabularyUndoFailure.invalidReceipt;
+        if (receipt.expired || receipt.snapshot == null) {
+          throw VocabularyUndoFailure.expired;
+        }
         final now = clock.now().toUtc();
         if (!now.isBefore(receipt.expiresAt)) {
           throw VocabularyUndoFailure.expired;
@@ -601,21 +604,27 @@ final class SqliteVocabularyDeletionService
       });
 
   @override
-  Future<void> clearTrash(String collectionId) =>
-      database.transaction(() async {
-        _ensureActive();
-        await (database.delete(
-          database.vocabularyTrash,
-        )..where((r) => r.collectionId.equals(collectionId))).go();
-        for (final receipt
-            in _active
-                .where((r) => r.entry.collectionId == collectionId)
-                .toList()) {
-          receipt.expired = true;
-          receipt.snapshot = null;
-          _active.remove(receipt);
-        }
-      });
+  Future<void> clearTrash(String collectionId) async {
+    final handles = <_Receipt>[];
+    await database.transaction(() async {
+      _ensureActive();
+      await (database.delete(
+        database.vocabularyTrash,
+      )..where((r) => r.collectionId.equals(collectionId))).go();
+      handles.addAll(
+        _active.where((r) => r.entry.collectionId == collectionId),
+      );
+    });
+    _retireHandles(handles);
+  }
+
+  void _retireHandles(Iterable<_Receipt> handles) {
+    for (final receipt in handles) {
+      receipt.expired = true;
+      receipt.snapshot = null;
+      _active.remove(receipt);
+    }
+  }
 
   VocabularyRecord _trashRecord(_Snapshot snapshot) {
     final entry = snapshot.entry;
@@ -683,7 +692,8 @@ final class SqliteVocabularyDeletionService
   }) async {
     _ensureActive();
     await purgeExpiredTrash();
-    return database.transaction(() async {
+    final restoredIdentities = <String>{};
+    final result = await database.transaction(() async {
       final rows =
           await (database.select(database.vocabularyTrash)
                 ..where(
@@ -710,6 +720,7 @@ final class SqliteVocabularyDeletionService
         try {
           await restore(receipt);
           restored.add(row.entryId);
+          restoredIdentities.add(snapshot.deletionIdentity);
           if (receipt.omittedCategories) omitted.add(row.entryId);
         } on VocabularyUndoFailure catch (failure) {
           conflicts[row.entryId] = failure;
@@ -721,6 +732,17 @@ final class SqliteVocabularyDeletionService
         omittedCategoryEntryIds: omitted,
       );
     });
+    // Retire original Undo handles only after the whole group commits. A later
+    // storage failure must leave those handles usable for the rolled-back rows.
+    _retireHandles(
+      _active
+          .where(
+            (receipt) =>
+                restoredIdentities.contains(receipt.snapshot?.deletionIdentity),
+          )
+          .toList(),
+    );
+    return result;
   }
 
   RetryObligation _retryRecord(StoredRetryObligation row) =>
