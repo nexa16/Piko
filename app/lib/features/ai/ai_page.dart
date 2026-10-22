@@ -333,10 +333,11 @@ class _AiPageState extends State<AiPage> {
                   ? null
                   : () {
                       controller.cancel();
-                      setState(
-                        () => level = CollectionRecord
-                            .levels[CollectionRecord.levels.indexOf(level) + 1],
-                      );
+                      setState(() {
+                        level = CollectionRecord
+                            .levels[CollectionRecord.levels.indexOf(level) + 1];
+                        portionResolved = false;
+                      });
                     },
             ),
           ],

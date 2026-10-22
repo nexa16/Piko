@@ -99,6 +99,16 @@ void main({bool nativeViewport = false}) {
           )
           .onChanged!('comprehensive');
       await t.pumpAndSettle();
+      t
+          .widget<PikoPreferencePicker<String>>(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is PikoPreferencePicker<String> &&
+                  w.label == copy.text('ai.targetLevel'),
+            ),
+          )
+          .onChanged!('B1');
+      await t.pumpAndSettle();
       final before = await stored(f.db);
       await tapVisible(t, find.byKey(const ValueKey('ai-start')));
       expect(p.calls, 1);
@@ -118,8 +128,15 @@ void main({bool nativeViewport = false}) {
         find.widgetWithText(PikoButton, copy.text('ai.anotherPortion')),
       );
       expect(p.calls, 1);
+      await tapVisible(
+        t,
+        find.widgetWithText(PikoButton, copy.text('ai.nextLevel')),
+      );
+      expect(find.text(copy.text('ai.anotherPortion')), findsNothing);
+      expect(find.text(copy.text('ai.nextLevel')), findsNothing);
       await tapVisible(t, find.byKey(const ValueKey('ai-start')));
       expect(p.calls, 2);
+      expect(p.last!.options!.level, 'A2');
       expect(await stored(f.db), before);
       await t.pumpWidget(const SizedBox.shrink());
       await t.pumpAndSettle();
