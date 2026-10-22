@@ -30,6 +30,9 @@ final class SpeedLearningSession extends ChangeNotifier {
     bool presentationActive = true,
     this.activeEntryIds,
     bool Function()? isPresentationCurrent,
+    this.commitCorrectableCompletion,
+    this.reverseCompletion,
+    this.retireCompletion,
   }) : _state = initial,
        // Preserve public callback names while keeping owned fields private,
        // matching the existing GradingCoordinator constructor boundary.
@@ -48,12 +51,118 @@ final class SpeedLearningSession extends ChangeNotifier {
   final Future<Set<String>> Function()? activeEntryIds;
   bool endedByExclusion = false;
   final Future<void> Function(SpeedCompletion) _commitCompletion;
+  final Future<SpeedCompletionResult> Function(SpeedCompletion)?
+  commitCorrectableCompletion;
+  final Future<void> Function(SpeedCompletionResult)? reverseCompletion;
+  final void Function(SpeedCompletionResult)? retireCompletion;
+  SpeedSession? _previousBefore;
+  SpeedAnswer? _previousAnswer;
+  SpeedCompletionResult? _previousCompletion;
+  SpeedTurnHandle? _correctionHandle;
+  SpeedAnswer? get previousAnswer => _previousAnswer;
+  bool get isCorrecting => _correctionHandle != null;
+  bool get canCorrectPrevious =>
+      _canInteract &&
+      !isSubmitting &&
+      !isComplete &&
+      !isCorrecting &&
+      !_revealed &&
+      _previousBefore != null &&
+      commitCorrectableCompletion != null &&
+      reverseCompletion != null;
+
+  bool beginCorrection() {
+    if (!canCorrectPrevious) return false;
+    _correctionHandle = SpeedTurnHandle._(_previousBefore!.currentEntryId!);
+    _revealed = true;
+    notifyListeners();
+    return true;
+  }
+
+  Future<SpeedCompletionResult?> _commitAnswer(SpeedSession next) async {
+    if (next.completion == null) return null;
+    final correctable = commitCorrectableCompletion;
+    if (correctable != null) {
+      final result = await correctable(next.completion!);
+      if (_stopped || _disposed) retireCompletion?.call(result);
+      return result;
+    }
+    await _commitCompletion(next.completion!);
+    return null;
+  }
+
+  void _remember(
+    SpeedSession before,
+    SpeedAnswer answer,
+    SpeedCompletionResult? receipt,
+  ) {
+    if (_stopped || _disposed) {
+      if (receipt != null) retireCompletion?.call(receipt);
+      return;
+    }
+    if (_previousCompletion case final old?) {
+      if (!identical(old, receipt)) retireCompletion?.call(old);
+    }
+    _previousBefore = before;
+    _previousAnswer = answer;
+    _previousCompletion = receipt;
+  }
+
+  Future<bool> _replace(SpeedTurnHandle handle, SpeedAnswer answer) async {
+    final result = Completer<bool>();
+    _pending = result.future;
+    _error = null;
+    try {
+      _register?.call(awaitPending());
+      notifyListeners();
+      await _refreshActivity();
+      if (activeEntryIds case final read?) {
+        if (!(await read()).contains(handle.entryId))
+          throw SpeedCompletionFailure.inactive;
+      }
+      if (_stopped || _disposed || !identical(_correctionHandle, handle))
+        return false;
+      if (answer != _previousAnswer) {
+        final before = _previousBefore!;
+        final next = before.answer(entryId: handle.entryId, answer: answer);
+        final priorReceipt = _previousCompletion;
+        if (priorReceipt != null) await reverseCompletion!(priorReceipt);
+        final receipt = await _commitAnswer(next);
+        _remember(before, answer, receipt);
+        if (!_stopped && !_disposed) _state = next;
+      }
+      if (!_stopped && !_disposed) {
+        _correctionHandle = null;
+        _activate();
+      }
+      return true;
+    } catch (error) {
+      if (!_stopped && !_disposed) _error = error;
+      rethrow;
+    } finally {
+      _pending = null;
+      result.complete(false);
+      if (!_stopped && !_disposed) notifyListeners();
+    }
+  }
 
   void _exclude(Set<String> inactive) {
     final state = _state;
     if (state == null) return;
     final next = state.excluding(inactive);
     if (identical(next, state)) return;
+    if (_previousBefore case final before?) {
+      if (inactive.contains(before.currentEntryId)) {
+        if (_previousCompletion case final receipt?)
+          retireCompletion?.call(receipt);
+        _previousBefore = null;
+        _previousCompletion = null;
+        _previousAnswer = null;
+        _correctionHandle = null;
+      } else {
+        _previousBefore = before.excluding(inactive);
+      }
+    }
     final currentId = _current?.entryId;
     _state = next;
     endedByExclusion = next.isComplete;
@@ -98,9 +207,11 @@ final class SpeedLearningSession extends ChangeNotifier {
           result.complete(false);
           return;
         }
-        final next = _state!.answer(entryId: handle.entryId, answer: answer);
-        if (next.completion != null) await _commitCompletion(next.completion!);
+        final before = _state!;
+        final next = before.answer(entryId: handle.entryId, answer: answer);
+        final receipt = await _commitAnswer(next);
         if (!_stopped && !_disposed && identical(_current, handle)) {
+          _remember(before, answer, receipt);
           _accept(next);
           await _refreshActivity();
         }
@@ -137,13 +248,13 @@ final class SpeedLearningSession extends ChangeNotifier {
   bool _disposed = false;
 
   SpeedSession? get state => _state;
-  SpeedTurnHandle? get current => _current;
+  SpeedTurnHandle? get current => _correctionHandle ?? _current;
   SpeedBreakHandle? get currentBreak => _currentBreak;
   bool get revealed => _revealed;
   bool get isSubmitting => _pending != null;
   bool get isStopped => _stopped;
   bool get isComplete => _state?.isComplete ?? false;
-  bool get needsBreak => _state?.needsBreak ?? false;
+  bool get needsBreak => !isCorrecting && (_state?.needsBreak ?? false);
   Object? get error => _error;
 
   bool get _canInteract =>
@@ -161,7 +272,7 @@ final class SpeedLearningSession extends ChangeNotifier {
   }
 
   bool canReveal(SpeedTurnHandle handle) =>
-      _canInteract && !isSubmitting && identical(handle, _current);
+      _canInteract && !isSubmitting && identical(handle, current);
 
   bool reveal(SpeedTurnHandle handle) {
     if (!canReveal(handle)) return false;
@@ -176,9 +287,11 @@ final class SpeedLearningSession extends ChangeNotifier {
 
   Future<bool> submitAnswer(SpeedTurnHandle handle, SpeedAnswer answer) {
     if (!canAnswer(handle)) return Future.value(false);
+    if (isCorrecting) return _replace(handle, answer);
     if (activeEntryIds != null) return _submitChecked(handle, answer);
     final next = _state!.answer(entryId: handle.entryId, answer: answer);
     if (next.completion == null) {
+      _remember(_state!, answer, null);
       _accept(next);
       notifyListeners();
       return Future.value(true);
@@ -197,7 +310,7 @@ final class SpeedLearningSession extends ChangeNotifier {
       if (!_stopped && !_disposed) notifyListeners();
       return result.future;
     }
-    unawaited(_commit(handle, next, result));
+    unawaited(_commit(handle, next, answer, result));
     if (!_stopped && !_disposed) notifyListeners();
     return result.future;
   }
@@ -205,11 +318,13 @@ final class SpeedLearningSession extends ChangeNotifier {
   Future<void> _commit(
     SpeedTurnHandle handle,
     SpeedSession next,
+    SpeedAnswer answer,
     Completer<bool> result,
   ) async {
     try {
-      await _commitCompletion(next.completion!);
+      final receipt = await _commitAnswer(next);
       if (!_stopped && !_disposed && identical(handle, _current)) {
+        _remember(_state!, answer, receipt);
         _accept(next);
       }
       result.complete(true);
@@ -279,8 +394,14 @@ final class SpeedLearningSession extends ChangeNotifier {
   }
 
   void _discard() {
+    if (_previousCompletion case final receipt?)
+      retireCompletion?.call(receipt);
     _stopped = true;
     _state = null;
+    _previousBefore = null;
+    _previousAnswer = null;
+    _previousCompletion = null;
+    _correctionHandle = null;
     _current = null;
     _currentBreak = null;
     _revealed = false;

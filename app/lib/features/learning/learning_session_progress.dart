@@ -10,13 +10,18 @@ final class LearningSessionProgress {
     required Set<SessionItemIdentity> members,
     Set<SessionItemIdentity> completed = const {},
     Set<SessionItemIdentity> firstTry = const {},
+    Map<SessionItemIdentity, int> attempts = const {},
   }) : members = Set.unmodifiable(members),
        completedItems = Set.unmodifiable(completed),
-       firstTryItems = Set.unmodifiable(firstTry);
+       firstTryItems = Set.unmodifiable(firstTry),
+       attempts = Map.unmodifiable(attempts);
 
   final Set<SessionItemIdentity> members;
   final Set<SessionItemIdentity> completedItems;
   final Set<SessionItemIdentity> firstTryItems;
+  final Map<SessionItemIdentity, int> attempts;
+  int get totalRetries =>
+      attempts.values.fold(0, (sum, count) => sum + count - 1);
   int get total => members.length;
   int get completed => completedItems.length;
   int get firstTryCorrect => firstTryItems.length;
@@ -31,6 +36,7 @@ final class LearningSessionProgress {
       members: members.difference(remove),
       completed: completedItems,
       firstTry: firstTryItems,
+      attempts: attempts,
     );
   }
 
@@ -47,13 +53,17 @@ final class LearningSessionProgress {
       RetryAnswerReceipt() => receipt.rating,
       _ => throw StateError('Unsupported learning answer receipt'),
     };
-    if (rating == LearningRating.again) return this;
     return LearningSessionProgress(
       members: members,
-      completed: {...completedItems, identity},
+      attempts: {...attempts, identity: (attempts[identity] ?? 0) + 1},
+      completed: {
+        ...completedItems,
+        if (rating != LearningRating.again) identity,
+      },
       firstTry: {
         ...firstTryItems,
-        if (receipt is RegularReviewReceipt) identity,
+        if (receipt is RegularReviewReceipt && rating != LearningRating.again)
+          identity,
       },
     );
   }

@@ -77,13 +77,13 @@ void main() {
       );
       final hardHandle = session.current!, beforeToggle = session.progress;
       final storage = await storedSnapshot(f.db);
-      expect(session.setHard(hardHandle, true), isTrue);
+      expect(session.setHard(hardHandle, true), isFalse);
       expect(session.progress, same(beforeToggle));
       expect(await storedSnapshot(f.db), storage);
       final hard =
           (await session.submitAnswerNow(hardHandle, AnswerGrade.correct))!
               as RegularReviewReceipt;
-      expect(hard.event.rating, LearningRating.hard);
+      expect(hard.event.rating, LearningRating.good);
       expectCounts(session, total: 3, completed: 2, firstTry: 2, pending: 1);
       final incorrectHandle = session.current!,
           priorIncorrect = session.progress;
@@ -92,10 +92,11 @@ void main() {
         AnswerGrade.incorrect,
       ))!;
       expectCounts(session, total: 3, completed: 2, firstTry: 2, pending: 1);
-      expect(session.progress, same(priorIncorrect));
+      expect(session.progress.completedItems, priorIncorrect.completedItems);
+      expect(session.progress.totalRetries, 0);
       expect(session.lastProgressChange!.receipt, same(incorrect));
       expect(session.lastProgressChange!.prior, same(priorIncorrect));
-      expect(session.lastProgressChange!.next, same(priorIncorrect));
+      expect(session.lastProgressChange!.next, same(session.progress));
       expect(session.hasPendingRetryWork, isTrue);
       expect(session.regularItemsExhausted, isTrue);
       for (var retry = 0; retry < 2; retry++) {
@@ -181,7 +182,7 @@ void main() {
       final accepted =
           (await session.submitAnswerNow(retry, AnswerGrade.correct))!
               as RetryAnswerReceipt;
-      expect(accepted.rating, LearningRating.hard);
+      expect(accepted.rating, LearningRating.good);
       expectCounts(session, total: 2, completed: 1, firstTry: 0, pending: 1);
       final regular = session.current!;
       await session.submitAnswerNow(regular, AnswerGrade.correct);
@@ -214,7 +215,7 @@ void main() {
         throwsA(isA<SqliteException>()),
       );
       expectCounts(session, total: 2, completed: 0, firstTry: 0, pending: 2);
-      expect(session.progress, same(initial));
+      expect(session.progress.completedItems, initial.completedItems);
       expect(session.lastProgressChange, isNull);
       expect(await storedSnapshot(f.db), before);
       await f.db.customStatement('DROP TRIGGER fail_progress_grade');
@@ -315,7 +316,7 @@ void main() {
         isNull,
       );
       expectCounts(session, total: 1, completed: 0, firstTry: 0, pending: 0);
-      expect(session.progress, same(initial));
+      expect(session.progress.completedItems, initial.completedItems);
       expect(session.lastProgressChange, isNull);
       expect(session.lastAnswer, isNull);
       final after = await storedSnapshot(f.db);
@@ -329,7 +330,8 @@ void main() {
   test(
     'latest regular correction replaces receipt and queue while reversing then applying exact progress',
     () async {
-      final f = await fixture(extra: 1), source = await gateway(f.db, f.owner.id);
+      final f = await fixture(extra: 1),
+          source = await gateway(f.db, f.owner.id);
       final session = await DueLearningSession.start(
         source: source,
         cutoff: instant,
@@ -357,10 +359,7 @@ void main() {
       expect(replaced.event.reviewedAt, accepted.event.reviewedAt);
       expect(replaced.event.rating, LearningRating.again);
       expect(replaced.scopeNext!.ordinal, accepted.scopeNext!.ordinal);
-      expect(
-        replaced.scopeNext!.revision,
-        accepted.scopeNext!.revision + 1,
-      );
+      expect(replaced.scopeNext!.revision, accepted.scopeNext!.revision + 1);
       expect(replaced.next.reviewRevision, accepted.next.reviewRevision + 1);
       expect(
         replaced.next.cardJson,
@@ -379,15 +378,18 @@ void main() {
       expect(session.lastProgressChange!.prior, same(initial));
       expect(session.lastProgressChange!.receipt, same(replaced));
       expectCounts(session, total: 2, completed: 0, firstTry: 0, pending: 2);
-      expect((await source.pendingRetries(at: f.db.clock.now())).single.id,
-          replaced.retryNext!.id);
+      expect(
+        (await source.pendingRetries(at: f.db.clock.now())).single.id,
+        replaced.retryNext!.id,
+      );
     },
   );
 
   test(
     'correcting latest regular Again to Good removes its retry and counts one first-try success without advancing ordinal',
     () async {
-      final f = await fixture(extra: 1), source = await gateway(f.db, f.owner.id);
+      final f = await fixture(extra: 1),
+          source = await gateway(f.db, f.owner.id);
       final session = await DueLearningSession.start(
         source: source,
         cutoff: instant,
@@ -400,7 +402,7 @@ void main() {
           (await session.submitAnswerNow(first, AnswerGrade.incorrect))!
               as RegularReviewReceipt;
       final unanswered = session.current!;
-      expect(session.progress, same(initial));
+      expect(session.progress.completedItems, initial.completedItems);
       expect(session.beginCorrection(unanswered), isTrue);
       final correction = session.current!;
       expect(session.previousRating, LearningRating.again);
@@ -411,10 +413,7 @@ void main() {
       expect(replaced.event.rating, LearningRating.good);
       expect(replaced.retryNext, isNull);
       expect(replaced.scopeNext!.ordinal, accepted.scopeNext!.ordinal);
-      expect(
-        replaced.scopeNext!.revision,
-        accepted.scopeNext!.revision + 1,
-      );
+      expect(replaced.scopeNext!.revision, accepted.scopeNext!.revision + 1);
       expect(session.current, same(unanswered));
       expect(session.acceptedReviews, [same(replaced)]);
       expect(session.lastProgressChange!.prior, same(initial));
@@ -426,7 +425,8 @@ void main() {
   test(
     'correcting the previous retry retires its now-stale displayed retry and preserves the unrelated armed round',
     () async {
-      final f = await fixture(extra: 1), source = await gateway(f.db, f.owner.id);
+      final f = await fixture(extra: 1),
+          source = await gateway(f.db, f.owner.id);
       final words = await f.vocabulary.watchByCollection(f.owner.id).first;
       final first = await f.review(rating: LearningRating.again);
       final second = await f.review(
@@ -457,9 +457,9 @@ void main() {
       expect(armed, hasLength(2));
       expect(armed.every((round) => round.waitEligibleAt != null), isTrue);
       (f.db.clock as MutablePikoClock).set(
-        armed.map((round) => round.waitEligibleAt!).reduce(
-          (a, b) => a.isAfter(b) ? a : b,
-        ),
+        armed
+            .map((round) => round.waitEligibleAt!)
+            .reduce((a, b) => a.isAfter(b) ? a : b),
       );
       await session.refreshRetries();
       final staleDisplayed = session.current!;
@@ -482,3 +482,4 @@ void main() {
     },
   );
 }
+

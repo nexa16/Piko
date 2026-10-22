@@ -106,13 +106,19 @@ final class PikoSpeedRuntime {
       activeEntryIds: () =>
           source.activeEntryIds(expectedEntryIds: originals.keys.toSet()),
       onPendingWrites: onPendingWrites,
-      commitCompletion: (completion) async {
+      commitCompletion: (_) async {},
+      retireCompletion: source.retireSpeedCompletion,
+      reverseCompletion: (receipt) async {
+        await source.reverseSpeedCompletion(expected: receipt);
+        completedAt.remove(receipt.prior.entryId);
+      },
+      commitCorrectableCompletion: (completion) async {
         final prior = originals[completion.entryId]!;
         final instant = completedAt.putIfAbsent(
           completion.entryId,
           () => clock.now().toUtc(),
         );
-        await source.completeSpeedItem(
+        return source.completeSpeedItem(
           expectedPrior: prior,
           errors: completion.errors,
           completedAt: instant,

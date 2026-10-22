@@ -9,9 +9,16 @@ bool _speedEqual(Map<String, Object?> a, Map<String, Object?> b) =>
     );
 
 final class _SpeedCorrection {
-  _SpeedCorrection(this.scope, this.beforeRows, this.afterRows);
+  _SpeedCorrection(this.scope, this.ordinal, this.beforeRows, this.afterRows);
   final CollectionReviewGateway scope;
+  final ScopeAnswerState ordinal;
   final Map<String, List<Map<String, Object?>>> beforeRows, afterRows;
+}
+
+extension SpeedCorrectionGateway on CollectionReviewGateway {
+  void retireSpeedCompletion(SpeedCompletionResult receipt) {
+    _speedCorrections[_repository]?.remove(receipt);
+  }
 }
 
 extension _SqliteSpeedCompletion on SqliteLearningRepository {
@@ -22,7 +29,16 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
     for (final table in ['speed_completion_receipts', 'statistics_activity']) {
       // Capture exact associated records; unrelated vocabulary credit can evolve.
       final rows = await database
-          .customSelect('SELECT * FROM $table ORDER BY rowid')
+          .customSelect(
+            table == 'speed_completion_receipts'
+                ? 'SELECT * FROM speed_completion_receipts WHERE entry_id = ? ORDER BY rowid'
+                : "SELECT * FROM statistics_activity WHERE mode = 'speed' AND instr(credit_key, ?) > 0 ORDER BY rowid",
+            variables: [
+              Variable<String>(
+                table == 'speed_completion_receipts' ? entryId : '"$entryId"',
+              ),
+            ],
+          )
           .get();
       result[table] = rows
           .map((row) => Map<String, Object?>.from(row.data))
@@ -45,6 +61,11 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
     if (registered == null || !identical(registered.scope, scope)) {
       throw SpeedCompletionFailure.staleState;
     }
+    final ordinal = await _scopeState(scope.collectionId, scope.direction);
+    if (ordinal.ordinal != registered.ordinal.ordinal ||
+        ordinal.revision != registered.ordinal.revision) {
+      throw SpeedCompletionFailure.staleState;
+    }
     final row = await (database.select(
       database.learningItems,
     )..where((row) => row.id.equals(expected.next.id))).getSingleOrNull();
@@ -55,8 +76,9 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
         entry == null ||
         !entry.active ||
         entry.collectionId != scope.collectionId ||
-        !_sameItem(_record(row), expected.next))
+        !_sameItem(_record(row), expected.next)) {
       throw SpeedCompletionFailure.staleState;
+    }
     final currentRows = await _speedRows(expected.next.entryId);
     for (final table in registered.afterRows.keys) {
       final current = currentRows[table]!, after = registered.afterRows[table]!;
@@ -73,14 +95,20 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
       )) {
         final key = table == 'statistics_activity' ? 'credit_key' : null;
         if (key != null) {
-          await database.customStatement(
+          await database.customUpdate(
             'DELETE FROM statistics_activity WHERE credit_key = ?',
-            [row[key]],
+            variables: [Variable<String>(row[key] as String)],
+            updates: {database.statisticsActivity},
           );
         } else {
-          await database.customStatement(
+          await database.customUpdate(
             'DELETE FROM speed_completion_receipts WHERE entry_id = ? AND direction = ? AND completed_at = ?',
-            [row['entry_id'], row['direction'], row['completed_at']],
+            variables: [
+              Variable<String>(row['entry_id'] as String),
+              Variable<String>(row['direction'] as String),
+              Variable<String>(row['completed_at'] as String),
+            ],
+            updates: {database.speedCompletionReceipts},
           );
         }
       }
@@ -160,12 +188,15 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
         if (count != 1) throw SpeedCompletionFailure.itemNotFound;
       }
       final result = SpeedCompletionResult(
-        prior: expected,
+        prior: current,
         next: next,
         alreadyApplied: !admitted,
       );
-      (_speedCorrections[this] ??= {})[result] = _SpeedCorrection(
+      final registry = _speedCorrections[this] ??= {};
+      registry.removeWhere((_, receipt) => identical(receipt.scope, scope));
+      registry[result] = _SpeedCorrection(
         scope,
+        await _scopeState(scope.collectionId, scope.direction),
         beforeRows,
         await _speedRows(entry.id),
       );
