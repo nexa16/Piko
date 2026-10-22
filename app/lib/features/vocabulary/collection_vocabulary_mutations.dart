@@ -37,6 +37,44 @@ final class CollectionVocabularyMutations extends ChangeNotifier {
   Object? deleteError;
   String? errorEntryId;
   bool get isBusy => _pending != null;
+  bool get supportsBatch => _service is VocabularyBatchDeletionService;
+
+  Future<void> deleteMany(Set<String> ids) {
+    if (_ended || isBusy || !supportsBatch) {
+      throw StateError('Collection batch deletion unavailable.');
+    }
+    final selected = Set<String>.of(ids);
+    final done = Completer<void>();
+    _pending = done.future;
+    deleteError = null;
+    errorEntryId = null;
+    notifyListeners();
+    unawaited(() async {
+      try {
+        final startedAt = _clock.now().toUtc();
+        final receipts = await (_service as VocabularyBatchDeletionService)
+            .deleteMany(collectionId: collectionId, ids: selected);
+        for (final receipt in receipts) {
+          if (_ended) {
+            _forgetReceipt(receipt);
+          } else {
+            final offer = CollectionUndoOffer(receipt);
+            _offers.add(offer);
+            _schedule(offer, fallback: startedAt);
+          }
+        }
+        done.complete();
+      } catch (error, stack) {
+        if (!_ended) deleteError = error;
+        done.completeError(error, stack);
+      } finally {
+        _pending = null;
+        if (!_ended) notifyListeners();
+      }
+    }());
+    return done.future;
+  }
+
   Future<void> awaitPending() async {
     while (_pending != null) {
       try {

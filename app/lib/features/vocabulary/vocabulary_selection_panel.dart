@@ -14,11 +14,13 @@ class VocabularySelectionPanel extends StatelessWidget {
     required this.matchingIds,
     required this.enabled,
     this.onHeightChanged,
+    this.onDelete,
   });
   final VocabularySelection selection;
   final List<String> matchingIds;
   final bool enabled;
   final ValueChanged<double>? onHeightChanged;
+  final VoidCallback? onDelete;
   @override
   Widget build(BuildContext context) {
     if (!selection.active) return const SizedBox.shrink();
@@ -52,6 +54,13 @@ class VocabularySelectionPanel extends StatelessWidget {
           variant: PikoButtonVariant.ghost,
           onPressed: enabled ? selection.clear : null,
         ),
+        if (onDelete != null)
+          PikoButton(
+            key: const ValueKey('vocabulary-delete-selection'),
+            label: copy.text('vocab.delete'),
+            variant: PikoButtonVariant.dangerGhost,
+            onPressed: enabled && selection.ids.isNotEmpty ? onDelete : null,
+          ),
         if (hidden > 0)
           Text(
             copy.text('selection.hidden', {'count': hidden}),

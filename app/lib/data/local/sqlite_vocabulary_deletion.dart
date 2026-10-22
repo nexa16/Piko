@@ -41,7 +41,7 @@ final class _Receipt implements VocabularyDeletionReceipt {
   @override
   final VocabularyRecord entry;
   @override
-  final DateTime expiresAt;
+  DateTime expiresAt;
   _Snapshot? snapshot;
   Future<VocabularyRecord>? pending;
   bool used = false, expired = false, forgotten = false;
@@ -50,7 +50,7 @@ final class _Receipt implements VocabularyDeletionReceipt {
 /// Temporary in-memory snapshots only; it does not own the database. Callers
 /// schedule expireUndo at receipt deadlines and forget/dispose on lifecycle end.
 final class SqliteVocabularyDeletionService
-    implements VocabularyDeletionService {
+    implements VocabularyDeletionService, VocabularyBatchDeletionService {
   SqliteVocabularyDeletionService(this.database, {PikoClock? clock})
     : clock = clock ?? database.clock;
   final PikoDatabase database;
@@ -125,9 +125,14 @@ final class SqliteVocabularyDeletionService
   }
 
   @override
-  Future<VocabularyDeletionReceipt> delete(String id) async {
+  Future<VocabularyDeletionReceipt> delete(String id) => _delete(id);
+
+  Future<VocabularyDeletionReceipt> _delete(
+    String id, {
+    bool sweep = true,
+  }) async {
     _ensureActive();
-    expireUndo();
+    if (sweep) expireUndo();
     final receipt = await database.transaction(() async {
       _ensureActive();
       final row = await database
@@ -230,6 +235,42 @@ final class SqliteVocabularyDeletionService
       _active.add(receipt);
     }
     return receipt;
+  }
+
+  @override
+  Future<List<VocabularyDeletionReceipt>> deleteMany({
+    required String collectionId,
+    required Set<String> ids,
+  }) async {
+    _ensureActive();
+    final selected = Set<String>.of(ids);
+    if (selected.isEmpty) return const [];
+    final receipts = <_Receipt>[];
+    try {
+      await database.transaction(() async {
+        final owned = await (database.select(
+          database.vocabularyEntries,
+        )..where((row) => row.collectionId.equals(collectionId))).get();
+        if (!owned.map((row) => row.id).toSet().containsAll(selected)) {
+          throw VocabularyValidation.entryNotFound;
+        }
+        for (final row in owned.where((row) => selected.contains(row.id))) {
+          receipts.add(await _delete(row.id, sweep: false) as _Receipt);
+        }
+        // All selected words receive a complete recovery window after the
+        // batch finishes; ordinary single-entry deadlines are unchanged.
+        final deadline = clock.now().toUtc().add(undoDuration);
+        for (final receipt in receipts) {
+          receipt.expiresAt = deadline;
+        }
+      });
+      return List.unmodifiable(receipts);
+    } catch (_) {
+      for (final receipt in receipts) {
+        forget(receipt);
+      }
+      rethrow;
+    }
   }
 
   @override

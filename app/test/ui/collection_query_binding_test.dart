@@ -74,6 +74,42 @@ class Clock implements PikoClock {
 
 void main() {
   testWidgets(
+    'loading indicator is delayed and belongs only to current query',
+    (tester) async {
+      final query = Query(), scope = CollectionViewScope();
+      final binding = CollectionQueryBinding(
+        collectionId: 'c',
+        service: query,
+        scope: scope,
+        invalidations: const Stream<void>.empty(),
+      );
+      addTearDown(() {
+        binding.dispose();
+        scope.dispose();
+      });
+      await tester.pump(const Duration(milliseconds: 149));
+      expect(binding.showLoading, isFalse);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(binding.showLoading, isTrue);
+      scope.setSearch('new');
+      expect(binding.showLoading, isFalse);
+      query.calls[0].result.complete(snapshot());
+      await tester.pump();
+      expect(binding.loading, isTrue);
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(binding.showLoading, isTrue);
+      query.calls[1].result.complete(snapshot());
+      await tester.pump();
+      expect(binding.showLoading, isFalse);
+      expect(binding.ready, isTrue);
+      scope.setSearch('fast');
+      query.calls[2].result.complete(snapshot());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(binding.showLoading, isFalse);
+    },
+  );
+  testWidgets(
     'latest query wins; loading and failures retain the last snapshot without claiming readiness',
     (tester) async {
       final query = Query(),

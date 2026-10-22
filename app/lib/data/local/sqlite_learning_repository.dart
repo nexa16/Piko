@@ -284,6 +284,19 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     final items = await _scopedItems(scope);
     final ordinal = await _scopeState(scope.collectionId, scope.direction);
     final result = <ReviewDueMembership>[];
+    // Search reprojects both learning directions. Fetch retry rows in bounded
+    // batches rather than issuing one query for every word (usually no retry).
+    // Keep origin/generation validation in _retryRecord for every actual round.
+    final retries = <int, StoredRetryObligation>{};
+    for (var start = 0; start < items.length; start += 500) {
+      final ids = items.skip(start).take(500).map((item) => item.id).toList();
+      final rows = await (database.select(
+        database.retryObligations,
+      )..where((row) => row.itemId.isIn(ids))).get();
+      for (final row in rows) {
+        retries[row.itemId] = row;
+      }
+    }
     DateTime? nextChangeAt;
     void consider(DateTime candidate) {
       if (candidate.isAfter(at) &&
@@ -293,7 +306,10 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     }
 
     for (final item in items) {
-      final round = await _retryFor(item);
+      final stored = retries[item.id];
+      final round = stored == null || stored.generation != item.generation
+          ? null
+          : await _retryRecord(stored, item);
       final activeRound = round != null && at.isBefore(round.expiresAt)
           ? round
           : null;

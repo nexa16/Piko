@@ -832,6 +832,82 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       !_learningBusy &&
       _mutations?.isBusy != true;
 
+  Future<void> _deleteSelectedVocabulary() async {
+    final mutations = _mutations;
+    final ids = Set<String>.of(_selection.ids);
+    if (!_queryControlsAvailable ||
+        ids.isEmpty ||
+        mutations?.supportsBatch != true) {
+      return;
+    }
+    final identity = _identity;
+    final barrier = _writeBarrier;
+    bool current() =>
+        mounted && identity == _identity && identical(mutations, _mutations);
+    setState(() => _openingEntry = true);
+    try {
+      final confirmed = await showPikoDialog<bool>(
+        context,
+        builder: (dialogContext) {
+          final copy = PikoCopyScope.of(dialogContext);
+          return PikoDialog(
+            purpose: PikoDialogPurpose.confirmation,
+            title: copy.text('vocab.delete'),
+            onClose: () => Navigator.of(dialogContext).pop(),
+            body: Text(
+              copy.text('selection.deleteWarning', {'count': ids.length}),
+            ),
+            actions: [
+              PikoDialogAction(
+                label: copy.text('action.cancel'),
+                role: PikoDialogActionRole.safe,
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              PikoDialogAction(
+                label: copy.text('vocab.delete'),
+                role: PikoDialogActionRole.destructive,
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+              ),
+            ],
+          );
+        },
+      );
+      if (!mounted ||
+          !current() ||
+          confirmed != true ||
+          ModalRoute.of(context)?.isCurrent != true ||
+          !setEquals(ids, _selection.ids)) {
+        return;
+      }
+      setState(() => _deleting = true);
+      barrier.freeze();
+      await barrier.drain();
+      if (!current()) return;
+      final operation = mutations!.deleteMany(ids);
+      widget.onPendingVocabularyWrites?.call(operation);
+      await operation;
+      if (current()) _selection.clear();
+    } catch (_) {
+      if (mounted && current()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(PikoCopyScope.of(context).text('vocab.deleteFailed')),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      barrier.release();
+      if (current()) {
+        setState(() {
+          _openingEntry = false;
+          _deleting = false;
+        });
+      }
+    }
+  }
+
   void _closeFilters() {
     final owned = _filterDialog;
     _filterDialog = null;
@@ -1838,6 +1914,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                     bottom: 0,
                     child: VocabularySelectionPanel(
                       selection: _selection,
+                      onDelete: _mutations?.supportsBatch == true
+                          ? _deleteSelectedVocabulary
+                          : null,
                       matchingIds:
                           widget.queryBinding!.snapshot?.entries
                               .map((e) => e.id)

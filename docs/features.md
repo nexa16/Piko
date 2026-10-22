@@ -106,6 +106,8 @@ Ordinary product emulator capture · [Full image](images/r7-categories.png) · [
 
 The Collection vocabulary area has a search field and separate **Filters**, **Group** and **Sort** controls. These affect the displayed list without modifying the words.
 
+Tapping outside search dismisses its keyboard. While a query is running, previous rows are hidden; a loading spinner appears if the query takes more than 150 ms. Only the latest query can display its results.
+
 | Control | Use and result |
 | --- | --- |
 | Search | Match saved target/native text. Clear the query to recover words hidden by search. |
@@ -128,6 +130,8 @@ Hold a collapsed vocabulary card to start selection, then tap cards to toggle th
 The vocabulary list uses the full viewport. A compact selection bar overlays its bottom only while words are selected; measured end spacing keeps the last card reachable. The controls wrap or scroll at large text sizes. With selection mode active at zero, its controls remain in the list without reserved overlay space.
 
 Changing search/filter can hide selected words without deselecting them. The selection summary reports hidden selections. Use **Clear selection** to end selection explicitly; leaving the Collection also clears it.
+
+Choose **Delete vocabulary** in the selection bar to delete the selected words, including hidden selections. Confirm the displayed count; cancelling keeps the selection. Grouped appearances refer to the same word and are deleted once. A successful deletion clears selection. Delete/Undo feedback appears above the bottom of the viewport rather than after the list. Each deleted word retains its eight-second Undo offer; restoring the latest offer reveals any earlier offer that is still valid.
 
 While selection mode is active, use **Review** or **Speed** in the Collection header to learn the selected active words, including words hidden by later filters. Long-term includes only work eligible now; Speed also includes previously learned words. The selection counts words once; learning counts each eligible direction. A known-zero mode stays visible and disabled. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit/delete/export operation and does not change Active/Inactive or saved filters.
 

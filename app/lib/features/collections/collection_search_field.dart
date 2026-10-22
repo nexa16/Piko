@@ -66,6 +66,7 @@ class _CollectionSearchFieldState extends State<CollectionSearchField> {
         focusNode: _focus,
         enabled: widget.enabled,
         textInputAction: TextInputAction.search,
+        onTapOutside: (_) => _focus.unfocus(),
         onChanged: (value) {
           if (_canChange(scope)) scope.setSearch(value);
         },

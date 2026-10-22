@@ -253,7 +253,48 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   }
 
   void changed() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      _scheduleFeedback();
+    }
+  }
+
+  CollectionUndoOffer? _shownOffer;
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _feedback;
+  bool _feedbackScheduled = false;
+
+  void _scheduleFeedback() {
+    if (_feedbackScheduled) return;
+    _feedbackScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _feedbackScheduled = false;
+      if (!mounted) return;
+      final offer = widget.mutations?.latest;
+      if (identical(offer, _shownOffer)) return;
+      _feedback?.close();
+      _feedback = null;
+      _shownOffer = offer;
+      if (offer == null || ModalRoute.of(context)?.isCurrent == false) return;
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      if (messenger == null) return;
+      final mutations = widget.mutations!;
+      _feedback = messenger.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          // The mutation owner closes/replaces this at the actual receipt deadline.
+          // Keep its eight-second recovery window rather than a three-second toast.
+          duration: const Duration(days: 1),
+          padding: EdgeInsets.zero,
+          content: AnimatedBuilder(
+            animation: mutations,
+            builder: (context, _) => DefaultTextStyle.merge(
+              style: TextStyle(color: pikoDesign.color('ink')),
+              child: undoBar(offer),
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   void barrierChanged() {
@@ -1008,7 +1049,11 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (topSpace > 0) SizedBox(height: topSpace),
-        if (waiting) Text(copy.text('vocab.loading')),
+        if (waiting && (widget.queryBinding?.showLoading ?? true))
+          Semantics(
+            label: copy.text('vocab.loading'),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
         if (loadError != null) ...[
           Text(copy.text('vocab.loadFailed')),
           PikoButton(
@@ -1035,13 +1080,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     );
     final trailing = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (widget.mutations?.latest case final offer?) ...[
-          SizedBox(height: pikoDesign.dimension('spacing.3')),
-          undoBar(offer),
-        ],
-        if (bottomSpace > 0) SizedBox(height: bottomSpace),
-      ],
+      children: [if (bottomSpace > 0) SizedBox(height: bottomSpace)],
     );
     final scope = widget.queryBinding?.scope;
     final snapshot = widget.queryBinding?.snapshot;
@@ -1188,7 +1227,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 child: Listener(onPointerMove: onPointerMove, child: leading),
               ),
               SliverList.builder(
-                itemCount: items.length,
+                itemCount: waiting ? 0 : items.length,
                 findChildIndexCallback: (key) {
                   final index = items.indexWhere(
                     (item) => key == ValueKey(item.key),
@@ -1208,7 +1247,8 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 leading,
-                for (var i = 0; i < items.length; i++) item(i),
+                if (!waiting)
+                  for (var i = 0; i < items.length; i++) item(i),
                 trailing,
               ],
             ),
@@ -1217,6 +1257,10 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
 
   @override
   void dispose() {
+    final feedback = _feedback;
+    if (feedback != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => feedback.close());
+    }
     _closeSavedDialog();
     dialogSourceStatus.dispose();
     widget.selection?.removeListener(changed);

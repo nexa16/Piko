@@ -27,3 +27,11 @@ abstract interface class VocabularyDeletionService {
   void forget(VocabularyDeletionReceipt receipt);
   void dispose();
 }
+
+/// Atomic Collection-owned batch; duplicate identities are deleted once.
+abstract interface class VocabularyBatchDeletionService {
+  Future<List<VocabularyDeletionReceipt>> deleteMany({
+    required String collectionId,
+    required Set<String> ids,
+  });
+}

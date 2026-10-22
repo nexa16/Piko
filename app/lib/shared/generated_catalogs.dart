@@ -3077,6 +3077,10 @@ const copyCatalog = <String, Object?>{
 "de": "{count} ausgewählt",
 "en": "{count} selected",
 },
+"selection.deleteWarning": <String, Object?>{
+"de": "{count} ausgewählte Vokabeln löschen?",
+"en": "Delete {count} selected vocabulary entries?",
+},
 "selection.hidden": <String, Object?>{
 "de": "{count} durch Filter oder Suche ausgeblendet",
 "en": "{count} hidden by filters or search",

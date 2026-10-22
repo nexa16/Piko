@@ -57,6 +57,8 @@ Upgrades run additive/backfill steps appropriate to the starting schema, inside 
 
 Saved editors serialize admitted writes, retain invalid raw drafts for correction, and distinguish validation from persistence errors. Pending writes are drained at relevant navigation/learning boundaries. Deletion and Undo use ownership/conflict checks; restoration cannot overwrite unrelated edits. Do not manipulate allocator high-water marks or infer preservation from a newly created empty database. Android preservation and termination protocols are in [developer setup](development.md#android-verification).
 
+Selected deletion validates every UUID against its Collection and commits the batch in one transaction. A failure rolls back the batch and releases its temporary receipts. Successful batches give all deleted words a full eight-second recovery window after the batch completes. Search projections fetch retry records in bounded batches, retaining generation and origin validation for actual retry rounds.
+
 Sources: [`PikoDatabase` and migrations](../app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](../app/lib/data/local/sqlite_vocabulary_repository.dart).
 
 <a id="vocabulary"></a>

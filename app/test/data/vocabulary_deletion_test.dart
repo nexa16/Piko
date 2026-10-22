@@ -67,6 +67,54 @@ void main() {
   });
 
   test(
+    'selected batch deletes exact identities and Undo restores learning',
+    () async {
+      final first = await create('One', 'Eins');
+      final second = await create('Two', 'Zwei');
+      final untouched = await create('Three', 'Drei');
+      final wordsBefore = await entries(), learningBefore = await learning();
+      final receipts = await deletion.deleteMany(
+        collectionId: owner,
+        ids: {first.id, second.id},
+      );
+      expect(receipts.map((r) => r.entry.id).toSet(), {first.id, second.id});
+      expect((await entries()).single['id'], untouched.id);
+      expect(receipts.map((r) => r.expiresAt).toSet(), {
+        now.add(const Duration(seconds: 8)),
+      });
+      for (final receipt in receipts.reversed) {
+        await deletion.restore(receipt);
+      }
+      expect(await entries(), wordsBefore);
+      expect(await learning(), learningBefore);
+    },
+  );
+
+  test(
+    'batch rejects foreign IDs and rolls back a later write failure',
+    () async {
+      final first = await create('One', 'Eins');
+      final second = await create('Two', 'Zwei');
+      final wordsBefore = await entries(), learningBefore = await learning();
+      await expectLater(
+        deletion.deleteMany(collectionId: owner, ids: {first.id, 'foreign'}),
+        throwsA(VocabularyValidation.entryNotFound),
+      );
+      expect(await entries(), wordsBefore);
+      await database.customStatement(
+        "CREATE TRIGGER reject_batch BEFORE DELETE ON vocabulary_entries "
+        "WHEN OLD.id = '${second.id}' BEGIN SELECT RAISE(ABORT, 'test failure'); END",
+      );
+      await expectLater(
+        deletion.deleteMany(collectionId: owner, ids: {first.id, second.id}),
+        throwsA(anything),
+      );
+      expect(await entries(), wordsBefore);
+      expect(await learning(), learningBefore);
+    },
+  );
+
+  test(
     'existing vocabulary and learning observers see delete and exact restoration',
     () async {
       final entry = await create('One', 'Eins');

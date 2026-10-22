@@ -24,6 +24,8 @@ final class CollectionQueryBinding extends ChangeNotifier
         if (_disposed) return;
         _generation++;
         _timer?.cancel();
+        _loadingTimer?.cancel();
+        showLoading = false;
         error = failure;
         loading = false;
         notifyListeners();
@@ -46,6 +48,8 @@ final class CollectionQueryBinding extends ChangeNotifier
   bool loading = false, _disposed = false, _active = true;
   int _generation = 0;
   Timer? _timer;
+  Timer? _loadingTimer;
+  bool showLoading = false;
   bool get ready => !loading && error == null && snapshot != null;
 
   String _lastSearch = '';
@@ -85,6 +89,13 @@ final class CollectionQueryBinding extends ChangeNotifier
     if (_disposed || !_active) return;
     _timer?.cancel();
     final generation = ++_generation;
+    _loadingTimer?.cancel();
+    showLoading = false;
+    _loadingTimer = Timer(const Duration(milliseconds: 150), () {
+      if (!_current(generation) || !loading) return;
+      showLoading = true;
+      notifyListeners();
+    });
     loading = true;
     error = null;
     notifyListeners();
@@ -151,6 +162,8 @@ final class CollectionQueryBinding extends ChangeNotifier
       error ??= failure;
     } finally {
       if (_current(generation)) {
+        _loadingTimer?.cancel();
+        showLoading = false;
         loading = false;
         notifyListeners();
       }
@@ -168,6 +181,7 @@ final class CollectionQueryBinding extends ChangeNotifier
     } else {
       _generation++;
       _timer?.cancel();
+      _loadingTimer?.cancel();
     }
   }
 
@@ -176,6 +190,7 @@ final class CollectionQueryBinding extends ChangeNotifier
     _disposed = true;
     _generation++;
     _timer?.cancel();
+    _loadingTimer?.cancel();
     scope.removeListener(_scopeChanged);
     _subscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
