@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../categories_repository.dart';
+import '../collections_repository.dart';
 import '../vocabulary_content.dart';
 import '../vocabulary_normalization.dart';
 import '../vocabulary_repository.dart';
@@ -15,6 +16,7 @@ enum AiFailure {
   accessDenied,
   limit,
   contextLimit,
+  expired,
   network,
   timeout,
   invalidResponse,
@@ -115,11 +117,13 @@ final class AiSnapshot {
     required this.nativeLanguage,
     required Iterable<AiEntry> entries,
     required Iterable<AiGroup> groups,
+    this.collection,
   }) : entries = List.unmodifiable(entries),
        groups = List.unmodifiable(groups);
   final String collectionId, targetLanguage, nativeLanguage;
   final List<AiEntry> entries;
   final List<AiGroup> groups;
+  final CollectionRecord? collection;
   Map<String, Object?> toJson({
     bool compact = false,
     bool excludeSource = false,
@@ -183,6 +187,118 @@ final class AiSnapshot {
   }
 }
 
+final class AiOptions {
+  const AiOptions({
+    this.level = 'A1',
+    this.goals = const {},
+    this.checks = const {
+      'translations',
+      'examples',
+      'hints',
+      'suitability',
+      'structure',
+      'categories',
+    },
+    this.categoryMode = 'improve',
+    this.filters = const {},
+    this.reviewOffset = 0,
+    this.reviewSize,
+    this.reviewedIds = const {},
+    this.contextSize,
+    this.contextOffset = 0,
+    this.contextIds,
+  });
+  final String level, categoryMode;
+  final Set<String> goals, checks;
+  final Map<String, Set<String>> filters;
+  final int reviewOffset;
+  final int? reviewSize;
+  final Set<String> reviewedIds;
+  final int? contextSize;
+  final int contextOffset;
+  final Set<String>? contextIds;
+  bool matches(AiEntry e) => filters.entries.every(
+    (f) =>
+        f.value.isEmpty ||
+        (e.assignments[f.key] ?? {}).intersection(f.value).isNotEmpty,
+  );
+  AiRequest bind(AiRequest r) {
+    final matching = r.action == AiAction.review
+        ? r.snapshot.entries
+              .where((e) => matches(e) && !reviewedIds.contains(e.record.id))
+              .toList()
+        : r.snapshot.entries;
+    final entries =
+        r.action != AiAction.review &&
+            r.action != AiAction.hints &&
+            contextSize != null
+        ? (contextIds == null
+                  ? matching.skip(contextOffset).take(contextSize!)
+                  : matching.where((e) => contextIds!.contains(e.record.id)))
+              .toList()
+        : r.action == AiAction.review && reviewSize != null
+        ? matching.skip(reviewOffset).take(reviewSize!).toList()
+        : matching;
+    return AiRequest(
+      id: r.id,
+      action: r.action,
+      snapshot: AiSnapshot(
+        collectionId: r.snapshot.collectionId,
+        targetLanguage: r.snapshot.targetLanguage,
+        nativeLanguage: r.snapshot.nativeLanguage,
+        entries: entries,
+        groups: r.snapshot.groups,
+        collection: r.snapshot.collection,
+      ),
+      issuedAt: r.issuedAt,
+      goal: r.goal,
+      comprehensiveLevel: r.comprehensiveLevel,
+      allowGroups: r.allowGroups,
+      allowValues: r.allowValues,
+      targets: r.targets,
+      anchor: r.anchor,
+      previous: r.previous,
+      followUp: r.followUp,
+      options: this,
+      fullContentKey: r.fullContentKey ?? r.snapshot.contentKey,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'level': level,
+    'goals': goals.toList()..sort(),
+    'checks': checks.toList()..sort(),
+    'categoryMode': categoryMode,
+  };
+  void validate(AiRequest request, Iterable<AiEditProposal> edits) {
+    if (request.action != AiAction.review) return;
+    final old = {for (final e in request.snapshot.entries) e.record.id: e};
+    for (final e in edits) {
+      if (!e.applicable) continue;
+      final check = switch (e.field) {
+        'target' || 'native' => 'translations',
+        'examples' => 'examples',
+        'hint' => 'hints',
+        'assignments' => 'categories',
+        _ => '',
+      };
+      if (!checks.contains(check)) throw AiFailure.invalidResponse;
+      if (e.field == 'assignments' && categoryMode == 'missing') {
+        final before = old[e.entryId]?.assignments;
+        if (before == null) throw AiFailure.invalidResponse;
+        final after = e.value as Map<String, Set<String>>;
+        for (final a in before.entries) {
+          if (a.value.isNotEmpty &&
+              (a.value.length != (after[a.key] ?? {}).length ||
+                  !a.value.containsAll(after[a.key] ?? {}))) {
+            throw AiFailure.invalidResponse;
+          }
+        }
+      }
+    }
+  }
+}
+
 final class AiRequest {
   AiRequest({
     required this.id,
@@ -197,6 +313,8 @@ final class AiRequest {
     this.anchor,
     Map<String, Object?>? previous,
     Map<String, Object?>? followUp,
+    this.options,
+    this.fullContentKey,
   }) : followUp = followUp == null
            ? null
            : Map.unmodifiable(_freeze(followUp) as Map<String, Object?>),
@@ -213,6 +331,8 @@ final class AiRequest {
   final bool comprehensiveLevel, allowGroups, allowValues;
   final Set<String> targets;
   final AiEntry? anchor;
+  final AiOptions? options;
+  final String? fullContentKey;
   int get cardCeiling => comprehensiveLevel ? 1000 : 200;
   Map<String, Object?> toJson() => {
     'requestId': id,
@@ -220,6 +340,7 @@ final class AiRequest {
     'scope': comprehensiveLevel ? 'comprehensiveLevel' : 'ordinary',
     'action': action.name,
     'goal': goal,
+    if (options != null) 'options': options!.toJson(),
     if (previous != null) 'previous': previous,
     if (followUp != null) 'followUp': followUp,
     'allowNewGroups': allowGroups,
@@ -617,6 +738,11 @@ final class AiPlan {
     if (request.action == AiAction.review && cards.isNotEmpty) {
       throw AiFailure.invalidResponse;
     }
+    if ((request.action == AiAction.review ||
+            request.action == AiAction.hints) &&
+        !processed.toSet().containsAll(edits.map((e) => e.entryId))) {
+      throw AiFailure.invalidResponse;
+    }
     for (final e in edits) {
       if (!request.snapshot.entries.any((v) => v.record.id == e.entryId)) {
         throw AiFailure.invalidResponse;
@@ -651,6 +777,13 @@ final class AiPlan {
               ? request.targets
               : request.snapshot.entries.map((e) => e.record.id),
         )) {
+      throw AiFailure.invalidResponse;
+    }
+    request.options?.validate(request, edits);
+    if (request.action == AiAction.review &&
+        request.options != null &&
+        !request.options!.checks.contains('categories') &&
+        (groups.isNotEmpty || values.isNotEmpty)) {
       throw AiFailure.invalidResponse;
     }
     return AiPlan._(

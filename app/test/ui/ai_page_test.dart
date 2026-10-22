@@ -57,15 +57,17 @@ Future<void> tapVisible(WidgetTester t, Finder f) async {
   await t.pumpAndSettle();
 }
 
-void main() {
+void main({bool nativeViewport = false}) {
   for (final locale in ['en', 'de']) {
     testWidgets(
       'AI $locale 320dp/200% explicit preview/selective apply and no secret error fallback',
       (t) async {
-        t.view.devicePixelRatio = 1;
-        t.view.physicalSize = const Size(320, 800);
-        addTearDown(t.view.resetDevicePixelRatio);
-        addTearDown(t.view.resetPhysicalSize);
+        if (!nativeViewport) {
+          t.view.devicePixelRatio = 1;
+          t.view.physicalSize = const Size(320, 800);
+          addTearDown(t.view.resetDevicePixelRatio);
+          addTearDown(t.view.resetPhysicalSize);
+        }
         final f = Fixture();
         await f.initialize();
         addTearDown(f.db.close);
@@ -73,31 +75,42 @@ void main() {
         await t.pumpWidget(
           PikoApp(
             locale: Locale(locale),
-            home: MediaQuery(
-              data: const MediaQueryData(
-                size: Size(320, 800),
-                textScaler: TextScaler.linear(2),
-              ),
-              child: AiPage(
-                service: SqliteAiService(f.db, enabled: true),
-                provider: p,
-                collectionId: f.owner.id,
-                collectionName: 'Synthetic',
+            home: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(
+                    nativeViewport && locale == 'en' ? 1 : 2,
+                  ),
+                ),
+                child: AiPage(
+                  service: SqliteAiService(f.db, enabled: true),
+                  provider: p,
+                  collectionId: f.owner.id,
+                  collectionName: 'Synthetic',
+                ),
               ),
             ),
           ),
         );
         await t.pumpAndSettle();
         final before = await stored(f.db);
+        final consent = find.byWidgetPredicate(
+          (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
+        );
+        await tapVisible(t, consent);
+        await tapVisible(
+          t,
+          find.byWidgetPredicate(
+            (w) =>
+                w is PikoIconButton &&
+                w.semanticLabel == copy.text('common.close'),
+          ),
+        );
         final goal = find.byKey(const ValueKey('ai-goal'));
         await t.ensureVisible(goal);
         await t.enterText(goal, 'Hotel B1');
         await t.pumpAndSettle();
         expect(p.calls, 0);
-        final consent = find.byWidgetPredicate(
-          (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
-        );
-        await tapVisible(t, consent);
         p.fail = true;
         await tapVisible(t, find.byKey(const ValueKey('ai-start')));
         expect(find.text(copy.text('ai.error.network')), findsOneWidget);

@@ -1,4 +1,5 @@
 import '../../data/categories_repository.dart';
+import '../../data/learning_reset.dart';
 import '../../data/learning_item.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
     required this.factory,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     required this.beforeLaunch,
     required this.onPendingWrites,
     required this.onBusyChanged,
@@ -34,6 +36,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
   final ReviewSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
@@ -81,6 +84,7 @@ class CollectionReviewEntryPoint extends StatelessWidget {
             factory: factory,
             vocabularyRepository: vocabularyRepository,
             categoriesRepository: categoriesRepository,
+            learningReset: learningReset,
             beforeLaunch: beforeLaunch,
             onPendingWrites: onPendingWrites,
             onBusyChanged: onBusyChanged,

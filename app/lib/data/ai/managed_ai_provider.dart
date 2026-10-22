@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'ai_contract.dart';
+import 'ai_wire.dart';
 
 abstract interface class AiAccess {
   Future<String?> accessToken();
@@ -109,7 +110,7 @@ final class ManagedAiProvider
       }
       if (response.statusCode == 429) throw AiFailure.limit;
       if (response.statusCode == 413) throw AiFailure.contextLimit;
-      if (response.statusCode == 410) throw AiFailure.timeout;
+      if (response.statusCode == 410) throw AiFailure.expired;
       if (response.statusCode == 422) throw AiFailure.invalidResponse;
       if (response.statusCode != 200 && response.statusCode != 202) {
         throw AiFailure.unavailable;
@@ -199,7 +200,8 @@ final class ManagedAiProvider
             !publishableKey!.startsWith('sb_publishable_'))) {
       throw AiFailure.unavailable;
     }
-    final body = utf8.encode(jsonEncode(request.toJson()));
+    final wire = AiWire(request);
+    final body = utf8.encode(jsonEncode(wire.body));
     if (body.length > maxInputBytes) throw AiFailure.contextLimit;
     final owner = ++_revision, clock = Stopwatch()..start();
     _busy = true;
@@ -234,7 +236,7 @@ final class ManagedAiProvider
           clock,
         );
       }
-      return response.$2;
+      return wire.result(response.$2);
     } on TimeoutException {
       _current(owner);
       if (owner == _revision) _outgoing?.abort();

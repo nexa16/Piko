@@ -566,8 +566,8 @@ const copyCatalog = <String, Object?>{
 "en": "These proposals are already being applied or have been adopted.",
 },
 "ai.error.contextLimit": <String, Object?>{
-"de": "Dieser Auftrag enthält zu viel Vokabelkontext. Nutze beim Prüfen Filter oder kleinere Schritte. Kürze beim Erzeugen das Thema oder beginne mit einer kleineren Sammlung. Deine Eingabe bleibt erhalten; es wurden keine Vorschläge gespeichert.",
-"en": "This request contains too much vocabulary context. For Collection review, use filters or smaller steps. For generation, shorten the topic or start with a smaller Collection. Your input is kept; no proposals were saved.",
+"de": "Dieser Auftrag enthält zu viel Vokabelkontext. Verwende ausdrücklich kleinere Abschnitte oder filtere die Sammlungsprüfung. Deine Eingabe bleibt erhalten; es wurden keine Vorschläge gespeichert.",
+"en": "This request contains too much vocabulary context. Use explicit smaller portions, or filter a Collection review. Your input is kept; no proposals were saved.",
 },
 "ai.error.dependency": <String, Object?>{
 "de": "Prüfe ausgewählte Definitionen, Kategorieregeln und die Bestätigung unvollständiger Ergebnisse. Nichts wurde gespeichert.",
@@ -713,6 +713,10 @@ const copyCatalog = <String, Object?>{
 "de": "Neuer Kategoriewert",
 "en": "New category value",
 },
+"ai.nextContext": <String, Object?>{
+"de": "Nächster Kontextabschnitt",
+"en": "Next context portion",
+},
 "ai.nextLevel": <String, Object?>{
 "de": "Nächstes Niveau",
 "en": "Next level",
@@ -752,6 +756,10 @@ const copyCatalog = <String, Object?>{
 "ai.partialConsent": <String, Object?>{
 "de": "Ausgewählte Vorschläge dieses ausdrücklich unvollständigen Ergebnisses übernehmen",
 "en": "Adopt selected proposals from this explicitly partial result",
+},
+"ai.partialContext": <String, Object?>{
+"de": "Nur {count} von {total} vorhandenen Vokabeln werden als Kontext gesendet. Die Abdeckung ist unvollständig. Vor dem Speichern werden Duplikate mit der gesamten Sammlung geprüft. Starte ausdrücklich, um diesen kostenpflichtigen Abschnitt anzufordern.",
+"en": "Only {count} of {total} existing items will be sent as context. This is partial coverage. Duplicates are checked against the full collection before saving. Start explicitly to request this paid portion.",
 },
 "ai.pilotAgree": <String, Object?>{
 "de": "Privatem Test und Datenauswertung zustimmen",
@@ -841,6 +849,10 @@ const copyCatalog = <String, Object?>{
 "de": "Zu prüfende Vokabeln",
 "en": "Vocabulary to review",
 },
+"ai.reviewProgress": <String, Object?>{
+"de": "Geprüft: {processed} · nächste Anfrage: bis zu {next} · verbleibend: {remaining}",
+"en": "Processed: {processed} · next request: up to {next} · remaining: {remaining}",
+},
 "ai.reviewReminder": <String, Object?>{
 "de": "Prüfe Bedeutungen, Beispiele und Abdeckung. Eine gültige Struktur bestätigt weder Sprachqualität noch Vollständigkeit. Nichts wird automatisch ausgewählt.",
 "en": "Check meanings, examples and coverage yourself. Format validation does not verify language quality or completeness. Nothing is selected automatically.",
@@ -848,6 +860,10 @@ const copyCatalog = <String, Object?>{
 "ai.reviewStep": <String, Object?>{
 "de": "Dieser Prüfschritt",
 "en": "This review step",
+},
+"ai.smallerContext": <String, Object?>{
+"de": "Einen kleineren Kontextabschnitt verwenden",
+"en": "Use a smaller context portion",
 },
 "ai.smallerStep": <String, Object?>{
 "de": "In kleineren Schritten prüfen",

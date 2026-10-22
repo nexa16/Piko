@@ -27,7 +27,11 @@ class _AiConnectionControlState extends State<AiConnectionControl> {
 
   Future<void> _connect() async {
     try {
-      await widget.connection.connect();
+      if (widget.connection.pilotStopped) {
+        await widget.connection.resumeExistingPilot();
+      } else {
+        await widget.connection.connect();
+      }
     } catch (_) {
       /* Localized state retains explicit recovery. */
     }
@@ -78,7 +82,7 @@ class _AiConnectionControlState extends State<AiConnectionControl> {
             ),
           PikoFormFieldRow(
             child: PikoButton(
-              label: copy.text('ai.connect'),
+              label: copy.text(c.pilotStopped ? 'ai.reconnect' : 'ai.connect'),
               onPressed: busy || !c.configured || !widget.consent
                   ? null
                   : _connect,

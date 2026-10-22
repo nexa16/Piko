@@ -67,6 +67,19 @@ Future<Fixture> fixture() async {
 }
 
 void main() {
+  test(
+    'comprehensive generation starts at a level without requiring a topic',
+    () async {
+      final f = await fixture();
+      final request = await SqliteAiService(f.db, enabled: true).request(
+        collectionId: f.owner.id,
+        action: AiAction.generate,
+        comprehensiveLevel: true,
+      );
+      expect(request.goal, isEmpty);
+      expect(request.comprehensiveLevel, isTrue);
+    },
+  );
   test('disabled service cannot prepare or adopt requests', () async {
     final f = await fixture();
     final s = SqliteAiService(f.db);

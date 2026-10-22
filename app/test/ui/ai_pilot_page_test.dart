@@ -182,6 +182,7 @@ void main() {
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-notice')));
         expect(p.calls, isEmpty);
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-consent')));
+        await tapVisible(t, find.byWidgetPredicate((w)=>w is PikoIconButton && w.semanticLabel==copy.text('common.close')));
         await tapVisible(t, find.byKey(const ValueKey('ai-start')));
         expect(
           t.getTopLeft(find.byKey(const ValueKey('ai-feedback'))).dy,
@@ -242,6 +243,7 @@ void main() {
         expect(t.takeException(), isNull);
         // A subsequent withdrawal removes service access, while the saved app data stays.
         final saved = await stored(f.db);
+        await tapVisible(t, find.byWidgetPredicate((w)=>w is PikoButton && w.label==copy.text('ai.accessSettings')));
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-withdraw')));
         expect(p.withdrawn, true);
         expect(await stored(f.db), saved);

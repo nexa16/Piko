@@ -263,6 +263,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   bool _openingReview = false;
   bool _openingSpeed = false;
   int? _speedCompletedCount;
+  int _speedTotalRetries = 0;
   bool get _genuinelyEmpty =>
       widget.queryBinding?.ready == true &&
       widget.queryBinding!.snapshot!.allEntries.isEmpty;
@@ -1531,6 +1532,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   if (_speedCompletedCount != null && ready)
                     SpeedCompletionNotice(
                       count: _speedCompletedCount!,
+                      totalRetries: _speedTotalRetries,
                       dismissFocusNode: _expandedNoticeFocus,
                       onDismiss: () =>
                           setState(() => _speedCompletedCount = null),
@@ -1625,6 +1627,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               vocabularyRepository:
                                   widget.vocabularyRepository!,
                               categoriesRepository: widget.categoriesRepository,
+                              learningReset: widget.learningReset,
                               enabled:
                                   ready &&
                                   _deleteRequest == null &&
@@ -1656,6 +1659,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               clock: widget.reviewCountClock,
                               factory: widget.reviewSessionFactory!,
                               categoriesRepository: widget.categoriesRepository,
+                              learningReset: widget.learningReset,
                               vocabularyRepository:
                                   widget.vocabularyRepository!,
                               enabled:
@@ -2036,6 +2040,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         factory: widget.selectedSpeedSessionFactory!,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
+        learningReset: widget.learningReset,
         enabled:
             ready &&
             _directionReady &&
@@ -2087,6 +2092,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         },
         onPendingWrites: registerForBuild,
         onSessionClosed: widget.queryBinding!.refresh,
+        onResult: (result) {
+          if (mounted) setState(() => _speedTotalRetries = result.totalRetries);
+        },
         onCompleted: (count) {
           if (mounted) {
             setState(() => _speedCompletedCount = count);
@@ -2182,6 +2190,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 factory: widget.reviewSessionFactory!,
                 vocabularyRepository: widget.vocabularyRepository!,
                 categoriesRepository: widget.categoriesRepository,
+                learningReset: widget.learningReset,
                 beforeLaunch: beforeLaunch,
                 onPendingWrites: widget.onPendingVocabularyWrites,
                 onBusyChanged: (busy) => onBusyChanged(false, busy),
@@ -2223,6 +2232,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         recheckCounts: !binding.ready,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
+        learningReset: widget.learningReset,
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
@@ -2297,10 +2307,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 factory: widget.speedSessionFactory!,
                 vocabularyRepository: widget.vocabularyRepository!,
                 categoriesRepository: widget.categoriesRepository,
+                learningReset: widget.learningReset,
                 beforeLaunch: beforeLaunch,
                 onBusyChanged: (busy) => onBusyChanged(true, busy),
                 onPendingWrites: widget.onPendingVocabularyWrites,
                 onSessionClosed: binding.refresh,
+                onResult: (result) {
+                  if (mounted) {
+                    setState(() => _speedTotalRetries = result.totalRetries);
+                  }
+                },
                 onCompleted: (count) {
                   if (mounted) setState(() => _speedCompletedCount = count);
                 },
@@ -2496,6 +2512,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             if (_speedCompletedCount != null && ready)
               SpeedCompletionNotice(
                 count: _speedCompletedCount!,
+                totalRetries: _speedTotalRetries,
                 showArtwork: false,
                 dismissFocusNode: _compactNoticeFocus,
                 onDismiss: () => setState(() => _speedCompletedCount = null),

@@ -14,6 +14,11 @@ import '../../ui/components/piko_page.dart';
 import '../../ui/components/piko_preference_picker.dart';
 import '../../ui/piko_theme.dart';
 import 'ai_operation_controller.dart';
+import '../../data/categories_repository.dart';
+import '../../data/collection_query.dart';
+import '../../data/collections_repository.dart';
+import '../collections/filter_selection_dialog.dart';
+import '../../ui/components/piko_dialog.dart';
 
 final class AiAdopted {
   const AiAdopted(this.adoption);
@@ -72,10 +77,385 @@ class _AiPageState extends State<AiPage> {
       consent = false;
   List<AiEntry>? related;
   Set<String> targets = {};
+  AiSnapshot? inventory;
+  String level = 'A1', targetLevel = 'A1', categoryMode = 'improve';
+  final goals = <String>{};
+  final checks = <String>{
+    'translations',
+    'examples',
+    'hints',
+    'suitability',
+    'structure',
+    'categories',
+  };
+  Map<String, Set<String>> filters = {};
+  final reviewedIds = <String>{};
+  bool portionResolved = false;
+  int? reviewSize;
+  int? contextSize;
+  int contextOffset = 0;
+  List<String> contextInventoryIds = [];
   @override
   void initState() {
     super.initState();
     if (widget.anchor != null && widget.service.enabled) _loadRelated();
+    if (widget.service.enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
+    }
+  }
+
+  Future<void> _initialize() async {
+    try {
+      final data = await widget.service.snapshot(widget.collectionId);
+      if (!mounted) return;
+      setState(() {
+        inventory = data;
+        level = data.collection?.level ?? 'A1';
+        targetLevel = level;
+      });
+      final c = connection;
+      if (c != null) {
+        await c.loadLocal();
+        if (c.deviceAccessId != null &&
+            !c.pilotStopped &&
+            widget.provider is AiPilotAccess) {
+          final notice = await (widget.provider as AiPilotAccess).pilot(
+            'notice',
+          );
+          if (!mounted) return;
+          setState(() {
+            pilotReady = notice['consented'] == true;
+            consent = pilotReady;
+          });
+        }
+      }
+    } catch (_) {
+      /* First access remains explicit; no auto enrollment. */
+    }
+    if (mounted && !ready) await _showAccess();
+  }
+
+  Future<void> _showAccess() => showPikoDialog<void>(
+    context,
+    builder: (_) => StatefulBuilder(
+      builder: (dialogContext, refresh) => PikoDialog(
+        title: _text('ai.privacyTitle'),
+        purpose: PikoDialogPurpose.form,
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(_text('ai.privacy')),
+            PikoCheckbox(
+              key: const ValueKey('ai-consent'),
+              label: _text('ai.consent'),
+              value: consent,
+              onChanged: (v) {
+                setState(() => consent = v);
+                refresh(() {});
+              },
+            ),
+            if (connection != null)
+              AiConnectionControl(connection: connection!, consent: consent),
+            if (widget.provider case final AiPilotAccess pilot)
+              AiPilotControl(
+                provider: pilot,
+                enabled: consent,
+                onReady: (v) {
+                  if (mounted) {
+                    setState(() => pilotReady = v);
+                    refresh(() {});
+                  }
+                },
+                onWithdraw: () {
+                  controller.stopWaiting();
+                  controller.cancel();
+                  setState(() {
+                    consent = false;
+                    pilotReady = false;
+                  });
+                  refresh(() {});
+                },
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  AiOptions get options => AiOptions(
+    level: level,
+    goals: Set.of(goals),
+    checks: Set.of(checks),
+    categoryMode: categoryMode,
+    filters: filters,
+    reviewedIds: Set.of(reviewedIds),
+    reviewSize: reviewSize,
+    contextSize: contextSize,
+    contextOffset: contextOffset,
+    contextIds: contextSize == null
+        ? null
+        : contextInventoryIds.skip(contextOffset).take(contextSize!).toSet(),
+  );
+  int get matchingCount =>
+      inventory?.entries.where(options.matches).length ?? 0;
+  int get remainingCount =>
+      inventory?.entries
+          .where(
+            (e) => options.matches(e) && !reviewedIds.contains(e.record.id),
+          )
+          .length ??
+      0;
+
+  Future<void> _filters() async {
+    final source = inventory;
+    if (source == null || source.collection == null) return;
+    CollectionQuerySnapshot projection(AiSnapshot s) => CollectionQuerySnapshot(
+      collection: s.collection!,
+      allEntries: s.entries.map((e) => e.record),
+      entries: s.entries.map((e) => e.record),
+      categoryDimensions: s.groups.map((g) => g.dimension),
+      categoryValues: {for (final g in s.groups) g.dimension.id: g.values},
+      assignments: {
+        for (final e in s.entries)
+          e.record.id: [
+            for (final a in e.assignments.entries)
+              CategoryAssignmentRecord(dimensionId: a.key, valueIds: a.value),
+          ],
+      },
+      directions: const {},
+    );
+    final selected = await showPikoDialog<CollectionFilterSelection>(
+      context,
+      builder: (_) => FilterSelectionDialog(
+        snapshot: projection(source),
+        opening: filters,
+        reloadDefinitions: () async =>
+            projection(await widget.service.snapshot(widget.collectionId)),
+        canApply: () => !busy && !controller.requesting,
+      ),
+    );
+    if (selected != null && mounted) {
+      _invalidate();
+      setState(() {
+        filters = selected;
+        reviewedIds.clear();
+      });
+    }
+  }
+
+  List<Widget> _requestFields() {
+    void changed(VoidCallback f) {
+      _invalidate();
+      setState(f);
+    }
+
+    return [
+      if (widget.anchor == null)
+        PikoPreferencePicker<String>(
+          label: _text('ai.action'),
+          value: comprehensive ? 'comprehensive' : action.name,
+          choices: [
+            for (final a in ['generate', 'comprehensive', 'gaps', 'review'])
+              (a, _text('ai.action.$a')),
+          ],
+          onChanged: busy
+              ? null
+              : (v) => changed(() {
+                  comprehensive = v == 'comprehensive';
+                  action = comprehensive
+                      ? AiAction.generate
+                      : AiAction.values.byName(v);
+                  level = comprehensive ? 'A1' : targetLevel;
+                  reviewedIds.clear();
+                  portionResolved = false;
+                  contextSize = null;
+                  contextOffset = 0;
+                }),
+        ),
+      if (action != AiAction.hints)
+        if (contextSize != null)
+          PikoFormFieldRow(
+            child: Text(
+              PikoCopyScope.of(context).text('ai.partialContext', {
+                'count': (contextInventoryIds.length - contextOffset).clamp(
+                  0,
+                  contextSize!,
+                ),
+                'total': contextInventoryIds.length,
+              }),
+            ),
+          ),
+      if (action != AiAction.hints)
+        PikoPreferencePicker<String>(
+          label: _text(comprehensive ? 'ai.targetLevel' : 'collection.level'),
+          value: targetLevel,
+          choices: [for (final l in CollectionRecord.levels) (l, l)],
+          onChanged: busy
+              ? null
+              : (v) => changed(() {
+                  targetLevel = v;
+                  if (!comprehensive) level = v;
+                }),
+        ),
+      if (comprehensive)
+        PikoFormFieldRow(
+          child: Text('${_text('ai.currentStage')}: $level → $targetLevel'),
+        ),
+      if (comprehensive && portionResolved)
+        Wrap(
+          spacing: pikoDesign.dimension('spacing.2'),
+          children: [
+            PikoButton(
+              label: _text('ai.anotherPortion'),
+              onPressed:
+                  busy ||
+                      controller.requesting ||
+                      (controller.plan != null && !controller.applied)
+                  ? null
+                  : () {
+                      controller.cancel();
+                      setState(() {});
+                    },
+            ),
+            PikoButton(
+              label: _text('ai.nextLevel'),
+              onPressed:
+                  busy ||
+                      controller.requesting ||
+                      (controller.plan != null && !controller.applied) ||
+                      CollectionRecord.levels.indexOf(level) >=
+                          CollectionRecord.levels.indexOf(targetLevel)
+                  ? null
+                  : () {
+                      controller.cancel();
+                      setState(
+                        () => level = CollectionRecord
+                            .levels[CollectionRecord.levels.indexOf(level) + 1],
+                      );
+                    },
+            ),
+          ],
+        ),
+      if (action == AiAction.generate && !comprehensive)
+        PikoFormFieldRow(
+          child: PikoField(
+            label: _text('ai.goal'),
+            child: TextField(
+              key: const ValueKey('ai-goal'),
+              controller: goal,
+              enabled: !busy,
+              minLines: 2,
+              maxLines: null,
+              decoration: pikoInputDecoration(),
+              onChanged: (_) => _invalidate(),
+            ),
+          ),
+        ),
+      if (action == AiAction.generate && !comprehensive)
+        PikoFormFieldRow(child: Text(_text('ai.topicExamples'))),
+      if (action != AiAction.hints) ...[
+        PikoFormFieldRow(child: Text(_text('ai.goals'))),
+        for (final g in [
+          'everyday',
+          'travel',
+          'social',
+          'work',
+          'study',
+          'general',
+        ])
+          PikoFormFieldRow(
+            child: PikoCheckbox(
+              label: _text('ai.goal.$g'),
+              value: goals.contains(g),
+              onChanged: busy
+                  ? null
+                  : (v) => changed(() => v ? goals.add(g) : goals.remove(g)),
+            ),
+          ),
+      ],
+      if (action == AiAction.review) ...[
+        PikoFormFieldRow(
+          child: Text('${_text('ai.reviewCount')}: $matchingCount'),
+        ),
+        PikoButton(
+          label: _text('action.filters'),
+          onPressed: busy || controller.requesting ? null : _filters,
+        ),
+        for (final c in [
+          'translations',
+          'examples',
+          'hints',
+          'suitability',
+          'structure',
+          'categories',
+        ])
+          PikoFormFieldRow(
+            child: PikoCheckbox(
+              label: _text('ai.check.$c'),
+              value: checks.contains(c),
+              onChanged: busy
+                  ? null
+                  : (v) => changed(() => v ? checks.add(c) : checks.remove(c)),
+            ),
+          ),
+        if (checks.contains('categories'))
+          PikoPreferencePicker<String>(
+            label: _text('ai.categoryMode'),
+            value: categoryMode,
+            choices: [
+              for (final m in ['missing', 'improve', 'reclassify'])
+                (m, _text('ai.categoryMode.$m')),
+            ],
+            onChanged: busy ? null : (m) => changed(() => categoryMode = m),
+          ),
+        if (reviewSize != null)
+          PikoFormFieldRow(
+            child: Text(
+              PikoCopyScope.of(context).text('ai.reviewProgress', {
+                'processed': reviewedIds.length,
+                'next': remainingCount.clamp(0, reviewSize!),
+                'remaining': remainingCount,
+              }),
+            ),
+          ),
+      ],
+      if (action != AiAction.hints) ...[
+        PikoFormFieldRow(
+          child: PikoCheckbox(
+            label: _text('ai.allowGroups'),
+            value: allowGroups,
+            onChanged: busy ? null : (v) => changed(() => allowGroups = v),
+          ),
+        ),
+        PikoFormFieldRow(child: Text(_text('ai.groupExample'))),
+        PikoFormFieldRow(
+          child: PikoCheckbox(
+            label: _text('ai.allowValues'),
+            value: allowValues,
+            onChanged: busy ? null : (v) => changed(() => allowValues = v),
+          ),
+        ),
+        PikoFormFieldRow(child: Text(_text('ai.valueExample'))),
+      ],
+      if (action == AiAction.hints) ...[
+        PikoFormFieldRow(child: Text(_text('ai.hintScope'))),
+        for (final e in related ?? <AiEntry>[])
+          PikoFormFieldRow(
+            child: PikoCheckbox(
+              label: '${e.record.targetText} — ${e.record.nativeText}',
+              value: targets.contains(e.record.id),
+              onChanged: busy
+                  ? null
+                  : (v) => changed(
+                      () => v
+                          ? targets.add(e.record.id)
+                          : targets.remove(e.record.id),
+                    ),
+            ),
+          ),
+      ],
+    ];
   }
 
   Future<void> _loadRelated() async {
@@ -100,6 +480,8 @@ class _AiPageState extends State<AiPage> {
 
   void _invalidate() {
     controller.invalidate();
+    reviewedIds.clear();
+    portionResolved = false;
   }
 
   @override
@@ -132,6 +514,7 @@ class _AiPageState extends State<AiPage> {
       allowValues: allowValues,
       anchor: widget.anchor,
       targets: action == AiAction.hints ? targets : null,
+      options: options,
     );
   }
 
@@ -161,6 +544,22 @@ class _AiPageState extends State<AiPage> {
     }
     try {
       final result = await controller.apply();
+      if (mounted &&
+          (comprehensive ||
+              (action == AiAction.review && reviewSize != null) ||
+              contextSize != null)) {
+        final fresh = await widget.service.snapshot(widget.collectionId);
+        if (mounted) {
+          setState(() {
+            inventory = fresh;
+            portionResolved = true;
+            if (action == AiAction.review) {
+              reviewedIds.addAll(controller.plan!.processedIds);
+            }
+          });
+        }
+        return;
+      }
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop(AiAdopted(result));
       }
@@ -512,139 +911,81 @@ class _AiPageState extends State<AiPage> {
               ),
               PikoFormSection(
                 title: _text('ai.request'),
-                children: [
-                  if (widget.anchor == null)
-                    PikoPreferencePicker<AiAction>(
-                      label: _text('ai.action'),
-                      value: action,
-                      choices: [
-                        for (final a in [
-                          AiAction.generate,
-                          AiAction.gaps,
-                          AiAction.review,
-                        ])
-                          (a, _text('ai.action.${a.name}')),
-                      ],
-                      onChanged: busy
-                          ? null
-                          : (a) {
-                              _invalidate();
-                              setState(() => action = a);
-                            },
-                    ),
-                  PikoFormFieldRow(
-                    child: PikoField(
-                      label: _text('ai.goal'),
-                      child: TextField(
-                        key: const ValueKey('ai-goal'),
-                        controller: goal,
-                        enabled: !busy,
-                        minLines: 2,
-                        maxLines: null,
-                        decoration: pikoInputDecoration(),
-                        onChanged: (_) => _invalidate(),
-                      ),
-                    ),
-                  ),
-                  if (action == AiAction.generate)
-                    PikoFormFieldRow(
-                      child: PikoCheckbox(
-                        label: _text('ai.comprehensive'),
-                        value: comprehensive,
-                        onChanged: busy
-                            ? null
-                            : (v) {
-                                _invalidate();
-                                setState(() => comprehensive = v);
-                              },
-                      ),
-                    ),
-                  if (action != AiAction.hints) ...[
-                    PikoFormFieldRow(
-                      child: PikoCheckbox(
-                        label: _text('ai.allowGroups'),
-                        value: allowGroups,
-                        onChanged: busy
-                            ? null
-                            : (v) {
-                                _invalidate();
-                                setState(() => allowGroups = v);
-                              },
-                      ),
-                    ),
-                    PikoFormFieldRow(
-                      child: PikoCheckbox(
-                        label: _text('ai.allowValues'),
-                        value: allowValues,
-                        onChanged: busy
-                            ? null
-                            : (v) {
-                                _invalidate();
-                                setState(() => allowValues = v);
-                              },
-                      ),
-                    ),
-                  ],
-                  if (action == AiAction.hints) ...[
-                    PikoFormFieldRow(child: Text(_text('ai.hintScope'))),
-                    for (final entry in related ?? <AiEntry>[])
-                      PikoFormFieldRow(
-                        child: PikoCheckbox(
-                          label:
-                              '${entry.record.targetText} — ${entry.record.nativeText}',
-                          value: targets.contains(entry.record.id),
-                          onChanged: busy
-                              ? null
-                              : (v) {
-                                  _invalidate();
-                                  setState(
-                                    () => v
-                                        ? targets.add(entry.record.id)
-                                        : targets.remove(entry.record.id),
-                                  );
-                                },
-                        ),
-                      ),
-                  ],
-                ],
+                children: _requestFields(),
               ),
-              PikoFormSection(
-                title: _text('ai.privacyTitle'),
-                children: [
-                  PikoFormFieldRow(child: Text(_text('ai.privacy'))),
-                  PikoFormFieldRow(
-                    child: PikoCheckbox(
-                      label: _text('ai.consent'),
-                      value: consent,
-                      onChanged: busy
-                          ? null
-                          : (v) => setState(() => consent = v),
-                    ),
-                  ),
-                  if (connection != null)
-                    AiConnectionControl(
-                      connection: connection!,
-                      consent: consent,
-                      enabled: !busy && !controller.requesting,
-                    ),
-                  if (widget.provider case final AiPilotAccess pilot)
-                    AiPilotControl(
-                      provider: pilot,
-                      enabled: consent && !busy && !controller.requesting,
-                      onReady: (value) {
-                        if (mounted) setState(() => pilotReady = value);
-                      },
-                      onWithdraw: () {
-                        controller.stopWaiting();
-                        controller.cancel();
-                      },
-                    ),
-                ],
+              PikoButton(
+                label: _text('ai.accessSettings'),
+                variant: PikoButtonVariant.ghost,
+                onPressed: busy ? null : _showAccess,
               ),
               if (controller.error != null)
                 Text(
                   _text('ai.error.${controller.error!.name}'),
                   key: const ValueKey('ai-error'),
+                ),
+              if (controller.error == AiFailure.contextLimit &&
+                  action != AiAction.hints)
+                PikoButton(
+                  label: _text(
+                    action == AiAction.review
+                        ? 'ai.smallerStep'
+                        : 'ai.smallerContext',
+                  ),
+                  onPressed: () {
+                    controller.cancel();
+                    setState(() {
+                      if (action == AiAction.review) {
+                        reviewSize = reviewSize == null
+                            ? 50
+                            : (reviewSize! ~/ 2).clamp(1, 50);
+                      } else {
+                        contextSize = contextSize == null
+                            ? 50
+                            : (contextSize! ~/ 2).clamp(1, 50);
+                        contextOffset = 0;
+                        contextInventoryIds =
+                            inventory?.entries
+                                .map((e) => e.record.id)
+                                .toList() ??
+                            [];
+                      }
+                      reviewedIds.clear();
+                    });
+                  },
+                ),
+              if (contextSize != null && portionResolved)
+                PikoButton(
+                  label: _text('ai.nextContext'),
+                  onPressed:
+                      busy ||
+                          controller.requesting ||
+                          (controller.plan != null && !controller.applied) ||
+                          contextOffset + contextSize! >=
+                              contextInventoryIds.length
+                      ? null
+                      : () {
+                          controller.cancel();
+                          setState(() {
+                            contextOffset += contextSize!;
+                            portionResolved = false;
+                          });
+                        },
+                ),
+              if (action == AiAction.review &&
+                  reviewSize != null &&
+                  controller.plan != null)
+                PikoButton(
+                  label: _text('ai.nextStep'),
+                  onPressed:
+                      busy ||
+                          controller.requesting ||
+                          !controller.applied ||
+                          remainingCount == 0
+                      ? null
+                      : () {
+                          controller.cancel();
+                          setState(() {});
+                        },
                 ),
               PikoButton(
                 key: const ValueKey('ai-start'),
@@ -658,7 +999,10 @@ class _AiPageState extends State<AiPage> {
                         !ready ||
                         (connection != null && !connection!.configured) ||
                         (action == AiAction.generate &&
+                            !comprehensive &&
                             goal.text.trim().isEmpty) ||
+                        (action == AiAction.review &&
+                            (checks.isEmpty || remainingCount == 0)) ||
                         (action == AiAction.hints &&
                             (related == null ||
                                 related!.length < 2 ||
@@ -677,7 +1021,16 @@ class _AiPageState extends State<AiPage> {
                 PikoButton(
                   label: _text('ai.discard'),
                   variant: PikoButtonVariant.ghost,
-                  onPressed: busy ? null : controller.cancel,
+                  onPressed: busy
+                      ? null
+                      : () {
+                          if (action == AiAction.review && reviewSize != null) {
+                            reviewedIds.addAll(controller.plan!.processedIds);
+                          }
+                          portionResolved = true;
+                          controller.cancel();
+                          setState(() {});
+                        },
                 ),
               SizedBox(height: d.dimension('spacing.6')),
               ..._preview(),

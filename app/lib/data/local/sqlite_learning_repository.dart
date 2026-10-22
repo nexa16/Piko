@@ -14,6 +14,7 @@ import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
 import 'sqlite_statistics_repository.dart';
+import '../../features/learning/learning_parameters.dart';
 
 part 'sqlite_review_correction.dart';
 part 'sqlite_speed_completion.dart';
@@ -489,7 +490,9 @@ final class SqliteLearningRepository
             expiresAt: round.expiresAt,
             errorCount: round.errorCount,
             dueOrdinal: round.dueOrdinal,
-            waitEligibleAt: at.add(const Duration(seconds: 10)),
+            waitEligibleAt: at.add(
+              const Duration(seconds: LearningParameters.retryWaitSeconds),
+            ),
           );
           next.validate();
           await (database.update(

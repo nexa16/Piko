@@ -39,6 +39,7 @@ final class AiOperationController extends ChangeNotifier {
     bool allowValues = true,
     AiEntry? anchor,
     Set<String>? targets,
+    AiOptions? options,
   }) async {
     if (disposed || requesting || applying) return;
     final owner = ++_revision;
@@ -51,7 +52,7 @@ final class AiOperationController extends ChangeNotifier {
     allowPartial = false;
     notifyListeners();
     try {
-      final request = await service.request(
+      final initial = await service.request(
         collectionId: collectionId,
         action: action,
         goal: goal,
@@ -61,6 +62,7 @@ final class AiOperationController extends ChangeNotifier {
         anchor: anchor,
         targets: targets,
       );
+      final request = options?.bind(initial) ?? initial;
       if (disposed || owner != _revision) return;
       _requestId = request.id;
       _rootRequestId = request.id;
@@ -113,6 +115,8 @@ final class AiOperationController extends ChangeNotifier {
         id: const Uuid().v4(),
         action: original.action,
         snapshot: original.snapshot,
+        options: original.options,
+        fullContentKey: original.fullContentKey,
         goal: original.goal,
         comprehensiveLevel: original.comprehensiveLevel,
         allowGroups: original.allowGroups,
@@ -170,6 +174,8 @@ final class AiOperationController extends ChangeNotifier {
         id: const Uuid().v4(),
         action: original.action,
         snapshot: original.snapshot,
+        options: original.options,
+        fullContentKey: original.fullContentKey,
         goal: original.goal,
         comprehensiveLevel: original.comprehensiveLevel,
         allowGroups: original.allowGroups,

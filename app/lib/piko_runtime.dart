@@ -110,6 +110,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
 
   late final categories = SqliteCategoriesRepository(database);
   late final learning = SqliteLearningRepository(database);
+  late final trash = SqliteVocabularyDeletionService(database);
   late final jsonService = SqliteVocabularyJsonService(database);
   late final fullExportService = SqliteFullExportService(database);
   late final collectionQuery = SqliteCollectionQueryService(database);
@@ -221,6 +222,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
               settingsOnly: true,
               vocabularyRepository: vocabulary,
               categoriesRepository: categories,
+              learningReset: learning,
+              vocabularyTrash: trash,
               interchangeBuilder: _interchange,
               aiBuilder: pikoAiEnabled ? _aiPage : null,
               onPendingVocabularyWrites: trackWrites,
@@ -301,6 +304,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       confirmDraft: coordinator?.confirm,
     );
     return EntrySessionResources(
+      learningReset: learning,
       aiCoordinator: coordinator,
       categoriesRepository: categories,
       onPendingWrites: trackWrites,
@@ -400,6 +404,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       aiAccess.dispose();
     }
     _statistics?.dispose();
+    trash.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();
     }
@@ -460,6 +465,8 @@ class _PikoRuntimeState extends State<PikoRuntime> {
               ),
         Expanded(
           child: CollectionsHome(
+            learningReset: learning,
+            vocabularyTrash: trash,
             repository: collections,
             entrySessionFactory: _entrySession,
             interchangeBuilder: _interchange,

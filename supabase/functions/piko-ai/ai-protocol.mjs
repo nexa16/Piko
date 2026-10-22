@@ -52,13 +52,20 @@ export function modelBody(input,maxOutputTokens){
    if(input.context.entries.length===0)schema.properties.edits.maxItems=0;
  }
  return {model:'gpt-6.1-sol',service_tier:'default',reasoning:{effort:'low'},
-   store:false,background:true,max_output_tokens:maxOutputTokens,instructions,
+   store:false,background:true,max_output_tokens:maxOutputTokens,instructions: instructions + (input.options ? `\nREQUEST OPTIONS: Requested CEFR ${input.options.level}; goals ${input.options.goals.join(', ')}. Review checks enabled: ${input.options.checks.join(', ')}. Do not propose changes in disabled fields. Categories mode ${input.options.categoryMode}: missing only fills unassigned groups and preserves every occupied assignment; improve fills gaps and proposes justified targeted corrections; reclassify may reconsider assignments broadly but protects acquisition Source. Entry suitability/structure diagnoses never authorize deletion, splitting, identity changes, or learning writes. Comprehensive progresses at the explicitly requested level only; never claim certified level coverage. Saved IDs such as @0 are opaque references, not lexical content or proposal IDs.\n` : ''),
    input:[{role:'user',content:JSON.stringify(content)}],
    text:{format:{type:'json_schema',name:'piko_vocabulary_actions_v1',strict:true,schema}}};
 }
 const allowed=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(k=>keys.includes(k));
 export function validateInput(v){
- if(!allowed(v,['requestId','issuedAt','action','scope','goal','allowNewGroups','allowNewValues','context','targets','previous','followUp']))return false;
+ if(!allowed(v,['requestId','issuedAt','action','scope','goal','allowNewGroups','allowNewValues','context','targets','previous','followUp','options']))return false;
+ if(v.options!==undefined){
+   const o=v.options;
+   if(!allowed(o,['level','goals','checks','categoryMode'])||!['A1','A2','B1','B2','C1','C2'].includes(o.level)||
+     !Array.isArray(o.goals)||o.goals.length>6||o.goals.some(g=>!['everyday','travel','social','work','study','general'].includes(g))||
+     !Array.isArray(o.checks)||!o.checks.length||o.checks.some(c=>!['translations','examples','hints','suitability','structure','categories'].includes(c))||
+     !['missing','improve','reclassify'].includes(o.categoryMode))return false;
+ }
  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(v.requestId)||!Number.isFinite(Date.parse(v.issuedAt))||!['generate','gaps','hints','review'].includes(v.action)||
    !['ordinary','comprehensiveLevel'].includes(v.scope)||typeof v.goal!=='string'||v.goal.length>12000||
    typeof v.allowNewGroups!=='boolean'||typeof v.allowNewValues!=='boolean')return false;

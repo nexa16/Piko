@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/clock.dart';
 import '../../data/collections_repository.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_reset.dart';
+import '../../data/vocabulary_deletion.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -47,6 +49,8 @@ class CollectionsHome extends StatefulWidget {
     this.selectedSpeedSessionFactory,
     this.selectedReviewSessionFactory,
     this.categoriesRepository,
+    this.learningReset,
+    this.vocabularyTrash,
     this.onOpenSettings,
     this.directionBinding,
     this.statisticsBinding,
@@ -71,6 +75,8 @@ class CollectionsHome extends StatefulWidget {
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
+  final VocabularyTrashService? vocabularyTrash;
   final VoidCallback? onOpenSettings;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   final StatisticsBinding? statisticsBinding;
@@ -131,6 +137,8 @@ class _CollectionsHomeState extends State<CollectionsHome> {
           selectedSpeedSessionFactory: widget.selectedSpeedSessionFactory,
           selectedReviewSessionFactory: widget.selectedReviewSessionFactory,
           categoriesRepository: widget.categoriesRepository,
+          learningReset: widget.learningReset,
+          vocabularyTrash: widget.vocabularyTrash,
           directionBinding: widget.directionBinding,
           reviewMembershipLoader: widget.reviewMembershipLoader,
           reviewCountPolicy: widget.reviewCountPolicy,
@@ -298,6 +306,7 @@ class _CollectionsHomeState extends State<CollectionsHome> {
                       clock: widget.reviewCountClock,
                       factory: widget.reviewSessionFactory!,
                       categoriesRepository: widget.categoriesRepository,
+                      learningReset: widget.learningReset,
                       vocabularyRepository: widget.vocabularyRepository!,
                       beforeLaunch: () async {},
                       onPendingWrites: widget.onPendingVocabularyWrites,

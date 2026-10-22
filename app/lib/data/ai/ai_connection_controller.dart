@@ -86,6 +86,7 @@ final class SupabaseAiAuthGateway implements AiAuthGateway {
     if (serialized != null) await client.auth.setInitialSession(serialized);
     var session = client.auth.currentSession;
     if (session == null) {
+      if (serialized != null) throw AiFailure.accessDenied;
       session = (await client.auth.signInAnonymously()).session;
     } else if (session.isExpired) {
       session = (await client.auth.refreshSession()).session;
@@ -124,6 +125,59 @@ final class AiConnectionController extends ChangeNotifier
   Future<void>? _pending;
   String? _serialized;
   bool _pilotStopped = false;
+  bool get pilotStopped => _pilotStopped;
+
+  /// Explicitly reconnect the retained identity after operator re-approval.
+  /// This does not grant backend consent/access or enroll another identity.
+  Future<void> resumeExistingPilot() {
+    if (_disposed || !enabled || !configured) {
+      return Future.error(AiFailure.unavailable);
+    }
+    if (_pending != null) return _pending!;
+    final result = Completer<void>(), owner = ++_revision;
+    _pending = result.future;
+    busy = true;
+    error = null;
+    _disconnected = false;
+    notifyListeners();
+    void current() {
+      if (_disposed || owner != _revision) throw AiFailure.accessDenied;
+    }
+
+    unawaited(() async {
+      try {
+        final saved = await vault.read();
+        current();
+        if (saved == null) throw AiFailure.accessDenied;
+        final expected = gateway.inspect(saved).userId;
+        final data = Map<String, dynamic>.from(jsonDecode(saved) as Map)
+          ..remove('pikoPilotWithdrawn');
+        final session = await gateway
+            .connect(jsonEncode(data))
+            .timeout(const Duration(seconds: 30));
+        current();
+        if (session.userId != expected) throw AiFailure.accessDenied;
+        await vault.write(session.serialized);
+        current();
+        _serialized = session.serialized;
+        deviceAccessId = session.userId;
+        _pilotStopped = false;
+        result.complete();
+      } catch (failure, stack) {
+        final mapped = failure is AiFailure ? failure : AiFailure.unavailable;
+        if (!_disposed && owner == _revision) error = mapped;
+        result.completeError(mapped, stack);
+      } finally {
+        if (owner == _revision) {
+          _pending = null;
+          busy = false;
+          if (!_disposed) notifyListeners();
+        }
+      }
+    }());
+    return result.future;
+  }
+
   bool _stopped(String? value) =>
       value != null && (jsonDecode(value) as Map)['pikoPilotWithdrawn'] == true;
   bool get configured => enabled && configuration.available;
@@ -161,6 +215,10 @@ final class AiConnectionController extends ChangeNotifier
         final session = await gateway
             .connect(stored)
             .timeout(const Duration(seconds: 30));
+        if (stored != null &&
+            gateway.inspect(stored).userId != session.userId) {
+          throw AiFailure.accessDenied;
+        }
         if (_disposed || owner != _revision) throw AiFailure.accessDenied;
         await vault.write(session.serialized);
         if (_disposed || owner != _revision) throw AiFailure.accessDenied;
