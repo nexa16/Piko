@@ -26,7 +26,13 @@ Future<(CategoryDimensionRecord, List<CategoryValueRecord>)> seed(
     mode: CategoryMode.multiple,
   );
   for (final name in ['Zebra', 'apple', 'Banana']) {
-    await repository.createValue(dimensionId: group.id, name: name);
+    // Explicitly seed the legacy/default automatic state; ordinary additions
+    // now freeze its effective order and append under CAT-ORDER-001.
+    await repository.createValue(
+      dimensionId: group.id,
+      name: name,
+      preserveAutomaticOrder: true,
+    );
   }
   return (group, await repository.values(group.id));
 }
@@ -37,6 +43,81 @@ List<String> names(List<CategoryValueRecord> values) =>
     values.map((v) => v.name).toList();
 
 void main() {
+  test(
+    'first ordinary addition freezes effective automatic order, appends and survives shared reads/reopen',
+    () async {
+      final directory = Directory.systemTemp.createTempSync(
+        'piko-first-append-',
+      );
+      final file = File('${directory.path}/data.sqlite');
+      var database = PikoDatabase(NativeDatabase(file));
+      final f = Fixture(database: database);
+      await f.initialize();
+      await f.review();
+      var repository = SqliteCategoriesRepository(database);
+      final (group, original) = await seed(repository, f.owner.id);
+      await repository.replaceAssignments(
+        entryId: f.entry.id,
+        assignments: {group.id: ids(original).toSet()},
+      );
+      final before = await stored(database);
+      await database.customStatement(
+        "CREATE TRIGGER reject_append BEFORE INSERT ON category_values BEGIN SELECT RAISE(ABORT,'test'); END",
+      );
+      await expectLater(
+        repository.createValue(dimensionId: group.id, name: 'Aardvark'),
+        throwsA(anything),
+      );
+      expect(await stored(database), before);
+      await database.customStatement('DROP TRIGGER reject_append');
+      final appended = await repository.createValue(
+        dimensionId: group.id,
+        name: 'Aardvark',
+      );
+      final expected = [...ids(original), appended.id];
+      expect(names(await repository.values(group.id)), [
+        'apple',
+        'Banana',
+        'Zebra',
+        'Aardvark',
+      ]);
+      expect(
+        (await repository.watchValues(group.id).first).map((v) => v.id),
+        expected,
+      );
+      final query = await SqliteCollectionQueryService(
+        database,
+      ).query(collectionId: f.owner.id, at: instant);
+      expect(query.categoryValues[group.id]!.map((v) => v.id), expected);
+      final after = await stored(database);
+      for (final table in before.keys.where(
+        (table) =>
+            table != 'category_values' && table != 'category_group_preferences',
+      )) {
+        expect(after[table], before[table], reason: table);
+      }
+      expect(
+        (await database.select(database.categoryGroupPreferences).get())
+            .singleWhere((p) => p.dimensionId == group.id)
+            .customValueOrder,
+        true,
+      );
+      await database.close();
+      database = PikoDatabase(NativeDatabase(file));
+      repository = SqliteCategoriesRepository(database);
+      expect(ids(await repository.values(group.id)), expected);
+      expect(
+        (await SqliteCollectionQueryService(database).query(
+          collectionId: f.owner.id,
+          at: instant,
+        )).categoryValues[group.id]!.map((v) => v.id),
+        expected,
+      );
+      await database.close();
+      directory.deleteSync(recursive: true);
+    },
+  );
+
   test(
     'default/no-op, atomic first custom move, rename/create and group independence',
     () async {
@@ -342,7 +423,7 @@ void main() {
       final legacy = sqlite.sqlite3.open(file.path);
       legacy.execute('DROP TABLE category_group_preferences');
       freezePre20(legacy);
-        legacy.execute('PRAGMA user_version = 17');
+      legacy.execute('PRAGMA user_version = 17');
       legacy.close();
       database = PikoDatabase(NativeDatabase(file));
       repository = SqliteCategoriesRepository(database);
