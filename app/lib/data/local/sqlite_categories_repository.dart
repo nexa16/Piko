@@ -10,6 +10,51 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
   SqliteCategoriesRepository(this.database);
   final PikoDatabase database;
 
+  @override
+  Future<List<CategoryDimensionRecord>> reorderDimensions({
+    required String collectionId,
+    required List<String> orderedIds,
+    List<String>? expectedOrder,
+  }) {
+    final requested = List<String>.of(orderedIds),
+        expected = expectedOrder == null
+            ? null
+            : List<String>.of(expectedOrder);
+    return _write(() async {
+      if (await (database.select(
+            database.collections,
+          )..where((row) => row.id.equals(collectionId))).getSingleOrNull() ==
+          null) {
+        throw CategoryValidation.collectionNotFound;
+      }
+      final current = await dimensions(collectionId);
+      final ids = current.map((g) => g.id).toList();
+      if (expected != null &&
+          (expected.length != ids.length ||
+              Iterable<int>.generate(
+                ids.length,
+              ).any((i) => expected[i] != ids[i]))) {
+        throw CategoryValidation.staleOrder;
+      }
+      if (requested.length != ids.length ||
+          requested.toSet().length != ids.length ||
+          !requested.toSet().containsAll(ids)) {
+        throw CategoryValidation.invalidOwnership;
+      }
+      if (Iterable<int>.generate(
+        ids.length,
+      ).every((i) => requested[i] == ids[i])) {
+        return current;
+      }
+      for (var i = 0; i < requested.length; i++) {
+        await (database.update(database.categoryDimensions)
+              ..where((row) => row.id.equals(requested[i])))
+            .write(CategoryDimensionsCompanion(position: Value(i)));
+      }
+      return dimensions(collectionId);
+    });
+  }
+
   String _name(String name) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw CategoryValidation.requiredName;

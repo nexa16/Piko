@@ -217,6 +217,19 @@ class $CollectionsTable extends Collections
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CollectionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<String> level = GeneratedColumn<String>(
+    'level',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "level IN ('A1','A2','B1','B2','C1','C2')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('A1'),
+  );
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -310,6 +323,7 @@ class $CollectionsTable extends Collections
       );
   @override
   List<GeneratedColumn> get $columns => [
+    level,
     id,
     name,
     targetLanguage,
@@ -331,6 +345,12 @@ class $CollectionsTable extends Collections
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -411,6 +431,10 @@ class $CollectionsTable extends Collections
   Collection map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Collection(
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level'],
+      )!,
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -453,6 +477,7 @@ class $CollectionsTable extends Collections
 }
 
 class Collection extends DataClass implements Insertable<Collection> {
+  final String level;
   final String id;
   final String name;
   final String targetLanguage;
@@ -462,6 +487,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   final bool automaticHintDefault;
   final bool hintDefaultOfferHandled;
   const Collection({
+    required this.level,
     required this.id,
     required this.name,
     required this.targetLanguage,
@@ -474,6 +500,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['level'] = Variable<String>(level);
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['target_language'] = Variable<String>(targetLanguage);
@@ -491,6 +518,7 @@ class Collection extends DataClass implements Insertable<Collection> {
 
   CollectionsCompanion toCompanion(bool nullToAbsent) {
     return CollectionsCompanion(
+      level: Value(level),
       id: Value(id),
       name: Value(name),
       targetLanguage: Value(targetLanguage),
@@ -512,6 +540,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Collection(
+      level: serializer.fromJson<String>(json['level']),
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       targetLanguage: serializer.fromJson<String>(json['targetLanguage']),
@@ -534,6 +563,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'level': serializer.toJson<String>(level),
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'targetLanguage': serializer.toJson<String>(targetLanguage),
@@ -548,6 +578,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   }
 
   Collection copyWith({
+    String? level,
     String? id,
     String? name,
     String? targetLanguage,
@@ -557,6 +588,7 @@ class Collection extends DataClass implements Insertable<Collection> {
     bool? automaticHintDefault,
     bool? hintDefaultOfferHandled,
   }) => Collection(
+    level: level ?? this.level,
     id: id ?? this.id,
     name: name ?? this.name,
     targetLanguage: targetLanguage ?? this.targetLanguage,
@@ -573,6 +605,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   );
   Collection copyWithCompanion(CollectionsCompanion data) {
     return Collection(
+      level: data.level.present ? data.level.value : this.level,
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       targetLanguage: data.targetLanguage.present
@@ -599,6 +632,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   @override
   String toString() {
     return (StringBuffer('Collection(')
+          ..write('level: $level, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('targetLanguage: $targetLanguage, ')
@@ -613,6 +647,7 @@ class Collection extends DataClass implements Insertable<Collection> {
 
   @override
   int get hashCode => Object.hash(
+    level,
     id,
     name,
     targetLanguage,
@@ -626,6 +661,7 @@ class Collection extends DataClass implements Insertable<Collection> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Collection &&
+          other.level == this.level &&
           other.id == this.id &&
           other.name == this.name &&
           other.targetLanguage == this.targetLanguage &&
@@ -637,6 +673,7 @@ class Collection extends DataClass implements Insertable<Collection> {
 }
 
 class CollectionsCompanion extends UpdateCompanion<Collection> {
+  final Value<String> level;
   final Value<String> id;
   final Value<String> name;
   final Value<String> targetLanguage;
@@ -647,6 +684,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<bool> hintDefaultOfferHandled;
   final Value<int> rowid;
   const CollectionsCompanion({
+    this.level = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.targetLanguage = const Value.absent(),
@@ -658,6 +696,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.rowid = const Value.absent(),
   });
   CollectionsCompanion.insert({
+    this.level = const Value.absent(),
     required String id,
     required String name,
     required String targetLanguage,
@@ -672,6 +711,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
        targetLanguage = Value(targetLanguage),
        nativeLanguage = Value(nativeLanguage);
   static Insertable<Collection> custom({
+    Expression<String>? level,
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? targetLanguage,
@@ -683,6 +723,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (level != null) 'level': level,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (targetLanguage != null) 'target_language': targetLanguage,
@@ -700,6 +741,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   }
 
   CollectionsCompanion copyWith({
+    Value<String>? level,
     Value<String>? id,
     Value<String>? name,
     Value<String>? targetLanguage,
@@ -711,6 +753,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Value<int>? rowid,
   }) {
     return CollectionsCompanion(
+      level: level ?? this.level,
       id: id ?? this.id,
       name: name ?? this.name,
       targetLanguage: targetLanguage ?? this.targetLanguage,
@@ -727,6 +770,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (level.present) {
+      map['level'] = Variable<String>(level.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -764,6 +810,7 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   @override
   String toString() {
     return (StringBuffer('CollectionsCompanion(')
+          ..write('level: $level, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('targetLanguage: $targetLanguage, ')
@@ -1573,6 +1620,441 @@ class VocabularyEntriesCompanion extends UpdateCompanion<VocabularyEntry> {
           ..write('addedAt: $addedAt, ')
           ..write('hintText: $hintText, ')
           ..write('hintVisibility: $hintVisibility, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VocabularyTrashTable extends VocabularyTrash
+    with TableInfo<$VocabularyTrashTable, VocabularyTrashData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VocabularyTrashTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<String> entryId = GeneratedColumn<String>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES collections (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<String> expiresAt = GeneratedColumn<String>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _snapshotJsonMeta = const VerificationMeta(
+    'snapshotJson',
+  );
+  @override
+  late final GeneratedColumn<String> snapshotJson = GeneratedColumn<String>(
+    'snapshot_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    entryId,
+    collectionId,
+    groupId,
+    deletedAt,
+    expiresAt,
+    snapshotJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vocabulary_trash';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VocabularyTrashData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deletedAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    if (data.containsKey('snapshot_json')) {
+      context.handle(
+        _snapshotJsonMeta,
+        snapshotJson.isAcceptableOrUnknown(
+          data['snapshot_json']!,
+          _snapshotJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_snapshotJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entryId};
+  @override
+  VocabularyTrashData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VocabularyTrashData(
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expires_at'],
+      )!,
+      snapshotJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_json'],
+      )!,
+    );
+  }
+
+  @override
+  $VocabularyTrashTable createAlias(String alias) {
+    return $VocabularyTrashTable(attachedDatabase, alias);
+  }
+}
+
+class VocabularyTrashData extends DataClass
+    implements Insertable<VocabularyTrashData> {
+  final String entryId;
+  final String collectionId;
+  final String groupId;
+  final String deletedAt;
+  final String expiresAt;
+  final String snapshotJson;
+  const VocabularyTrashData({
+    required this.entryId,
+    required this.collectionId,
+    required this.groupId,
+    required this.deletedAt,
+    required this.expiresAt,
+    required this.snapshotJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entry_id'] = Variable<String>(entryId);
+    map['collection_id'] = Variable<String>(collectionId);
+    map['group_id'] = Variable<String>(groupId);
+    map['deleted_at'] = Variable<String>(deletedAt);
+    map['expires_at'] = Variable<String>(expiresAt);
+    map['snapshot_json'] = Variable<String>(snapshotJson);
+    return map;
+  }
+
+  VocabularyTrashCompanion toCompanion(bool nullToAbsent) {
+    return VocabularyTrashCompanion(
+      entryId: Value(entryId),
+      collectionId: Value(collectionId),
+      groupId: Value(groupId),
+      deletedAt: Value(deletedAt),
+      expiresAt: Value(expiresAt),
+      snapshotJson: Value(snapshotJson),
+    );
+  }
+
+  factory VocabularyTrashData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VocabularyTrashData(
+      entryId: serializer.fromJson<String>(json['entryId']),
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      deletedAt: serializer.fromJson<String>(json['deletedAt']),
+      expiresAt: serializer.fromJson<String>(json['expiresAt']),
+      snapshotJson: serializer.fromJson<String>(json['snapshotJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entryId': serializer.toJson<String>(entryId),
+      'collectionId': serializer.toJson<String>(collectionId),
+      'groupId': serializer.toJson<String>(groupId),
+      'deletedAt': serializer.toJson<String>(deletedAt),
+      'expiresAt': serializer.toJson<String>(expiresAt),
+      'snapshotJson': serializer.toJson<String>(snapshotJson),
+    };
+  }
+
+  VocabularyTrashData copyWith({
+    String? entryId,
+    String? collectionId,
+    String? groupId,
+    String? deletedAt,
+    String? expiresAt,
+    String? snapshotJson,
+  }) => VocabularyTrashData(
+    entryId: entryId ?? this.entryId,
+    collectionId: collectionId ?? this.collectionId,
+    groupId: groupId ?? this.groupId,
+    deletedAt: deletedAt ?? this.deletedAt,
+    expiresAt: expiresAt ?? this.expiresAt,
+    snapshotJson: snapshotJson ?? this.snapshotJson,
+  );
+  VocabularyTrashData copyWithCompanion(VocabularyTrashCompanion data) {
+    return VocabularyTrashData(
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      snapshotJson: data.snapshotJson.present
+          ? data.snapshotJson.value
+          : this.snapshotJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyTrashData(')
+          ..write('entryId: $entryId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('groupId: $groupId, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('snapshotJson: $snapshotJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    entryId,
+    collectionId,
+    groupId,
+    deletedAt,
+    expiresAt,
+    snapshotJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VocabularyTrashData &&
+          other.entryId == this.entryId &&
+          other.collectionId == this.collectionId &&
+          other.groupId == this.groupId &&
+          other.deletedAt == this.deletedAt &&
+          other.expiresAt == this.expiresAt &&
+          other.snapshotJson == this.snapshotJson);
+}
+
+class VocabularyTrashCompanion extends UpdateCompanion<VocabularyTrashData> {
+  final Value<String> entryId;
+  final Value<String> collectionId;
+  final Value<String> groupId;
+  final Value<String> deletedAt;
+  final Value<String> expiresAt;
+  final Value<String> snapshotJson;
+  final Value<int> rowid;
+  const VocabularyTrashCompanion({
+    this.entryId = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.snapshotJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VocabularyTrashCompanion.insert({
+    required String entryId,
+    required String collectionId,
+    required String groupId,
+    required String deletedAt,
+    required String expiresAt,
+    required String snapshotJson,
+    this.rowid = const Value.absent(),
+  }) : entryId = Value(entryId),
+       collectionId = Value(collectionId),
+       groupId = Value(groupId),
+       deletedAt = Value(deletedAt),
+       expiresAt = Value(expiresAt),
+       snapshotJson = Value(snapshotJson);
+  static Insertable<VocabularyTrashData> custom({
+    Expression<String>? entryId,
+    Expression<String>? collectionId,
+    Expression<String>? groupId,
+    Expression<String>? deletedAt,
+    Expression<String>? expiresAt,
+    Expression<String>? snapshotJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entryId != null) 'entry_id': entryId,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (groupId != null) 'group_id': groupId,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (snapshotJson != null) 'snapshot_json': snapshotJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VocabularyTrashCompanion copyWith({
+    Value<String>? entryId,
+    Value<String>? collectionId,
+    Value<String>? groupId,
+    Value<String>? deletedAt,
+    Value<String>? expiresAt,
+    Value<String>? snapshotJson,
+    Value<int>? rowid,
+  }) {
+    return VocabularyTrashCompanion(
+      entryId: entryId ?? this.entryId,
+      collectionId: collectionId ?? this.collectionId,
+      groupId: groupId ?? this.groupId,
+      deletedAt: deletedAt ?? this.deletedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      snapshotJson: snapshotJson ?? this.snapshotJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entryId.present) {
+      map['entry_id'] = Variable<String>(entryId.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<String>(expiresAt.value);
+    }
+    if (snapshotJson.present) {
+      map['snapshot_json'] = Variable<String>(snapshotJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VocabularyTrashCompanion(')
+          ..write('entryId: $entryId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('groupId: $groupId, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('snapshotJson: $snapshotJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6663,6 +7145,9 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
   late final $CollectionsTable collections = $CollectionsTable(this);
   late final $VocabularyEntriesTable vocabularyEntries =
       $VocabularyEntriesTable(this);
+  late final $VocabularyTrashTable vocabularyTrash = $VocabularyTrashTable(
+    this,
+  );
   late final $VocabularyExamplesTable vocabularyExamples =
       $VocabularyExamplesTable(this);
   late final $LearningItemsTable learningItems = $LearningItemsTable(this);
@@ -6705,6 +7190,7 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
     appSettings,
     collections,
     vocabularyEntries,
+    vocabularyTrash,
     vocabularyExamples,
     learningItems,
     regularReviews,
@@ -6730,6 +7216,13 @@ abstract class _$PikoDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('vocabulary_entries', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'collections',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('vocabulary_trash', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -6949,6 +7442,7 @@ typedef $$AppSettingsTableProcessedTableManager =
     >;
 typedef $$CollectionsTableCreateCompanionBuilder =
     CollectionsCompanion Function({
+      Value<String> level,
       required String id,
       required String name,
       required String targetLanguage,
@@ -6961,6 +7455,7 @@ typedef $$CollectionsTableCreateCompanionBuilder =
     });
 typedef $$CollectionsTableUpdateCompanionBuilder =
     CollectionsCompanion Function({
+      Value<String> level,
       Value<String> id,
       Value<String> name,
       Value<String> targetLanguage,
@@ -6991,6 +7486,26 @@ final class $$CollectionsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _vocabularyEntriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$VocabularyTrashTable, List<VocabularyTrashData>>
+  _vocabularyTrashRefsTable(_$PikoDatabase db) => MultiTypedResultKey.fromTable(
+    db.vocabularyTrash,
+    aliasName: 'collections__id__vocabulary_trash__collection_id',
+  );
+
+  $$VocabularyTrashTableProcessedTableManager get vocabularyTrashRefs {
+    final manager = $$VocabularyTrashTableTableManager(
+      $_db,
+      $_db.vocabularyTrash,
+    ).filter((f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _vocabularyTrashRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -7055,6 +7570,11 @@ class $$CollectionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
@@ -7111,6 +7631,31 @@ class $$CollectionsTableFilterComposer
           }) => $$VocabularyEntriesTableFilterComposer(
             $db: $db,
             $table: $db.vocabularyEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> vocabularyTrashRefs(
+    Expression<bool> Function($$VocabularyTrashTableFilterComposer f) f,
+  ) {
+    final $$VocabularyTrashTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.vocabularyTrash,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTrashTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyTrash,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7180,6 +7725,11 @@ class $$CollectionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
@@ -7230,6 +7780,9 @@ class $$CollectionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -7289,6 +7842,31 @@ class $$CollectionsTableAnnotationComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
+    return f(composer);
+  }
+
+  Expression<T> vocabularyTrashRefs<T extends Object>(
+    Expression<T> Function($$VocabularyTrashTableAnnotationComposer a) f,
+  ) {
+    final $$VocabularyTrashTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.vocabularyTrash,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTrashTableAnnotationComposer(
+            $db: $db,
+            $table: $db.vocabularyTrash,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
@@ -7360,6 +7938,7 @@ class $$CollectionsTableTableManager
           Collection,
           PrefetchHooks Function({
             bool vocabularyEntriesRefs,
+            bool vocabularyTrashRefs,
             bool scopeAnswerOrdinalsRefs,
             bool categoryDimensionsRefs,
           })
@@ -7377,6 +7956,7 @@ class $$CollectionsTableTableManager
               $$CollectionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> level = const Value.absent(),
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> targetLanguage = const Value.absent(),
@@ -7387,6 +7967,7 @@ class $$CollectionsTableTableManager
                 Value<bool> hintDefaultOfferHandled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion(
+                level: level,
                 id: id,
                 name: name,
                 targetLanguage: targetLanguage,
@@ -7399,6 +7980,7 @@ class $$CollectionsTableTableManager
               ),
           createCompanionCallback:
               ({
+                Value<String> level = const Value.absent(),
                 required String id,
                 required String name,
                 required String targetLanguage,
@@ -7409,6 +7991,7 @@ class $$CollectionsTableTableManager
                 Value<bool> hintDefaultOfferHandled = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CollectionsCompanion.insert(
+                level: level,
                 id: id,
                 name: name,
                 targetLanguage: targetLanguage,
@@ -7430,6 +8013,7 @@ class $$CollectionsTableTableManager
           prefetchHooksCallback:
               ({
                 vocabularyEntriesRefs = false,
+                vocabularyTrashRefs = false,
                 scopeAnswerOrdinalsRefs = false,
                 categoryDimensionsRefs = false,
               }) {
@@ -7437,6 +8021,7 @@ class $$CollectionsTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (vocabularyEntriesRefs) db.vocabularyEntries,
+                    if (vocabularyTrashRefs) db.vocabularyTrash,
                     if (scopeAnswerOrdinalsRefs) db.scopeAnswerOrdinals,
                     if (categoryDimensionsRefs) db.categoryDimensions,
                   ],
@@ -7458,6 +8043,27 @@ class $$CollectionsTableTableManager
                                 table,
                                 p0,
                               ).vocabularyEntriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.collectionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (vocabularyTrashRefs)
+                        await $_getPrefetchedData<
+                          Collection,
+                          $CollectionsTable,
+                          VocabularyTrashData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CollectionsTableReferences
+                              ._vocabularyTrashRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CollectionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).vocabularyTrashRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.collectionId == item.id,
@@ -7528,6 +8134,7 @@ typedef $$CollectionsTableProcessedTableManager =
       Collection,
       PrefetchHooks Function({
         bool vocabularyEntriesRefs,
+        bool vocabularyTrashRefs,
         bool scopeAnswerOrdinalsRefs,
         bool categoryDimensionsRefs,
       })
@@ -8226,6 +8833,360 @@ typedef $$VocabularyEntriesTableProcessedTableManager =
         bool vocabularyExamplesRefs,
         bool learningItemsRefs,
       })
+    >;
+typedef $$VocabularyTrashTableCreateCompanionBuilder =
+    VocabularyTrashCompanion Function({
+      required String entryId,
+      required String collectionId,
+      required String groupId,
+      required String deletedAt,
+      required String expiresAt,
+      required String snapshotJson,
+      Value<int> rowid,
+    });
+typedef $$VocabularyTrashTableUpdateCompanionBuilder =
+    VocabularyTrashCompanion Function({
+      Value<String> entryId,
+      Value<String> collectionId,
+      Value<String> groupId,
+      Value<String> deletedAt,
+      Value<String> expiresAt,
+      Value<String> snapshotJson,
+      Value<int> rowid,
+    });
+
+final class $$VocabularyTrashTableReferences
+    extends
+        BaseReferences<
+          _$PikoDatabase,
+          $VocabularyTrashTable,
+          VocabularyTrashData
+        > {
+  $$VocabularyTrashTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CollectionsTable _collectionIdTable(_$PikoDatabase db) => db
+      .collections
+      .createAlias('vocabulary_trash__collection_id__collections__id');
+
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
+    final manager = $$CollectionsTableTableManager(
+      $_db,
+      $_db.collections,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$VocabularyTrashTableFilterComposer
+    extends Composer<_$PikoDatabase, $VocabularyTrashTable> {
+  $$VocabularyTrashTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotJson => $composableBuilder(
+    column: $table.snapshotJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CollectionsTableFilterComposer get collectionId {
+    final $$CollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyTrashTableOrderingComposer
+    extends Composer<_$PikoDatabase, $VocabularyTrashTable> {
+  $$VocabularyTrashTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotJson => $composableBuilder(
+    column: $table.snapshotJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CollectionsTableOrderingComposer get collectionId {
+    final $$CollectionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyTrashTableAnnotationComposer
+    extends Composer<_$PikoDatabase, $VocabularyTrashTable> {
+  $$VocabularyTrashTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<String> get snapshotJson => $composableBuilder(
+    column: $table.snapshotJson,
+    builder: (column) => column,
+  );
+
+  $$CollectionsTableAnnotationComposer get collectionId {
+    final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VocabularyTrashTableTableManager
+    extends
+        RootTableManager<
+          _$PikoDatabase,
+          $VocabularyTrashTable,
+          VocabularyTrashData,
+          $$VocabularyTrashTableFilterComposer,
+          $$VocabularyTrashTableOrderingComposer,
+          $$VocabularyTrashTableAnnotationComposer,
+          $$VocabularyTrashTableCreateCompanionBuilder,
+          $$VocabularyTrashTableUpdateCompanionBuilder,
+          (VocabularyTrashData, $$VocabularyTrashTableReferences),
+          VocabularyTrashData,
+          PrefetchHooks Function({bool collectionId})
+        > {
+  $$VocabularyTrashTableTableManager(
+    _$PikoDatabase db,
+    $VocabularyTrashTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VocabularyTrashTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VocabularyTrashTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VocabularyTrashTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> entryId = const Value.absent(),
+                Value<String> collectionId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String> deletedAt = const Value.absent(),
+                Value<String> expiresAt = const Value.absent(),
+                Value<String> snapshotJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyTrashCompanion(
+                entryId: entryId,
+                collectionId: collectionId,
+                groupId: groupId,
+                deletedAt: deletedAt,
+                expiresAt: expiresAt,
+                snapshotJson: snapshotJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entryId,
+                required String collectionId,
+                required String groupId,
+                required String deletedAt,
+                required String expiresAt,
+                required String snapshotJson,
+                Value<int> rowid = const Value.absent(),
+              }) => VocabularyTrashCompanion.insert(
+                entryId: entryId,
+                collectionId: collectionId,
+                groupId: groupId,
+                deletedAt: deletedAt,
+                expiresAt: expiresAt,
+                snapshotJson: snapshotJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VocabularyTrashTable, VocabularyTrashData>(
+                    table,
+                  ),
+                  $$VocabularyTrashTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({collectionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (collectionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.collectionId,
+                                referencedTable:
+                                    $$VocabularyTrashTableReferences
+                                        ._collectionIdTable(db),
+                                referencedColumn:
+                                    $$VocabularyTrashTableReferences
+                                        ._collectionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$VocabularyTrashTableProcessedTableManager =
+    ProcessedTableManager<
+      _$PikoDatabase,
+      $VocabularyTrashTable,
+      VocabularyTrashData,
+      $$VocabularyTrashTableFilterComposer,
+      $$VocabularyTrashTableOrderingComposer,
+      $$VocabularyTrashTableAnnotationComposer,
+      $$VocabularyTrashTableCreateCompanionBuilder,
+      $$VocabularyTrashTableUpdateCompanionBuilder,
+      (VocabularyTrashData, $$VocabularyTrashTableReferences),
+      VocabularyTrashData,
+      PrefetchHooks Function({bool collectionId})
     >;
 typedef $$VocabularyExamplesTableCreateCompanionBuilder =
     VocabularyExamplesCompanion Function({
@@ -12820,6 +13781,8 @@ class $PikoDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$VocabularyEntriesTableTableManager get vocabularyEntries =>
       $$VocabularyEntriesTableTableManager(_db, _db.vocabularyEntries);
+  $$VocabularyTrashTableTableManager get vocabularyTrash =>
+      $$VocabularyTrashTableTableManager(_db, _db.vocabularyTrash);
   $$VocabularyExamplesTableTableManager get vocabularyExamples =>
       $$VocabularyExamplesTableTableManager(_db, _db.vocabularyExamples);
   $$LearningItemsTableTableManager get learningItems =>

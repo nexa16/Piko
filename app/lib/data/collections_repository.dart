@@ -17,11 +17,24 @@ final class CollectionRecord {
   static const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 }
 
-enum CollectionValidation { requiredName, sameLanguage, collectionNotFound, invalidLevel }
+enum CollectionValidation {
+  requiredName,
+  sameLanguage,
+  collectionNotFound,
+  invalidLevel,
+}
 
 abstract interface class CollectionLevelRepository {
-  Future<CollectionRecord> setLevel({required String id, required String level});
-  Future<CollectionRecord> createWithLevel({required String name, required VocabularyLanguage targetLanguage, required VocabularyLanguage nativeLanguage, required String level});
+  Future<CollectionRecord> setLevel({
+    required String id,
+    required String level,
+  });
+  Future<CollectionRecord> createWithLevel({
+    required String name,
+    required VocabularyLanguage targetLanguage,
+    required VocabularyLanguage nativeLanguage,
+    required String level,
+  });
 }
 
 abstract interface class CollectionsRepository {

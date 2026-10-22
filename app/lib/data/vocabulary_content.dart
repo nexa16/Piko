@@ -30,12 +30,15 @@ final class ExamplePair {
 /// Raw editing values; only normalized content crosses the storage boundary.
 final class VocabularyContent {
   const VocabularyContent({
-    this._examples,
+    List<ExamplePair>? examples,
     String? exampleTargetText,
     String? exampleNativeText,
     this.hintText,
     this.hintVisibility = HintVisibility.always,
-  }) : _legacyTarget = exampleTargetText,
+  // Preserve the public examples argument while storing its backing list privately.
+  // ignore: prefer_initializing_formals
+  }) : _examples = examples,
+       _legacyTarget = exampleTargetText,
        _legacyNative = exampleNativeText;
   static const maxExampleLength = 1000;
   static const maxHintLength = 2000;

@@ -252,6 +252,7 @@ final class SqliteVocabularyJsonService implements VocabularyJsonService {
         {
           'id': collection.id,
           'name': collection.name,
+          'level': collection.level,
           'targetLanguage': VocabularyLanguage.stored(
             collection.targetLanguage,
             collection.targetLanguageName,

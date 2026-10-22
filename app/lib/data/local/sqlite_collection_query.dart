@@ -206,6 +206,7 @@ final class SqliteCollectionQueryService implements CollectionQueryService {
         collection: CollectionRecord(
           id: owner.id,
           name: owner.name,
+          level: owner.level,
           targetLanguage: VocabularyLanguage.stored(
             owner.targetLanguage,
             owner.targetLanguageName,
