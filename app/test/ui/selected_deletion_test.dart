@@ -2,17 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'vocabulary_selection_test.dart' show SelectionHarness, key;
 
-void main() {
+void main({bool nativeViewport = false}) {
   testWidgets(
     'cancel retains hidden selected UUID; confirmed delete excludes unrelated words',
     (tester) async {
       final h = SelectionHarness();
-      await h.mount(tester);
+      await h.mount(tester, nativeViewport: nativeViewport);
       await h.start(tester);
       final selected = h.fixture.entry.id;
       final field = key('collection-search');
       await h.reveal(tester, field);
       await tester.enterText(field, 'Word 18');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pumpAndSettle();
       final action = key('vocabulary-delete-selection');
       await tester.tap(action);
@@ -50,7 +51,12 @@ void main() {
       );
       expect(undo, findsOneWidget);
       final rect = tester.getRect(undo);
-      expect(rect.bottom, lessThanOrEqualTo(900));
+      expect(
+        rect.bottom,
+        lessThanOrEqualTo(
+          tester.view.physicalSize.height / tester.view.devicePixelRatio,
+        ),
+      );
       expect(rect.top, greaterThan(0));
       await tester.tap(undo);
       await tester.pumpAndSettle();
