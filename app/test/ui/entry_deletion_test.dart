@@ -184,6 +184,14 @@ void main() {
       expect(find.text('Delete vocabulary'), findsNothing);
       f.session.selectSavedEntry(b.id);
       await tester.pumpAndSettle();
+      expect(find.text(PikoCopy('en').text('entry.autoSave')), findsNothing);
+      expect(
+        find.descendant(
+          of: card(b.id),
+          matching: find.text(PikoCopy('en').text('entry.saved')),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Delete vocabulary'), findsOneWidget);
       await tester.ensureVisible(find.text('Delete vocabulary'));
       f.deletion.failDelete = true;

@@ -1162,19 +1162,22 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         ),
                       ),
                     ),
-                    Text(
-                      copy.text(
-                        draft
-                            ? (session.isBusy ? 'entry.saving' : 'entry.new')
-                            : saved!.isSaving
-                            ? 'entry.saving'
-                            : error != null
-                            ? 'entry.unsaved'
-                            : 'entry.saved',
-                      ),
-                      style: metaStyle.copyWith(
-                        fontSize: pikoDesign.dimension(
-                          'components.entryStack.statusSize',
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        copy.text(
+                          draft
+                              ? (session.isBusy ? 'entry.saving' : 'entry.new')
+                              : saved!.isSaving
+                              ? 'entry.saving'
+                              : error != null
+                              ? 'entry.unsaved'
+                              : 'entry.saved',
+                        ),
+                        style: metaStyle.copyWith(
+                          fontSize: pikoDesign.dimension(
+                            'components.entryStack.statusSize',
+                          ),
                         ),
                       ),
                     ),
@@ -1545,17 +1548,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ),
                                 ),
                               ],
-                            )
-                          else
-                            Text(
-                              copy.text(
-                                saved!.isSaving
-                                    ? 'entry.saving'
-                                    : error != null
-                                    ? 'entry.unsaved'
-                                    : 'entry.autoSave',
-                              ),
-                              style: metaStyle,
                             ),
                           if (error != null &&
                               error != VocabularyValidation.requiredTarget &&
