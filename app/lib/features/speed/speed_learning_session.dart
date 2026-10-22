@@ -74,6 +74,9 @@ final class SpeedLearningSession extends ChangeNotifier {
   bool beginCorrection() {
     if (!canCorrectPrevious) return false;
     _correctionHandle = SpeedTurnHandle._(_previousBefore!.currentEntryId!);
+    // A hidden game's cached callbacks must not operate during correction or
+    // revive when that game is presented again after replacement.
+    _currentBreak = null;
     _revealed = true;
     notifyListeners();
     return true;
@@ -372,6 +375,8 @@ final class SpeedLearningSession extends ChangeNotifier {
   bool tapNumber(SpeedBreakHandle handle, int number) {
     if (!_canInteract ||
         isSubmitting ||
+        isCorrecting ||
+        !needsBreak ||
         _state?.numberGame == null ||
         !identical(handle, _currentBreak)) {
       return false;

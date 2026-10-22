@@ -12,6 +12,42 @@ import 'due_learning_session_test.dart' show addWords, source;
 
 void main() {
   test(
+    'Speed retains accepted retry totals after unfinished deactivation through break and completion',
+    () {
+      var state = SpeedSession.start(
+        collectionId: 'collection',
+        direction: LearningDirection.targetToNative,
+        eligibleEntryIds: ['a', 'b'],
+        poolSize: 2,
+      );
+      state = state.answer(entryId: 'a', answer: SpeedAnswer.incorrect);
+      state = state.answer(entryId: 'b', answer: SpeedAnswer.incorrect);
+      state = state.answer(entryId: 'a', answer: SpeedAnswer.correct);
+      expect(state.totalRetries, 1);
+      state = state.excluding({'a'});
+      expect(state.entryIds, ['b']);
+      expect(state.pool, ['b']);
+      expect(state.itemProgress['a']!.attempts, 2);
+      expect(state.totalRetries, 1);
+      state = state.answer(entryId: 'b', answer: SpeedAnswer.correct);
+      expect(state.totalRetries, 2);
+      state = state.beginBreak();
+      for (var ordinal = 1; ordinal <= 10; ordinal++) {
+        state = state.tapNumber(ordinal);
+      }
+      expect(state.totalRetries, 2);
+      state = state.answer(entryId: 'b', answer: SpeedAnswer.correct);
+      expect(state.isComplete, isTrue);
+      expect(state.totalRetries, 3);
+      final fresh = SpeedSession.start(
+        collectionId: 'collection',
+        direction: LearningDirection.targetToNative,
+        eligibleEntryIds: ['a', 'b'],
+      );
+      expect(fresh.totalRetries, 0);
+    },
+  );
+  test(
     'Skip on eligible retry preserves obligation, expiry and answer ordinal',
     () async {
       final f = Fixture();
@@ -91,9 +127,27 @@ void main() {
       await answer(SpeedAnswer.correct);
       expect(session.needsBreak, isTrue);
       expect(session.beginBreak(), isTrue);
-      session.tapNumber(session.currentBreak!, 1);
+      final hiddenGame = session.currentBreak!;
+      session.tapNumber(hiddenGame, 1);
       expect(session.canCorrectPrevious, isTrue);
       expect(session.beginCorrection(), isTrue);
+      final correcting = session.state;
+      expect(session.tapNumber(hiddenGame, 2), isFalse);
+      expect(session.state, same(correcting));
+      expect(session.revealed, isTrue);
+      expect(session.currentBreak, isNull);
+      expect(
+        await session.submitAnswer(session.current!, SpeedAnswer.correct),
+        isTrue,
+      );
+      expect(session.state!.numberGame!.completedCount, 1);
+      final representedGame = session.currentBreak!;
+      expect(representedGame, isNot(same(hiddenGame)));
+      expect(session.tapNumber(hiddenGame, 2), isFalse);
+      expect(session.tapNumber(representedGame, 2), isTrue);
+      expect(session.beginCorrection(), isTrue);
+      expect(session.tapNumber(representedGame, 3), isFalse);
+      expect(session.revealed, isTrue);
       expect(
         await session.submitAnswer(session.current!, SpeedAnswer.incorrect),
         isTrue,
@@ -111,6 +165,7 @@ void main() {
       expect(session.needsBreak, isTrue);
       session.beginBreak();
       final game = session.currentBreak!;
+      expect(session.tapNumber(hiddenGame, 1), isFalse);
       for (var i = 1; i <= 10; i++) {
         session.tapNumber(game, i);
       }

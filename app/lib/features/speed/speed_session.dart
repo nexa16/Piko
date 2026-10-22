@@ -248,10 +248,9 @@ final class SpeedSession {
       turnIndex: 0,
       rotation: rotation,
       completedEntryIds: completedEntryIds,
-      itemProgress: {
-        for (final pair in itemProgress.entries)
-          if (!remove.contains(pair.key)) pair.key: pair.value,
-      },
+      // Eligibility changes do not erase accepted attempts from this launch.
+      // Retain round counters independently of the remaining question pool.
+      itemProgress: itemProgress,
       needsBreak: keepBreak,
       numberGame: keepBreak ? numberGame : null,
       completedBreaks: completedBreaks,
