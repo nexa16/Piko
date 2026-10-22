@@ -87,11 +87,15 @@ Finder action(String label) => find.descendant(
   matching: find.widgetWithText(PikoButton, label),
 );
 
-void main() {
+void main({bool nativeViewport = false}) {
   for (final locale in ['en', 'de']) {
     testWidgets(
       '$locale reset Cancel writes nothing and confirms only chosen direction',
       (tester) async {
+        if (nativeViewport && locale == 'de') {
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        }
         final repository = Reset(), copy = PikoCopy(locale);
         final notifications = <Set<LearningDirection>>[];
         var drains = 0;
@@ -119,9 +123,13 @@ void main() {
         expect(drains, 0);
         await tester.tap(find.byKey(const ValueKey('vocabulary-reset-one')));
         await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const ValueKey('reset-direction-nativeToTarget')),
+        final direction = find.descendant(
+          of: find.byKey(const ValueKey('reset-direction-nativeToTarget')),
+          matching: find.byType(Checkbox),
         );
+        await tester.ensureVisible(direction);
+        await tester.pumpAndSettle();
+        await tester.tap(direction);
         await tester.pumpAndSettle();
         await tester.tap(action(copy.text('vocab.resetLearning')));
         await tester.pumpAndSettle();
@@ -136,6 +144,10 @@ void main() {
     testWidgets(
       '$locale trash restores group valid subset, reports conflicts and confirms clear',
       (tester) async {
+        if (nativeViewport && locale == 'de') {
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        }
         final repository = Trash(), copy = PikoCopy(locale);
         await tester.pumpWidget(
           PikoApp(

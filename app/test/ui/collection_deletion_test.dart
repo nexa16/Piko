@@ -58,10 +58,13 @@ Future<void> mount(
   double scale = 1,
   double keyboard = 0,
   bool reduced = false,
+  bool nativeViewport = false,
 }) async {
-  tester.view.physicalSize = Size(width, 1000);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
+  if (!nativeViewport) {
+    tester.view.physicalSize = Size(width, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
@@ -107,13 +110,23 @@ Future<void> swipeDelete(
   await tester.pump();
 }
 
-void main() {
+void registerRound10EditorTests({
+  bool nativeViewport = false,
+  String locale = 'en',
+  double scale = 1,
+}) {
   testWidgets(
-    'editor Delete Cancel preserves invalid raw draft and title status',
+    '$locale editor Delete Cancel preserves invalid raw draft and title status',
     (tester) async {
       final f = CollectionDeletionFixture();
       await tester.runAsync(f.initialize);
-      await mount(tester, f);
+      await mount(
+        tester,
+        f,
+        locale: locale,
+        scale: scale,
+        nativeViewport: nativeViewport,
+      );
       final id = f.entries.first.id;
       await tester.tap(card(id));
       await tester.pumpAndSettle();
@@ -133,7 +146,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(PikoDialog).last,
-          matching: button('Cancel'),
+          matching: button(PikoCopy(locale).text('action.cancel')),
         ),
       );
       await tester.pumpAndSettle();
@@ -144,10 +157,13 @@ void main() {
         const TextSelection(baseOffset: 0, extentOffset: 1),
       );
       expect(f.deletion.deletes, 0);
-      expect(find.text(PikoCopy('en').text('entry.unsaved')), findsOneWidget);
+      expect(find.text(PikoCopy(locale).text('entry.unsaved')), findsOneWidget);
     },
   );
+}
 
+void main() {
+  registerRound10EditorTests();
   testWidgets(
     'Undo above a raw editor uses the documented short-list scroll-bound fallback',
     (tester) async {

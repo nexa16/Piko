@@ -36,10 +36,12 @@ CollectionQuerySnapshot grouped() => CollectionQuerySnapshot(
   directions: projection().directions,
 );
 
-void main() {
+void registerRound10GroupTests({String locale = 'en', double scale = 1}) {
   testWidgets(
-    'collapsed group selection shares UUID state and preserves outside selections',
+    '$locale collapsed group selection shares UUID state and preserves outside selections',
     (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final scope = CollectionViewScope();
       await scope.saveView(const CollectionViewPreferences(grouping: 'topic'));
       final repository = LiveVocabulary();
@@ -59,6 +61,7 @@ void main() {
       });
       await tester.pumpWidget(
         PikoApp(
+          locale: Locale(locale),
           home: Scaffold(
             body: SingleChildScrollView(
               child: CollectionVocabulary(
@@ -95,6 +98,10 @@ void main() {
       expect(tester.getSize(compact).height, lessThan(85));
     },
   );
+}
+
+void main() {
+  registerRound10GroupTests();
   test(
     'Unicode lexical sorting is stable, original order explicit, unknown dates last in both directions',
     () {

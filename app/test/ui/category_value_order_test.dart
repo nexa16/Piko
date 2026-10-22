@@ -9,25 +9,33 @@ import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 import 'category_assignment_picker_test.dart' show PickerFixture;
 
-Future<void> move(WidgetTester tester, PickerFixture fixture, String id) async {
+Future<void> move(
+  WidgetTester tester,
+  PickerFixture fixture,
+  String id, {
+  String locale = 'en',
+}) async {
   final menu = find.byKey(ValueKey('category-order-menu-$id'));
   await tester.ensureVisible(menu);
   await tester.pumpAndSettle();
   await tester.tap(menu);
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Move up').last);
+  await tester.tap(find.text(PikoCopy(locale).text('category.moveUp')).last);
   await fixture.flush(tester);
 }
 
-void main() {
+void registerRound10OrderTests({String locale = 'en', double scale = 1}) {
   testWidgets(
-    'Value order lives in Settings and persists to other category consumers',
+    '$locale Value order lives in Settings and persists to other category consumers',
     (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final fixture = PickerFixture();
       await tester.runAsync(() => fixture.initialize(count: 3));
       try {
         await tester.pumpWidget(
           PikoApp(
+            locale: Locale(locale),
             home: CategoryGroupSettingsPage(
               group: fixture.dimension,
               repository: fixture.repository,
@@ -38,7 +46,7 @@ void main() {
         final before = await tester.runAsync(
           () => fixture.repository.values(fixture.dimension.id),
         );
-        await move(tester, fixture, before!.last.id);
+        await move(tester, fixture, before!.last.id, locale: locale);
         final after = await tester.runAsync(
           () => fixture.repository.values(fixture.dimension.id),
         );
@@ -66,43 +74,53 @@ void main() {
     },
   );
 
-  testWidgets('failed Settings reorder keeps stored order and reports failure', (
-    tester,
-  ) async {
-    final fixture = PickerFixture();
-    await tester.runAsync(() => fixture.initialize(count: 3));
-    try {
-      await tester.pumpWidget(
-        PikoApp(
-          home: CategoryGroupSettingsPage(
-            group: fixture.dimension,
-            repository: fixture.repository,
+  testWidgets(
+    '$locale failed Settings reorder keeps stored order and reports failure',
+    (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final fixture = PickerFixture();
+      await tester.runAsync(() => fixture.initialize(count: 3));
+      try {
+        await tester.pumpWidget(
+          PikoApp(
+            locale: Locale(locale),
+            home: CategoryGroupSettingsPage(
+              group: fixture.dimension,
+              repository: fixture.repository,
+            ),
           ),
-        ),
-      );
-      await fixture.flush(tester);
-      final before = await tester.runAsync(
-        () => fixture.repository.values(fixture.dimension.id),
-      );
-      await tester.runAsync(
-        () => fixture.db.customStatement(
-          "CREATE TRIGGER fail_order BEFORE UPDATE OF position ON category_values BEGIN SELECT RAISE(ABORT, 'synthetic'); END",
-        ),
-      );
-      await move(tester, fixture, before!.last.id);
-      final after = await tester.runAsync(
-        () => fixture.repository.values(fixture.dimension.id),
-      );
-      expect(after!.map((value) => value.id), before.map((value) => value.id));
-      expect(
-        find.text(PikoCopy('en').text('category.dimensionSaveFailed')),
-        findsOneWidget,
-      );
-    } finally {
-      await fixture.cleanup(tester);
-    }
-  });
+        );
+        await fixture.flush(tester);
+        final before = await tester.runAsync(
+          () => fixture.repository.values(fixture.dimension.id),
+        );
+        await tester.runAsync(
+          () => fixture.db.customStatement(
+            "CREATE TRIGGER fail_order BEFORE UPDATE OF position ON category_values BEGIN SELECT RAISE(ABORT, 'synthetic'); END",
+          ),
+        );
+        await move(tester, fixture, before!.last.id, locale: locale);
+        final after = await tester.runAsync(
+          () => fixture.repository.values(fixture.dimension.id),
+        );
+        expect(
+          after!.map((value) => value.id),
+          before.map((value) => value.id),
+        );
+        expect(
+          find.text(PikoCopy(locale).text('category.dimensionSaveFailed')),
+          findsOneWidget,
+        );
+      } finally {
+        await fixture.cleanup(tester);
+      }
+    },
+  );
+}
 
+void main() {
+  registerRound10OrderTests();
   for (final locale in ['en', 'de']) {
     testWidgets(
       '$locale Filters retain staged selection and search without reorder controls',
