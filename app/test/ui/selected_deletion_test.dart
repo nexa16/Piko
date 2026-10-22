@@ -1,8 +1,32 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:flutter/material.dart';
 import 'vocabulary_selection_test.dart' show SelectionHarness, key;
 
 void main({bool nativeViewport = false}) {
+  testWidgets('Compact language text keeps row selection and editor gestures', (
+    tester,
+  ) async {
+    final h = SelectionHarness();
+    await h.mount(tester, nativeViewport: nativeViewport);
+    final entry = h.fixture.entry;
+    final card = key('vocabulary-${entry.id}');
+    for (final language in [entry.targetText, entry.nativeText]) {
+      await h.reveal(tester, card);
+      final text = find.descendant(of: card, matching: find.text(language));
+      await tester.longPress(text);
+      await tester.pumpAndSettle();
+      expect(h.selection(tester).ids, {entry.id});
+      h.selection(tester).clear();
+      await tester.pumpAndSettle();
+    }
+    await h.reveal(tester, card);
+    await tester.tap(
+      find.descendant(of: card, matching: find.text(entry.targetText)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(ValueKey('inline-${entry.id}-target')), findsOneWidget);
+  });
   testWidgets(
     'cancel retains hidden selected UUID; confirmed delete excludes unrelated words',
     (tester) async {

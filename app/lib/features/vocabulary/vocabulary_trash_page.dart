@@ -214,7 +214,7 @@ class _VocabularyTrashPageState extends State<VocabularyTrashPage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                      CompactVocabularyPair(
+                                      CompactVocabularyPair.preview(
                                         first: entry.targetText,
                                         second: entry.nativeText,
                                       ),
