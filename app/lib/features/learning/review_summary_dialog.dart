@@ -84,6 +84,14 @@ class ReviewSummaryDialog extends StatelessWidget {
                     SizedBox(
                       width: width,
                       child: metric(
+                        'total-retries',
+                        progress.totalRetries,
+                        copy.text('summary.totalRetries'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: metric(
                         'completed',
                         progress.completed,
                         copy.text('summary.completed'),

@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import '../learning/learning_editor_guard.dart';
 import '../../data/categories_repository.dart';
 import 'dart:async';
@@ -23,10 +24,13 @@ typedef SpeedGameBuilder =
 
 /// Returned only after every selected word has committed its completion.
 final class SpeedSessionResult {
-  const SpeedSessionResult({required this.completedCount})
-    : assert(completedCount > 0);
+  const SpeedSessionResult({
+    required this.completedCount,
+    this.totalRetries = 0,
+  }) : assert(completedCount > 0);
 
   final int completedCount;
+  final int totalRetries;
 }
 
 /// Owns this in-process session's presentation and safe exit, never its storage.
@@ -36,6 +40,7 @@ class SpeedSessionRoute extends StatefulWidget {
     required this.session,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     this.onPendingWrites,
     this.gameBuilder,
     super.key,
@@ -45,6 +50,7 @@ class SpeedSessionRoute extends StatefulWidget {
   final SpeedLearningSession session;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final ValueChanged<Future<void>>? onPendingWrites;
   final SpeedGameBuilder? gameBuilder;
 
@@ -166,7 +172,10 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
             !session.isSubmitting &&
             session.error == null &&
             state.completedEntryIds.length == state.entryIds.length
-        ? SpeedSessionResult(completedCount: state.completedEntryIds.length)
+        ? SpeedSessionResult(
+            completedCount: state.completedEntryIds.length,
+            totalRetries: state.totalRetries,
+          )
         : null;
     setState(() => _exiting = true);
     await session.stop();
@@ -191,6 +200,26 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
       // The session retains this exact revealed turn and retryable failure.
     }
   }
+
+  Widget _previousAction(
+    BuildContext context,
+    SpeedLearningSession session,
+    bool Function() canUse,
+  ) => Padding(
+    padding: EdgeInsets.only(top: pikoDesign.dimension('spacing.3')),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: PikoButton(
+        key: const ValueKey('speed-correct-previous'),
+        label: PikoCopyScope.of(context).text('learn.correctPrevious'),
+        icon: const PikoIcon(PikoIconName.rotateCcw),
+        variant: PikoButtonVariant.primaryOutline,
+        onPressed: _isCurrent(session) && canUse()
+            ? () => session.beginCorrection()
+            : null,
+      ),
+    ),
+  );
 
   Widget _grades(
     BuildContext context,
@@ -313,6 +342,22 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                     ),
                   ),
                   if (state != null) ...[
+                    Text(
+                      copy.text('learn.totalRetries', {
+                        'count': state.totalRetries,
+                      }),
+                      key: const ValueKey('speed-total-retries'),
+                    ),
+                    if (session.isCorrecting)
+                      Text(
+                        copy.text('learn.previousGrade', {
+                          'grade': copy.text(
+                            session.previousAnswer == SpeedAnswer.correct
+                                ? 'action.correct'
+                                : 'action.incorrect',
+                          ),
+                        }),
+                      ),
                     Padding(
                       padding: EdgeInsets.only(
                         top: d.dimension('components.reviewContext.topMargin'),
@@ -355,8 +400,11 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                       LearningPromptCard(
                         key: ObjectKey(handle),
                         presentation: handle,
+                        allowEditing: !session.isCorrecting,
                         collection: widget.collection,
                         categoriesRepository: widget.categoriesRepository,
+                        learningReset: widget.learningReset,
+                        onLearningReset: (_) => unawaited(_exit(session)),
                         editorGuard: _editorGuard,
                         onPendingWrites: widget.onPendingWrites,
                         onInactive: session.revalidateActivity,
@@ -370,12 +418,23 @@ class _SpeedSessionRouteState extends State<SpeedSessionRoute>
                         canReveal: () =>
                             _isCurrent(session) && session.canReveal(handle),
                         onReveal: () => session.reveal(handle),
+                        questionActions: session.canCorrectPrevious
+                            ? (context, canUse) =>
+                                  _previousAction(context, session, canUse)
+                            : null,
                         revealedActions: (context, canSubmit) =>
                             _grades(context, session, handle, canSubmit),
                       )
-                    else if (session.needsBreak)
+                    else if (session.needsBreak) ...[
+                      if (session.canCorrectPrevious)
+                        _previousAction(
+                          context,
+                          session,
+                          () => session.canCorrectPrevious,
+                        ),
                       widget.gameBuilder?.call(context, session) ??
                           SpeedNumbersBreak(session: session),
+                    ],
                   ],
                 ],
               ),

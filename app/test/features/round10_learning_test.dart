@@ -12,6 +12,131 @@ import 'due_learning_session_test.dart' show addWords, source;
 
 void main() {
   test(
+    'Skip on eligible retry preserves obligation, expiry and answer ordinal',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final gateway = await source(f);
+      final clock = f.db.clock as MutablePikoClock;
+      final session = await DueLearningSession.start(
+        source: gateway,
+        cutoff: instant,
+        clock: clock,
+        presentationActive: false,
+      );
+      addTearDown(session.dispose);
+      await session.submitAnswerNow(session.current!, AnswerGrade.incorrect);
+      final pending = (await gateway.pendingRetries(at: clock.now())).single;
+      clock.set(pending.waitEligibleAt!);
+      await session.refreshRetries();
+      session.setPresentationActive(true);
+      final before = <String, Object>{};
+      for (final table in [
+        'learning_items',
+        'regular_reviews',
+        'retry_obligations',
+        'scope_answer_ordinals',
+      ]) {
+        before[table] = await rows(f.db, table);
+      }
+      expect(session.currentIsRetry, isTrue);
+      final first = session.current!;
+      expect(session.skip(first), isTrue);
+      expect(session.currentIsRetry, isTrue);
+      expect(session.current!.item.id, first.item.id);
+      expect(session.progress.totalRetries, 0);
+      for (final table in before.keys) {
+        expect(await rows(f.db, table), before[table], reason: table);
+      }
+      await session.submitAnswerNow(session.current!, AnswerGrade.incorrect);
+      expect(session.progress.totalRetries, 1);
+      final retry = (await gateway.pendingRetries(at: clock.now())).single;
+      clock.set(retry.waitEligibleAt!);
+      await session.refreshRetries();
+      await session.submitAnswerNow(session.current!, AnswerGrade.correct);
+      expect(session.progress.totalRetries, 2);
+    },
+  );
+
+  test(
+    'Speed previous remains available during game; correction recalculates break and attempts',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      await addWords(f, 1);
+      final ids = (await (await source(
+        f,
+      )).items()).map((item) => item.entryId).toList();
+      final session =
+          await PikoSpeedRuntime(
+            learning: f.learning,
+            clock: f.db.clock,
+          ).prepareSelected(
+            collectionId: f.owner.id,
+            direction: LearningDirection.targetToNative,
+            orderedEntryIds: ids,
+            poolSize: 2,
+          );
+      addTearDown(session.dispose);
+      session.setPresentationActive(true);
+      Future<void> answer(SpeedAnswer grade) async {
+        final handle = session.current!;
+        session.reveal(handle);
+        expect(await session.submitAnswer(handle, grade), isTrue);
+      }
+
+      await answer(SpeedAnswer.incorrect);
+      await answer(SpeedAnswer.correct);
+      expect(session.needsBreak, isTrue);
+      expect(session.beginBreak(), isTrue);
+      session.tapNumber(session.currentBreak!, 1);
+      expect(session.canCorrectPrevious, isTrue);
+      expect(session.beginCorrection(), isTrue);
+      expect(
+        await session.submitAnswer(session.current!, SpeedAnswer.incorrect),
+        isTrue,
+      );
+      expect(session.state!.pool, ids);
+      expect(session.needsBreak, isFalse);
+      expect(session.state!.numberGame, isNull);
+      expect(session.state!.totalRetries, 0);
+      expect(await rows(f.db, 'statistics_activity'), isEmpty);
+      expect(session.beginCorrection(), isTrue);
+      expect(
+        await session.submitAnswer(session.current!, SpeedAnswer.correct),
+        isTrue,
+      );
+      expect(session.needsBreak, isTrue);
+      session.beginBreak();
+      final game = session.currentBreak!;
+      for (var i = 1; i <= 10; i++) {
+        session.tapNumber(game, i);
+      }
+      expect(session.state!.completedBreaks, 1);
+      expect(session.beginCorrection(), isTrue);
+      expect(
+        await session.submitAnswer(session.current!, SpeedAnswer.correct),
+        isTrue,
+      );
+      expect(session.state!.completedBreaks, 1);
+      expect(session.current!.entryId, ids.first);
+      await answer(SpeedAnswer.correct);
+      expect(session.state!.totalRetries, 1);
+      expect(session.beginCorrection(), isTrue);
+      expect(
+        await session.submitAnswer(session.current!, SpeedAnswer.incorrect),
+        isTrue,
+      );
+      expect(session.state!.totalRetries, 1);
+      expect(session.state!.itemProgress[ids.first]!.errors, 2);
+      await session.stop();
+      expect(session.canCorrectPrevious, isFalse);
+      expect(session.state, isNull);
+    },
+  );
+  test(
     'unlimited Skip defers behind five presentations with no durable effects',
     () async {
       final f = Fixture();
@@ -43,13 +168,15 @@ void main() {
       expect(order.toSet(), hasLength(5));
       expect(order, isNot(contains(first)));
       expect(session.current!.item.id, first);
-      for (var i = 0; i < 20; i++)
+      for (var i = 0; i < 20; i++) {
         expect(session.skip(session.current!), isTrue);
+      }
       expect(session.pendingItemCount, 7);
       expect(session.progress.totalRetries, 0);
       expect(session.progress.completed, 0);
-      for (final table in before.keys)
+      for (final table in before.keys) {
         expect(await rows(f.db, table), before[table], reason: table);
+      }
     },
   );
 

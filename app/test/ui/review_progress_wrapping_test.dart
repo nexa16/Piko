@@ -9,6 +9,8 @@ import 'package:piko/shared/copy_scope.dart';
 import 'package:piko/ui/components/piko_page.dart';
 import 'package:piko/ui/piko_theme.dart';
 
+String progressDescription(PikoCopy copy, Map<String, Object> counts) =>
+    '${copy.text('learn.progress', counts)} · ${copy.text('learn.totalRetries', {'count': 0})}';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -144,7 +146,7 @@ void main() {
                 tester
                     .getSemantics(find.byKey(const ValueKey('review-counters')))
                     .label,
-                copy.text('learn.progress', {
+                progressDescription(copy, {
                   'completed': correct,
                   'total': 30,
                   'correct': correct,

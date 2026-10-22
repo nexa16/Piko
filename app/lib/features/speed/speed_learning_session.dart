@@ -117,11 +117,13 @@ final class SpeedLearningSession extends ChangeNotifier {
       notifyListeners();
       await _refreshActivity();
       if (activeEntryIds case final read?) {
-        if (!(await read()).contains(handle.entryId))
+        if (!(await read()).contains(handle.entryId)) {
           throw SpeedCompletionFailure.inactive;
+        }
       }
-      if (_stopped || _disposed || !identical(_correctionHandle, handle))
+      if (_stopped || _disposed || !identical(_correctionHandle, handle)) {
         return false;
+      }
       if (answer != _previousAnswer) {
         final before = _previousBefore!;
         final next = before.answer(entryId: handle.entryId, answer: answer);
@@ -153,8 +155,9 @@ final class SpeedLearningSession extends ChangeNotifier {
     if (identical(next, state)) return;
     if (_previousBefore case final before?) {
       if (inactive.contains(before.currentEntryId)) {
-        if (_previousCompletion case final receipt?)
+        if (_previousCompletion case final receipt?) {
           retireCompletion?.call(receipt);
+        }
         _previousBefore = null;
         _previousCompletion = null;
         _previousAnswer = null;
@@ -394,8 +397,9 @@ final class SpeedLearningSession extends ChangeNotifier {
   }
 
   void _discard() {
-    if (_previousCompletion case final receipt?)
+    if (_previousCompletion case final receipt?) {
       retireCompletion?.call(receipt);
+    }
     _stopped = true;
     _state = null;
     _previousBefore = null;

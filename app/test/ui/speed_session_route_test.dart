@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/collections_repository.dart';
 import 'package:piko/data/learning_item.dart';
+import 'package:piko/data/speed_completion.dart';
+import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/data/vocabulary_repository.dart';
 import 'package:piko/features/learning/review_summary_dialog.dart';
 import 'package:piko/features/speed/speed_learning_session.dart';
@@ -57,6 +59,7 @@ class SpeedHarness {
     this.direction = LearningDirection.targetToNative,
     this.injectGame = true,
     int poolSize = 1,
+    bool correctable = false,
   }) {
     session = SpeedLearningSession(
       initial: SpeedSession.start(
@@ -71,6 +74,40 @@ class SpeedHarness {
         if (failCommit) throw StateError('commit failed');
         durable.add(completion);
       },
+      commitCorrectableCompletion: !correctable
+          ? null
+          : (completion) async {
+              durable.add(completion);
+              final card = LearningCardCodec.encode(
+                LearningScheduler().initialCard(
+                  itemId: 1,
+                  at: DateTime.utc(2026),
+                ),
+              );
+              return SpeedCompletionResult(
+                prior: LearningItemRecord(
+                  id: 1,
+                  entryId: completion.entryId,
+                  direction: direction,
+                  cardJson: card,
+                  formatVersion: LearningCardCodec.version,
+                ),
+                next: LearningItemRecord(
+                  id: 1,
+                  entryId: completion.entryId,
+                  direction: direction,
+                  cardJson: card,
+                  formatVersion: LearningCardCodec.version,
+                  speedCompleted: true,
+                ),
+                alreadyApplied: false,
+              );
+            },
+      reverseCompletion: !correctable
+          ? null
+          : (_) async {
+              durable.removeLast();
+            },
     );
   }
 
@@ -150,6 +187,46 @@ Finder gradeButton(SpeedAnswer answer) =>
     find.byKey(ValueKey('speed-grade-${answer.name}'));
 
 void main() {
+  for (final language in ['en', 'de']) {
+    testWidgets(
+      'Speed $language Previous replaces revealed answer during minigame and shows transient retries',
+      (tester) async {
+        final h = SpeedHarness(
+          language: language,
+          poolSize: 2,
+          correctable: true,
+          injectGame: false,
+        );
+        await h.mount(tester, scale: 2);
+        await h.reveal(tester);
+        await h.grade(tester, SpeedAnswer.incorrect);
+        await h.reveal(tester);
+        await h.grade(tester, SpeedAnswer.correct);
+        expect(h.session.needsBreak, isTrue);
+        final previous = find.byKey(const ValueKey('speed-correct-previous'));
+        expect(previous, findsOneWidget);
+        await tester.ensureVisible(previous);
+        await tester.tap(previous);
+        await tester.pumpAndSettle();
+        expect(h.session.isCorrecting, isTrue);
+        expect(gradeButton(SpeedAnswer.incorrect), findsOneWidget);
+        expect(
+          find.text(
+            PikoCopy(language).text('learn.previousGrade', {
+              'grade': PikoCopy(language).text('action.correct'),
+            }),
+          ),
+          findsOneWidget,
+        );
+        await h.grade(tester, SpeedAnswer.incorrect);
+        expect(h.session.state!.completedEntryIds, isEmpty);
+        expect(h.session.needsBreak, isFalse);
+        expect(h.durable, isEmpty);
+        expect(h.session.state!.totalRetries, 0);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   for (final language in ['en', 'de']) {
     for (final direction in LearningDirection.values) {
       testWidgets(
@@ -243,23 +320,26 @@ void main() {
     }
   }
 
-  testWidgets('leaving during the final write retains its result without completion feedback', (tester) async {
-    final h = SpeedHarness();
-    await h.mount(tester);
-    await h.reveal(tester);
-    await h.grade(tester, SpeedAnswer.correct);
-    h.commitGate = Completer<void>();
-    await h.reveal(tester);
-    await h.grade(tester, SpeedAnswer.correct);
-    await h.exit(tester);
-    expect(find.byType(SpeedSessionRoute), findsOneWidget);
-    expect(h.result, isNull);
-    h.commitGate!.complete();
-    await tester.pumpAndSettle();
-    expect(find.byType(SpeedSessionRoute), findsNothing);
-    expect(h.durable, hasLength(2));
-    expect(h.result, isNull);
-  });
+  testWidgets(
+    'leaving during the final write retains its result without completion feedback',
+    (tester) async {
+      final h = SpeedHarness();
+      await h.mount(tester);
+      await h.reveal(tester);
+      await h.grade(tester, SpeedAnswer.correct);
+      h.commitGate = Completer<void>();
+      await h.reveal(tester);
+      await h.grade(tester, SpeedAnswer.correct);
+      await h.exit(tester);
+      expect(find.byType(SpeedSessionRoute), findsOneWidget);
+      expect(h.result, isNull);
+      h.commitGate!.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(SpeedSessionRoute), findsNothing);
+      expect(h.durable, hasLength(2));
+      expect(h.result, isNull);
+    },
+  );
 
   testWidgets(
     'pending completion disables grades; failure retains revealed card and exact retry',
@@ -373,34 +453,37 @@ void main() {
   );
 
   for (final failFinalCommit in [false, true]) {
-    testWidgets('final commit must succeed before a completion result: failure=$failFinalCommit', (tester) async {
-      final h = SpeedHarness();
-      await h.mount(tester);
-      await h.reveal(tester);
-      await h.grade(tester, SpeedAnswer.correct);
-      h.commitGate = Completer<void>();
-      h.failCommit = failFinalCommit;
-      await h.reveal(tester);
-      await h.grade(tester, SpeedAnswer.correct);
-      expect(h.session.isSubmitting, isTrue);
-      expect(h.durable, hasLength(1));
-      expect(h.result, isNull);
-      expect(find.byType(SpeedSessionRoute), findsOneWidget);
-      h.commitGate!.complete();
-      await tester.pumpAndSettle();
-      if (failFinalCommit) {
-        expect(h.session.error, isNotNull);
-        expect(find.byType(SpeedSessionRoute), findsOneWidget);
-        expect(h.result, isNull);
-        await h.exit(tester);
-        expect(h.result, isNull);
+    testWidgets(
+      'final commit must succeed before a completion result: failure=$failFinalCommit',
+      (tester) async {
+        final h = SpeedHarness();
+        await h.mount(tester);
+        await h.reveal(tester);
+        await h.grade(tester, SpeedAnswer.correct);
+        h.commitGate = Completer<void>();
+        h.failCommit = failFinalCommit;
+        await h.reveal(tester);
+        await h.grade(tester, SpeedAnswer.correct);
+        expect(h.session.isSubmitting, isTrue);
         expect(h.durable, hasLength(1));
-      } else {
-        expect(find.byType(SpeedSessionRoute), findsNothing);
-        expect(h.result!.completedCount, 2);
-        expect(h.durable, hasLength(2));
-      }
-    });
+        expect(h.result, isNull);
+        expect(find.byType(SpeedSessionRoute), findsOneWidget);
+        h.commitGate!.complete();
+        await tester.pumpAndSettle();
+        if (failFinalCommit) {
+          expect(h.session.error, isNotNull);
+          expect(find.byType(SpeedSessionRoute), findsOneWidget);
+          expect(h.result, isNull);
+          await h.exit(tester);
+          expect(h.result, isNull);
+          expect(h.durable, hasLength(1));
+        } else {
+          expect(find.byType(SpeedSessionRoute), findsNothing);
+          expect(h.result!.completedCount, 2);
+          expect(h.durable, hasLength(2));
+        }
+      },
+    );
   }
 
   testWidgets(

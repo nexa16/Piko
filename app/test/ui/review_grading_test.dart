@@ -288,7 +288,7 @@ void main() {
       await tester.tap(gradeButton(AnswerGrade.correct));
       await h.finish(tester);
       expect(session.error, isNotNull);
-      expect(session.hard, isTrue);
+      expect(session.hard, isFalse);
       expect(text(card, tester), ['One', 'Eins']);
       expect(
         find.text(PikoCopy('en').text('learn.gradeFailed')),
@@ -304,7 +304,7 @@ void main() {
       );
       await tester.tap(gradeButton(AnswerGrade.correct));
       await h.finish(tester);
-      expect(session.acceptedReviews.single.event.rating, LearningRating.hard);
+      expect(session.acceptedReviews.single.event.rating, LearningRating.good);
       expect(session.hard, isFalse);
       expect(text(card, tester), ['Next']);
       expect(actions, findsNothing);
@@ -653,10 +653,10 @@ void main() {
               pikoDesign.dimension('typography.label'),
             );
           }
-          expect(find.byType(Checkbox), findsOneWidget);
+          expect(find.byType(Checkbox), findsNothing);
           expect(
             find.text(PikoCopy(language).text('learn.hard')),
-            findsOneWidget,
+            findsNothing,
           );
           await tester.ensureVisible(gradeButton(AnswerGrade.incorrect));
           await tester.tap(gradeButton(AnswerGrade.incorrect));
@@ -682,10 +682,7 @@ void main() {
       await h.finish(tester);
       final previous = find.byKey(const ValueKey('review-correct-previous'));
       expect(previous, findsOneWidget);
-      expect(
-        launch.button(PikoCopy('en').text('learn.exit')),
-        findsOneWidget,
-      );
+      expect(launch.button(PikoCopy('en').text('learn.exit')), findsOneWidget);
       final stale = tester.widget<PikoButton>(previous).onPressed!;
       await tester.ensureVisible(card);
       await tester.tap(card);
@@ -714,19 +711,18 @@ void main() {
       expect(session.current!.item.id, accepted.prior.id);
       expect(find.byKey(const ValueKey('review-answer-text')), findsOneWidget);
       expect(
-        find.text(PikoCopy('en').text('learn.previousGrade', {
-          'grade': PikoCopy('en').text('action.correct'),
-        })),
+        find.text(
+          PikoCopy('en').text('learn.previousGrade', {
+            'grade': PikoCopy('en').text('action.correct'),
+          }),
+        ),
         findsOneWidget,
       );
       expect(
         find.textContaining(PikoCopy('en').text('action.correct')),
         findsWidgets,
       );
-      expect(
-        launch.button(PikoCopy('en').text('learn.exit')),
-        findsOneWidget,
-      );
+      expect(launch.button(PikoCopy('en').text('learn.exit')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('review-correct-previous')),
         findsNothing,

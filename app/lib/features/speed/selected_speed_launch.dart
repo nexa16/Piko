@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -64,8 +65,10 @@ class SelectedSpeedLaunch extends StatefulWidget {
     required this.onBusyChanged,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     this.onPendingWrites,
     this.onCompleted,
+    this.onResult,
     this.onSessionClosed,
     this.enabled = true,
     this.recheckCounts = false,
@@ -83,8 +86,10 @@ class SelectedSpeedLaunch extends StatefulWidget {
   final ValueChanged<bool> onBusyChanged;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<int>? onCompleted;
+  final ValueChanged<SpeedSessionResult>? onResult;
   final VoidCallback? onSessionClosed;
   final bool enabled;
   final bool recheckCounts;
@@ -277,6 +282,7 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
             session: session,
             vocabularyRepository: widget.vocabularyRepository,
             categoriesRepository: widget.categoriesRepository,
+            learningReset: widget.learningReset,
             onPendingWrites: register,
           ),
         ),
@@ -284,7 +290,10 @@ class SelectedSpeedLaunchState extends State<SelectedSpeedLaunch> {
       prepared = null; // The route now owns disposal.
       final result = await closed;
       if (current()) {
-        if (result != null) widget.onCompleted?.call(result.completedCount);
+        if (result != null) {
+          widget.onCompleted?.call(result.completedCount);
+          widget.onResult?.call(result);
+        }
         widget.onSessionClosed?.call();
       }
     } catch (_) {

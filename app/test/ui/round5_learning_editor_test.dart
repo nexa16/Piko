@@ -119,7 +119,7 @@ void main() {
               findsOneWidget,
             );
             expect(speed ? quick!.current : normal!.current, same(handle));
-            if (!speed) expect(normal!.hard, isTrue);
+            if (!speed) expect(normal!.hard, isFalse);
             expect(
               await tester.runAsync(() => rows(f.db, 'learning_items')),
               before,

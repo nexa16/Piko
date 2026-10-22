@@ -454,8 +454,9 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
         isCorrecting ||
         !_presentationActive ||
         !(_presentationGuard?.call() ?? true) ||
-        !identical(_grading.current, handle))
+        !identical(_grading.current, handle)) {
       return false;
+    }
     final otherIds = <int>{
       for (final item in unreviewedMembers)
         if (item.id != handle.item.id) item.id,

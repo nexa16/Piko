@@ -37,7 +37,8 @@ class ReviewProgress extends StatelessWidget {
               SizedBox(height: d.dimension('spacing.2')),
               Semantics(
                 key: const ValueKey('review-counters'),
-                label: description,
+                label:
+                    '$description · ${copy.text('learn.totalRetries', {'count': progress.totalRetries})}',
                 excludeSemantics: true,
                 child: DefaultTextStyle(
                   style: Theme.of(context).textTheme.bodySmall!,
@@ -45,6 +46,12 @@ class ReviewProgress extends StatelessWidget {
                     spacing: d.dimension('spacing.4'),
                     runSpacing: d.dimension('spacing.2'),
                     children: [
+                      Text(
+                        copy.text('learn.totalRetries', {
+                          'count': progress.totalRetries,
+                        }),
+                        key: const ValueKey('review-total-retries'),
+                      ),
                       Text(
                         copy.text('learn.completedGroup', {
                           'completed': progress.completed,
@@ -73,7 +80,8 @@ class ReviewProgress extends StatelessWidget {
             child: LearningProgressBar(
               key: const ValueKey('review-progress'),
               fillKey: const ValueKey('review-progress-fill'),
-              label: '${copy.text('learn.progressLabel')} · $description',
+              label:
+                  '${copy.text('learn.progressLabel')} · $description · ${copy.text('learn.totalRetries', {'count': progress.totalRetries})}',
               completed: progress.completed,
               total: progress.total,
             ),

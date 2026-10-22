@@ -510,7 +510,7 @@ void main() {
         expect(find.text('One'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('review-prompt')));
         await tester.pumpAndSettle();
-        await tester.tap(find.byType(PikoCheckbox));
+        expect(find.byType(PikoCheckbox), findsNothing);
         await tester.pumpAndSettle();
         final handle = session.current;
         unawaited(
@@ -526,7 +526,7 @@ void main() {
         await tester.tap(button('common.back'));
         await tester.pumpAndSettle();
         expect(session.current, same(handle));
-        expect(session.hard, isTrue);
+        expect(session.hard, isFalse);
         expect(find.byKey(const ValueKey('review-grading')), findsOneWidget);
         expect(find.text('Eins'), findsOneWidget);
         expect(session.acceptedReviews, isEmpty);

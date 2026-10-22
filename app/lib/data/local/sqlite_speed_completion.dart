@@ -9,9 +9,16 @@ bool _speedEqual(Map<String, Object?> a, Map<String, Object?> b) =>
     );
 
 final class _SpeedCorrection {
-  _SpeedCorrection(this.scope, this.ordinal, this.beforeRows, this.afterRows);
+  _SpeedCorrection(
+    this.scope,
+    this.ordinal,
+    this.markerBefore,
+    this.beforeRows,
+    this.afterRows,
+  );
   final CollectionReviewGateway scope;
   final ScopeAnswerState ordinal;
+  final bool markerBefore;
   final Map<String, List<Map<String, Object?>>> beforeRows, afterRows;
 }
 
@@ -116,9 +123,7 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
     await (database.update(
       database.learningItems,
     )..where((row) => row.id.equals(expected.prior.id))).write(
-      LearningItemsCompanion(
-        speedCompleted: Value(expected.prior.speedCompleted),
-      ),
+      LearningItemsCompanion(speedCompleted: Value(registered.markerBefore)),
     );
     _speedCorrections[this]!.remove(expected);
   });
@@ -188,7 +193,7 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
         if (count != 1) throw SpeedCompletionFailure.itemNotFound;
       }
       final result = SpeedCompletionResult(
-        prior: current,
+        prior: expected,
         next: next,
         alreadyApplied: !admitted,
       );
@@ -197,6 +202,7 @@ extension _SqliteSpeedCompletion on SqliteLearningRepository {
       registry[result] = _SpeedCorrection(
         scope,
         await _scopeState(scope.collectionId, scope.direction),
+        current.speedCompleted,
         beforeRows,
         await _speedRows(entry.id),
       );

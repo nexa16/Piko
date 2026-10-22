@@ -8,6 +8,8 @@ import 'review_launch_test.dart' as launch;
 import 'review_grading_test.dart' as grading;
 import 'review_prompt_test.dart' show card;
 
+String progressDescription(PikoCopy copy, Map<String, Object> counts) =>
+    '${copy.text('learn.progress', counts)} · ${copy.text('learn.totalRetries', {'count': 0})}';
 void main() {
   for (final language in ['en', 'de']) {
     launch.testWidgets(
@@ -35,18 +37,17 @@ void main() {
             progress = find.byKey(const ValueKey('review-progress'));
         expect(
           tester.widget<Semantics>(counter).properties.label,
-          copy.text('learn.progress', {
-            'completed': 0,
-            'total': 2,
-            'correct': 0,
-          }),
+          progressDescription(copy, {'completed': 0, 'total': 2, 'correct': 0}),
         );
         final semantics = tester.ensureSemantics();
         try {
           final node = tester.getSemantics(progress);
           expect(node.getSemanticsData().role, SemanticsRole.progressBar);
           expect(node.label, contains(copy.text('learn.progressLabel')));
-          expect(node.label, contains(tester.widget<Semantics>(counter).properties.label));
+          expect(
+            node.label,
+            contains(tester.widget<Semantics>(counter).properties.label),
+          );
           expect(node.value, '0');
           final bar = tester.getRect(progress),
               counters = tester.getRect(counter),
@@ -74,7 +75,9 @@ void main() {
             0,
           );
           expect(
-            tester.getSize(find.byKey(const ValueKey('review-progress-fill'))).height,
+            tester
+                .getSize(find.byKey(const ValueKey('review-progress-fill')))
+                .height,
             bar.height,
           );
           await tester.ensureVisible(card);
@@ -86,7 +89,7 @@ void main() {
           await h.flush(tester);
           expect(
             tester.widget<Semantics>(counter).properties.label,
-            copy.text('learn.progress', {
+            progressDescription(copy, {
               'completed': 1,
               'total': 2,
               'correct': 1,
@@ -99,7 +102,9 @@ void main() {
             closeTo(tester.getSize(progress).width / 2, .01),
           );
           expect(
-            tester.getSize(find.byKey(const ValueKey('review-progress-fill'))).height,
+            tester
+                .getSize(find.byKey(const ValueKey('review-progress-fill')))
+                .height,
             tester.getSize(progress).height,
           );
           await tester.ensureVisible(card);
@@ -107,7 +112,9 @@ void main() {
           await tester.ensureVisible(grading.gradeButton(AnswerGrade.correct));
           await tester.tap(grading.gradeButton(AnswerGrade.correct));
           await h.finish(tester);
-          final filled = tester.getSize(find.byKey(const ValueKey('review-progress-fill')));
+          final filled = tester.getSize(
+            find.byKey(const ValueKey('review-progress-fill')),
+          );
           expect(filled.width, closeTo(tester.getSize(progress).width, .01));
           expect(filled.height, tester.getSize(progress).height);
           expect(session.progress.completed, 2);
