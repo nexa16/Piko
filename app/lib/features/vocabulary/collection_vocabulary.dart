@@ -1226,15 +1226,21 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               SliverToBoxAdapter(
                 child: Listener(onPointerMove: onPointerMove, child: leading),
               ),
-              SliverList.builder(
-                itemCount: waiting ? 0 : items.length,
-                findChildIndexCallback: (key) {
-                  final index = items.indexWhere(
-                    (item) => key == ValueKey(item.key),
-                  );
-                  return index < 0 ? null : index;
-                },
-                itemBuilder: (context, index) => item(index),
+              SliverVisibility(
+                visible: !waiting,
+                maintainState: true,
+                maintainAnimation: true,
+                maintainSize: true,
+                sliver: SliverList.builder(
+                  itemCount: items.length,
+                  findChildIndexCallback: (key) {
+                    final index = items.indexWhere(
+                      (item) => key == ValueKey(item.key),
+                    );
+                    return index < 0 ? null : index;
+                  },
+                  itemBuilder: (context, index) => item(index),
+                ),
               ),
               SliverToBoxAdapter(
                 child: Listener(onPointerMove: onPointerMove, child: trailing),
@@ -1247,8 +1253,15 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 leading,
-                if (!waiting)
-                  for (var i = 0; i < items.length; i++) item(i),
+                Visibility(
+                  visible: !waiting,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  maintainSize: true,
+                  child: Column(
+                    children: [for (var i = 0; i < items.length; i++) item(i)],
+                  ),
+                ),
                 trailing,
               ],
             ),
