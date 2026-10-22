@@ -295,7 +295,11 @@ class _AiPageState extends State<AiPage> {
               ? null
               : (v) => changed(() {
                   targetLevel = v;
-                  if (!comprehensive) level = v;
+                  if (!comprehensive) {
+                    level = v;
+                  } else {
+                    level = 'A1';
+                  }
                 }),
         ),
       if (comprehensive)
@@ -737,7 +741,7 @@ class _AiPageState extends State<AiPage> {
             ),
           ],
         ),
-      if (controller.canContinue && ready)
+      if (controller.canContinue && ready && !comprehensive)
         PikoButton(
           key: const ValueKey('ai-continue'),
           label: _text('ai.continue'),

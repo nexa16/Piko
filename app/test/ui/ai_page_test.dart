@@ -7,6 +7,7 @@ import 'package:piko/features/ai/ai_page.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
+import 'package:piko/ui/components/piko_preference_picker.dart';
 import '../data/regular_reviews_test.dart' show Fixture;
 import '../data/ai_service_test.dart' show envelope, card;
 import '../data/statistics_test.dart' show stored;
@@ -14,11 +15,14 @@ import '../data/statistics_test.dart' show stored;
 class FakeProvider implements AiProvider {
   int calls = 0;
   bool fail = false;
+  bool partial = false;
+  AiRequest? last;
   @override
   Future<Map<String, Object?>> generate(AiRequest r) async {
     calls++;
+    last = r;
     if (fail) throw AiFailure.network;
-    return envelope(r, cards: [card('new-card')]);
+    return envelope(r, cards: [card('new-card')], complete: !partial);
   }
 
   @override
@@ -58,6 +62,69 @@ Future<void> tapVisible(WidgetTester t, Finder f) async {
 }
 
 void main({bool nativeViewport = false}) {
+  testWidgets(
+    'comprehensive portions require disposition and another explicit paid start',
+    (t) async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final p = FakeProvider()..partial = true, copy = PikoCopy('en');
+      await t.pumpWidget(
+        PikoApp(
+          home: AiPage(
+            service: SqliteAiService(f.db, enabled: true),
+            provider: p,
+            collectionId: f.owner.id,
+            collectionName: 'Synthetic',
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      await tapVisible(t, find.byKey(const ValueKey('ai-consent')));
+      await tapVisible(
+        t,
+        find.byWidgetPredicate(
+          (w) =>
+              w is PikoIconButton &&
+              w.semanticLabel == copy.text('common.close'),
+        ),
+      );
+      t
+          .widget<PikoPreferencePicker<String>>(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is PikoPreferencePicker<String> &&
+                  w.label == copy.text('ai.action'),
+            ),
+          )
+          .onChanged!('comprehensive');
+      await t.pumpAndSettle();
+      final before = await stored(f.db);
+      await tapVisible(t, find.byKey(const ValueKey('ai-start')));
+      expect(p.calls, 1);
+      expect(p.last!.comprehensiveLevel, isTrue);
+      expect(p.last!.options!.level, 'A1');
+      expect(p.last!.goal, isEmpty);
+      expect(find.byKey(const ValueKey('ai-continue')), findsNothing);
+      expect(find.text(copy.text('ai.anotherPortion')), findsNothing);
+      await tapVisible(
+        t,
+        find.widgetWithText(PikoButton, copy.text('ai.discard')),
+      );
+      expect(p.calls, 1);
+      expect(await stored(f.db), before);
+      await tapVisible(
+        t,
+        find.widgetWithText(PikoButton, copy.text('ai.anotherPortion')),
+      );
+      expect(p.calls, 1);
+      await tapVisible(t, find.byKey(const ValueKey('ai-start')));
+      expect(p.calls, 2);
+      expect(await stored(f.db), before);
+      await t.pumpWidget(const SizedBox.shrink());
+      await t.pumpAndSettle();
+    },
+  );
   for (final locale in ['en', 'de']) {
     testWidgets(
       'AI $locale 320dp/200% explicit preview/selective apply and no secret error fallback',

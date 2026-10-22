@@ -9,6 +9,7 @@ import 'package:piko/features/ai/ai_related_hints_control.dart';
 import 'package:piko/features/ai/ai_page.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_checkbox.dart';
+import 'package:piko/ui/components/piko_button.dart';
 import '../data/regular_reviews_test.dart' show Fixture, rows;
 import '../data/ai_service_test.dart' show envelope, edit;
 import '../data/statistics_test.dart' show stored;
@@ -121,12 +122,34 @@ void main() {
           final control = find.byKey(const ValueKey('ai-related-hints'));
           await tapVisible(t, control);
           expect(find.byType(AiPage), findsOneWidget);
+          await tapVisible(
+            t,
+            find.byWidgetPredicate(
+              (w) =>
+                  w is PikoIconButton &&
+                  w.semanticLabel == copy.text('common.close'),
+            ),
+          );
           Navigator.of(t.element(find.byType(AiPage))).pop();
           await t.pumpAndSettle();
           expect(control, findsOneWidget);
           expect(p.calls, isEmpty);
           expect(await stored(f.db), before);
           await tapVisible(t, control);
+          await tapVisible(
+            t,
+            find.byWidgetPredicate(
+              (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
+            ),
+          );
+          await tapVisible(
+            t,
+            find.byWidgetPredicate(
+              (w) =>
+                  w is PikoIconButton &&
+                  w.semanticLabel == copy.text('common.close'),
+            ),
+          );
           // Keep one target; all directly related meanings remain comparison context.
           for (final entry in (await service.snapshot(
             f.owner.id,
@@ -140,12 +163,6 @@ void main() {
               ),
             );
           }
-          await tapVisible(
-            t,
-            find.byWidgetPredicate(
-              (w) => w is PikoCheckbox && w.label == copy.text('ai.consent'),
-            ),
-          );
           await tapVisible(t, find.byKey(const ValueKey('ai-start')));
           expect(p.calls.length, 1);
           final r = p.calls.single;
