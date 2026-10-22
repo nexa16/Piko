@@ -8,6 +8,13 @@ import 'review_launch_test.dart' as launch;
 import 'review_grading_test.dart' as grading;
 import 'review_prompt_test.dart' show card, text;
 
+String expectedProgress(
+  PikoCopy copy, {
+  required int completed,
+  required int retries,
+}) =>
+    '${copy.text('learn.progress', {'completed': completed, 'total': 1, 'correct': 0})} · ${copy.text('learn.totalRetries', {'count': retries})}';
+
 void main() {
   for (final reverse in [false, true]) {
     launch.testWidgets(
@@ -38,11 +45,7 @@ void main() {
         expect(text(card, tester), reverse ? ['Eins'] : ['One']);
         expect(
           tester.widget<Semantics>(counter).properties.label,
-          copy.text('learn.progress', {
-            'completed': 0,
-            'total': 1,
-            'correct': 0,
-          }),
+          expectedProgress(copy, completed: 0, retries: 0),
         );
         await grading.reveal(tester);
         expect(text(card, tester), reverse ? ['Eins', 'One'] : ['One', 'Eins']);
@@ -58,11 +61,7 @@ void main() {
         expect(tester.widget<Text>(direction).data, fixed);
         expect(
           tester.widget<Semantics>(counter).properties.label,
-          copy.text('learn.progress', {
-            'completed': 0,
-            'total': 1,
-            'correct': 0,
-          }),
+          expectedProgress(copy, completed: 0, retries: 0),
         );
         (f.db.clock as MutablePikoClock).advance(const Duration(seconds: 10));
         await tester.pump(const Duration(seconds: 10));
@@ -77,11 +76,7 @@ void main() {
         expect(session.progress.firstTryCorrect, 0);
         expect(
           tester.widget<Semantics>(counter).properties.label,
-          copy.text('learn.progress', {
-            'completed': 1,
-            'total': 1,
-            'correct': 0,
-          }),
+          expectedProgress(copy, completed: 1, retries: 1),
         );
         expect(tester.takeException(), isNull);
       },
