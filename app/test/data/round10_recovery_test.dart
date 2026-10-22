@@ -15,6 +15,7 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_deletion.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/data/local/sqlite_collection_query.dart';
+import 'package:piko/data/local/sqlite_learning_repository.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import '../support/mutable_clock.dart';
 import 'regular_reviews_test.dart' show Fixture, rows, instant;
@@ -448,6 +449,17 @@ void main() {
         ).query(collectionId: f.owner.id, at: instant)).collection.level,
         'C1',
       );
+      final resetter = SqliteLearningRepository(db);
+      await resetter.resetLearning(
+        entryId: f.entry.id,
+        directions: LearningDirection.values.toSet(),
+      );
+      final resetState = await rows(db, 'learning_items');
+      final history = await rows(db, 'regular_reviews');
+      await db.close();
+      db = PikoDatabase(NativeDatabase(dbFile));
+      expect(await rows(db, 'learning_items'), resetState);
+      expect(await rows(db, 'regular_reviews'), history);
       await db.close();
       dir.deleteSync(recursive: true);
     },
