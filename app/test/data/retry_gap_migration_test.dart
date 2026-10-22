@@ -258,6 +258,7 @@ void main() {
                   {
                     ...row,
                     'automatic_hint_default': 0,
+                    'level': 'A1',
                     'hint_default_offer_handled': 0,
                     'target_language_name': null,'native_language_name': null,
                   }

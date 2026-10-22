@@ -189,6 +189,7 @@ void main() {
           for (final stored in table.value as List) {
             final row = Map<String, Object?>.from(stored as Map);
             if (table.key == 'collections') {
+                row.remove('level'); // Absent in the frozen legacy schema.
               row.remove('automatic_hint_default');
               row.remove('hint_default_offer_handled');
                 row.remove('target_language_name');row.remove('native_language_name');

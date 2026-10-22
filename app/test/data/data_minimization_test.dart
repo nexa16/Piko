@@ -16,6 +16,7 @@ const allowedColumns = <String, Set<String>>{
   'app_settings': {'key', 'value'},
   // Collection-owned Hint default and one-time offer state; no event history.
   'collections': {
+    'level', // COLL-LEVEL-001: current Collection setting, no history.
     'id',
     'name',
     'target_language',
@@ -42,6 +43,8 @@ const allowedColumns = <String, Set<String>>{
   },
   // Ordered user-authored examples; no extra learning history.
   'vocabulary_examples': {'entry_id', 'position', 'target_text', 'native_text'},
+  // VOCAB-TRASH-001: one versioned exact recovery snapshot, maximum24h.
+  'vocabulary_trash': {'entry_id', 'collection_id', 'group_id', 'deleted_at', 'expires_at', 'snapshot_json'},
   'learning_items': {
     'id',
     'entry_id',

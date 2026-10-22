@@ -429,6 +429,7 @@ void main() {
                 {
                   ...row,
                   if (table == 'collections') ...{
+                    'level': 'A1',
                     'target_language_name': null,
                     'native_language_name': null,
                   },

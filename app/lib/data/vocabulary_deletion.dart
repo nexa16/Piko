@@ -16,6 +16,11 @@ enum VocabularyUndoFailure {
   categoryConflict,
 }
 
+/// Recovery can keep vocabulary while omitting assignments invalidated meanwhile.
+abstract interface class VocabularyRecoveryWarnings {
+  bool get omittedCategories;
+}
+
 abstract interface class VocabularyDeletionService {
   Future<VocabularyDeletionReceipt> delete(String id);
   Future<VocabularyRecord> restore(VocabularyDeletionReceipt receipt);

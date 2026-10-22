@@ -20,61 +20,73 @@ import '../support/mutable_clock.dart';
 import 'regular_reviews_test.dart' show Fixture, rows, instant;
 
 void main() {
-  test(
-    'durable trash survives restart, preserves exact payload/order and never revives expired retries',
-    () async {
-      final directory = Directory.systemTemp.createTempSync('piko-trash-');
-      final file = File('${directory.path}/data.sqlite');
-      final clock = MutablePikoClock(instant);
-      var db = PikoDatabase(NativeDatabase(file), clock: clock);
-      final f = Fixture(database: db);
-      await f.initialize();
-      await f.review(reverse: true, rating: LearningRating.again);
-      await f.vocabulary.updateWithContent(
-        id: f.entry.id,
-        targetText: 'One',
-        nativeText: 'Eins',
-        assignments: {},
-        content: const VocabularyContent(
-          examples: [
-            ExamplePair(targetText: 'One example', nativeText: 'Ein Beispiel'),
-          ],
-          hintText: 'hint',
-        ),
-        active: false,
-      );
-      final before = {
-        for (final table in [
-          'vocabulary_entries',
-          'vocabulary_examples',
-          'learning_items',
-          'regular_reviews',
-          'statistics_activity',
-        ])
-          table: await rows(db, table),
-      };
-      final deletion = SqliteVocabularyDeletionService(db);
-      await deletion.delete(f.entry.id);
-      deletion.dispose();
-      await db.close();
-      clock.set(instant.add(const Duration(hours: 20)));
-      db = PikoDatabase(NativeDatabase(file), clock: clock);
-      final reopened = SqliteVocabularyDeletionService(db);
-      final groups = await reopened.trashGroups(collectionId: f.owner.id);
-      expect(groups.single.entries.single.id, f.entry.id);
-      expect(groups.single.entries.single.active, false);
-      final result = await reopened.restoreTrashEntry(f.entry.id);
-      expect(result.restoredIds, {f.entry.id});
-      for (final table in before.keys) {
-        expect(await rows(db, table), before[table], reason: table);
-      }
-      expect(await rows(db, 'retry_obligations'), isEmpty);
-      expect(await reopened.trashGroups(collectionId: f.owner.id), isEmpty);
-      expect(await db.customSelect('PRAGMA foreign_key_check').get(), isEmpty);
-      await db.close();
-      directory.deleteSync(recursive: true);
-    },
-  );
+  for (final restoreHours in [1, 20]) {
+    test(
+      'durable trash after ${restoreHours}h restart preserves payload/order and only live retries',
+      () async {
+        final directory = Directory.systemTemp.createTempSync('piko-trash-');
+        final file = File('${directory.path}/data.sqlite');
+        final clock = MutablePikoClock(instant);
+        var db = PikoDatabase(NativeDatabase(file), clock: clock);
+        final f = Fixture(database: db);
+        await f.initialize();
+        await f.review(reverse: true, rating: LearningRating.again);
+        await f.vocabulary.updateWithContent(
+          id: f.entry.id,
+          targetText: 'One',
+          nativeText: 'Eins',
+          assignments: {},
+          content: const VocabularyContent(
+            examples: [
+              ExamplePair(
+                targetText: 'One example',
+                nativeText: 'Ein Beispiel',
+              ),
+            ],
+            hintText: 'hint',
+          ),
+          active: false,
+        );
+        final before = {
+          for (final table in [
+            'vocabulary_entries',
+            'vocabulary_examples',
+            'learning_items',
+            'regular_reviews',
+            'statistics_activity',
+          ])
+            table: await rows(db, table),
+        };
+        final deletion = SqliteVocabularyDeletionService(db);
+        final retriesBefore = await rows(db, 'retry_obligations');
+        await deletion.delete(f.entry.id);
+        deletion.dispose();
+        await db.close();
+        clock.set(instant.add(Duration(hours: restoreHours)));
+        db = PikoDatabase(NativeDatabase(file), clock: clock);
+        final reopened = SqliteVocabularyDeletionService(db);
+        final groups = await reopened.trashGroups(collectionId: f.owner.id);
+        expect(groups.single.entries.single.id, f.entry.id);
+        expect(groups.single.entries.single.active, false);
+        final result = await reopened.restoreTrashEntry(f.entry.id);
+        expect(result.restoredIds, {f.entry.id});
+        for (final table in before.keys) {
+          expect(await rows(db, table), before[table], reason: table);
+        }
+        expect(
+          await rows(db, 'retry_obligations'),
+          restoreHours == 1 ? retriesBefore : isEmpty,
+        );
+        expect(await reopened.trashGroups(collectionId: f.owner.id), isEmpty);
+        expect(
+          await db.customSelect('PRAGMA foreign_key_check').get(),
+          isEmpty,
+        );
+        await db.close();
+        directory.deleteSync(recursive: true);
+      },
+    );
+  }
 
   test(
     'rolling groups, valid subset restore, category omissions and clear invalidate Undo',
@@ -211,6 +223,15 @@ void main() {
       addTearDown(f.db.close);
       await f.review(rating: LearningRating.again);
       await f.review(reverse: true);
+      final speedScope = await f.learning.forCollection(
+        collectionId: f.owner.id,
+        direction: LearningDirection.targetToNative,
+      );
+      await speedScope.completeSpeedItem(
+        expectedPrior: await f.current(),
+        errors: 0,
+        completedAt: instant,
+      );
       final prior = await f.current(), reverse = await f.current(null, true);
       final history = await rows(f.db, 'regular_reviews'),
           stats = await rows(f.db, 'statistics_activity');
@@ -224,6 +245,7 @@ void main() {
       expect(next.generation, prior.generation + 1);
       expect(next.reviewRevision, prior.reviewRevision + 1);
       expect(next.card.lastReview, isNull);
+      expect(prior.speedCompleted, true);
       expect(next.speedCompleted, false);
       expect((await f.current(null, true)).cardJson, reverse.cardJson);
       expect((await f.current(f.other)).cardJson, unrelated.cardJson);
@@ -273,19 +295,82 @@ void main() {
     },
   );
 
-  test('group recovery rolls back all eligible restores on an unexpected storage error', () async {
-    final f = Fixture(); await f.initialize(); addTearDown(f.db.close);
-    final second = await f.vocabulary.create(collectionId: f.owner.id, targetText: 'Second', nativeText: 'Zweite');
-    final deletion = SqliteVocabularyDeletionService(f.db);
-    await deletion.deleteMany(collectionId: f.owner.id, ids: {f.entry.id, second.id});
-    final before = await rows(f.db, 'vocabulary_trash');
-    final group = (await deletion.trashGroups(collectionId: f.owner.id)).single;
-    await f.db.customStatement("CREATE TRIGGER reject_second BEFORE INSERT ON learning_items WHEN NEW.entry_id='${second.id}' BEGIN SELECT RAISE(ABORT,'test'); END");
-    await expectLater(deletion.restoreTrashGroup(group.id), throwsA(anything));
-    expect(await rows(f.db, 'vocabulary_trash'), before);
-    expect(await f.vocabulary.watchById(f.entry.id).first, isNull);
-    expect(await f.vocabulary.watchById(second.id).first, isNull);
-  });
+  test(
+    'group recovery rolls back all eligible restores on an unexpected storage error',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final second = await f.vocabulary.create(
+        collectionId: f.owner.id,
+        targetText: 'Second',
+        nativeText: 'Zweite',
+      );
+      final deletion = SqliteVocabularyDeletionService(f.db);
+      await deletion.deleteMany(
+        collectionId: f.owner.id,
+        ids: {f.entry.id, second.id},
+      );
+      final before = await rows(f.db, 'vocabulary_trash');
+      final group = (await deletion.trashGroups(
+        collectionId: f.owner.id,
+      )).single;
+      await f.db.customStatement(
+        "CREATE TRIGGER reject_second BEFORE INSERT ON learning_items WHEN NEW.entry_id='${second.id}' BEGIN SELECT RAISE(ABORT,'test'); END",
+      );
+      await expectLater(
+        deletion.restoreTrashGroup(group.id),
+        throwsA(anything),
+      );
+      expect(await rows(f.db, 'vocabulary_trash'), before);
+      expect(await f.vocabulary.watchById(f.entry.id).first, isNull);
+      expect(await f.vocabulary.watchById(second.id).first, isNull);
+    },
+  );
+
+  test(
+    'Undo omits assignments made invalid meanwhile while preserving exact learning',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      await f.review();
+      final categories = SqliteCategoriesRepository(f.db);
+      final dimension = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'Topic',
+        mode: CategoryMode.multiple,
+      );
+      final a = await categories.createValue(
+        dimensionId: dimension.id,
+        name: 'a',
+      );
+      final b = await categories.createValue(
+        dimensionId: dimension.id,
+        name: 'b',
+      );
+      await categories.replaceAssignments(
+        entryId: f.entry.id,
+        assignments: {
+          dimension.id: {a.id, b.id},
+        },
+      );
+      final learning = await rows(f.db, 'learning_items');
+      final history = await rows(f.db, 'regular_reviews');
+      final service = SqliteVocabularyDeletionService(f.db);
+      final receipt = await service.delete(f.entry.id);
+      await categories.updateDimension(
+        id: dimension.id,
+        name: 'Topic',
+        mode: CategoryMode.single,
+      );
+      await service.restore(receipt);
+      expect((receipt as VocabularyRecoveryWarnings).omittedCategories, true);
+      expect(await categories.assignments(f.entry.id), isEmpty);
+      expect(await rows(f.db, 'learning_items'), learning);
+      expect(await rows(f.db, 'regular_reviews'), history);
+    },
+  );
 
   test(
     'v22 upgrade, level and group order survive reopen, JSON preserves destination level',
@@ -365,6 +450,76 @@ void main() {
       );
       await db.close();
       dir.deleteSync(recursive: true);
+    },
+  );
+
+  test(
+    'level creation and category order failures commit no partial metadata',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final created = await f.collections.createWithLevel(
+        name: 'Level',
+        targetLanguage: f.owner.targetLanguage,
+        nativeLanguage: f.owner.nativeLanguage,
+        level: 'B2',
+      );
+      expect(created.level, 'B2');
+      final count = (await rows(f.db, 'collections')).length;
+      await f.db.customStatement(
+        "CREATE TRIGGER reject_level BEFORE UPDATE OF level ON collections BEGIN SELECT RAISE(ABORT,'test'); END",
+      );
+      await expectLater(
+        f.collections.createWithLevel(
+          name: 'Failed',
+          targetLanguage: f.owner.targetLanguage,
+          nativeLanguage: f.owner.nativeLanguage,
+          level: 'C2',
+        ),
+        throwsA(anything),
+      );
+      expect((await rows(f.db, 'collections')).length, count);
+      final categories = SqliteCategoriesRepository(f.db);
+      final first = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'First',
+        mode: CategoryMode.single,
+      );
+      final second = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'Second',
+        mode: CategoryMode.multiple,
+      );
+      final original = [first.id, second.id], ordered = [second.id, first.id];
+      final before = await rows(f.db, 'category_dimensions');
+      await expectLater(
+        categories.reorderDimensions(
+          collectionId: f.owner.id,
+          orderedIds: ordered,
+          expectedOrder: ordered,
+        ),
+        throwsA(CategoryValidation.staleOrder),
+      );
+      await expectLater(
+        categories.reorderDimensions(
+          collectionId: f.owner.id,
+          orderedIds: [first.id, 'foreign'],
+        ),
+        throwsA(CategoryValidation.invalidOwnership),
+      );
+      await f.db.customStatement(
+        "CREATE TRIGGER reject_group_order BEFORE UPDATE OF position ON category_dimensions WHEN OLD.id='${first.id}' BEGIN SELECT RAISE(ABORT,'test'); END",
+      );
+      await expectLater(
+        categories.reorderDimensions(
+          collectionId: f.owner.id,
+          orderedIds: ordered,
+          expectedOrder: original,
+        ),
+        throwsA(anything),
+      );
+      expect(await rows(f.db, 'category_dimensions'), before);
     },
   );
 }

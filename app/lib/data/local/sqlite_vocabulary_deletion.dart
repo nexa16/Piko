@@ -84,7 +84,8 @@ final class _Snapshot {
   final List<StoredCategoryAssignment> assignments;
 }
 
-final class _Receipt implements VocabularyDeletionReceipt {
+final class _Receipt
+    implements VocabularyDeletionReceipt, VocabularyRecoveryWarnings {
   _Receipt({
     required this.issuer,
     required this.entry,
@@ -99,8 +100,8 @@ final class _Receipt implements VocabularyDeletionReceipt {
   _Snapshot? snapshot;
   Future<VocabularyRecord>? pending;
   bool used = false, expired = false, forgotten = false;
+  @override
   bool omittedCategories = false;
-  bool fromTrash = false;
 }
 
 /// Durable Collection-owned recovery with transient eight-second Undo handles.
@@ -502,16 +503,14 @@ final class SqliteVocabularyDeletionService
             receipt.omittedCategories = true;
           }
         }
-        if (receipt.fromTrash) {
-          for (final group in assignments.keys.toList()) {
-            final dimension = await SqliteCategoriesRepository(
-              database,
-            ).dimensionById(group);
-            if (dimension?.mode == CategoryMode.single &&
-                assignments[group]!.length > 1) {
-              assignments.remove(group);
-              receipt.omittedCategories = true;
-            }
+        for (final group in assignments.keys.toList()) {
+          final dimension = await SqliteCategoriesRepository(
+            database,
+          ).dimensionById(group);
+          if (dimension?.mode == CategoryMode.single &&
+              assignments[group]!.length > 1) {
+            assignments.remove(group);
+            receipt.omittedCategories = true;
           }
         }
         try {
@@ -690,7 +689,7 @@ final class SqliteVocabularyDeletionService
           entry: _trashRecord(snapshot),
           expiresAt: DateTime.parse(row.expiresAt),
           snapshot: snapshot,
-        )..fromTrash = true;
+        );
         try {
           await restore(receipt);
           restored.add(row.entryId);

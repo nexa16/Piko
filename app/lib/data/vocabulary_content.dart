@@ -35,8 +35,8 @@ final class VocabularyContent {
     String? exampleNativeText,
     this.hintText,
     this.hintVisibility = HintVisibility.always,
-  // Preserve the public examples argument while storing its backing list privately.
-  // ignore: prefer_initializing_formals
+    // Preserve the public examples argument while storing its backing list privately.
+    // ignore: prefer_initializing_formals
   }) : _examples = examples,
        _legacyTarget = exampleTargetText,
        _legacyNative = exampleNativeText;
