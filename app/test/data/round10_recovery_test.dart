@@ -21,6 +21,85 @@ import '../support/mutable_clock.dart';
 import 'regular_reviews_test.dart' show Fixture, rows, instant;
 
 void main() {
+  for (final crossService in [false, true]) {
+    test(
+      'old Undo cannot consume a new deletion after trash recovery (cross-service=$crossService)',
+      () async {
+        final f = Fixture();
+        await f.initialize();
+        addTearDown(f.db.close);
+        await f.review(rating: LearningRating.again);
+        final original = SqliteVocabularyDeletionService(f.db);
+        final recovery = crossService
+            ? SqliteVocabularyDeletionService(f.db)
+            : original;
+        final firstReceipt = await original.delete(f.entry.id);
+        await recovery.restoreTrashEntry(f.entry.id);
+        await f.vocabulary.updateWithContent(
+          id: f.entry.id,
+          targetText: 'Updated',
+          nativeText: 'Aktualisiert',
+          assignments: {},
+          content: const VocabularyContent(hintText: 'new content'),
+        );
+        await f.learning.resetLearning(
+          entryId: f.entry.id,
+          directions: LearningDirection.values.toSet(),
+        );
+        await f.review();
+        final before = {
+          for (final table in [
+            'vocabulary_entries',
+            'learning_items',
+            'regular_reviews',
+            'retry_obligations',
+            'statistics_activity',
+          ])
+            table: await rows(f.db, table),
+        };
+        final secondReceipt = await recovery.delete(f.entry.id);
+        // Both operations use the same fixed clock. Date/entry/group equality
+        // cannot stand in for the identity of one particular deletion.
+        expect(firstReceipt.expiresAt, secondReceipt.expiresAt);
+        final retained = await rows(f.db, 'vocabulary_trash');
+        await expectLater(
+          original.restore(firstReceipt),
+          throwsA(VocabularyUndoFailure.expired),
+        );
+        expect(original.canUndo(firstReceipt), false);
+        expect(await rows(f.db, 'vocabulary_trash'), retained);
+        expect(await f.vocabulary.watchById(f.entry.id).first, isNull);
+        await recovery.restore(secondReceipt);
+        for (final table in before.keys) {
+          expect(await rows(f.db, table), before[table], reason: table);
+        }
+      },
+    );
+  }
+
+  test('legacy version1 durable snapshots remain recoverable', () async {
+    final f = Fixture();
+    await f.initialize();
+    addTearDown(f.db.close);
+    final service = SqliteVocabularyDeletionService(f.db);
+    await service.delete(f.entry.id);
+    final row = (await rows(f.db, 'vocabulary_trash')).single;
+    final snapshot =
+        jsonDecode(row['snapshot_json'] as String) as Map<String, dynamic>;
+    snapshot['version'] = 1;
+    snapshot.remove('deletionIdentity');
+    await f.db.customStatement(
+      'UPDATE vocabulary_trash SET snapshot_json = ? WHERE entry_id = ?',
+      [jsonEncode(snapshot), f.entry.id],
+    );
+    final result = await service.restoreTrashEntry(f.entry.id);
+    expect(result.restoredIds, {f.entry.id});
+    expect(
+      (await f.vocabulary.watchById(f.entry.id).first)!.targetText,
+      f.entry.targetText,
+    );
+  });
+
   for (final restoreHours in [1, 20]) {
     test(
       'durable trash after ${restoreHours}h restart preserves payload/order and only live retries',

@@ -14,18 +14,21 @@ import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
 
 final class _Snapshot {
-  const _Snapshot(
+  _Snapshot(
     this.rowId,
     this.entry,
     this.learning,
     this.reviews,
     this.retries,
     this.assignments,
-    this.content,
-  );
+    this.content, {
+    String? deletionIdentity,
+  }) : deletionIdentity = deletionIdentity ?? const Uuid().v4();
+  final String deletionIdentity;
   final VocabularyContent content;
   String encode() => jsonEncode({
-    'version': 1,
+    'version': 2,
+    'deletionIdentity': deletionIdentity,
     'rowId': rowId,
     'entry': entry.toJson(),
     'learning': learning.map((r) => r.toJson()).toList(),
@@ -38,9 +41,7 @@ final class _Snapshot {
   });
   static _Snapshot decode(String json) {
     final value = jsonDecode(json) as Map<String, dynamic>;
-    if (value['version'] != 1) {
-      throw const FormatException('Unsupported trash snapshot version');
-    }
+    final identity = identityOf(json);
     final entry = VocabularyEntry.fromJson(
       value['entry'] as Map<String, dynamic>,
     );
@@ -73,7 +74,21 @@ final class _Snapshot {
         hintText: entry.hintText,
         hintVisibility: entry.hintVisibility,
       ),
+      deletionIdentity: identity,
     );
+  }
+
+  static String identityOf(String json) {
+    final value = jsonDecode(json) as Map<String, dynamic>;
+    // Version1 had no persisted operation nonce. Its exact envelope provides a
+    // stable identity for recovery, while every new deletion is always version2.
+    if (value['version'] == 1) return 'legacy:$json';
+    if (value['version'] == 2 &&
+        value['deletionIdentity'] is String &&
+        (value['deletionIdentity'] as String).isNotEmpty) {
+      return value['deletionIdentity'] as String;
+    }
+    throw const FormatException('Unsupported trash snapshot identity');
   }
 
   final int rowId;
@@ -411,7 +426,9 @@ final class SqliteVocabularyDeletionService
           database.vocabularyTrash,
         )..where((row) => row.entryId.equals(entry.id))).getSingleOrNull();
         if (retained == null ||
-            !now.isBefore(DateTime.parse(retained.expiresAt))) {
+            !now.isBefore(DateTime.parse(retained.expiresAt)) ||
+            _Snapshot.identityOf(retained.snapshotJson) !=
+                snapshot.deletionIdentity) {
           throw VocabularyUndoFailure.expired;
         }
         final existing = await database
