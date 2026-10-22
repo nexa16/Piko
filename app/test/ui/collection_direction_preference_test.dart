@@ -8,6 +8,7 @@ import 'package:piko/features/collections/collection_detail.dart';
 import 'package:piko/features/collections/collection_compact_action.dart';
 import 'package:piko/features/collections/collection_query_binding.dart';
 import 'package:piko/features/collections/collection_view_scope.dart';
+import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import 'package:piko/features/settings/preferred_direction_controller.dart';
 import 'package:piko/features/speed/speed_setup_dialog.dart';
@@ -79,6 +80,9 @@ void main() {
       );
       final vocabulary = LiveVocabulary();
       final scope = CollectionViewScope();
+      await scope.saveView(
+        const CollectionViewPreferences(mode: VocabularyViewMode.detailed),
+      );
       final source = bothDirections();
       final projectionService = ProjectionService(source);
       final binding = CollectionQueryBinding(
@@ -176,6 +180,18 @@ void main() {
         find.byKey(ValueKey('vocabulary-status-${one.id}-nativeToTarget')),
       );
       expect(status.data!.contains('→'), isFalse);
+      await scope.saveView(
+        const CollectionViewPreferences(mode: VocabularyViewMode.compact),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(ValueKey('vocabulary-status-${one.id}-nativeToTarget')),
+        findsNothing,
+      );
+      await scope.saveView(
+        const CollectionViewPreferences(mode: VocabularyViewMode.detailed),
+      );
+      await tester.pumpAndSettle();
       staleReview();
       staleSpeed();
       await tester.pumpAndSettle();
