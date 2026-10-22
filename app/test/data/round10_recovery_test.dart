@@ -21,6 +21,51 @@ import '../support/mutable_clock.dart';
 import 'regular_reviews_test.dart' show Fixture, rows, instant;
 
 void main() {
+  test(
+    'rolling groups compare UTC instants across millisecond and microsecond precision',
+    () async {
+      final firstAt = DateTime.utc(2026, 10, 14, 9, 0, 0, 123);
+      final clock = MutablePikoClock(firstAt);
+      final f = Fixture(
+        database: PikoDatabase(NativeDatabase.memory(), clock: clock),
+      );
+      await f.initialize();
+      addTearDown(f.db.close);
+      final words = [f.entry];
+      for (var i = 1; i < 4; i++) {
+        words.add(
+          await f.vocabulary.create(
+            collectionId: f.owner.id,
+            targetText: 'word$i',
+            nativeText: 'Wort$i',
+          ),
+        );
+      }
+      final deletion = SqliteVocabularyDeletionService(f.db);
+      await deletion.delete(words[0].id);
+      clock.advance(const Duration(microseconds: 456));
+      await deletion.delete(words[1].id);
+      clock.advance(const Duration(minutes: 2));
+      await deletion.delete(words[2].id);
+      var groups = await deletion.trashGroups(collectionId: f.owner.id);
+      expect(groups, hasLength(1));
+      expect(
+        groups.single.entries.map((e) => e.id),
+        words.take(3).toList().reversed.map((e) => e.id),
+      );
+      expect(groups.single.deletedAt, clock.now());
+      clock.advance(const Duration(minutes: 2, microseconds: 1));
+      await deletion.delete(words[3].id);
+      groups = await deletion.trashGroups(collectionId: f.owner.id);
+      expect(groups, hasLength(2));
+      expect(groups.first.entries.single.id, words[3].id);
+      expect(
+        groups.last.entries.map((e) => e.id),
+        words.take(3).toList().reversed.map((e) => e.id),
+      );
+    },
+  );
+
   for (final crossService in [false, true]) {
     test(
       'old Undo cannot consume a new deletion after trash recovery (cross-service=$crossService)',

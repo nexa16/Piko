@@ -289,17 +289,23 @@ final class SqliteVocabularyDeletionService
         content,
       );
       await _purgeExpiredTrash(deleteAt);
-      final prior =
-          await (database.select(database.vocabularyTrash)
-                ..where((r) => r.collectionId.equals(entry.collectionId))
-                ..orderBy([(r) => OrderingTerm.desc(r.deletedAt)])
-                ..limit(1))
-              .getSingleOrNull();
+      final trash = database.vocabularyTrash;
+      final priorRows =
+          await (database.selectOnly(trash)
+                ..addColumns([trash.groupId, trash.deletedAt])
+                ..where(trash.collectionId.equals(entry.collectionId)))
+              .get();
+      ({String groupId, DateTime deletedAt})? prior;
+      for (final row in priorRows) {
+        final at = DateTime.parse(row.read(trash.deletedAt)!);
+        if (prior == null || at.isAfter(prior.deletedAt)) {
+          prior = (groupId: row.read(trash.groupId)!, deletedAt: at);
+        }
+      }
       final groupId =
           prior != null &&
-              !deleteAt.isBefore(DateTime.parse(prior.deletedAt)) &&
-              deleteAt.difference(DateTime.parse(prior.deletedAt)) <=
-                  groupingGap
+              !deleteAt.isBefore(prior.deletedAt) &&
+              deleteAt.difference(prior.deletedAt) <= groupingGap
           ? prior.groupId
           : const Uuid().v4();
       await database
@@ -646,14 +652,10 @@ final class SqliteVocabularyDeletionService
     _ensureActive();
     await purgeExpiredTrash();
     return database.transaction(() async {
-      final rows =
-          await (database.select(database.vocabularyTrash)
-                ..where((r) => r.collectionId.equals(collectionId))
-                ..orderBy([
-                  (r) => OrderingTerm.desc(r.deletedAt),
-                  (r) => OrderingTerm.asc(r.entryId),
-                ]))
-              .get();
+      final rows = await (database.select(
+        database.vocabularyTrash,
+      )..where((r) => r.collectionId.equals(collectionId))).get();
+      rows.sort((a, b) => _trashOrder(b, a));
       final grouped = <String, List<VocabularyTrashData>>{};
       for (final row in rows) {
         grouped.putIfAbsent(row.groupId, () => []).add(row);
@@ -695,17 +697,13 @@ final class SqliteVocabularyDeletionService
     final restoredIdentities = <String>{};
     final result = await database.transaction(() async {
       final rows =
-          await (database.select(database.vocabularyTrash)
-                ..where(
-                  (r) => entryId != null
-                      ? r.entryId.equals(entryId)
-                      : r.groupId.equals(groupId!),
-                )
-                ..orderBy([
-                  (r) => OrderingTerm.asc(r.deletedAt),
-                  (r) => OrderingTerm.asc(r.entryId),
-                ]))
+          await (database.select(database.vocabularyTrash)..where(
+                (r) => entryId != null
+                    ? r.entryId.equals(entryId)
+                    : r.groupId.equals(groupId!),
+              ))
               .get();
+      rows.sort(_trashOrder);
       if (entryId != null && rows.isEmpty) throw VocabularyUndoFailure.expired;
       final restored = <String>{}, omitted = <String>{};
       final conflicts = <String, VocabularyUndoFailure>{};
@@ -743,6 +741,13 @@ final class SqliteVocabularyDeletionService
           .toList(),
     );
     return result;
+  }
+
+  int _trashOrder(VocabularyTrashData a, VocabularyTrashData b) {
+    final time = DateTime.parse(
+      a.deletedAt,
+    ).compareTo(DateTime.parse(b.deletedAt));
+    return time == 0 ? a.entryId.compareTo(b.entryId) : time;
   }
 
   RetryObligation _retryRecord(StoredRetryObligation row) =>
