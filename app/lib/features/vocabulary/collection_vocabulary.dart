@@ -405,6 +405,21 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     widget.onPendingWrites?.call(operation);
     try {
       await operation;
+      final warnings = offer.receipt;
+      if (mounted &&
+          ModalRoute.of(context)?.isCurrent != false &&
+          warnings is VocabularyRecoveryWarnings &&
+          (warnings as VocabularyRecoveryWarnings).omittedCategories) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              PikoCopyScope.of(
+                context,
+              ).text('trash.categoryWarning', {'count': 1}),
+            ),
+          ),
+        );
+      }
     } catch (_) {
       /* Offer retains localized failure. */
     }

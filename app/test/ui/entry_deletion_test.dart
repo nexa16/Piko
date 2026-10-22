@@ -7,6 +7,8 @@ import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_dialog.dart';
 import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/data/categories_repository.dart';
+import 'package:piko/data/local/sqlite_categories_repository.dart';
 import '../support/entry_deletion_fixture.dart';
 
 Future<ValueNotifier<EntrySessionController>> mount(
@@ -93,6 +95,42 @@ Future<void> tapDelete(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'Undo explains omitted deleted categories without reporting recovery failure',
+    (tester) async {
+      final f = EntryDeletionFixture();
+      await f.initialize();
+      final entry = await f.confirm('One', 'Eins');
+      final categories = SqliteCategoriesRepository(f.db);
+      final group = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'Topic',
+        mode: CategoryMode.multiple,
+      );
+      final value = await categories.createValue(
+        dimensionId: group.id,
+        name: 'Food',
+      );
+      await categories.replaceAssignments(
+        entryId: entry.id,
+        assignments: {
+          group.id: {value.id},
+        },
+      );
+      await mount(tester, f);
+      await f.session.deleteSavedEntry(entry.id);
+      await tester.pumpAndSettle();
+      await categories.deleteDimension(group.id);
+      await tester.tap(find.text('Undo'));
+      await flush(tester, f);
+      expect(f.session.confirmedEntries.single.id, entry.id);
+      expect(
+        find.text(PikoCopy('en').text('trash.categoryWarning', {'count': 1})),
+        findsOneWidget,
+      );
+      expect(f.session.lastUndoOmittedCategories, isTrue);
+    },
+  );
   testWidgets(
     'collapsed saved card swipe reveals explicit deletion and real Undo',
     (tester) async {

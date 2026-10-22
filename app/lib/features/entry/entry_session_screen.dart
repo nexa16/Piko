@@ -748,6 +748,20 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     setState(() => undoFeedback = null);
     try {
       await initiatingSession.undoDeletion(id);
+      if (mounted &&
+          identical(session, initiatingSession) &&
+          route?.isCurrent == true &&
+          initiatingSession.lastUndoOmittedCategories) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              PikoCopyScope.of(
+                context,
+              ).text('trash.categoryWarning', {'count': 1}),
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (mounted &&
           identical(session, initiatingSession) &&
