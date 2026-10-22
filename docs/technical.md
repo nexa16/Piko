@@ -24,7 +24,7 @@ The runtime hydrates retained language and learning-direction settings and track
 
 UI composition seams permit injected repositories/controllers/clocks in tests. An injected route or synthetic test entry point is not the ordinary product entry point used by the gallery.
 
-Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/main.dart), [`PikoRuntime`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/piko_runtime.dart), [`CollectionViewScopes`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/collections/collection_view_scope.dart).
+Sources: [`main.dart`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/main.dart), [`PikoRuntime`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/piko_runtime.dart), [`CollectionViewScopes`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/collections/collection_view_scope.dart).
 
 <a id="interaction-layout"></a>
 ## Interaction layout
@@ -64,7 +64,7 @@ Schema 23 adds the Collection level with A1 backfill and a Collection-owned Tras
 
 Search projections fetch retry records in bounded batches, retaining generation and origin validation for actual retry rounds. Outside-touch search dismissal and delayed loading presentation retain raw editor ownership, scroll geometry and current-query generation guards.
 
-Sources: [`PikoDatabase` and migrations](../app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](../app/lib/data/local/sqlite_vocabulary_repository.dart).
+Sources: [`PikoDatabase` and migrations](../app/lib/data/local/piko_database.dart), [`openPikoDatabase`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/local/database_connection.dart), [`SqliteVocabularyRepository`](../app/lib/data/local/sqlite_vocabulary_repository.dart).
 
 <a id="vocabulary"></a>
 ## Vocabulary identity and content
@@ -75,7 +75,7 @@ A vocabulary entry has two learning directions. Editing words, examples, hints o
 
 Example pairs preserve order and require both sides when nonempty; each side is capped at 1,000 characters. A hint is capped at 2,000 and has `always`/`hidden` visibility. Collection Hint defaults apply to new content rather than rewriting existing entries. Added timestamps for legacy entries may be unknown; the app does not synthesize historical creation dates.
 
-Sources: [`normalization`](../app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
+Sources: [`normalization`](../app/lib/data/vocabulary_normalization.dart), [`content model`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/vocabulary_content.dart), [`saved editor controller`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/vocabulary/inline_vocabulary_edit_controller.dart).
 
 <a id="queries"></a>
 ## Queries, categories and selection
@@ -84,7 +84,7 @@ Sources: [`normalization`](../app/lib/data/vocabulary_normalization.dart), [`con
 
 Single dimensions allow one value per word; Multiple dimensions allow several. Display sorting uses normalized Unicode scalar lexical order, without locale collation, accent folding or natural-number sorting. Ties preserve original order. Date sorting puts unknown dates after known ones. Grouping can render one word in several value groups; counts and selection use its identity rather than rendered occurrences.
 
-Category Values use their alphabetical default until an explicit move. Settings-only `CategoryOrderList` supplies one drag/menu/semantic ordering composition for groups and Values. `SqliteCategoriesRepository.reorderDimensions` and `reorderValues` validate complete UUID permutations and observed order before committing contiguous ranks. Stale moves do not overwrite later changes. Rename keeps rank within a custom order; new groups and custom-ordered Values append, and deletion retains surviving relative order. Local ordering preferences are excluded from Collection interchange. Pickers, tags, filters, editors, management and grouped headings consume the repository's effective sequence; vocabulary sorting within a heading remains independent. Filters retain staged membership/Apply/Clear and their searchable scroll body, with no ordering controls.
+Initial starter category Values use alphabetical order; ordinary Value creation appends after the current effective sequence, even before an explicit move. Settings-only `CategoryOrderList` supplies one drag/menu/semantic ordering composition for groups and Values. `SqliteCategoriesRepository.reorderDimensions` and `reorderValues` validate complete UUID permutations and observed order before committing contiguous ranks. Stale moves do not overwrite later changes. Rename keeps the saved rank; new groups and Values append, and deletion retains surviving relative order. Local ordering preferences are excluded from Collection interchange. Pickers, tags, filters, editors, management and grouped headings consume the repository's effective sequence; vocabulary sorting within a heading remains independent. Filters retain staged membership/Apply/Clear and their searchable scroll body, with no ordering controls.
 
 Schema 21 adds a nullable stable tag-color role key to local group preferences. Existing groups receive colors once in position/UUID order per Collection. New groups atomically choose the first unused canonical role, then the least-used role with canonical tie order. Deletion frees that usage without recoloring survivors. One shared tag component resolves the role; unknown keys have deterministic UUID fallback without render writes. These keys and colors are absent from schema5 Collection JSON and full export; import preserves existing local roles and allocates roles for new groups.
 
@@ -96,7 +96,7 @@ Compact launch choices re-read their own mode’s counts at selection and prepar
 
 `CollectionViewPreferences` holds layout, language order, grouping and sorting. Query bindings combine search/filters with those preferences and refresh on database invalidation. Staged dialog choices are committed with Apply. `VocabularySelection` owns only transient UUIDs: Select all unions matching IDs; group tri-state selection unions or removes only current matching group UUIDs, including collapsed children. Other and hidden selections remain selected, and explicit clear/page departure ends selection. It performs no persistent mutation. Both header presentations use the same selection-aware projection. An unfiltered directional snapshot is captured in the query transaction, then restricted to selected active UUIDs. Regular/retry eligibility remains authoritative for Long-term; selected Speed admits reviewed/completed items. Actual starts drain writes and revalidate membership/ownership. Outside selection mode automatic filtered learning is unchanged. Compact list and Trash previews share CompactVocabularyPair; the list chooses a flat surface while Detailed retains PikoCard and its richer metadata. Compact uses side-by-side single-line text and keeps selection affordances. Editable list rows expose full values through the editor; the named read-only Trash preview adds tooltips without competing with list selection gestures. View retains layout/language choice; bulk group expansion stays beside list results.
 
-Sources: [`query service`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_collection_query.dart), [`view model`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/collections/collection_view_preferences.dart), [`selection`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/vocabulary/vocabulary_selection.dart).
+Sources: [`query service`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/local/sqlite_collection_query.dart), [`view model`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/collections/collection_view_preferences.dart), [`selection`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/vocabulary/vocabulary_selection.dart).
 
 <a id="learning"></a>
 ## Learning, retry and correction
@@ -127,7 +127,7 @@ Due-session membership and progress separate distinct words, directional work, c
 
 Source: `LearningParameters` in the [learning source](../app/lib/features/learning).
 
-Sources: [`LearningScheduler`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/learning/learning_scheduler.dart), [`learning repository`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_learning_repository.dart), [`retry gap`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/learning/retry_gap.dart), [`learning day`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/core/learning_day.dart).
+Sources: [`LearningScheduler`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/learning/learning_scheduler.dart), [`learning repository`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/local/sqlite_learning_repository.dart), [`retry gap`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/learning/retry_gap.dart), [`learning day`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/core/learning_day.dart).
 
 <a id="speed"></a>
 ## Speed state
@@ -140,7 +140,7 @@ Collection contextual artwork derives from the same resolved query and allowed d
 
 Completion artwork is presentation only. `ReviewSessionRoute` retains its existing successful-completion guard and renders the original static pose in `ReviewSummaryDialog`; the underlying Collection route is offstage. A non-null committed `SpeedSessionResult` retains the existing inline notice lifetime. `SpeedCompletionNotice` renders one decorative pose while the Collection suppresses its contextual pose. Dismissal restores current availability without writing learning or statistics. Assets are local lossless exports and excluded from semantics/focus.
 
-Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/features/speed/speed_learning_session.dart), [`current Speed completion`](../app/lib/data/local/sqlite_speed_completion.dart).
+Sources: [`SpeedSession`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/speed/speed_session.dart), [`SpeedLearningSession`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/features/speed/speed_learning_session.dart), [`current Speed completion`](../app/lib/data/local/sqlite_speed_completion.dart).
 
 <a id="statistics"></a>
 ## Statistics
@@ -177,7 +177,7 @@ The statistics block is `null` before storage initialization. Otherwise its vers
 
 [`Full export service`](../app/lib/data/local/sqlite_full_export_service.dart) and [`Settings export control`](../app/lib/features/interchange/full_export_control.dart) separate snapshot preparation from native file saving. Pending operations are registered with the runtime drain, admit one request, reject late handoffs after route/repository replacement and distinguish saved, canceled and failed outcomes.
 
-Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/vocabulary_json.dart), [`JSON service`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/data/local/sqlite_vocabulary_json_service.dart), [`platform adapter`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/lib/platform/vocabulary_json_platform.dart).
+Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/vocabulary_json.dart), [`JSON service`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/data/local/sqlite_vocabulary_json_service.dart), [`platform adapter`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/lib/platform/vocabulary_json_platform.dart).
 
 <a id="resources"></a>
 ## Shared resources
@@ -186,7 +186,7 @@ Sources: [`format and interfaces`](https://github.com/nexa16/Piko/blob/1f5089aac
 
 Lucide SVG source and notices live in `mockups/assets/icons/lucide`; the app packages generated copies under its own assets directory. Nunito Sans and Korean fallback font assets and their notices are bundled offline. Original artwork and Android system UI have their own appearance; historical mockups are not product screenshot evidence. The Android release configuration currently uses debug signing and is not a store-ready signing setup.
 
-Sources: [`generator`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/tool/generate_shared.mjs), [`dependencies and assets`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/pubspec.yaml), [`Android build configuration`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab81273eeadc765858f98264/app/android/app/build.gradle.kts).
+Sources: [`generator`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/tool/generate_shared.mjs), [`dependencies and assets`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/pubspec.yaml), [`Android build configuration`](https://github.com/nexa16/Piko/blob/e1e6230fff4694bc64e25ccfec2261cc2e0a9d12/app/android/app/build.gradle.kts).
 
 
 ## Optional AI content boundary
@@ -195,9 +195,9 @@ Sources: [`generator`](https://github.com/nexa16/Piko/blob/1f5089aac32bc236ab812
 
 Generation can explicitly request another portion of an incomplete result. Portions share the original immutable inventory and include earlier proposals as comparison context. Choices remain local; failures preserve the preview. The aggregate technical admission ceiling is 200 cards for ordinary topics/gaps or 1000 for an explicitly comprehensive level. These bounds are absent from the model task and do not certify coverage. Complete requests are not automatically continued.
 
-The request form carries Collection-default level, optional goals, independent new-definition permissions and selected review checks/category mode. Review filters include active/inactive matches and start empty on each visit. Field permissions are checked in request/result validation and again during adoption; category Fill missing preserves populated assignments. A1-to-target generation begins at A1 and requires explicit portion adoption/discard before another portion or level. It makes no certified-coverage claim.
+The request form carries Collection-default level, optional goals, independent new-definition permissions and selected review checks/category mode. Review filters include active/inactive matches, start empty on each visit and stage their own category selections independently of the vocabulary list filters. Field permissions are checked in request/result validation and again during adoption; category Fill missing preserves populated assignments. A1-to-target generation begins at A1 and requires explicit portion adoption/discard before another portion or level. It makes no certified-coverage claim.
 
-Repeated transport identifiers are compacted reversibly while preserving content, UUID/dependency validation and full-snapshot stale checks. The managed input limit remains 192,000 UTF-8 bytes. Oversized requests fail explicitly; an explicit smaller-step retry displays its partial scope. Context progression freezes its selected UUIDs so adoption cannot shift an offset and silently skip pending work. No automatic paid retry, silent truncation or fallback model is introduced. Localized recovery distinguishes context size, network, access, quota/rate, timeout, invalid result and service failure; unknown dispatch/retention outcomes remain unknown.
+Repeated transport identifiers are compacted reversibly while preserving content, UUID/dependency validation and full-snapshot stale checks. The managed input limit remains 192,000 UTF-8 bytes. Oversized requests fail explicitly; an explicit smaller-step retry displays its partial scope. Context progression freezes its selected UUIDs so adoption cannot shift an offset and silently skip pending work. Each smaller context portion requires explicit resolution and a separate request for the next; this is independent of generation continuation for additional proposals. No automatic paid retry, silent truncation or fallback model is introduced. Localized recovery distinguishes context size, network, access, quota/rate, timeout, invalid result and service failure; unknown dispatch/retention outcomes remain unknown.
 
 The hosted generation/gap schema keeps complete new-card content in `cards`, including examples. Its `edits` can contain only saved-entry category additions and must be empty when the saved inventory is empty. Review retains its separate correction fields. The app independently validates identity, ownership and allowed changes before displaying an applicable proposal.
 
