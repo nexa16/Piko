@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/main.dart';
 import 'package:piko/data/ai/ai_contract.dart';
 import 'package:piko/data/local/sqlite_ai_service.dart';
+import 'package:piko/data/local/sqlite_categories_repository.dart';
+import 'package:piko/data/categories_repository.dart';
+import 'package:piko/data/vocabulary_content.dart';
 import 'package:piko/features/ai/ai_page.dart';
 import 'package:piko/shared/catalogs.dart';
 import 'package:piko/ui/components/piko_button.dart';
@@ -22,6 +25,7 @@ class FakeProvider implements AiProvider {
     calls++;
     last = r;
     if (fail) throw AiFailure.network;
+    if (r.action == AiAction.review) return envelope(r);
     return envelope(r, cards: [card('new-card')], complete: !partial);
   }
 
@@ -62,6 +66,117 @@ Future<void> tapVisible(WidgetTester t, Finder f) async {
 }
 
 void main({bool nativeViewport = false}) {
+  testWidgets(
+    'review filters include inactive matches, reset per visit and keep saved level',
+    (t) async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      await f.collections.setLevel(id: f.owner.id, level: 'B2');
+      final categories = SqliteCategoriesRepository(f.db);
+      final group = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'My filter',
+        mode: CategoryMode.multiple,
+      );
+      final value = await categories.createValue(
+        dimensionId: group.id,
+        name: 'Included',
+      );
+      await categories.replaceAssignments(
+        entryId: f.entry.id,
+        assignments: {
+          group.id: {value.id},
+        },
+      );
+      final inactive = await f.vocabulary.createWithContent(
+        collectionId: f.owner.id,
+        targetText: 'Inactive',
+        nativeText: 'Inaktiv',
+        assignments: {
+          group.id: {value.id},
+        },
+        content: const VocabularyContent(),
+        active: false,
+      );
+      await f.vocabulary.create(
+        collectionId: f.owner.id,
+        targetText: 'Other',
+        nativeText: 'Andere',
+      );
+      final p = FakeProvider(), copy = PikoCopy('en');
+      Widget page(int visit) => PikoApp(
+        home: AiPage(
+          key: ValueKey(visit),
+          service: SqliteAiService(f.db, enabled: true),
+          provider: p,
+          collectionId: f.owner.id,
+          collectionName: 'Synthetic',
+          initialAction: AiAction.review,
+          categoriesRepository: categories,
+        ),
+      );
+      Future<void> consent() async {
+        await t.pumpAndSettle();
+        await tapVisible(t, find.byKey(const ValueKey('ai-consent')));
+        await tapVisible(
+          t,
+          find.byWidgetPredicate(
+            (w) =>
+                w is PikoIconButton &&
+                w.semanticLabel == copy.text('common.close'),
+          ),
+        );
+      }
+
+      await t.pumpWidget(page(1));
+      await consent();
+      expect(find.text('${copy.text('ai.reviewCount')}: 3'), findsOneWidget);
+      final levelPicker = find.byWidgetPredicate(
+        (w) =>
+            w is PikoPreferencePicker<String> &&
+            w.label == copy.text('collection.level'),
+      );
+      expect(t.widget<PikoPreferencePicker<String>>(levelPicker).value, 'B2');
+      t.widget<PikoPreferencePicker<String>>(levelPicker).onChanged!('C1');
+      await t.pumpAndSettle();
+      expect(
+        (await (f.db.select(
+          f.db.collections,
+        )..where((row) => row.id.equals(f.owner.id))).getSingle()).level,
+        'B2',
+      );
+      expect(find.text('One'), findsNothing);
+      expect(find.text('Inactive'), findsNothing);
+      await tapVisible(
+        t,
+        find.widgetWithText(PikoButton, copy.text('action.filters')),
+      );
+      expect(
+        find.byKey(const ValueKey('filter-values-scroll')),
+        findsOneWidget,
+      );
+      await tapVisible(t, find.byKey(ValueKey('filter-value-${value.id}')));
+      await tapVisible(
+        t,
+        find.widgetWithText(PikoButton, copy.text('r2.apply')),
+      );
+      expect(find.text('${copy.text('ai.reviewCount')}: 2'), findsOneWidget);
+      await tapVisible(t, find.byKey(const ValueKey('ai-start')));
+      expect(p.last!.snapshot.entries.map((e) => e.record.id).toSet(), {
+        f.entry.id,
+        inactive.id,
+      });
+      expect(p.last!.options!.level, 'C1');
+      await t.pumpWidget(page(2));
+      await consent();
+      expect(find.text('${copy.text('ai.reviewCount')}: 3'), findsOneWidget);
+      expect(t.widget<PikoPreferencePicker<String>>(levelPicker).value, 'B2');
+      expect(p.calls, 1);
+      await t.pumpWidget(const SizedBox.shrink());
+      await t.pumpAndSettle();
+    },
+  );
   testWidgets(
     'comprehensive portions require disposition and another explicit paid start',
     (t) async {

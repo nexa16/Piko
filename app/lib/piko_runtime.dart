@@ -101,6 +101,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       !pikoAiEnabled
       ? const SizedBox.shrink()
       : AiPage(
+          categoriesRepository: categories,
           service: aiService,
           provider: aiProvider,
           collectionId: collection.id,

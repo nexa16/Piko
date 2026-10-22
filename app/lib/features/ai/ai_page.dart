@@ -44,6 +44,7 @@ class AiPage extends StatefulWidget {
     this.anchor,
     this.stageOnly = false,
     this.initialAction = AiAction.generate,
+    this.categoriesRepository,
   });
   final AiContentService service;
   final AiProvider provider;
@@ -52,6 +53,7 @@ class AiPage extends StatefulWidget {
   final AiEntry? anchor;
   final bool stageOnly;
   final AiAction initialAction;
+  final CategoriesRepository? categoriesRepository;
   @override
   State<AiPage> createState() => _AiPageState();
 }
@@ -228,6 +230,7 @@ class _AiPageState extends State<AiPage> {
     final selected = await showPikoDialog<CollectionFilterSelection>(
       context,
       builder: (_) => FilterSelectionDialog(
+        categories: widget.categoriesRepository,
         snapshot: projection(source),
         opening: filters,
         reloadDefinitions: () async =>
