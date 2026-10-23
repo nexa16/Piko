@@ -34,7 +34,9 @@ The provisional **200 ms** target is unmet. Separate SQL query measurements do n
 
 The exact ordinary release-mode APK installs in place and cold-opens. The existing database migrates to schema **23** with all content and learning history preserved: **16 existing tables remain exactly equal**. The previously absent `statistics_origins` singleton is initialized once by the existing Home bootstrap; this expected initialization does not rewrite review history. Existing Collections receive the A1 default, and the retained sentinel is unchanged.
 
-Observed ordinary-app interactions include Compact-row long-press selection, saved-editor Delete cancellation, learning-reset cancellation, heading save status, Collection Settings → Trash and group recovery. These observations are separate from synthetic fixture results. Final ordinary learning/reopen and refreshed capture checks are not yet included in this record.
+Observed ordinary-app interactions include Compact-row long-press selection, saved-editor Delete cancellation, learning-reset cancellation, heading save status, Collection Settings → Trash and group recovery. Long-term and selected Speed rounds complete with retry totals; completed rounds expose no Previous Review. Trash recovery survives cold restart. Settings group reordering and new-Value append order persist.
+
+After these ordinary interactions, read-only SQLite inspection confirms all three vocabulary entries and their assignments remain identical. Five of six learning directions are unchanged; the exercised direction has exactly the expected Long-term review and Speed-completion marker, with one regular review, one Speed receipt and two statistics events. Trash is empty after recovery, the sentinel is unchanged, and integrity and foreign-key checks pass. The exact ordinary release APK is restored and cold-opens; its installed SHA-256 matches the manifest. Refreshed full captures come from this ordinary APK. These observations are separate from synthetic fixture results.
 
 ## Managed backend boundary
 
@@ -42,4 +44,4 @@ The approved version-5 backend is live with the exact reviewed function files an
 
 ## Limits
 
-Physical-phone and TalkBack coverage remain unverified. There is no complete OS, keyboard, locale or fresh-machine matrix. Earlier published-gallery observations, line coverage and duplication percentages are historical and are not carried forward as measurements of this source. No release/store readiness or unperformed ordinary-app learning, reopen or capture pass is implied.
+Physical-phone and TalkBack coverage remain unverified. There is no complete OS, keyboard, locale or fresh-machine matrix. The configured private-AI APK is built and checksum-verified; the native AI tests use fake providers, and no fresh paid provider attempt is inferred. Earlier published-gallery observations, line coverage and duplication percentages are historical and are not carried forward as measurements of this source. No release/store readiness is implied.
