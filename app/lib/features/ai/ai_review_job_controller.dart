@@ -71,6 +71,18 @@ final class AiReviewJobController extends ChangeNotifier {
     bool allowValues = true,
   }) => _run(() async {
     if (ownsUnfinished) throw AiFailure.dependency;
+    Map<String, Object?> capability;
+    try {
+      capability = await provider.reviewJob('capabilities', const {});
+    } catch (_) {
+      throw AiFailure.unavailable;
+    }
+    if (capability['reviewJobProtocol'] != 1 ||
+        capability['snapshotVersion'] != 1 ||
+        capability['resultPartsVersion'] != 1 ||
+        capability['reviewJobsAvailable'] != true) {
+      throw AiFailure.unavailable;
+    }
     job = await store.prepareReviewJob(
       collectionId: collectionId,
       installationId: installationId,

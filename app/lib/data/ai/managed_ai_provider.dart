@@ -10,6 +10,10 @@ abstract interface class AiAccess {
   Future<String?> accessToken();
 }
 
+abstract interface class ExistingAiAccess {
+  Future<String?> existingAccessToken();
+}
+
 abstract interface class AiPilotLocalStop {
   Future<void> stopPilotLocally();
   Future<String?> withdrawalAccessToken();
@@ -100,7 +104,8 @@ final class ManagedAiProvider
         uri.hasFragment) {
       throw AiFailure.unavailable;
     }
-    final read = action == 'status' || action == 'result';
+    final read =
+        action == 'status' || action == 'result' || action == 'capabilities';
     final body = read ? null : utf8.encode(jsonEncode(data));
     if (body != null && body.length > maxInputBytes) {
       throw AiFailure.contextLimit;
@@ -113,8 +118,10 @@ final class ManagedAiProvider
         uri.replace(
           queryParameters: {
             'job': action,
-            if (read) 'jobId': data['jobId']! as String,
-            if (read) 'installationId': data['installationId']! as String,
+            if (read && action != 'capabilities')
+              'jobId': data['jobId']! as String,
+            if (read && action != 'capabilities')
+              'installationId': data['installationId']! as String,
             if (read && data['part'] != null) 'part': '${data['part']}',
           },
         ),
@@ -162,6 +169,9 @@ final class ManagedAiProvider
         await (uri.queryParameters['pilot'] == 'withdraw' &&
                     access is AiPilotLocalStop
                 ? (access as AiPilotLocalStop).withdrawalAccessToken()
+                : uri.queryParameters.containsKey('job') &&
+                      access is ExistingAiAccess
+                ? (access as ExistingAiAccess).existingAccessToken()
                 : access.accessToken())
             .timeout(
               const Duration(seconds: 30),

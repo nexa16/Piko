@@ -14,6 +14,7 @@ class FakeJobProvider implements AiReviewJobProvider {
   final entries = <Map<String, Object?>>[];
   Map<String, Object?> status = {}, result = {};
   bool offline = false;
+  bool available = true;
   final resultParts = <int>[];
   @override
   Future<Map<String, Object?>> reviewJob(
@@ -22,6 +23,13 @@ class FakeJobProvider implements AiReviewJobProvider {
   ) async {
     calls.add(action);
     if (offline) throw AiFailure.network;
+    if (action == 'capabilities')
+      return {
+        'reviewJobProtocol': 1,
+        'snapshotVersion': 1,
+        'resultPartsVersion': 1,
+        'reviewJobsAvailable': available,
+      };
     if (action == 'prepare') {
       status = {
         'jobId': data['jobId'],
@@ -70,6 +78,31 @@ class FakeJobProvider implements AiReviewJobProvider {
 }
 
 void main() {
+  test(
+    'unsupported deployed service cannot create local job or lock',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final service = SqliteAiService(f.db, enabled: true),
+          provider = FakeJobProvider()..available = false;
+      final controller = AiReviewJobController(
+        collectionId: f.owner.id,
+        installationId: 'install-a',
+        store: service.reviewJobs,
+        provider: provider,
+      );
+      addTearDown(controller.dispose);
+      await controller.start(maxCostCents: 100, options: const AiOptions());
+      expect(controller.error, AiFailure.unavailable);
+      expect(
+        await service.reviewJobs.reviewJobFor(f.owner.id, 'install-a'),
+        isNull,
+      );
+      await f.db.requireCollectionWritable(f.owner.id);
+      expect(provider.calls, ['capabilities']);
+    },
+  );
   test(
     'completed result above 2 MB is retrieved through verified GET parts',
     () async {

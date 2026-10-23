@@ -89,20 +89,46 @@ class AuthGateway implements AiAuthGateway {
 }
 
 void main() {
-  test('late explicit reactivation cannot overtake a newer withdrawal', () async {
-    final v=MemoryVault()..value=session().serialized,g=AuthGateway();
-    final c=AiConnectionController(configuration:config,vault:v,gateway:g,enabled:true);
-    await c.stopPilotLocally();
-    v.held=Completer<String?>();
-    final resume=c.resumeExistingPilot();
-    final rejection=expectLater(resume,throwsA(AiFailure.accessDenied));
-    final stop=c.stopPilotLocally();
-    final held=v.held!;v.held=null;held.complete(v.value);
-    await rejection;await stop;
-    expect(c.pilotStopped,isTrue);expect(g.connections,0);
-    expect(jsonDecode(v.value!)['pikoPilotWithdrawn'],isTrue);
-    c.dispose();
+  test('job read and capability access never enrolls a new identity', () async {
+    final v = MemoryVault(), g = AuthGateway();
+    final c = AiConnectionController(
+      configuration: config,
+      vault: v,
+      gateway: g,
+      enabled: true,
+    );
+    addTearDown(c.close);
+    await expectLater(c.existingAccessToken(), throwsA(AiFailure.accessDenied));
+    expect(g.connections, 0);
+    expect(v.writes, 0);
+    expect(c.deviceAccessId, isNull);
   });
+  test(
+    'late explicit reactivation cannot overtake a newer withdrawal',
+    () async {
+      final v = MemoryVault()..value = session().serialized, g = AuthGateway();
+      final c = AiConnectionController(
+        configuration: config,
+        vault: v,
+        gateway: g,
+        enabled: true,
+      );
+      await c.stopPilotLocally();
+      v.held = Completer<String?>();
+      final resume = c.resumeExistingPilot();
+      final rejection = expectLater(resume, throwsA(AiFailure.accessDenied));
+      final stop = c.stopPilotLocally();
+      final held = v.held!;
+      v.held = null;
+      held.complete(v.value);
+      await rejection;
+      await stop;
+      expect(c.pilotStopped, isTrue);
+      expect(g.connections, 0);
+      expect(jsonDecode(v.value!)['pikoPilotWithdrawn'], isTrue);
+      c.dispose();
+    },
+  );
   test(
     'explicit reactivation reuses retained identity without granting consent',
     () async {

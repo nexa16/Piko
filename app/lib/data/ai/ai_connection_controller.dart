@@ -107,7 +107,7 @@ final class SupabaseAiAuthGateway implements AiAuthGateway {
 /// No anonymous signup, refresh or provider request occurs on app launch.
 /// Activation happens only at an explicit AI-connect/request boundary.
 final class AiConnectionController extends ChangeNotifier
-    implements AiAccess, AiPilotLocalStop {
+    implements AiAccess, AiPilotLocalStop, ExistingAiAccess {
   AiConnectionController({
     required this.configuration,
     required this.vault,
@@ -196,7 +196,7 @@ final class AiConnectionController extends ChangeNotifier
     if (!_disposed && owner == _revision) notifyListeners();
   }
 
-  Future<void> connect() {
+  Future<void> connect({bool existingOnly = false}) {
     if (!enabled) return Future.error(AiFailure.disabled);
     if (!configured || _disposed) return Future.error(AiFailure.unavailable);
     if (_pending != null) return _pending!;
@@ -210,6 +210,7 @@ final class AiConnectionController extends ChangeNotifier
       try {
         final stored = await vault.read();
         if (_disposed || owner != _revision) throw AiFailure.accessDenied;
+        if (existingOnly && stored == null) throw AiFailure.accessDenied;
         _pilotStopped = _pilotStopped || _stopped(stored);
         if (_pilotStopped) throw AiFailure.accessDenied;
         final session = await gateway
@@ -264,6 +265,25 @@ final class AiConnectionController extends ChangeNotifier
       Map<String, dynamic>.from(jsonDecode(_serialized!) as Map),
     );
     return session?.accessToken;
+  }
+
+  /// Job status/capability/control requests may refresh an existing identity,
+  /// but can never enroll a new anonymous identity as a side effect.
+  @override
+  Future<String?> existingAccessToken() async {
+    if (!enabled) throw AiFailure.disabled;
+    if (_disconnected || _disposed || _pilotStopped)
+      throw AiFailure.accessDenied;
+    if (_serialized != null) {
+      final saved = Session.fromJson(
+        Map<String, dynamic>.from(jsonDecode(_serialized!) as Map),
+      );
+      if (saved != null && !saved.isExpired) return saved.accessToken;
+    }
+    await connect(existingOnly: true);
+    return Session.fromJson(
+      Map<String, dynamic>.from(jsonDecode(_serialized!) as Map),
+    )?.accessToken;
   }
 
   @override
