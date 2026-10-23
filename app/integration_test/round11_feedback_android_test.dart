@@ -283,13 +283,15 @@ void main() {
           const TextSelection(baseOffset: 0, extentOffset: 1),
         );
         expect(tester.takeException(), isNull);
+        await tap(field);
+        await wait(() => imeInset() > 0, 'IME focused for correction');
         await tester.enterText(field, entry.targetText);
         await tester.pumpAndSettle();
         await wait(
           () =>
               tester.widget<TextField>(field).controller!.text ==
               entry.targetText,
-          'Corrected draft',
+          'Corrected draft (${tester.widget<TextField>(field).controller!.text})',
         );
         await tap(close);
         await wait(
