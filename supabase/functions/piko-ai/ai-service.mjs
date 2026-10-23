@@ -4,7 +4,7 @@ const api='https://api.openai.com/v1/responses';
 const maxBytes=192000,maxResponseBytes=2000000;
 const json=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
 export class AiServiceError extends Error{
- constructor(code){super(code);this.code=code;}
+ constructor(code,details){super(code);this.code=code;if(details)this.details=details;}
 }
 function errorStatus(code){return ({access_denied:403,limit:429,expired:410,replay:409,invalid_request:400,context_limit:413,invalid_response:422})[code]??503;}
 async function readBytes(stream,limit,code='context_limit'){
@@ -27,7 +27,14 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
    const response=await fetchImpl(path,{method:body?'POST':'GET',redirect:'error',
      headers:{Authorization:'Bearer '+providerKey,'Content-Type':'application/json'},
      ...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(25000)});
-   if(!response.ok)throw new AiServiceError(response.status===429?'limit':'unavailable');
+   if(!response.ok){
+     if(response.status===429){
+       const retry=response.headers.get('Retry-After'),seconds=Number(retry),date=Date.parse(retry??'');
+       const retryAt=retry&&(Number.isFinite(seconds)&&seconds>=0?new Date(Date.now()+seconds*1000).toISOString():Number.isFinite(date)?new Date(date).toISOString():null);
+       throw new AiServiceError('limit',{limitType:'provider',...(retryAt?{retryAt}:{})});
+     }
+     throw new AiServiceError('unavailable');
+   }
    return decoded(response);
  }
  async function result(response,requestId,userId,hash,cardCeiling){
@@ -76,6 +83,7 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
        const requestId=url.searchParams.get('requestId'),hash=req.headers.get('X-Piko-Request-Digest');
        if(!uuid.test(requestId??'')||!/^[a-f0-9]{64}$/.test(hash??'')||url.searchParams.size!==1)throw new AiServiceError('invalid_request');
        const status=await rpc('piko_ai_status',{p_user_id:userId,p_request_id:requestId,p_hash:hash});
+       if(status?.cachedResponse)return await result(status.cachedResponse,requestId,userId,hash,status.cardCeiling);
        if(!/^resp_[a-zA-Z0-9_-]+$/.test(status?.responseId??''))throw new AiServiceError('unavailable');
        return await result(await provider(api+'/'+encodeURIComponent(status.responseId)),requestId,userId,hash,status.cardCeiling);
      }
@@ -108,7 +116,7 @@ export function createAiHandler({enabled=false,providerKey,authenticate,rpc,fetc
      return await result(response,input.requestId,userId,hash,admitted.cardCeiling);
    }catch(error){
      const code=error instanceof AiServiceError?error.code:'unavailable';
-     return json(errorStatus(code),{code});
+     return json(errorStatus(code),{code,...(error.details??{})});
    }
  };
 }
