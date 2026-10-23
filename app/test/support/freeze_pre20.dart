@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
+import 'freeze_pre24.dart';
 
 // Collections/vocabulary DDL was unchanged from 16 through 19. Retain original
 // rowids while freezing those tables so this is an actual old-schema upgrade.
 void freezePre20(sqlite.Database raw) {
+  freezePre24(raw);
   // Recovery storage did not exist before schema23; never merely relabel it old.
   raw.execute('DROP TABLE IF EXISTS vocabulary_trash');
   if (raw

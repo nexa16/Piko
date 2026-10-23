@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../support/freeze_pre24.dart';
 import 'dart:convert';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -538,6 +539,7 @@ void main() {
       final before = await rows(db, 'learning_items');
       await db.close();
       final raw = sqlite.sqlite3.open(dbFile.path);
+      freezePre24(raw);
       raw.execute('ALTER TABLE collections DROP COLUMN level');
       raw.execute('DROP TABLE vocabulary_trash');
       raw.execute('PRAGMA user_version=22');

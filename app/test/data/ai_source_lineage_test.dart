@@ -14,6 +14,7 @@ import 'package:piko/data/vocabulary_content.dart';
 import 'ai_service_test.dart' show envelope, edit;
 import 'regular_reviews_test.dart' show Fixture;
 import 'statistics_test.dart' show stored;
+import '../support/freeze_pre24.dart';
 
 void main() {
   test(
@@ -109,6 +110,7 @@ void main() {
       );
       await db.close();
       final raw = sqlite.sqlite3.open(file.path);
+      freezePre24(raw);
       raw.execute('DROP TABLE vocabulary_trash');
       raw.execute('ALTER TABLE collections DROP COLUMN level');
       raw.execute(
@@ -146,10 +148,9 @@ void main() {
                     )
                     .get())
                 .map(
-                  (r) =>
-                      Map<String, Object?>.from(r.data)
-                        ..remove('level')
-                        ..remove('acquisition_source'),
+                  (r) => Map<String, Object?>.from(r.data)
+                    ..remove('level')
+                    ..remove('acquisition_source'),
                 )
                 .toList();
         expect(after, before[table], reason: table);

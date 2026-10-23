@@ -44,7 +44,39 @@ const allowedColumns = <String, Set<String>>{
   // Ordered user-authored examples; no extra learning history.
   'vocabulary_examples': {'entry_id', 'position', 'target_text', 'native_text'},
   // VOCAB-TRASH-001: one versioned exact recovery snapshot, maximum24h.
-  'vocabulary_trash': {'entry_id', 'collection_id', 'group_id', 'deleted_at', 'expires_at', 'snapshot_json'},
+  'vocabulary_trash': {
+    'entry_id',
+    'collection_id',
+    'group_id',
+    'deleted_at',
+    'expires_at',
+    'snapshot_json',
+  },
+  // AI-REVIEW-JOB-001: explicit paid job recovery/content lock, never learning
+  // events. Payload/result contain review content only; ordinary learning must
+  // not populate either table.
+  'ai_review_jobs': {
+    'job_id',
+    'collection_id',
+    'installation_id',
+    'digest',
+    'state',
+    'generation',
+    'expires_at',
+    'lock_enabled',
+    'cancel_pending',
+    'payload_json',
+    'status_json',
+    'result_json',
+  },
+  // Durable once-only adoption receipt and exact review outcome for replay.
+  'ai_adoption_receipts': {
+    'request_id',
+    'selection_key',
+    'collection_id',
+    'adopted_at',
+    'outcome_json',
+  },
   'learning_items': {
     'id',
     'entry_id',
@@ -132,6 +164,14 @@ Future<void> assertInventory(PikoDatabase db) async {
       columns.map((row) => row.read<String>('name')).toSet(),
       entry.value,
       reason: entry.key,
+    );
+  }
+  for (final table in ['ai_review_jobs', 'ai_adoption_receipts']) {
+    expect(
+      await rows(db, table),
+      isEmpty,
+      reason:
+          'Ordinary learning must not create AI job state or copy learning/history into AI payloads',
     );
   }
 }
