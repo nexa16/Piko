@@ -240,3 +240,12 @@ test('completed reports larger than 2MB round-trip as immutable bounded GET part
  assert.ok(new TextEncoder().encode(serialized).length>2000000);assert.equal(await textHash(serialized),first.resultHash);assert.deepEqual(JSON.parse(serialized).limitations,report.limitations);
  assert.equal((await fetchPart(first.parts)).status,400);assert.equal((await pg.query('select count(*)::int as n from piko_ai_private.receipts')).rows[0].n,0);
 });
+test('capability negotiation is read-only, requires an existing verified identity and all dispatch gates',async()=>{
+ const request=()=>new Request('https://synthetic/?job=capabilities',{headers:{Authorization:'Bearer synthetic'}});
+ const handler=createReviewJobHandler({enabled:true,authenticate:async()=>owner,rpc});
+ const yes=await (await handler(request())).json();assert.deepEqual(yes,{reviewJobProtocol:1,snapshotVersion:1,resultPartsVersion:1,reviewJobsAvailable:true});
+ await pg.exec('update piko_ai_private.config set review_jobs_enabled=false');assert.equal((await(await handler(request())).json()).reviewJobsAvailable,false);
+ const disabled=createReviewJobHandler({enabled:false,authenticate:async()=>owner,rpc:async()=>{throw Error('disabled gate must not query new RPC');}});assert.equal((await(await disabled(request())).json()).reviewJobsAvailable,false);
+ const untrusted=createReviewJobHandler({enabled:true,authenticate:async()=>null,rpc:async()=>{throw Error('no RPC for unauthenticated caller');}});assert.equal((await untrusted(request())).status,403);
+ for(const table of ['review_jobs','receipts'])assert.equal((await pg.query('select count(*)::int as n from piko_ai_private.'+table)).rows[0].n,0);
+});

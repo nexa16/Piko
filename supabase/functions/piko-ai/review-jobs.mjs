@@ -166,13 +166,17 @@ export function createReviewJobHandler({enabled=false,authenticate,rpc}){
  return async req=>{
   try{
    const url=new URL(req.url),action=url.searchParams.get('job');
-   if((!enabled&&!['cancel','status','result'].includes(action))||!authenticate||!rpc)fail('unavailable');
+   if((!enabled&&!['cancel','status','result','capabilities'].includes(action))||!authenticate||!rpc)fail('unavailable');
    const queryKeys=action==='result'?['job','jobId','installationId','part']:['job','jobId','installationId'];
-   if(!['prepare','upload','start','status','resume','cancel','result'].includes(action)||[...url.searchParams.keys()].some(k=>!queryKeys.includes(k)))fail('invalid_request');
-   const read=['status','result'].includes(action);
+   if(!['prepare','upload','start','status','resume','cancel','result','capabilities'].includes(action)||[...url.searchParams.keys()].some(k=>!queryKeys.includes(k)))fail('invalid_request');
+   const read=['status','result','capabilities'].includes(action);
    if(req.method!==(read?'GET':'POST'))return json(405,{code:'invalid_request'});
    const auth=req.headers.get('Authorization')??'',userId=auth.startsWith('Bearer ')?await authenticate(auth.slice(7)):null;
    if(!uuid.test(userId??''))fail('access_denied');
+   if(action==='capabilities'){
+    const available=enabled&&(await rpc('piko_ai_review_capabilities',{p_user_id:userId}))?.reviewJobsAvailable===true;
+    return json(200,{reviewJobProtocol:1,snapshotVersion:1,resultPartsVersion:1,reviewJobsAvailable:available});
+   }
    const raw=read?'{}':await boundedText(req,210000),data=read?{installationId:url.searchParams.get('installationId')}:JSON.parse(raw),jobId=read?url.searchParams.get('jobId'):data.jobId;
    if(!uuid.test(jobId??''))fail('invalid_request');
    if(action==='prepare'){

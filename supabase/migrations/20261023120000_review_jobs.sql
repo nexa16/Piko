@@ -92,6 +92,15 @@ begin
  return slots;
 end $$;
 
+-- Read-only protocol negotiation happens before the app creates its local
+-- lock. No enrollment, receipt, job, reservation or provider dispatch occurs.
+create function public.piko_ai_review_capabilities(p_user_id uuid) returns jsonb
+language sql stable security invoker set search_path='' as $$
+ select jsonb_build_object('reviewJobsAvailable',piko_ai_private.review_access(p_user_id,clock_timestamp()))
+$$;
+revoke all on function public.piko_ai_review_capabilities(uuid) from public,anon,authenticated;
+grant execute on function public.piko_ai_review_capabilities(uuid) to service_role;
+
 create function public.piko_ai_review_job(p_user_id uuid,p_job_id uuid,p_action text,p_data jsonb)
  returns jsonb language plpgsql security invoker set search_path='' as $$
 declare j piko_ai_private.review_jobs%rowtype;c piko_ai_private.config%rowtype;
