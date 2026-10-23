@@ -96,6 +96,24 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      Offset visibleRowPoint(Finder target) {
+        var area = tester.getRect(find.byType(Scrollable).first);
+        final compact = keyed('collection-compact-header');
+        if (compact.evaluate().isNotEmpty) {
+          final bottom = tester.getRect(compact).bottom;
+          if (bottom > area.top) {
+            area = Rect.fromLTRB(area.left, bottom, area.right, area.bottom);
+          }
+        }
+        final visible = tester.getRect(target).intersect(area);
+        expect(
+          visible.height,
+          greaterThan(0),
+          reason: 'A visible row target is required',
+        );
+        return Offset(visible.left + 12, visible.center.dy);
+      }
+
       Future<Map<String, Object?>> contentSnapshot() async => {
         for (final table in [
           'vocabulary_entries',
@@ -220,7 +238,7 @@ void main() {
         expect(find.byType(PikoDialog), findsNothing);
         await tap(keyed('vocabulary-examples-${entry.id}'));
         expect(find.text('Second example.'), findsNothing);
-        await tester.longPress(card);
+        await tester.longPressAt(visibleRowPoint(card));
         await tester.pumpAndSettle();
         final indicator = keyed('vocabulary-selection-indicator-${entry.id}');
         expect(
@@ -336,7 +354,7 @@ void main() {
         final heading = keyed('collection-group-${value.id}');
         await reveal(heading);
         expect(keyed('collection-group-selection-${value.id}'), findsNothing);
-        await tester.longPress(heading);
+        await tester.longPressAt(visibleRowPoint(heading));
         await tester.pumpAndSettle();
         expect(selection.ids, {entry.id});
         expect(query.scope.expandedGroups, isEmpty);
@@ -355,7 +373,7 @@ void main() {
         final beforeCount = query.snapshot!.allEntries.length;
         final viewport = tester.getRect(find.byType(Scrollable).first);
         await tester.dragFrom(
-          tester.getRect(groupedCard).intersect(viewport).center,
+          visibleRowPoint(groupedCard),
           const Offset(-170, 0),
         );
         await tester.pumpAndSettle();
