@@ -172,14 +172,17 @@ void main() {
           ),
         );
         await wait(
-          () => find.byType(CollectionVocabulary).evaluate().isNotEmpty,
-          'Collection list',
+          () => find.byType(CollectionDetail).evaluate().isNotEmpty,
+          'Collection route',
         );
         final detail = tester.widget<CollectionDetail>(
           find.byType(CollectionDetail),
         );
         final query = detail.queryBinding!;
         await wait(() => query.ready, 'Ready projection');
+        // At enlarged text the vocabulary sliver is below the initial cache;
+        // scroll to the actual row before reading its lazily built consumer.
+        await reveal(keyed('vocabulary-${entry.id}'));
         final list = tester.widget<CollectionVocabulary>(
           find.byType(CollectionVocabulary),
         );
