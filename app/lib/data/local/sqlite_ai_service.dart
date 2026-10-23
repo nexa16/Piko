@@ -182,6 +182,13 @@ final class SqliteAiService implements AiContentService, AiReviewJobsSupport {
     _applying = true;
     try {
       final created = await database.transaction(() async {
+        final job = await database
+            .customSelect(
+              'SELECT state,digest,result_json FROM ai_review_jobs WHERE job_id=?',
+              variables: [Variable(plan.request.id)],
+            )
+            .getSingleOrNull();
+        if (job?.read<String>('state') == 'detached') throw AiFailure.stale;
         final consumed = await database
             .customSelect(
               'SELECT selection_key,outcome_json FROM ai_adoption_receipts WHERE request_id = ?',
@@ -192,16 +199,11 @@ final class SqliteAiService implements AiContentService, AiReviewJobsSupport {
         if (consumed != null) {
           final saved = consumed.readNullable<String>('outcome_json');
           if (consumed.read<String>('selection_key') != selectionKey ||
-              saved == null)
+              saved == null) {
             throw AiFailure.consumed;
+          }
           return _restoreAdoption(aiObject(jsonDecode(saved)));
         }
-        final job = await database
-            .customSelect(
-              'SELECT state,digest,result_json FROM ai_review_jobs WHERE job_id=?',
-              variables: [Variable(plan.request.id)],
-            )
-            .getSingleOrNull();
         if (job != null) {
           if (job.read<String>('state') != 'completed' ||
               job.readNullable<String>('result_json') == null) {

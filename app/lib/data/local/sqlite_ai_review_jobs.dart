@@ -113,6 +113,7 @@ final class SqliteAiReviewJobs implements AiReviewJobStore {
         jsonEncode(status.data),
       ],
     );
+    await database.watchReviewExpiry();
     return AiLocalReviewJob(
       id: request.id,
       installationId: installationId,
@@ -163,6 +164,7 @@ final class SqliteAiReviewJobs implements AiReviewJobStore {
         job.installationId,
       ],
     );
+    await database.watchReviewExpiry();
     return AiLocalReviewJob(
       id: job.id,
       installationId: job.installationId,

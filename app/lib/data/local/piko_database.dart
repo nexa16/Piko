@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'dart:async';
 import '../../core/clock.dart';
 import '../../core/learning_day.dart';
 import 'statistics_tables.dart';
@@ -346,6 +347,10 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
   final LearningDayCalendar learningDayCalendar;
   final _scheduler = LearningScheduler();
+  Timer? _reviewExpiryTimer;
+  Future<void>? _reviewExpiryWork;
+  Duration _reviewExpiryCheckInterval = const Duration(minutes: 1);
+  bool _closing = false;
 
   @override
   int get schemaVersion => 24;
@@ -583,12 +588,67 @@ class PikoDatabase extends _$PikoDatabase {
   }
 
   Future<void> requireCollectionWritable(String collectionId) async {
+    await expireReviewLocks();
     final locked = await customSelect(
       'SELECT job_id FROM ai_review_jobs '
       'WHERE collection_id = ? AND lock_enabled = 1 LIMIT 1',
       variables: [Variable(collectionId)],
     ).getSingleOrNull();
     if (locked != null) throw const CollectionReviewLocked();
+  }
+
+  /// A reached fixed deadline is usable offline. Device-clock changes remain
+  /// a limitation of this local safeguard; the server independently fences work.
+  Future<void> expireReviewLocks() => transaction(() async {
+    final now = clock.now().toUtc();
+    final rows = await customSelect(
+      'SELECT job_id,expires_at FROM ai_review_jobs WHERE lock_enabled=1',
+    ).get();
+    for (final row in rows) {
+      if (!now.isBefore(DateTime.parse(row.read<String>('expires_at')))) {
+        await customStatement(
+          "UPDATE ai_review_jobs SET lock_enabled=0,state='expired' WHERE job_id=? AND lock_enabled=1",
+          [row.read<String>('job_id')],
+        );
+      }
+    }
+  });
+
+  Future<void> watchReviewExpiry({Duration? maximumCheckInterval}) async {
+    if (maximumCheckInterval != null) {
+      _reviewExpiryCheckInterval = maximumCheckInterval;
+    }
+    _reviewExpiryTimer?.cancel();
+    if (_closing) return;
+    final rows = await customSelect(
+      'SELECT expires_at FROM ai_review_jobs WHERE lock_enabled=1',
+    ).get();
+    if (_closing || rows.isEmpty) return;
+    final deadlines =
+        rows.map((r) => DateTime.parse(r.read<String>('expires_at'))).toList()
+          ..sort();
+    var delay = deadlines.first.difference(clock.now().toUtc());
+    if (delay > _reviewExpiryCheckInterval) delay = _reviewExpiryCheckInterval;
+    if (delay <= Duration.zero) delay = const Duration(milliseconds: 1);
+    _reviewExpiryTimer = Timer(delay, () {
+      _reviewExpiryWork = (() async {
+        try {
+          await expireReviewLocks();
+          if (!_closing) await watchReviewExpiry();
+        } catch (_) {
+          /* Fail closed; foreground admission still surfaces failures. */
+        }
+      })();
+    });
+  }
+
+  @override
+  Future<void> close() async {
+    if(_closing) return;
+    _closing = true;
+    _reviewExpiryTimer?.cancel();
+    await _reviewExpiryWork;
+    await super.close();
   }
 
   /// Call before mounting app routes. No-backup identity distinguishes an OS
@@ -613,6 +673,7 @@ class PikoDatabase extends _$PikoDatabase {
         );
       }
     }
+    await watchReviewExpiry();
   });
 
   /// Called inside group creation or the upgrade transaction, never while rendering.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import '../../data/ai/ai_contract.dart';
 import '../../data/ai/ai_review_job.dart';
@@ -134,8 +135,16 @@ final class AiReviewJobController extends ChangeNotifier {
   }
 
   Future<void> _fetch() async {
+    job = await store.reviewJobFor(collectionId, installationId);
     final current = job;
     if (current == null || current.status.state == AiJobState.detached) return;
+    if ({
+      AiJobState.expired,
+      AiJobState.cancelled,
+      AiJobState.failed,
+    }.contains(current.status.state)) {
+      return;
+    }
     if (current.cancelPending) {
       job = await store.saveReviewStatus(
         current,
@@ -159,12 +168,55 @@ final class AiReviewJobController extends ChangeNotifier {
       );
     }
     if (job!.status.state == AiJobState.completed && job!.result == null) {
-      final result = await provider.reviewJob('result', {
-        'jobId': current.id,
-        'installationId': installationId,
-      });
+      final result = await _result(current);
       await store.saveReviewResult(job!, result);
       job = await store.reviewJobFor(collectionId, installationId);
+    }
+  }
+
+  Future<Map<String, Object?>> _result(AiLocalReviewJob current) async {
+    final first = await provider.reviewJob('result', {
+      'jobId': current.id,
+      'installationId': installationId,
+      'part': 0,
+    });
+    final parts = first['parts'], hash = first['resultHash'];
+    if (parts is! int ||
+        parts < 1 ||
+        parts > 1024 ||
+        hash is! String ||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
+      throw AiFailure.invalidResponse;
+    }
+    final buffer = StringBuffer();
+    for (var index = 0; index < parts; index++) {
+      final part = index == 0
+          ? first
+          : await provider.reviewJob('result', {
+              'jobId': current.id,
+              'installationId': installationId,
+              'part': index,
+            });
+      if (part['jobId'] != current.id ||
+          part['snapshotDigest'] != current.manifest.digest ||
+          part['resultHash'] != hash ||
+          part['parts'] != parts ||
+          part['part'] != index ||
+          part['content'] is! String ||
+          (part['content']! as String).length > 200000) {
+        throw AiFailure.invalidResponse;
+      }
+      buffer.write(part['content']);
+      if (buffer.length > 32000000) throw AiFailure.invalidResponse;
+    }
+    final text = buffer.toString(), bytes = utf8.encode(buffer.toString());
+    if (bytes.length > 64000000 || sha256.convert(bytes).toString() != hash) {
+      throw AiFailure.invalidResponse;
+    }
+    try {
+      return aiObject(jsonDecode(text));
+    } on FormatException {
+      throw AiFailure.invalidResponse;
     }
   }
 

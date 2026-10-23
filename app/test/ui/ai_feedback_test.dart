@@ -127,6 +127,7 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
       await t.pumpWidget(const SizedBox.shrink());
       await t.pump();
+      await t.runAsync(f.db.close);
     },
   );
 }

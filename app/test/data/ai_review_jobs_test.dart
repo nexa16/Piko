@@ -13,6 +13,7 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_deletion.dart';
 import 'regular_reviews_test.dart' show Fixture, rows;
 import 'ai_service_test.dart' show envelope, edit;
+import '../support/mutable_clock.dart';
 
 void main() {
   Future<(Fixture, SqliteAiService)> setup({PikoDatabase? database}) async {
@@ -21,6 +22,34 @@ void main() {
     addTearDown(f.db.close);
     return (f, SqliteAiService(f.db, enabled: true));
   }
+
+  test(
+    'open application expires fixed job deadline without AI navigation or restart',
+    () async {
+      final (f, service) = await setup();
+      await service.reviewJobs.prepareReviewJob(
+        collectionId: f.owner.id,
+        installationId: 'install-a',
+        maxCostCents: 100,
+        options: const AiOptions(),
+      );
+      await f.db.watchReviewExpiry(
+        maximumCheckInterval: const Duration(milliseconds: 10),
+      );
+      (f.db.clock as MutablePikoClock).advance(const Duration(days: 8));
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await f.vocabulary.update(
+        id: f.entry.id,
+        targetText: 'After expiry',
+        nativeText: 'Nach Ablauf',
+      );
+      final job = (await service.reviewJobs.reviewJobFor(
+        f.owner.id,
+        'install-a',
+      ))!;
+      expect(job.status.state, AiJobState.expired);
+    },
+  );
 
   test(
     'durable collection admission blocks indirect content writes but real grades work',
@@ -271,6 +300,11 @@ void main() {
         throwsA(AiFailure.consumed),
       );
       expect(await rows(reopened, 'ai_adoption_receipts'), hasLength(1));
+      await reopened.reconcileAiInstallation('restored-installation');
+      await expectLater(
+        SqliteAiService(reopened, enabled: true).apply(plan, {'change'}),
+        throwsA(AiFailure.stale),
+      );
     },
   );
   test(

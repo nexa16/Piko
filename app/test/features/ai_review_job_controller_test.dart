@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:piko/data/ai/ai_contract.dart';
 import 'package:piko/data/ai/ai_review_job.dart';
 import 'package:piko/data/local/piko_database.dart';
@@ -12,6 +14,7 @@ class FakeJobProvider implements AiReviewJobProvider {
   final entries = <Map<String, Object?>>[];
   Map<String, Object?> status = {}, result = {};
   bool offline = false;
+  final resultParts = <int>[];
   @override
   Future<Map<String, Object?>> reviewJob(
     String action,
@@ -46,11 +49,71 @@ class FakeJobProvider implements AiReviewJobProvider {
         'generation': (status['generation']! as int) + 1,
       };
     }
-    return action == 'result' ? result : status;
+    if (action == 'result') {
+      final text = jsonEncode(result), part = data['part'] as int? ?? 0;
+      resultParts.add(part);
+      final count = (text.length / 200000).ceil(), start = part * 200000;
+      return {
+        'jobId': result['jobId'],
+        'snapshotDigest': result['snapshotDigest'],
+        'resultHash': sha256.convert(utf8.encode(text)).toString(),
+        'part': part,
+        'parts': count,
+        'content': text.substring(
+          start,
+          (start + 200000).clamp(0, text.length),
+        ),
+      };
+    }
+    return status;
   }
 }
 
 void main() {
+  test(
+    'completed result above 2 MB is retrieved through verified GET parts',
+    () async {
+      final f = Fixture();
+      await f.initialize();
+      addTearDown(f.db.close);
+      final service = SqliteAiService(f.db, enabled: true),
+          provider = FakeJobProvider();
+      final controller = AiReviewJobController(
+        collectionId: f.owner.id,
+        installationId: 'install-a',
+        store: service.reviewJobs,
+        provider: provider,
+        pollInterval: const Duration(days: 1),
+      );
+      addTearDown(controller.dispose);
+      await controller.start(maxCostCents: 100, options: const AiOptions());
+      final job = controller.job!;
+      provider.status = {
+        ...provider.status,
+        'state': 'completed',
+        'generation': 3,
+        'processed': 1,
+      };
+      provider.result = {
+        ...envelope(job.manifest.request),
+        'jobId': job.id,
+        'snapshotDigest': job.manifest.digest,
+        'limitations': List.filled(1200, 'Synthetic ${'x' * 1980}'),
+      };
+      expect(
+        utf8.encode(jsonEncode(provider.result)).length,
+        greaterThan(2000000),
+      );
+      await controller.refresh();
+      expect(controller.error, isNull);
+      expect(controller.plan!.limitations, hasLength(1200));
+      expect(provider.resultParts.length, greaterThan(10));
+      expect(
+        provider.resultParts,
+        orderedEquals(List.generate(provider.resultParts.length, (i) => i)),
+      );
+    },
+  );
   test(
     '700-entry upload runs once; restart polls only and completed report survives reopen',
     () async {

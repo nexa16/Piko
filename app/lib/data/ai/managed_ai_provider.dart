@@ -115,6 +115,7 @@ final class ManagedAiProvider
             'job': action,
             if (read) 'jobId': data['jobId']! as String,
             if (read) 'installationId': data['installationId']! as String,
+            if (read && data['part'] != null) 'part': '${data['part']}',
           },
         ),
         body,
