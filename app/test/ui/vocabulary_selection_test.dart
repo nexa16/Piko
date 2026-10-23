@@ -6,6 +6,7 @@ import 'package:piko/data/local/sqlite_categories_repository.dart';
 import 'package:piko/data/local/sqlite_settings_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/features/collections/collection_detail.dart';
+import 'package:piko/features/collections/collections_home.dart';
 import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/features/vocabulary/vocabulary_selection.dart';
@@ -83,7 +84,18 @@ class SelectionHarness {
         home: PikoRuntime(databaseFactory: () => db),
       ),
     );
-    await tester.pumpAndSettle();
+    // Runtime hydration includes native installation reconciliation before
+    // exposing Collections. Wait for the real read boundary, not one frame.
+    for (var attempt = 0; attempt < 20; attempt++) {
+      await tester.runAsync(() => db.customSelect('SELECT 1').get());
+      await tester.pumpAndSettle();
+      if (find.byType(CollectionsHome).evaluate().isNotEmpty &&
+          key('collection-${fixture.owner.id}').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    expect(find.byType(CollectionsHome), findsOneWidget);
+    expect(key('collection-${fixture.owner.id}'), findsOneWidget);
     await tester.ensureVisible(key('collection-${fixture.owner.id}'));
     await tester.tap(
       find

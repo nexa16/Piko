@@ -175,7 +175,24 @@ void main() {
         ),
       );
       expect(speedRect.left, speedRow.left);
-      expect(speedRect.width, closeTo((speedRow.width - 8) / 2, .01));
+      // The continuously collapsing header transforms both children for paint.
+      // Check the unchanged half-width/gap layout in its own logical space.
+      expect(
+        tester.getSize(action('speed', LearningDirection.nativeToTarget)).width,
+        closeTo(
+          (tester
+                      .getSize(
+                        find.byKey(
+                          const ValueKey('collection-speed-actions'),
+                          skipOffstage: false,
+                        ),
+                      )
+                      .width -
+                  8) /
+              2,
+          .01,
+        ),
+      );
       final status = tester.widget<Text>(
         find.byKey(ValueKey('vocabulary-status-${one.id}-nativeToTarget')),
       );

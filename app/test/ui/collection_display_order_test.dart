@@ -125,8 +125,14 @@ void main() {
             final entry = entries![index];
             final row = find.byKey(ValueKey('vocabulary-${entry.id}'));
             expect(
-              tester.getRect(find.text(entry.targetText)).center.dx,
-              lessThan(tester.getRect(find.text(entry.nativeText)).center.dx),
+              tester.getRect(find.text(entry.targetText)).bottom,
+              lessThanOrEqualTo(
+                tester.getRect(find.text(entry.nativeText)).top,
+              ),
+            );
+            expect(
+              tester.getRect(find.text(entry.targetText)).left,
+              tester.getRect(find.text(entry.nativeText)).left,
             );
             expect(
               find.bySemanticsLabel(
@@ -207,8 +213,14 @@ void main() {
             );
             await tester.pumpAndSettle();
             expect(
-              tester.getRect(find.text(entry.targetText)).center.dx,
-              lessThan(tester.getRect(find.text(entry.nativeText)).center.dx),
+              tester.getRect(find.text(entry.targetText)).bottom,
+              lessThanOrEqualTo(
+                tester.getRect(find.text(entry.nativeText)).top,
+              ),
+            );
+            expect(
+              tester.getRect(find.text(entry.targetText)).left,
+              tester.getRect(find.text(entry.nativeText)).left,
             );
           }
           final retained = await tester.runAsync(() async {
