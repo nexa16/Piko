@@ -100,7 +100,7 @@ begin
  if p_user_id is null or p_job_id is null or p_data is null then raise exception 'invalid_request'; end if;
  select * into c from piko_ai_private.config where id=1 for update;
  if not exists(select 1 from piko_ai_private.owner_access where user_id=p_user_id) then raise exception 'access_denied'; end if;
- if exists(select 1 from piko_ai_private.review_jobs where id=p_job_id and user_id<>p_user_id) then raise exception 'access_denied'; end if;
+ if exists(select 1 from piko_ai_private.review_jobs where id=p_job_id and (user_id<>p_user_id or installation_id is distinct from p_data->>'installationId')) then raise exception 'access_denied'; end if;
  if p_action='cancel' then
   insert into piko_ai_private.review_cancellations(job_id,user_id) values(p_job_id,p_user_id) on conflict do nothing;
  end if;
@@ -128,7 +128,7 @@ begin
   end if;
   raise exception 'access_denied';
  end if;
- if j.expires_at<=t and j.state not in('cancelled','expired') then
+ if j.expires_at<=t and j.state in('preparing','running','paused','unknown','cancelling') then
   update piko_ai_private.review_jobs set state='expired',generation=generation+1,phase='expired' where id=j.id returning * into j;
  end if;
  if p_action='cancel' then
@@ -139,15 +139,16 @@ begin
   update piko_ai_private.receipts set deadline=least(deadline,t) where request_id in(select id from piko_ai_private.review_steps where job_id=j.id) and status<>'settled';
   return piko_ai_private.review_status(j);
  end if;
- if not piko_ai_private.review_access(p_user_id,t) then
-  if p_action='status' and j.state='expired' then return piko_ai_private.review_status(j); end if;
-  raise exception 'access_denied';
+ if p_action='status' then
+  if not exists(select 1 from piko_ai_private.owner_access where user_id=p_user_id and enabled and withdrawn_at is null) then raise exception 'access_denied'; end if;
+  return piko_ai_private.review_status(j);
  end if;
- if p_action='status' then return piko_ai_private.review_status(j); end if;
  if p_action='result' then
+  if not exists(select 1 from piko_ai_private.owner_access where user_id=p_user_id and enabled and withdrawn_at is null and expires_at>t and consent_version=c.notice_version) then raise exception 'access_denied'; end if;
   if j.state<>'completed' or j.result is null or j.content_expires_at<=t then raise exception 'expired'; end if;
   return j.result||jsonb_build_object('jobId',j.id,'snapshotDigest',j.snapshot_digest,'conflicts',coalesce(j.conflicts,'[]'::jsonb));
  end if;
+ if not piko_ai_private.review_access(p_user_id,t) then raise exception 'access_denied'; end if;
  if j.expires_at<=t then raise exception 'expired'; end if;
  if p_action='upload' then
   if j.state<>'preparing' then raise exception 'replay'; end if;
@@ -335,9 +336,15 @@ begin
   update piko_ai_private.review_steps set state='pending',lease_until=t where id=s.id;
   perform pgmq.send('piko_ai_review',jsonb_build_object('jobId',j.id),10);
  elsif p_event='unknown' then
-  update piko_ai_private.review_steps set state='unknown',lease_until=t where id=s.id;
-  update piko_ai_private.receipts set status='uncertain',deadline=t where request_id=s.id and status<>'settled';
-  update piko_ai_private.review_jobs set state='unknown',error=p_data,generation=generation+1 where id=j.id;
+  if s.response_id is not null or p_data->>'responseId' ~ '^resp_[a-zA-Z0-9_-]+$' then
+   update piko_ai_private.review_steps set state='pending',response_id=coalesce(response_id,p_data->>'responseId'),provider_poll_expires_at=coalesce(provider_poll_expires_at,t+interval '10 minutes'),lease_until=t where id=s.id;
+   update piko_ai_private.receipts set status='started',response_id=coalesce(response_id,p_data->>'responseId') where request_id=s.id and status<>'settled';
+   perform pgmq.send('piko_ai_review',jsonb_build_object('jobId',j.id),10);
+  else
+   update piko_ai_private.review_steps set state='unknown',lease_until=t where id=s.id;
+   update piko_ai_private.receipts set status='uncertain',deadline=t where request_id=s.id and status<>'settled';
+   update piko_ai_private.review_jobs set state='unknown',error=p_data,generation=generation+1 where id=j.id;
+  end if;
  elsif p_event='failed' then
   update piko_ai_private.review_steps set state='failed',lease_until=t where id=s.id;
   update piko_ai_private.receipts set deadline=t where request_id=s.id and status<>'settled';

@@ -13,7 +13,8 @@ export function canonical(value){
  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])]));
  return value;
 }
-export async function snapshotHash(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(JSON.stringify(canonical(value))))),x=>x.toString(16).padStart(2,'0')).join('');}
+export async function textHash(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))),x=>x.toString(16).padStart(2,'0')).join('');}
+export async function snapshotHash(value){return textHash(JSON.stringify(canonical(value)));}
 const exact=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>keys.includes(k));
 const language=v=>typeof v==='string'?v:v?.name??v?.id;
 const safeEntry=e=>({id:e.id,target:e.target,native:e.native,hint:e.hint,examples:e.examples,assignments:e.assignments});
@@ -27,7 +28,7 @@ export function reviewInput(manifest,entries,id){
 
 export function validateManifest(m){
  if(!exact(m,['version','collection','options','entries','groups','allowNewGroups','allowNewValues'])||m.version!==1||
-  !exact(m.collection,['id','targetLanguage','nativeLanguage','level'])||!uuid.test(m.collection.id??'')||
+  !exact(m.collection,['id','name','targetLanguage','nativeLanguage','level'])||!uuid.test(m.collection.id??'')||typeof m.collection.name!=='string'||
   !Array.isArray(m.entries)||!m.entries.length||m.entries.length>10000||!Array.isArray(m.groups)||
   typeof m.allowNewGroups!=='boolean'||typeof m.allowNewValues!=='boolean')fail('invalid_request');
  const ids=m.entries.map(e=>e.id);
@@ -165,13 +166,14 @@ export function createReviewJobHandler({enabled=false,authenticate,rpc}){
  return async req=>{
   try{
    const url=new URL(req.url),action=url.searchParams.get('job');
-   if((!enabled&&action!=='cancel')||!authenticate||!rpc)fail('unavailable');
-   if(!['prepare','upload','start','status','resume','cancel','result'].includes(action)||url.searchParams.size>2)fail('invalid_request');
+   if((!enabled&&!['cancel','status','result'].includes(action))||!authenticate||!rpc)fail('unavailable');
+   const queryKeys=action==='result'?['job','jobId','installationId','part']:['job','jobId','installationId'];
+   if(!['prepare','upload','start','status','resume','cancel','result'].includes(action)||[...url.searchParams.keys()].some(k=>!queryKeys.includes(k)))fail('invalid_request');
    const read=['status','result'].includes(action);
    if(req.method!==(read?'GET':'POST'))return json(405,{code:'invalid_request'});
    const auth=req.headers.get('Authorization')??'',userId=auth.startsWith('Bearer ')?await authenticate(auth.slice(7)):null;
    if(!uuid.test(userId??''))fail('access_denied');
-   const raw=read?'{}':await boundedText(req,210000),data=JSON.parse(raw),jobId=read?url.searchParams.get('jobId'):data.jobId;
+   const raw=read?'{}':await boundedText(req,210000),data=read?{installationId:url.searchParams.get('installationId')}:JSON.parse(raw),jobId=read?url.searchParams.get('jobId'):data.jobId;
    if(!uuid.test(jobId??''))fail('invalid_request');
    if(action==='prepare'){
     if(!digestPattern.test(data.snapshotDigest??'')||!Number.isSafeInteger(data.maxCostCents)||data.maxCostCents<1||
@@ -181,16 +183,24 @@ export function createReviewJobHandler({enabled=false,authenticate,rpc}){
     return json(200,await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:action,p_data:{...data,metadata}}));
    }
    if(action==='start'){
-    const manifest=await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:'manifest',p_data:{}});
+    const manifest=await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:'manifest',p_data:{installationId:data.installationId}});
     if(manifest.state!=='preparing')return json(200,manifest.status);
     const snapshot={...manifest.metadata,entries:manifest.entries};
     if(await snapshotHash(snapshot)!==manifest.snapshotDigest)fail('replay',{diagnosticCode:'snapshot_digest_mismatch'});
     const plan=planReview(snapshot,manifest.config);
     if(plan.maximumCostCents>manifest.maxCostCents)fail('limit',{limitType:'jobBudget',limitMaximum:manifest.maxCostCents,limitRemaining:manifest.maxCostCents,limitUnit:'cents',required:plan.maximumCostCents,diagnosticCode:'review_plan_budget'});
-    return json(200,await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:'start',p_data:{snapshotDigest:manifest.snapshotDigest,pricing:manifest.config,steps:plan.steps,maximumCostCents:plan.maximumCostCents}}));
+    return json(200,await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:'start',p_data:{installationId:data.installationId,snapshotDigest:manifest.snapshotDigest,pricing:manifest.config,steps:plan.steps,maximumCostCents:plan.maximumCostCents}}));
    }
    if(action==='upload'&&(!Number.isInteger(data.index)||data.index<0||!Array.isArray(data.entries)||data.entries.length>50||!data.entries.length||
     data.entries.some(e=>!exact(e,['id','target','native','hint','examples','assignments','active','hintVisibility'])||!uuid.test(e.id??''))))fail('invalid_request');
+   if(action==='result'){
+    const rawPart=url.searchParams.get('part')??'0';
+    if(!/^(0|[1-9]\d*)$/.test(rawPart)||!Number.isSafeInteger(Number(rawPart)))fail('invalid_request');
+    const result=await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:action,p_data:data}),serialized=JSON.stringify(result);
+    const parts=Math.max(1,Math.ceil(serialized.length/200000)),part=Number(rawPart);
+    if(part>=parts)fail('invalid_request');
+    return json(200,{jobId,snapshotDigest:result.snapshotDigest,resultHash:await textHash(serialized),part,parts,content:serialized.slice(part*200000,(part+1)*200000)});
+   }
    return json(200,await rpc('piko_ai_review_job',{p_user_id:userId,p_job_id:jobId,p_action:action,p_data:data}));
   }catch(error){
    const code=error instanceof AiServiceError?error.code:'invalid_request';
@@ -210,7 +220,7 @@ async function boundedText(req,max){
 export function createReviewWorker({enabled=false,workerSecret,providerKey,rpc,fetchImpl=fetch}){
  return async req=>{
   if(req.method!=='POST'||!enabled||!workerSecret||!providerKey||req.headers.get('Authorization')!=='Bearer '+workerSecret)return json(403,{code:'access_denied'});
-  let task;
+  let task,dispatchStarted=false,attached=false,responseKnownId;
   try{
    task=await rpc('piko_ai_review_claim',{});
    if(!task)return json(200,{state:'idle'});
@@ -220,7 +230,7 @@ export function createReviewWorker({enabled=false,workerSecret,providerKey,rpc,f
     return json(200,{state:'completed'});
    }
    const post=!task.responseId;
-   if(post)await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'dispatch',p_data:{}});
+   if(post){await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'dispatch',p_data:{}});dispatchStarted=true;}
    let response;
    try{
     const fetched=await fetchImpl(post?api:api+'/'+encodeURIComponent(task.responseId),{method:post?'POST':'GET',redirect:'error',headers:{Authorization:'Bearer '+providerKey,'Content-Type':'application/json'},...(post?{body:JSON.stringify(task.body)}:{}),signal:AbortSignal.timeout(25000)});
@@ -236,7 +246,8 @@ export function createReviewWorker({enabled=false,workerSecret,providerKey,rpc,f
     return json(200,{state:post?'unknown':'pending'});
    }
    if(!/^resp_[a-zA-Z0-9_-]+$/.test(response.id??''))fail('invalid_response');
-   if(post)await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'attached',p_data:{responseId:response.id}});
+   responseKnownId=response.id;
+   if(post){await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'attached',p_data:{responseId:response.id}});attached=true;}
    if(['queued','in_progress'].includes(response.status)){
     await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'pending',p_data:{}});
     return json(200,{state:'pending'});
@@ -254,7 +265,7 @@ export function createReviewWorker({enabled=false,workerSecret,providerKey,rpc,f
    await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'result',p_data:{result}});
    return json(200,{state:'step_completed'});
   }catch(error){
-   if(task&&!task.finalize){try{await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:'failed',p_data:{code:'invalid_response'}});}catch{}}
+   if(task&&!task.finalize){try{await rpc('piko_ai_review_finish',{p_job_id:task.jobId,p_step_id:task.requestId,p_token:task.token,p_event:dispatchStarted&&!attached?'unknown':'failed',p_data:{code:dispatchStarted&&!attached?'provider_outcome_unknown':'invalid_response',...(responseKnownId?{responseId:responseKnownId}:{})}});}catch{}}
    return json(503,{code:error instanceof AiServiceError?error.code:'unavailable'});
   }
  };

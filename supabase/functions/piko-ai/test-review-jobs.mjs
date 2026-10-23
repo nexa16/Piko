@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import fs from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
-import {snapshotHash,planReview,aggregateReview,validateReviewResult,createReviewJobHandler,createReviewWorker} from './review-jobs.mjs';
+import {snapshotHash,textHash,planReview,aggregateReview,validateReviewResult,createReviewJobHandler,createReviewWorker} from './review-jobs.mjs';
 const owner='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-8000-000000000002';
 const options={level:'B1',goals:[],checks:['translations','examples','hints','suitability','structure','categories'],categoryMode:'improve',filters:{}};
 const pricing={maxInputBytes:192000,maxOutputTokens:32000,inputNanoUsd:2500,outputNanoUsd:10000,eurPerUsd:1};
-function manifest(count=3){return {version:1,collection:{id:randomUUID(),targetLanguage:{kind:'catalog',id:'en'},nativeLanguage:{kind:'catalog',id:'de'},level:'B1'},options,groups:[],allowNewGroups:true,allowNewValues:true,
+function manifest(count=3){return {version:1,collection:{id:randomUUID(),name:'Synthetic Collection',targetLanguage:{kind:'catalog',id:'en'},nativeLanguage:{kind:'catalog',id:'de'},level:'B1'},options,groups:[],allowNewGroups:true,allowNewValues:true,
  entries:Array.from({length:count},(_,i)=>({id:randomUUID(),target:'term '+i,native:'Wort '+i,active:i%2===0,hint:null,hintVisibility:'always',examples:[{target:'This is '+i,native:'Das ist '+i}],assignments:{}})).sort((a,b)=>a.id.localeCompare(b.id))};}
 function output(step){return {requestId:step.requestId,complete:true,processedIds:step.ids,groups:[],values:[],cards:[],edits:[],limitations:[]};}
 test('700 entries are covered exactly once in details and every compact ID is compared globally',()=>{
@@ -26,6 +26,11 @@ test('snapshot canonical hash is deterministic and content/filter/flag changes i
  const m=manifest(),hash=await snapshotHash(m),reordered=Object.fromEntries(Object.entries(m).reverse());
  assert.equal(hash,await snapshotHash(reordered));
  for(const edit of [x=>x.entries[0].target='changed',x=>x.options={...x.options,filters:{some:['value']}},x=>x.allowNewGroups=false]){const x=structuredClone(m);edit(x);assert.notEqual(hash,await snapshotHash(x));}
+});
+test('actual Dart manifest fixture preserves custom language/name/inactive/categories/filters and cross-language SHA',async()=>{
+ const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/dart-review-manifest.json',import.meta.url),'utf8'));
+ const plan=planReview(fixture.document,pricing);assert.equal(await snapshotHash(fixture.document),fixture.digest);
+ assert.equal(plan.steps[0].input.context.targetLanguage,'Synthetic language');assert.equal(plan.total,1);assert.equal(plan.steps.length,2);
 });
 test('incomplete IDs, unknown IDs, cards and forbidden fields never become completed review',()=>{
  const s=planReview(manifest(),pricing).steps[0];
@@ -75,7 +80,7 @@ async function rpc(name,args){
  try{return (await pg.query('select public.'+name+'('+params+') as r',values)).rows[0].r;}
  catch(error){throw Object.assign(new Error(error.message),{code:error.message});}
 }
-const op=(id,action,data={},uid=owner)=>rpc('piko_ai_review_job',{p_user_id:uid,p_job_id:id,p_action:action,p_data:data});
+const op=(id,action,data={},uid=owner)=>rpc('piko_ai_review_job',{p_user_id:uid,p_job_id:id,p_action:action,p_data:{installationId:'synthetic',...data}});
 async function prepared(m=manifest(),maxCostCents=1900){
  const id=randomUUID(),digest=await snapshotHash(m),metadata={...m};delete metadata.entries;
  await op(id,'prepare',{installationId:'synthetic',idempotencyKey:id,snapshotDigest:digest,snapshotVersion:'1',scopeIds:m.entries.map(e=>e.id),metadata,maxCostCents});
@@ -157,7 +162,7 @@ test('ordinary cached results remain recoverable beyond provider TTL without ext
 });
 test('HTTP prepare/upload/start enforces complete canonical manifest and budget before paid admission',async()=>{
  const m=manifest(),id=randomUUID(),hash=await snapshotHash(m),handler=createReviewJobHandler({enabled:true,authenticate:async()=>owner,rpc});
- const send=(action,data)=>handler(new Request('https://synthetic/?job='+action,{method:'POST',headers:{Authorization:'Bearer synthetic'},body:JSON.stringify({jobId:id,...data})}));
+ const send=(action,data)=>handler(new Request('https://synthetic/?job='+action,{method:'POST',headers:{Authorization:'Bearer synthetic'},body:JSON.stringify({jobId:id,installationId:'synthetic',...data})}));
  assert.equal((await send('prepare',{...m,entries:undefined,jobId:id,snapshotDigest:hash,snapshotVersion:'1',scopeIds:m.entries.map(e=>e.id),maxCostCents:1,idempotencyKey:id,installationId:'synthetic'})).status,200);
  assert.equal((await send('upload',{index:0,entries:m.entries})).status,200);
  const denied=await send('start',{});assert.equal(denied.status,429);assert.equal((await denied.json()).limitType,'jobBudget');
@@ -166,7 +171,7 @@ test('HTTP prepare/upload/start enforces complete canonical manifest and budget 
 });
 test('disabled dispatch still acknowledges cancellation; worker secret failure invokes no privileged RPC',async()=>{
  const id=randomUUID(),handler=createReviewJobHandler({enabled:false,authenticate:async()=>owner,rpc});
- const response=await handler(new Request('https://synthetic/?job=cancel',{method:'POST',headers:{Authorization:'Bearer synthetic'},body:JSON.stringify({jobId:id})}));assert.equal(response.status,200);assert.equal((await response.json()).state,'cancelled');
+ const response=await handler(new Request('https://synthetic/?job=cancel',{method:'POST',headers:{Authorization:'Bearer synthetic'},body:JSON.stringify({jobId:id,installationId:'synthetic'})}));assert.equal(response.status,200);assert.equal((await response.json()).state,'cancelled');
  let calls=0;const worker=createReviewWorker({enabled:true,workerSecret:'synthetic-secret',providerKey:'synthetic-only',rpc:async()=>{calls++;}});
  assert.equal((await worker(new Request('https://synthetic/',{method:'POST',headers:{Authorization:'Bearer wrong'}}))).status,403);assert.equal(calls,0);
 });
@@ -196,4 +201,42 @@ test('preflight counts already used UTC-day slots and practical one-minute sched
  // capacity rather than assuming the execution host's current time of day.
  await pg.query("update piko_ai_private.review_jobs set expires_at=now()+interval '2 minutes' where id=$1",[p.id]);
  await assert.rejects(op(p.id,'start',{snapshotDigest:p.digest,steps:plan.steps,maximumCostCents:plan.maximumCostCents,pricing}),/limit/);
+});
+test('actual three-parameter GET contract binds installation and remains readable when paid flags stop',async()=>{
+ const p=await prepared(),handler=createReviewJobHandler({enabled:false,authenticate:async()=>owner,rpc});
+ const read=installation=>handler(new Request('https://synthetic/?job=status&jobId='+p.id+'&installationId='+installation,{headers:{Authorization:'Bearer synthetic'}}));
+ await pg.exec('update piko_ai_private.config set enabled=false,review_jobs_enabled=false');
+ assert.equal((await read('synthetic')).status,200);
+ const wrong=await read('another-install');assert.notEqual(wrong.status,200);
+});
+test('malformed provider identity after dispatch remains unknown and never silently unlocks as a definite failure',async()=>{
+ const p=await started();let paid=0;
+ const worker=createReviewWorker({enabled:true,workerSecret:'synthetic',providerKey:'not-real',rpc,fetchImpl:async()=>{paid++;return Response.json({id:'malformed',status:'completed'});}});
+ const request=()=>new Request('https://synthetic/',{method:'POST',headers:{Authorization:'Bearer synthetic'}});
+ assert.equal((await worker(request())).status,503);assert.equal((await op(p.id,'status')).state,'unknown');
+ await pg.exec('update pgmq.messages set visible_at=now()');await worker(request());assert.equal(paid,1);
+});
+test('lost attach acknowledgement recovers the known response by GET, without repeating its POST',async()=>{
+ const p=await started();let paid=0,polled=0,once=true;
+ const safeRpc=async(name,args)=>{const result=await rpc(name,args);if(name==='piko_ai_review_finish'&&args.p_event==='attached'&&once){once=false;throw Error('synthetic lost ack');}return result;};
+ const worker=createReviewWorker({enabled:true,workerSecret:'synthetic',providerKey:'not-real',rpc:safeRpc,fetchImpl:async(url,opt)=>{
+  if(opt.method==='POST'){paid++;return Response.json({id:'resp_synthetic',status:'queued'});}
+  polled++;return Response.json({id:'resp_synthetic',status:'completed',usage:{input_tokens:100,output_tokens:100},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(output(p.plan.steps[0]))}]}]});
+ }});
+ const request=()=>new Request('https://synthetic/',{method:'POST',headers:{Authorization:'Bearer synthetic'}});
+ assert.equal((await worker(request())).status,503);assert.equal((await op(p.id,'status')).state,'running');
+ await pg.exec('update pgmq.messages set visible_at=now()');assert.equal((await worker(request())).status,200);assert.equal(paid,1);assert.equal(polled,1);
+});
+test('completed reports larger than 2MB round-trip as immutable bounded GET parts with a whole-report checksum',async()=>{
+ const p=await prepared(),report={requestId:p.id,complete:true,processedIds:p.m.entries.map(e=>e.id),groups:[],values:[],cards:[],edits:[],limitations:Array.from({length:1300},(_,i)=>'Synthetic '+i+' '+String.fromCodePoint(0x1F4DA).repeat(900))};
+ await pg.query("update piko_ai_private.review_jobs set state='completed',result=$2 where id=$1",[p.id,JSON.stringify(report)]);
+ const handler=createReviewJobHandler({enabled:true,authenticate:async()=>owner,rpc});
+ const fetchPart=part=>handler(new Request('https://synthetic/?job=result&jobId='+p.id+'&installationId=synthetic&part='+part,{headers:{Authorization:'Bearer synthetic'}}));
+ const first=await (await fetchPart(0)).json();assert.ok(first.parts>2);let serialized='';
+ for(let part=0;part<first.parts;part++){
+  const response=await fetchPart(part),body=await response.text();assert.ok(new TextEncoder().encode(body).length<2000000);
+  const piece=JSON.parse(body);assert.equal(piece.part,part);assert.equal(piece.resultHash,first.resultHash);assert.equal(piece.snapshotDigest,p.digest);serialized+=piece.content;
+ }
+ assert.ok(new TextEncoder().encode(serialized).length>2000000);assert.equal(await textHash(serialized),first.resultHash);assert.deepEqual(JSON.parse(serialized).limitations,report.limitations);
+ assert.equal((await fetchPart(first.parts)).status,400);assert.equal((await pg.query('select count(*)::int as n from piko_ai_private.receipts')).rows[0].n,0);
 });
