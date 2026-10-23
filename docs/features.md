@@ -33,9 +33,9 @@ Use the heading's rename control to change its name; save or cancel that edit ex
 
 The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
-<img src="images/r7-collection.png" width="320" alt="French Collection with four retained words and no currently due review">
+<img src="images/r10-collection.png" width="320" alt="Collection with flat Compact bilingual rows and separate Review and Speed actions">
 
-Ordinary product emulator capture · [Full image](images/r7-collection.png) · [Capture metadata: `r7-collection`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r10-collection.png) · [Capture metadata: `r10-collection`](build-manifest.json)
 
 [Technical ownership](technical.md#runtime) · [Home and Collection images](screenshots.md#collections)
 
@@ -50,10 +50,6 @@ Ordinary product emulator capture · [Full image](images/r7-collection.png) · [
 The entry session retains previously confirmed words for revisiting and editing. A new draft is different from an existing saved card: completing both required fields alone does not confirm the new word. Once a word is saved, valid edits save automatically. Watch **Saving…**, **Saved** and validation/error feedback rather than assuming an invalid edit reached storage.
 
 The same target/native pair can have separate entries with different Hints. Each meaning has its own UUID and starts with fresh learning. A complete pair plus Hint must be unique within its Collection: comparison normalizes Unicode, lowercases and collapses runs of Unicode whitespace, while preserving punctuation and accents. An absent or whitespace-only Hint is the same empty key. Change the pair or Hint to resolve a duplicate. Editing the Hint on an existing entry preserves its learning. Empty required fields and incomplete example pairs need correction before saving.
-
-<img src="images/r7-entry-draft.png" width="320" alt="Unsaved manually typed livre and Buch with manual examples and Hint controls">
-
-Ordinary product emulator capture · [Full image](images/r7-entry-draft.png) · [Capture metadata: `r7-entry-draft`](build-manifest.json)
 
 [Editor image](screenshots.md#editors) · [Identity and validation](technical.md#vocabulary)
 
@@ -99,9 +95,9 @@ Categories feed the list's filters and grouping. If none exist, the category/fil
 
 In category group Properties, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
 
-<img src="images/r7-categories.png" width="320" alt="Category group editor with default-off session carry-over and explicit-save explanation">
+<img src="images/r10-category-values.png" width="320" alt="Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus">
 
-Ordinary product emulator capture · [Full image](images/r7-categories.png) · [Capture metadata: `r7-categories`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r10-category-values.png) · [Capture metadata: `r10-category-values`](build-manifest.json)
 
 [Category image](screenshots.md#categories) · [Category ownership](technical.md#queries)
 
@@ -139,9 +135,9 @@ Choose **Delete vocabulary** in the selection bar to delete the selected words, 
 
 While selection mode is active, use **Review** or **Speed** in the Collection header to learn the selected active words, including words hidden by later filters. Long-term includes only work eligible now; Speed also includes previously learned words. The selection counts words once; learning counts each eligible direction. A known-zero mode stays visible and disabled. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit or export operation and does not change Active/Inactive or saved filters.
 
-<img src="images/r7-selected-speed.png" width="320" alt="Selected Speed setup for one reviewed word, with fixed direction and hidden and inactive counts">
+<img src="images/r10-selected-speed.png" width="320" alt="Selected Speed setup for one active reviewed word with hidden and inactive counts">
 
-Ordinary product emulator capture · [Full image](images/r7-selected-speed.png) · [Capture metadata: `r7-selected-speed`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r10-selected-speed.png) · [Capture metadata: `r10-selected-speed`](build-manifest.json)
 
 [Selection image](screenshots.md#selection) · [Selection ownership](technical.md#queries)
 
@@ -236,10 +232,6 @@ From Home, open the Settings gear. **General** contains App language, **Learning
 **Learning direction** selects Target → Native, Native → Target, or Both directions separately. It affects eligible launch choices; it does not merge the two directions' progress. **Show examples on questions** changes question-side presentation while preserving stored examples.
 
 Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
-
-<img src="images/r7-settings.png" width="320" alt="Global Settings with four cards, immediate preferences and full export">
-
-Ordinary product emulator capture · [Full image](images/r7-settings.png) · [Capture metadata: `r7-settings`](build-manifest.json)
 
 [Settings image](screenshots.md#settings) · [Preference ownership](technical.md#runtime)
 
