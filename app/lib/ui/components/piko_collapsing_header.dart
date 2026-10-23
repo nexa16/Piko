@@ -34,6 +34,7 @@ class _HeaderState extends State<PikoCollapsingHeader> {
   @override
   Widget build(BuildContext context) => _HeaderSliver(
     keepExpanded: widget.keepExpanded,
+    reduceMotion: MediaQuery.disableAnimationsOf(context),
     onCompactChanged: changed,
     children: [
       ExcludeFocus(excluding: compact, child: widget.expanded),
@@ -46,19 +47,25 @@ class _HeaderSliver extends MultiChildRenderObjectWidget {
   const _HeaderSliver({
     required super.children,
     required this.keepExpanded,
+    required this.reduceMotion,
     required this.onCompactChanged,
   });
   final bool keepExpanded;
+  final bool reduceMotion;
   final ValueChanged<bool> onCompactChanged;
   @override
   MultiChildRenderObjectElement createElement() => _HeaderElement(this);
   @override
-  _RenderHeader createRenderObject(BuildContext context) =>
-      _RenderHeader(keepExpanded, onCompactChanged: onCompactChanged);
+  _RenderHeader createRenderObject(BuildContext context) => _RenderHeader(
+    keepExpanded,
+    reduceMotion: reduceMotion,
+    onCompactChanged: onCompactChanged,
+  );
   @override
   void updateRenderObject(BuildContext context, _RenderHeader renderObject) {
     renderObject
       ..keepExpanded = keepExpanded
+      ..reduceMotion = reduceMotion
       ..onCompactChanged = onCompactChanged;
   }
 }
@@ -79,14 +86,28 @@ class _RenderHeader extends RenderSliver
     with
         ContainerRenderObjectMixin<RenderBox, _HeaderParentData>,
         RenderSliverHelpers {
-  _RenderHeader(this._keepExpanded, {required this.onCompactChanged});
+  _RenderHeader(
+    this._keepExpanded, {
+    required bool reduceMotion,
+    required this.onCompactChanged,
+    // Keep the internal flag private while the construction API is named.
+    // ignore: prefer_initializing_formals
+  }) : _reduceMotion = reduceMotion;
   bool _keepExpanded, _compact = false, _notificationScheduled = false;
+  bool _reduceMotion;
   double _expandedOffset = 0;
+  double _progress = 0, _expandedScale = 1;
   double? _cycleMaximum, _layoutWidth;
   ValueChanged<bool> onCompactChanged;
   set keepExpanded(bool value) {
     if (_keepExpanded == value) return;
     _keepExpanded = value;
+    markNeedsLayout();
+  }
+
+  set reduceMotion(bool value) {
+    if (_reduceMotion == value) return;
+    _reduceMotion = value;
     markNeedsLayout();
   }
 
@@ -126,12 +147,19 @@ class _RenderHeader extends RenderSliver
         : 0.0;
     final extent = math.max(minimum, maximum - constraints.scrollOffset);
     _expandedOffset = _keepExpanded && canPin ? 0 : -constraints.scrollOffset;
-    final next =
+    final completelyCompact =
         canPin &&
         !_keepExpanded &&
         constraints.scrollOffset > 0 &&
         extent <= minimum;
-    if (next) _cycleMaximum ??= maximum;
+    _progress = canPin && !_keepExpanded && maximum > minimum
+        ? (constraints.scrollOffset / (maximum - minimum)).clamp(0.0, 1.0)
+        : 0;
+    if (_progress > 0) _cycleMaximum ??= maximum;
+    _expandedScale = _reduceMotion || !canPin || _keepExpanded
+        ? 1
+        : extent / maximum;
+    final next = _reduceMotion ? completelyCompact : _progress >= .5;
     if (next != _compact) {
       _compact = next;
       markNeedsSemanticsUpdate();
@@ -166,11 +194,48 @@ class _RenderHeader extends RenderSliver
       needsCompositing,
       offset,
       Rect.fromLTWH(0, 0, constraints.crossAxisExtent, geometry!.paintExtent),
-      (context, offset) => context.paintChild(
-        active,
-        offset + Offset(0, _compact ? 0 : _expandedOffset),
-      ),
+      (context, offset) {
+        if (_reduceMotion || _progress == 0 || _progress == 1) {
+          _paintChild(context, offset, active, 1);
+        } else {
+          _paintChild(context, offset, firstChild!, 1 - _progress);
+          _paintChild(context, offset, lastChild!, _progress);
+        }
+      },
     );
+  }
+
+  Matrix4 _childTransform(RenderObject child) {
+    if (identical(child, firstChild)) {
+      if (_reduceMotion || _progress == 0) {
+        return Matrix4.translationValues(0, _expandedOffset, 0);
+      }
+      return Matrix4.identity()
+        ..translateByDouble(
+          constraints.crossAxisExtent * (1 - _expandedScale) / 2,
+          0,
+          0,
+          1,
+        )
+        ..scaleByDouble(_expandedScale, _expandedScale, 1, 1);
+    }
+    return Matrix4.identity();
+  }
+
+  void _paintChild(
+    PaintingContext context,
+    Offset offset,
+    RenderBox child,
+    double opacity,
+  ) {
+    context.pushOpacity(offset, (255 * opacity).round(), (context, offset) {
+      context.pushTransform(
+        needsCompositing,
+        offset,
+        _childTransform(child),
+        (context, offset) => context.paintChild(child, offset),
+      );
+    });
   }
 
   @override
@@ -178,18 +243,19 @@ class _RenderHeader extends RenderSliver
     SliverHitTestResult result, {
     required double mainAxisPosition,
     required double crossAxisPosition,
-  }) => hitTestBoxChild(
-    BoxHitTestResult.wrap(result),
-    active,
-    mainAxisPosition: mainAxisPosition,
-    crossAxisPosition: crossAxisPosition,
+  }) => BoxHitTestResult.wrap(result).addWithPaintTransform(
+    transform: _childTransform(active),
+    position: Offset(crossAxisPosition, mainAxisPosition),
+    hitTest: (result, position) => active.hitTest(result, position: position),
   );
   @override
   double childMainAxisPosition(RenderObject child) =>
-      identical(child, firstChild) ? _expandedOffset : 0;
+      identical(child, firstChild) && (_reduceMotion || _progress == 0)
+      ? _expandedOffset
+      : 0;
   @override
   void applyPaintTransform(RenderObject child, Matrix4 transform) {
-    transform.translateByDouble(0, childMainAxisPosition(child), 0, 1);
+    transform.multiply(_childTransform(child));
   }
 
   @override

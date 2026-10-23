@@ -112,6 +112,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
   String? editorOccurrence;
   final retired = <_Editor>{};
   final rowKeys = <String, GlobalKey>{};
+  final expandedExamples = <String>{};
   double topSpace = 0, bottomSpace = 0;
   int anchorRevision = 0;
   bool get actionBusy =>
@@ -166,6 +167,7 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
       loadError = null;
       openingErrorId = null;
       rowKeys.clear();
+      expandedExamples.clear();
       topSpace = 0;
       bottomSpace = 0;
       anchorRevision++;
@@ -611,6 +613,24 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
     selection.toggle(id);
   }
 
+  Future<void> selectGroup(Iterable<String> matching) async {
+    final selection = widget.selection;
+    if (selection == null || actionBusy) return;
+    final owner = widget.collection.id;
+    final ids = matching.toSet();
+    if (!selection.active && editor != null) await activateRow(null);
+    if (!mounted ||
+        widget.collection.id != owner ||
+        editor != null ||
+        actionBusy ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    // A long press always activates and selects; it must not toggle a fully
+    // selected group off. Checkbox taps keep the explicit tri-state behavior.
+    selection.selectAll(ids);
+  }
+
   Object _savedDialogOwner = Object();
   ModalRoute<void>? _savedDialog;
   String? _savedDialogEntry;
@@ -717,14 +737,24 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 ),
                 if (!selecting)
                   PikoIconButton(
+                    key: ValueKey(
+                      'vocabulary-edit-${occurrence(record.id, group)}',
+                    ),
                     icon: const PikoIcon(PikoIconName.pencil),
                     semanticLabel: copy.text('vocab.inlineEdit'),
                     onPressed: actionBusy ? null : activate,
+                  )
+                else
+                  SizedBox.square(
+                    dimension: pikoDesign.dimension('controls.largeHeight'),
                   ),
               ],
             ),
             Text(second),
-            for (final pair in record.content.examples) ...[
+            for (final pair
+                in expandedExamples.contains(occurrence(record.id, group))
+                    ? record.content.examples
+                    : record.content.examples.take(1)) ...[
               SizedBox(height: pikoDesign.dimension('spacing.2')),
               Text(view.targetFirst ? pair.targetText : pair.nativeText),
               Text(
@@ -732,13 +762,69 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                 style: TextStyle(color: pikoDesign.color('muted')),
               ),
             ],
+            if (record.content.examples.length > 1)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Semantics(
+                  expanded: expandedExamples.contains(
+                    occurrence(record.id, group),
+                  ),
+                  child: PikoButton(
+                    key: ValueKey(
+                      'vocabulary-examples-${occurrence(record.id, group)}',
+                    ),
+                    variant: PikoButtonVariant.ghost,
+                    label: copy.text(
+                      expandedExamples.contains(occurrence(record.id, group))
+                          ? 'vocab.fewerExamples'
+                          : 'vocab.moreExamples',
+                      expandedExamples.contains(occurrence(record.id, group))
+                          ? const {}
+                          : {'count': record.content.examples.length - 1},
+                    ),
+                    onPressed: actionBusy || selecting
+                        ? null
+                        : () {
+                            PikoAnchorRegion.capture(context);
+                            setState(() {
+                              final id = occurrence(record.id, group);
+                              if (!expandedExamples.add(id)) {
+                                expandedExamples.remove(id);
+                              }
+                            });
+                          },
+                  ),
+                ),
+              ),
             if (record.content.hintText != null) ...[
               SizedBox(height: pikoDesign.dimension('spacing.2')),
               Text(record.content.hintText!),
             ],
           ] else
-            ExcludeSemantics(
-              child: CompactVocabularyPair(first: first, second: second),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: CompactVocabularyPair(first: first, second: second),
+                  ),
+                ),
+                if (!selecting)
+                  PikoIconButton(
+                    key: ValueKey(
+                      'vocabulary-edit-${occurrence(record.id, group)}',
+                    ),
+                    icon: const PikoIcon(PikoIconName.pencil),
+                    semanticLabel: copy.text('vocab.inlineEdit'),
+                    onPressed: actionBusy
+                        ? null
+                        : () => activateOccurrence(record.id, group),
+                  )
+                else
+                  SizedBox.square(
+                    dimension: pikoDesign.dimension('controls.largeHeight'),
+                  ),
+              ],
             ),
           if (view.mode == VocabularyViewMode.detailed &&
               widget.categoriesRepository != null)
@@ -809,21 +895,23 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           ),
       ],
     );
-    if (widget.selection != null) {
+    if (widget.selection != null && selecting) {
       final indicatorSize = pikoDesign.dimension('components.icons.size');
       content = Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.only(
-              right: indicatorSize + pikoDesign.dimension('spacing.3'),
-            ),
-            child: content,
-          ),
+          content,
           if (selecting)
             Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
+              top: view.mode == VocabularyViewMode.detailed
+                  ? (pikoDesign.dimension('controls.largeHeight') -
+                            indicatorSize) /
+                        2
+                  : 0,
+              bottom: view.mode == VocabularyViewMode.compact ? 0 : null,
+              right:
+                  (pikoDesign.dimension('controls.largeHeight') -
+                      indicatorSize) /
+                  2,
               child: Center(
                 child: Container(
                   key: ValueKey(
@@ -1154,13 +1242,21 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
                           PikoAnchorRegion.capture(anchorContext);
                           scope.expandGroups([id], !expanded);
                         },
+                  onLongPress: widget.selection == null || actionBusy
+                      ? null
+                      : () {
+                          PikoAnchorRegion.capture(anchorContext);
+                          selectGroup(
+                            item.group.entries.map((entry) => entry.id),
+                          );
+                        },
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: pikoDesign.dimension('spacing.3'),
                     ),
                     child: Row(
                       children: [
-                        if (widget.selection != null)
+                        if (widget.selection?.active == true)
                           Checkbox(
                             key: ValueKey('collection-group-selection-$id'),
                             tristate: true,
@@ -1346,7 +1442,7 @@ class _RetainedVocabularyRowState extends State<_RetainedVocabularyRow>
   }
 }
 
-/// Compact has flat geometry; Detailed retains the established card role.
+/// Both list layouts share the canonical individual card role.
 class _VocabularyRowSurface extends StatelessWidget {
   const _VocabularyRowSurface({
     super.key,
@@ -1362,34 +1458,11 @@ class _VocabularyRowSurface extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) {
-    if (!compact) {
-      return PikoCard(
-        focused: focused,
-        selected: selected,
-        selectable: selectable,
-        padding: padding,
-        child: child,
-      );
-    }
-    return Container(
-      constraints: BoxConstraints(
-        minHeight: pikoDesign.dimension('controls.largeHeight'),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: pikoDesign.dimension('spacing.4'),
-        vertical: pikoDesign.dimension('spacing.2'),
-      ),
-      decoration: BoxDecoration(
-        color: selected ? pikoDesign.color('tint') : Colors.transparent,
-        border: Border(
-          bottom: BorderSide(color: PikoTheme.border),
-          left: BorderSide(
-            color: focused ? pikoDesign.color('primary') : Colors.transparent,
-            width: pikoDesign.dimension('states.focusWidth'),
-          ),
-        ),
-      ),
-      alignment: Alignment.centerLeft,
+    return PikoCard(
+      focused: focused,
+      selected: selected,
+      selectable: selectable,
+      padding: padding,
       child: child,
     );
   }
