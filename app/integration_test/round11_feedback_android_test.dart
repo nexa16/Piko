@@ -165,7 +165,12 @@ void main() {
           PikoApp(home: PikoRuntime(databaseFactory: () => db)),
         );
         final copy = await hydratedRuntimeCopy(tester);
-        await tap(keyed('collection-${fixture.owner.id}'));
+        await tap(
+          find.descendant(
+            of: keyed('collection-${fixture.owner.id}'),
+            matching: find.text(fixture.owner.name),
+          ),
+        );
         await wait(
           () => find.byType(CollectionVocabulary).evaluate().isNotEmpty,
           'Collection list',
