@@ -23,13 +23,14 @@ class FakeJobProvider implements AiReviewJobProvider {
   ) async {
     calls.add(action);
     if (offline) throw AiFailure.network;
-    if (action == 'capabilities')
+    if (action == 'capabilities') {
       return {
         'reviewJobProtocol': 1,
         'snapshotVersion': 1,
         'resultPartsVersion': 1,
         'reviewJobsAvailable': available,
       };
+    }
     if (action == 'prepare') {
       status = {
         'jobId': data['jobId'],

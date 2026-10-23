@@ -272,8 +272,9 @@ final class AiConnectionController extends ChangeNotifier
   @override
   Future<String?> existingAccessToken() async {
     if (!enabled) throw AiFailure.disabled;
-    if (_disconnected || _disposed || _pilotStopped)
+    if (_disconnected || _disposed || _pilotStopped) {
       throw AiFailure.accessDenied;
+    }
     if (_serialized != null) {
       final saved = Session.fromJson(
         Map<String, dynamic>.from(jsonDecode(_serialized!) as Map),

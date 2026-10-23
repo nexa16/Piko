@@ -21,8 +21,9 @@ void freezePre24(sqlite.Database raw) {
       .map((r) => r['name'] as String)
       .toList();
   for (final trigger in triggers) {
-    if (!RegExp(r'^ai_lock_[a-z_]+$').hasMatch(trigger))
+    if (!RegExp(r'^ai_lock_[a-z_]+$').hasMatch(trigger)) {
       throw StateError('Unexpected synthetic trigger name');
+    }
     raw.execute('DROP TRIGGER "$trigger"');
   }
   for (final table in ['ai_adoption_receipts', 'ai_review_jobs']) {
