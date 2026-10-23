@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 /// Android system broadcasts, with resume/boundary refresh on other platforms.
-Stream<void> deviceClockChanges() => !Platform.isAndroid
+Stream<void> deviceClockChanges({bool? android}) =>
+    !(android ?? Platform.isAndroid)
     ? const Stream<void>.empty()
     : const EventChannel(
         'piko/clock_changes',
