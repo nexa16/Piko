@@ -5,6 +5,7 @@ import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_dialog.dart';
 import '../../ui/components/piko_field.dart';
 import '../../ui/components/piko_form.dart';
+import '../../ui/components/piko_preference_picker.dart';
 import '../../ui/piko_theme.dart';
 
 class CreateCollectionDialog extends StatefulWidget {
@@ -19,6 +20,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
   var target = VocabularyLanguage.korean;
   var native = VocabularyLanguage.german;
   var submitting = false;
+  var level = CollectionRecord.levels.first;
   var nameInitialized = false;
   var automaticName = true;
   String? error;
@@ -46,11 +48,19 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
       error = null;
     });
     try {
-      final created = await widget.repository.create(
-        name: name.text,
-        targetLanguage: target,
-        nativeLanguage: native,
-      );
+      final repository = widget.repository;
+      final created = repository is CollectionLevelRepository
+          ? await (repository as CollectionLevelRepository).createWithLevel(
+              name: name.text,
+              targetLanguage: target,
+              nativeLanguage: native,
+              level: level,
+            )
+          : await repository.create(
+              name: name.text,
+              targetLanguage: target,
+              nativeLanguage: native,
+            );
       if (mounted && route?.isCurrent == true) {
         Navigator.of(context).pop(created);
       }
@@ -106,6 +116,18 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
             children: [
               language('collection.targetLanguage', target, true),
               language('collection.nativeLanguage', native, false),
+              if (widget.repository is CollectionLevelRepository)
+                PikoPreferencePicker<String>(
+                  key: const ValueKey('collection-create-level'),
+                  label: copy.text('collection.level'),
+                  value: level,
+                  choices: [
+                    for (final value in CollectionRecord.levels) (value, value),
+                  ],
+                  onChanged: submitting
+                      ? null
+                      : (value) => setState(() => level = value),
+                ),
               PikoFormFieldRow(
                 child: PikoTextField(
                   label: copy.text('collection.name'),

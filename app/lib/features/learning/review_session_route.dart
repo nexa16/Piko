@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import 'learning_editor_guard.dart';
 import '../../data/categories_repository.dart';
 import 'dart:async';
@@ -15,7 +16,7 @@ import 'due_learning_session.dart';
 import 'review_launch.dart';
 import 'review_prompt_card.dart';
 import 'regular_grading_coordinator.dart';
-import 'hard_modifier.dart';
+
 import 'learning_scheduler.dart';
 import 'review_progress.dart';
 import 'review_summary_dialog.dart';
@@ -28,12 +29,14 @@ class ReviewSessionRoute extends StatefulWidget {
     required this.session,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     this.onPendingWrites,
   });
   final CollectionRecord collection;
   final DueLearningSession session;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final ValueChanged<Future<void>>? onPendingWrites;
   @override
   State<ReviewSessionRoute> createState() => _ReviewSessionRouteState();
@@ -172,25 +175,6 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Expanded(child: SizedBox()),
-              SizedBox(width: d.dimension('components.reviewGrading.gap')),
-              Expanded(
-                child: HardModifier(
-                  key: const ValueKey('review-hard'),
-                  coordinator: session,
-                  handle: handle,
-                  canChange: () =>
-                      mounted &&
-                      !_exiting &&
-                      identical(session, widget.session) &&
-                      canSubmit(),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: d.dimension('components.reviewGrading.gap')),
           IntrinsicHeight(
             child: Row(
               key: const ValueKey('review-grading'),
@@ -423,6 +407,9 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                         handle: handle,
                         collection: widget.collection,
                         categoriesRepository: widget.categoriesRepository,
+                        learningReset: widget.learningReset,
+                        onLearningReset: (_) =>
+                            unawaited(_exit(sessionForBuild)),
                         editorGuard: _editorGuard,
                         onPendingWrites: widget.onPendingWrites,
                         allowEditing: !sessionForBuild.isCorrecting,
@@ -437,14 +424,28 @@ class _ReviewSessionRouteState extends State<ReviewSessionRoute>
                             !sessionForBuild.isStopped &&
                             !sessionForBuild.isSubmitting &&
                             identical(sessionForBuild.current, handle),
-                        questionActions:
-                            !sessionForBuild.isCorrecting &&
-                                sessionForBuild.canCorrectPrevious(handle)
-                            ? (context, canUse) => _previousAction(
-                                context,
-                                sessionForBuild,
-                                handle,
-                                canUse,
+                        questionActions: !sessionForBuild.isCorrecting
+                            ? (context, canUse) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  PikoButton(
+                                    key: const ValueKey('review-skip'),
+                                    label: copy.text('learn.skip'),
+                                    variant: PikoButtonVariant.primaryOutline,
+                                    onPressed: !_exiting && canUse()
+                                        ? () => sessionForBuild.skip(handle)
+                                        : null,
+                                  ),
+                                  if (sessionForBuild.canCorrectPrevious(
+                                    handle,
+                                  ))
+                                    _previousAction(
+                                      context,
+                                      sessionForBuild,
+                                      handle,
+                                      canUse,
+                                    ),
+                                ],
                               )
                             : null,
                         revealedActions: (context, canSubmit) =>

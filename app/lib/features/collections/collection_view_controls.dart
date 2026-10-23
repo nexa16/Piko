@@ -159,12 +159,6 @@ class _ViewOverviewDialogState extends State<_ViewOverviewDialog> {
           onApplied: () => setState(() => screen = null),
         );
       }
-      final groups = binding.snapshot == null
-          ? <String>[]
-          : groupVocabulary(
-              binding.snapshot!,
-              scope.view,
-            ).map((g) => g.id).whereType<String>().toList();
       return PikoDialog(
         title: copy.text('settingsPreview.view'),
         purpose: PikoDialogPurpose.directChoice,
@@ -187,26 +181,6 @@ class _ViewOverviewDialogState extends State<_ViewOverviewDialog> {
               onTap: () =>
                   setState(() => screen = CollectionViewPicker.languageOrder),
             ),
-            if (scope.view.grouping != null) ...[
-              PikoFormRow(
-                title: copy.text('view.expandAll'),
-                onTap: groups.any((id) => !scope.expandedGroups.contains(id))
-                    ? () {
-                        scope.expandGroups(groups, true);
-                        setState(() {});
-                      }
-                    : null,
-              ),
-              PikoFormRow(
-                title: copy.text('view.collapseAll'),
-                onTap: groups.any(scope.expandedGroups.contains)
-                    ? () {
-                        scope.expandGroups(groups, false);
-                        setState(() {});
-                      }
-                    : null,
-              ),
-            ],
           ],
         ),
       );

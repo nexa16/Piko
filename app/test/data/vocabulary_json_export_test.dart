@@ -87,6 +87,7 @@ void main() {
       expect(collection.keys.toSet(), {
         'id',
         'name',
+        'level',
         'targetLanguage',
         'nativeLanguage',
         'reviewScopes',

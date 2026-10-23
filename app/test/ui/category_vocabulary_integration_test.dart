@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/local/sqlite_collections_repository.dart';
 import 'package:piko/data/local/sqlite_vocabulary_repository.dart';
+import 'package:piko/data/local/sqlite_collection_query.dart';
+import 'package:piko/features/collections/collection_query_binding.dart';
+import 'package:piko/features/collections/collection_view_preferences.dart';
+import 'package:piko/features/collections/collection_view_scope.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
@@ -46,7 +50,7 @@ Finder label(PickerFixture f, int index) {
   );
 }
 
-Future<void> mount(
+Future<CollectionViewScope> mount(
   WidgetTester tester,
   PickerFixture f,
   String language,
@@ -56,6 +60,21 @@ Future<void> mount(
       f.db,
     ).watchById(f.dimension.collectionId).first,
   );
+  final scope = CollectionViewScope();
+  await scope.saveView(
+    const CollectionViewPreferences(mode: VocabularyViewMode.detailed),
+  );
+  final binding = CollectionQueryBinding(
+    collectionId: f.dimension.collectionId,
+    service: SqliteCollectionQueryService(f.db),
+    scope: scope,
+    invalidations: f.db.tableUpdates().map((_) {}),
+    clock: f.db.clock,
+  );
+  addTearDown(() {
+    binding.dispose();
+    scope.dispose();
+  });
   await tester.pumpWidget(
     PikoApp(
       localeController: InterfaceLocaleController(Locale(language)),
@@ -65,18 +84,20 @@ Future<void> mount(
             collection: collection!,
             repository: SqliteVocabularyRepository(f.db),
             categoriesRepository: f.repository,
+            queryBinding: binding,
           ),
         ),
       ),
     ),
   );
   await f.flush(tester);
+  return scope;
 }
 
 void main() {
   for (final language in ['en', 'de']) {
     testWidgets(
-      '$language picker stages assignments; Apply preserves raw invalid text until atomic autosave and collapsed chips update',
+      '$language picker preserves raw drafts and atomic assignments; Detailed tags update and Compact hides them',
       (tester) async {
         final f = PickerFixture();
         await tester.runAsync(f.initialize);
@@ -86,7 +107,7 @@ void main() {
           await tester.runAsync(f.db.close);
           f.raw.dispose();
         });
-        await mount(tester, f, language);
+        final view = await mount(tester, f, language);
         expect(label(f, 0), findsOneWidget);
         expect(label(f, 1), findsNothing);
         await tester.tap(find.byKey(ValueKey('vocabulary-${f.entryId}')));
@@ -140,6 +161,12 @@ void main() {
         expect(find.byType(TextField), findsNothing);
         expect(label(f, 0), findsOneWidget);
         expect(label(f, 1), findsOneWidget);
+        await view.saveView(
+          const CollectionViewPreferences(mode: VocabularyViewMode.compact),
+        );
+        await f.flush(tester);
+        expect(label(f, 0), findsNothing);
+        expect(label(f, 1), findsNothing);
       },
     );
   }

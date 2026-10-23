@@ -354,7 +354,7 @@ void main() {
       await stopping;
       await registered.single;
       expect(session.acceptedReviews.single, same(receipt));
-      expect(receipt.event.rating, LearningRating.hard);
+      expect(receipt.event.rating, LearningRating.good);
       expect(session.unreviewedMembers, hasLength(1));
       expect(session.current, isNull);
       expect(notifications, 0);
@@ -425,7 +425,7 @@ void main() {
         throwsStateError,
       );
       expect(session.current, same(handle));
-      expect(session.hard, isTrue);
+      expect(session.hard, isFalse);
       expect(session.acceptedReviews, isEmpty);
       expect(await rows(f.db, 'learning_items'), before);
       expect(await rows(f.db, 'regular_reviews'), isEmpty);
@@ -436,7 +436,7 @@ void main() {
           AnswerGrade.correct,
           reviewedAt: instant,
         ))!.event.rating,
-        LearningRating.hard,
+        LearningRating.good,
       );
     },
   );
@@ -464,7 +464,7 @@ void main() {
         throwsA(isA<SqliteException>()),
       );
       expect(session.current, same(handle));
-      expect(session.hard, isTrue);
+      expect(session.hard, isFalse);
       expect(session.acceptedReviews, isEmpty);
       expect(await rows(f.db, 'learning_items'), before);
       expect(await rows(f.db, 'regular_reviews'), isEmpty);

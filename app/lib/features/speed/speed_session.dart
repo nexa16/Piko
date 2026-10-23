@@ -2,23 +2,34 @@ import 'dart:math';
 
 import '../../data/learning_item.dart' show LearningDirection;
 import 'speed_numbers_game.dart';
+import '../learning/learning_parameters.dart';
 
 enum SpeedAnswer { correct, incorrect }
 
 /// Current-round counters, never an attempt history or long-term grade.
 final class SpeedItemProgress {
-  const SpeedItemProgress({this.errors = 0, this.correctStreak = 0});
+  const SpeedItemProgress({
+    this.errors = 0,
+    this.correctStreak = 0,
+    this.attempts = 0,
+  });
 
   final int errors;
   final int correctStreak;
-  int get requiredCorrectStreak => errors >= 3 ? 4 : errors + 1;
+  final int attempts;
+  int get requiredCorrectStreak =>
+      min(LearningParameters.speedMaxCorrectStreak, errors + 1);
   bool get isComplete => correctStreak >= requiredCorrectStreak;
 
   SpeedItemProgress _answer(SpeedAnswer answer) => switch (answer) {
-    SpeedAnswer.incorrect => SpeedItemProgress(errors: errors + 1),
+    SpeedAnswer.incorrect => SpeedItemProgress(
+      errors: errors + 1,
+      attempts: attempts + 1,
+    ),
     SpeedAnswer.correct => SpeedItemProgress(
       errors: errors,
       correctStreak: correctStreak + 1,
+      attempts: attempts + 1,
     ),
   };
 }
@@ -100,7 +111,7 @@ final class SpeedSession {
     );
   }
 
-  static const defaultPoolSize = 5;
+  static const defaultPoolSize = LearningParameters.speedPoolSize;
   static const maxPoolSize = 9007199254740991;
 
   final String collectionId;
@@ -122,6 +133,10 @@ final class SpeedSession {
   final int rotation;
   final Set<String> completedEntryIds;
   final Map<String, SpeedItemProgress> itemProgress;
+  int get totalRetries => itemProgress.values.fold(
+    0,
+    (sum, progress) => sum + max(0, progress.attempts - 1),
+  );
 
   /// Set only by the answer that reaches an item's required streak.
   /// This intent does not itself write a marker, reset FSRS or record a review.
@@ -233,10 +248,9 @@ final class SpeedSession {
       turnIndex: 0,
       rotation: rotation,
       completedEntryIds: completedEntryIds,
-      itemProgress: {
-        for (final pair in itemProgress.entries)
-          if (!remove.contains(pair.key)) pair.key: pair.value,
-      },
+      // Eligibility changes do not erase accepted attempts from this launch.
+      // Retain round counters independently of the remaining question pool.
+      itemProgress: itemProgress,
       needsBreak: keepBreak,
       numberGame: keepBreak ? numberGame : null,
       completedBreaks: completedBreaks,

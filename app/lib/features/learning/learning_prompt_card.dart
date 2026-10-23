@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import 'dart:async';
 import '../../data/categories_repository.dart';
 import '../../data/collections_repository.dart';
@@ -33,16 +34,20 @@ class LearningPromptCard extends StatefulWidget {
     this.onReveal,
     this.collection,
     this.categoriesRepository,
+    this.learningReset,
     this.editorGuard,
     this.onPendingWrites,
     this.onInactive,
+    this.onLearningReset,
     this.allowEditing = true,
   });
   final CollectionRecord? collection;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final LearningEditorGuard? editorGuard;
   final ValueChanged<Future<void>>? onPendingWrites;
   final Future<void> Function()? onInactive;
+  final ValueChanged<Set<LearningDirection>>? onLearningReset;
   final bool allowEditing;
   final Object presentation;
   final String entryId;
@@ -252,6 +257,12 @@ class _LearningPromptCardState extends State<LearningPromptCard> {
           targetFocus: _targetFocus,
           nativeFocus: _nativeFocus,
           categories: widget.categoriesRepository,
+          learningReset: widget.learningReset,
+          onLearningReset: (directions) {
+            if (directions.contains(widget.direction)) {
+              widget.onLearningReset?.call(directions);
+            }
+          },
           busy: _closing,
           onPendingWrites: _register,
           onCollapse: () => unawaited(_closeEditor()),

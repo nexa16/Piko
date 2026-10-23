@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import '../../data/collection_query.dart';
 import '../../data/categories_repository.dart';
 import '../../shared/copy_scope.dart';
@@ -14,7 +13,7 @@ import '../../ui/piko_theme.dart';
 
 typedef CollectionFilterSelection = Map<String, Set<String>>;
 
-/// Filter membership is staged; value order is independent, immediate metadata.
+/// Filter membership is staged. Category ordering belongs to Settings.
 class FilterSelectionDialog extends StatefulWidget {
   const FilterSelectionDialog({
     required this.snapshot,
@@ -43,15 +42,11 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
   late CollectionFilterSelection _draft = _copy(widget.opening);
   bool _pending = false;
   String? _error;
-  String? _orderErrorValue;
-  final _orders = <String, List<CategoryValueRecord>>{};
   final _query = TextEditingController();
   final _scroll = ScrollController();
   final _anchor = PikoInteractionAnchor();
   final _searchArea = GlobalKey();
-  final _rows = <String, GlobalKey>{};
-  bool _overflow = false, _measuring = false, _dragging = false;
-  VoidCallback? _retryOrder;
+  bool _overflow = false, _measuring = false;
 
   @override
   void dispose() {
@@ -61,7 +56,7 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
   }
 
   List<CategoryValueRecord> _values(String group) =>
-      _orders[group] ?? _definitions.categoryValues[group] ?? const [];
+      _definitions.categoryValues[group] ?? const [];
 
   void _measureOverflow() {
     if (_measuring) return;
@@ -73,88 +68,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       final overflow = _scroll.position.maxScrollExtent > searchHeight + 1;
       if (_overflow != overflow) setState(() => _overflow = overflow);
     });
-  }
-
-  Future<void> _move(String group, int from, int to) async {
-    final repository = widget.categories;
-    if (!_canEdit || repository == null || _query.text.isNotEmpty) return;
-    final previous = List<CategoryValueRecord>.of(_values(group));
-    if (from < 0 || from >= previous.length || to < 0 || to > previous.length) {
-      return;
-    }
-    if (to > from) to--;
-    if (from == to) return;
-    final next = List<CategoryValueRecord>.of(previous);
-    final moved = next.removeAt(from);
-    next.insert(to, moved);
-    final retryTo = to > from ? to + 1 : to;
-    _anchor.clear(); // Explicit movement owns scroll, not the old row's top.
-    setState(() {
-      _pending = true;
-      _orders[group] = next;
-      _error = null;
-      _orderErrorValue = null;
-      _retryOrder = null;
-    });
-    final done = Completer<void>();
-    try {
-      widget.onPendingWrites?.call(done.future);
-      final saved = await repository.reorderValues(
-        dimensionId: group,
-        expectedOrder: previous.map((value) => value.id).toList(),
-        orderedIds: next.map((value) => value.id).toList(),
-      );
-      if (!mounted) return;
-      setState(() => _orders[group] = saved);
-    } catch (error) {
-      if (!mounted) return;
-      final stale =
-          error == CategoryValidation.staleOrder ||
-          error == CategoryValidation.dimensionNotFound;
-      setState(() {
-        _orders[group] = previous;
-        _orderErrorValue = moved.id;
-        _error = stale ? 'category.reorderStale' : 'category.reorderFailed';
-        _retryOrder = () => _move(group, from, retryTo);
-      });
-      if (stale && widget.canApply()) {
-        try {
-          final fresh = await widget.reloadDefinitions();
-          if (!mounted ||
-              fresh.collection.id != widget.snapshot.collection.id) {
-            return;
-          }
-          setState(() {
-            _definitions = fresh;
-            _orders.clear();
-            if (!fresh.categoryValues.values
-                .expand((v) => v)
-                .any((v) => v.id == moved.id)) {
-              _orderErrorValue = null;
-            }
-            _retryOrder =
-                null; // New membership requires a deliberate new move.
-          });
-        } catch (_) {
-          /* Keep prior display and an explicit retry. */
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _pending = false);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-          final row = _rows[moved.id]?.currentContext;
-          if (row != null) {
-            Scrollable.ensureVisible(
-              row,
-              alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-            );
-          }
-        });
-      }
-      done.complete();
-    }
   }
 
   static CollectionFilterSelection _copy(CollectionFilterSelection source) => {
@@ -171,7 +84,7 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
       widget.canApply() &&
       ModalRoute.of(context)?.isCurrent == true;
   void _select(String dimension, String value, bool selected) {
-    if (!_canEdit || _dragging) return;
+    if (!_canEdit) return;
     setState(() {
       final values = {...?_draft[dimension]};
       if (selected) {
@@ -193,7 +106,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
     setState(() {
       _pending = true;
       _error = null;
-      _orderErrorValue = null;
     });
     final done = Completer<void>();
     try {
@@ -253,81 +165,77 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
   @override
   Widget build(BuildContext context) {
     final copy = PikoCopyScope.of(context);
-    return Listener(
-      onPointerCancel: (_) => _dragging = false,
-      child: Focus(
-        autofocus: true,
-        child: PikoDialog(
-          purpose: PikoDialogPurpose.selection,
-          title: copy.text('action.filters'),
-          onClose: widget.onClose,
-          bodyOwnsScroll: widget.categories != null,
-          body: widget.categories != null
-              ? _orderedBody(context)
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_definitions.categoryDimensions.isEmpty)
-                      Text(copy.text('r2.noCategories')),
-                    for (final dimension
-                        in _definitions.categoryDimensions) ...[
-                      Text(
-                        dimension.name,
-                        style: TextStyle(
-                          fontWeight: pikoDesign.weight(
-                            'components.buttons.weight',
-                          ),
+    return Focus(
+      autofocus: true,
+      child: PikoDialog(
+        purpose: PikoDialogPurpose.selection,
+        title: copy.text('action.filters'),
+        onClose: widget.onClose,
+        bodyOwnsScroll: widget.categories != null,
+        body: widget.categories != null
+            ? _orderedBody(context)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_definitions.categoryDimensions.isEmpty)
+                    Text(copy.text('r2.noCategories')),
+                  for (final dimension in _definitions.categoryDimensions) ...[
+                    Text(
+                      dimension.name,
+                      style: TextStyle(
+                        fontWeight: pikoDesign.weight(
+                          'components.buttons.weight',
                         ),
                       ),
-                      for (final value
-                          in _definitions.categoryValues[dimension.id] ??
-                              const [])
-                        CheckboxListTile(
-                          key: ValueKey('filter-value-${value.id}'),
-                          title: Text(value.name),
-                          value:
-                              _draft[dimension.id]?.contains(value.id) ?? false,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          contentPadding: EdgeInsets.zero,
-                          onChanged: !_canEdit
-                              ? null
-                              : (selected) => _select(
-                                  dimension.id,
-                                  value.id,
-                                  selected == true,
-                                ),
-                        ),
-                      SizedBox(height: pikoDesign.dimension('spacing.2')),
-                    ],
-                    if (_error != null)
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          copy.text(_error!),
-                          style: TextStyle(color: pikoDesign.color('danger')),
-                        ),
+                    ),
+                    for (final value
+                        in _definitions.categoryValues[dimension.id] ??
+                            const [])
+                      CheckboxListTile(
+                        key: ValueKey('filter-value-${value.id}'),
+                        title: Text(value.name),
+                        value:
+                            _draft[dimension.id]?.contains(value.id) ?? false,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        onChanged: !_canEdit
+                            ? null
+                            : (selected) => _select(
+                                dimension.id,
+                                value.id,
+                                selected == true,
+                              ),
                       ),
+                    SizedBox(height: pikoDesign.dimension('spacing.2')),
                   ],
-                ),
-          actions: [
-            PikoDialogAction(
-              key: const ValueKey('filters-clear-pending'),
-              label: copy.text('r2.clearFilters'),
-              role: PikoDialogActionRole.safe,
-              onPressed: !_canEdit || _draft.isEmpty
-                  ? null
-                  : () => setState(() {
-                      _draft = {};
-                      _error = null;
-                    }),
-            ),
-            PikoDialogAction(
-              label: copy.text('r2.apply'),
-              icon: const PikoIcon(PikoIconName.check),
-              onPressed: _canEdit && _changed ? _apply : null,
-            ),
-          ],
-        ),
+                  if (_error != null)
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        copy.text(_error!),
+                        style: TextStyle(color: pikoDesign.color('danger')),
+                      ),
+                    ),
+                ],
+              ),
+        actions: [
+          PikoDialogAction(
+            key: const ValueKey('filters-clear-pending'),
+            label: copy.text('r2.clearFilters'),
+            role: PikoDialogActionRole.safe,
+            onPressed: !_canEdit || _draft.isEmpty
+                ? null
+                : () => setState(() {
+                    _draft = {};
+                    _error = null;
+                  }),
+          ),
+          PikoDialogAction(
+            label: copy.text('r2.apply'),
+            icon: const PikoIcon(PikoIconName.check),
+            onPressed: _canEdit && _changed ? _apply : null,
+          ),
+        ],
       ),
     );
   }
@@ -335,7 +243,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
   Widget _orderedBody(BuildContext context) {
     final copy = PikoCopyScope.of(context);
     final needle = _query.text.trim().toLowerCase();
-    final canMove = _canEdit && _query.text.isEmpty;
     _measureOverflow();
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -383,21 +290,6 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
                     ),
                   ),
                 ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: pikoDesign.dimension('spacing.2'),
-                  ),
-                  child: Text(
-                    copy.text(
-                      _query.text.isNotEmpty
-                          ? 'category.reorderSearch'
-                          : 'category.reorderHelp',
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ),
               if (_definitions.categoryDimensions.isEmpty)
                 SliverToBoxAdapter(child: Text(copy.text('r2.noCategories'))),
               for (final dimension in _definitions.categoryDimensions) ...[
@@ -416,10 +308,9 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
                     ),
                   ),
                 ),
-                _valueSliver(dimension.id, needle, canMove),
+                _valueSliver(dimension.id, needle),
               ],
-              if (_error != null && _orderErrorValue == null)
-                SliverToBoxAdapter(child: _errorFeedback()),
+              if (_error != null) SliverToBoxAdapter(child: _errorFeedback()),
             ],
           ),
         );
@@ -439,23 +330,15 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
             style: TextStyle(color: pikoDesign.color('danger')),
           ),
         ),
-        if (_retryOrder != null)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: PikoButton(
-              label: copy.text('action.retry'),
-              onPressed: _canEdit && _query.text.isEmpty ? _retryOrder : null,
-            ),
-          ),
       ],
     );
   }
 
-  Widget _valueSliver(String group, String needle, bool canMove) {
+  Widget _valueSliver(String group, String needle) {
     final copy = PikoCopyScope.of(context);
     final values = _values(
       group,
-    ).where((v) => v.name.toLowerCase().contains(needle)).toList();
+    ).where((value) => value.name.toLowerCase().contains(needle)).toList();
     if (values.isEmpty) {
       return SliverToBoxAdapter(
         child: Text(
@@ -467,112 +350,23 @@ class _FilterSelectionDialogState extends State<FilterSelectionDialog> {
         ),
       );
     }
-    Widget rowBuilder(BuildContext context, int index) {
-      final value = values[index];
-      void moveUp() => _move(group, index, index - 1);
-      void moveDown() => _move(group, index, index + 2);
-      return ReorderableDelayedDragStartListener(
-        key: ValueKey(value.id),
-        index: index,
-        enabled: canMove,
-        child: PikoAnchorRegion(
-          key: _rows.putIfAbsent(value.id, () => GlobalKey()),
-          child: Semantics(
-            customSemanticsActions: {
-              if (canMove && index > 0)
-                CustomSemanticsAction(label: copy.text('category.moveUp')):
-                    moveUp,
-              if (canMove && index < values.length - 1)
-                CustomSemanticsAction(label: copy.text('category.moveDown')):
-                    moveDown,
-            },
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: CheckboxListTile(
-                        key: ValueKey('filter-value-${value.id}'),
-                        title: Text(value.name),
-                        value: _draft[group]?.contains(value.id) ?? false,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: !_canEdit
-                            ? null
-                            : (selected) =>
-                                  _select(group, value.id, selected == true),
-                      ),
-                    ),
-                    PopupMenuButton<int>(
-                      key: ValueKey('filter-value-menu-${value.id}'),
-                      tooltip: copy.text('category.reorder', {
-                        'value': value.name,
-                      }),
-                      iconColor: pikoDesign.color('primary'),
-                      icon: const PikoIcon(PikoIconName.ellipsis),
-                      itemBuilder: (_) => [
-                        PopupMenuItem(
-                          value: -1,
-                          enabled: canMove && index > 0,
-                          child: Text(
-                            copy.text(
-                              index == 0
-                                  ? 'category.firstPosition'
-                                  : 'category.moveUp',
-                            ),
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 1,
-                          enabled: canMove && index < values.length - 1,
-                          child: Text(
-                            copy.text(
-                              index == values.length - 1
-                                  ? 'category.lastPosition'
-                                  : 'category.moveDown',
-                            ),
-                          ),
-                        ),
-                      ],
-                      onSelected: (direction) {
-                        if (direction < 0) {
-                          moveUp();
-                        } else {
-                          moveDown();
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                if (_error != null && _orderErrorValue == value.id)
-                  _errorFeedback(),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (!canMove) {
-      return SliverList.builder(
-        itemCount: values.length,
-        itemBuilder: rowBuilder,
-      );
-    }
-    return SliverReorderableList(
+    return SliverList.builder(
       itemCount: values.length,
-      onReorderStart: (_) {
-        _anchor.clear();
-        _dragging = true;
+      itemBuilder: (context, index) {
+        final value = values[index];
+        return PikoAnchorRegion(
+          child: CheckboxListTile(
+            key: ValueKey('filter-value-${value.id}'),
+            title: Text(value.name),
+            value: _draft[group]?.contains(value.id) ?? false,
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            onChanged: !_canEdit
+                ? null
+                : (selected) => _select(group, value.id, selected == true),
+          ),
+        );
       },
-      onReorderEnd: (_) => _dragging = false,
-      onReorderItem: (from, to) => _move(group, from, to > from ? to + 1 : to),
-      proxyDecorator: (child, index, animation) => Material(
-        color: pikoDesign.color('surface'),
-        elevation: 2,
-        child: child,
-      ),
-      itemBuilder: rowBuilder,
     );
   }
 }

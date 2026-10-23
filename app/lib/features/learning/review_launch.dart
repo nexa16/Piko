@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import '../../data/categories_repository.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
@@ -50,6 +51,7 @@ class ReviewLaunch extends StatefulWidget {
     required this.factory,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     required this.beforeLaunch,
     required this.onPendingWrites,
     required this.onBusyChanged,
@@ -77,6 +79,7 @@ class ReviewLaunch extends StatefulWidget {
   final ReviewSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<Future<void>>? onPendingWrites;
   final ValueChanged<bool> onBusyChanged;
@@ -304,6 +307,7 @@ class ReviewLaunchState extends State<ReviewLaunch> {
             session: launched,
             vocabularyRepository: vocabulary,
             categoriesRepository: widget.categoriesRepository,
+            learningReset: widget.learningReset,
             onPendingWrites: widget.onPendingWrites,
           ),
         ),

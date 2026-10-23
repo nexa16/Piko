@@ -15,6 +15,9 @@ import '../../data/categories_repository.dart';
 import '../../data/vocabulary_content.dart';
 import '../categories/vocabulary_categories.dart';
 import '../vocabulary/vocabulary_content_editor.dart';
+import '../vocabulary/vocabulary_editor_actions.dart';
+import '../vocabulary/vocabulary_reset_control.dart';
+import '../../data/learning_reset.dart';
 import '../interchange/vocabulary_json_page.dart';
 import '../../shared/copy_scope.dart';
 import '../../ui/components/piko_button.dart';
@@ -38,6 +41,7 @@ class EntrySessionScreen extends StatefulWidget {
     this.onPendingWrites,
     this.categoriesRepository,
     this.aiCoordinator,
+    this.learningReset,
     super.key,
   });
   final CollectionRecord collection;
@@ -46,6 +50,7 @@ class EntrySessionScreen extends StatefulWidget {
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
   final AiEntrySessionCoordinator? aiCoordinator;
+  final LearningResetRepository? learningReset;
   @override
   State<EntrySessionScreen> createState() => _EntrySessionScreenState();
 }
@@ -743,6 +748,20 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
     setState(() => undoFeedback = null);
     try {
       await initiatingSession.undoDeletion(id);
+      if (mounted &&
+          identical(session, initiatingSession) &&
+          route?.isCurrent == true &&
+          initiatingSession.lastUndoOmittedCategories) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              PikoCopyScope.of(
+                context,
+              ).text('trash.categoryWarning', {'count': 1}),
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (mounted &&
           identical(session, initiatingSession) &&
@@ -1143,19 +1162,22 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                         ),
                       ),
                     ),
-                    Text(
-                      copy.text(
-                        draft
-                            ? (session.isBusy ? 'entry.saving' : 'entry.new')
-                            : saved!.isSaving
-                            ? 'entry.saving'
-                            : error != null
-                            ? 'entry.unsaved'
-                            : 'entry.saved',
-                      ),
-                      style: metaStyle.copyWith(
-                        fontSize: pikoDesign.dimension(
-                          'components.entryStack.statusSize',
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        copy.text(
+                          draft
+                              ? (session.isBusy ? 'entry.saving' : 'entry.new')
+                              : saved!.isSaving
+                              ? 'entry.saving'
+                              : error != null
+                              ? 'entry.unsaved'
+                              : 'entry.saved',
+                        ),
+                        style: metaStyle.copyWith(
+                          fontSize: pikoDesign.dimension(
+                            'components.entryStack.statusSize',
+                          ),
                         ),
                       ),
                     ),
@@ -1451,6 +1473,27 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                 ),
                               ],
                             ),
+                          if (!draft && widget.learningReset != null)
+                            PikoFormGroup(
+                              children: [
+                                VocabularyResetControl(
+                                  entryId: id,
+                                  repository: widget.learningReset!,
+                                  enabled:
+                                      !session.isBusy &&
+                                      !exitDraining &&
+                                      exitRequest == null,
+                                  beforeReset: () async {
+                                    await session.awaitSavedEdits();
+                                    if (session.savedEntryState(id).error !=
+                                        null) {
+                                      throw StateError('Unsaved vocabulary');
+                                    }
+                                  },
+                                  onPendingWrites: widget.onPendingWrites,
+                                ),
+                              ],
+                            ),
                           if (!draft && session.supportsDeletion)
                             PikoFormGroup(
                               children: [
@@ -1464,7 +1507,14 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                           exitDraining ||
                                           exitRequest != null
                                       ? null
-                                      : () => deleteEntry(id),
+                                      : () async {
+                                          if (await confirmVocabularyDeletion(
+                                                context,
+                                              ) &&
+                                              mounted) {
+                                            await deleteEntry(id);
+                                          }
+                                        },
                                 ),
                               ],
                             ),
@@ -1498,17 +1548,6 @@ class _EntrySessionScreenState extends State<EntrySessionScreen> {
                                   ),
                                 ),
                               ],
-                            )
-                          else
-                            Text(
-                              copy.text(
-                                saved!.isSaving
-                                    ? 'entry.saving'
-                                    : error != null
-                                    ? 'entry.unsaved'
-                                    : 'entry.autoSave',
-                              ),
-                              style: metaStyle,
                             ),
                           if (error != null &&
                               error != VocabularyValidation.requiredTarget &&

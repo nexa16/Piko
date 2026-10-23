@@ -28,6 +28,43 @@ class SearchQueryService implements CollectionQueryService {
 }
 
 void main() {
+  testWidgets(
+    'outside touch dismisses search and activates the tapped control',
+    (tester) async {
+      final scope = CollectionViewScope();
+      addTearDown(scope.dispose);
+      var activated = 0;
+      await tester.pumpWidget(
+        PikoApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                CollectionSearchField(scope: scope),
+                TextButton(
+                  onPressed: () => activated++,
+                  child: const Text('Outside'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      final field = find.byKey(const ValueKey('collection-search'));
+      await tester.tap(field);
+      await tester.enterText(field, 'retained query');
+      await tester.pump();
+      expect(tester.widget<TextField>(field).focusNode!.hasFocus, isTrue);
+      await tester.tap(field);
+      await tester.pump();
+      expect(tester.widget<TextField>(field).focusNode!.hasFocus, isTrue);
+      await tester.tap(find.text('Outside'));
+      await tester.pump();
+      expect(tester.widget<TextField>(field).focusNode!.hasFocus, isFalse);
+      expect(activated, 1);
+      expect(scope.search, 'retained query');
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   for (final language in ['en', 'de']) {
     testWidgets(
       '$language search preserves raw Unicode text and clears only search',

@@ -5,6 +5,8 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 // Collections/vocabulary DDL was unchanged from 16 through 19. Retain original
 // rowids while freezing those tables so this is an actual old-schema upgrade.
 void freezePre20(sqlite.Database raw) {
+  // Recovery storage did not exist before schema23; never merely relabel it old.
+  raw.execute('DROP TABLE IF EXISTS vocabulary_trash');
   if (raw
       .select('PRAGMA table_info(category_group_preferences)')
       .any((r) => r['name'] == 'acquisition_source')) {

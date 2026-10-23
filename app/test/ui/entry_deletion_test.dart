@@ -5,6 +5,10 @@ import 'package:piko/features/entry/entry_session_controller.dart';
 import 'package:piko/features/entry/entry_session_screen.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/catalogs.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/ui/components/piko_button.dart';
+import 'package:piko/data/categories_repository.dart';
+import 'package:piko/data/local/sqlite_categories_repository.dart';
 import '../support/entry_deletion_fixture.dart';
 
 Future<ValueNotifier<EntrySessionController>> mount(
@@ -76,7 +80,57 @@ Future<void> flush(WidgetTester tester, EntryDeletionFixture f) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> tapDelete(WidgetTester tester) async {
+  await tester.tap(find.text('Delete vocabulary'));
+  await tester.pumpAndSettle();
+  if (find.byType(PikoDialog).evaluate().isNotEmpty) {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(PikoDialog).last,
+        matching: find.widgetWithText(PikoButton, 'Delete vocabulary'),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+}
+
 void main() {
+  testWidgets(
+    'Undo explains omitted deleted categories without reporting recovery failure',
+    (tester) async {
+      final f = EntryDeletionFixture();
+      await f.initialize();
+      final entry = await f.confirm('One', 'Eins');
+      final categories = SqliteCategoriesRepository(f.db);
+      final group = await categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'Topic',
+        mode: CategoryMode.multiple,
+      );
+      final value = await categories.createValue(
+        dimensionId: group.id,
+        name: 'Food',
+      );
+      await categories.replaceAssignments(
+        entryId: entry.id,
+        assignments: {
+          group.id: {value.id},
+        },
+      );
+      await mount(tester, f);
+      await f.session.deleteSavedEntry(entry.id);
+      await tester.pumpAndSettle();
+      await categories.deleteDimension(group.id);
+      await tester.tap(find.text('Undo'));
+      await flush(tester, f);
+      expect(f.session.confirmedEntries.single.id, entry.id);
+      expect(
+        find.text(PikoCopy('en').text('trash.categoryWarning', {'count': 1})),
+        findsOneWidget,
+      );
+      expect(f.session.lastUndoOmittedCategories, isTrue);
+    },
+  );
   testWidgets(
     'collapsed saved card swipe reveals explicit deletion and real Undo',
     (tester) async {
@@ -91,7 +145,7 @@ void main() {
       expect(find.text('Delete vocabulary'), findsOneWidget);
       f.session.setTargetText('keep draft');
       f.deletion.failDelete = true;
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await flush(tester, f);
       expect(
         find.text(PikoCopy('en').text('vocab.deleteFailed')),
@@ -103,7 +157,7 @@ void main() {
       f.deletion.failDelete = false;
       await tester.drag(card(saved.id), const Offset(-110, 0));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await flush(tester, f);
       expect(f.session.confirmedEntries, isEmpty);
       await tester.tap(find.text('Undo'));
@@ -130,10 +184,18 @@ void main() {
       expect(find.text('Delete vocabulary'), findsNothing);
       f.session.selectSavedEntry(b.id);
       await tester.pumpAndSettle();
+      expect(find.text(PikoCopy('en').text('entry.autoSave')), findsNothing);
+      expect(
+        find.descendant(
+          of: card(b.id),
+          matching: find.text(PikoCopy('en').text('entry.saved')),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Delete vocabulary'), findsOneWidget);
       await tester.ensureVisible(find.text('Delete vocabulary'));
       f.deletion.failDelete = true;
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await tester.pumpAndSettle();
       expect(
         find.text("Couldn't delete this vocabulary. Please try again."),
@@ -141,7 +203,7 @@ void main() {
       );
       expect(f.session.confirmedEntries, hasLength(3));
       f.deletion.failDelete = false;
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await flush(tester, f);
       expect(f.session.activeEntryId, c.id);
       expect(find.byKey(ValueKey('undo-${b.id}')), findsOneWidget);
@@ -290,7 +352,7 @@ void main() {
       final current = await mount(tester, f);
       f.deletion.deleteGate = Completer<void>();
       await tester.ensureVisible(find.text('Delete vocabulary'));
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await tester.pumpAndSettle();
       current.value = f.newSession();
       await tester.pumpAndSettle();
@@ -309,7 +371,7 @@ void main() {
       f.deletion.deleteGate = Completer<void>();
       f.deletion.failDelete = true;
       await tester.ensureVisible(find.text('Delete vocabulary'));
-      await tester.tap(find.text('Delete vocabulary'));
+      await tapDelete(tester);
       await tester.pumpAndSettle();
       final navigator = Navigator.of(
         tester.element(find.byType(EntrySessionScreen)),

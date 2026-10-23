@@ -14,7 +14,6 @@ import 'package:piko/features/vocabulary/collection_vocabulary.dart';
 import 'package:piko/main.dart';
 import 'package:piko/shared/interface_locale.dart';
 import 'package:piko/ui/components/piko_button.dart';
-import 'package:piko/ui/components/piko_card.dart';
 import '../support/vocabulary_opening_snapshot.dart';
 
 const owner = CollectionRecord(
@@ -593,7 +592,16 @@ void main() {
       expect(find.bySemanticsLabel('Edit Café · Kaffee'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
-      expect(tester.widget<PikoCard>(card(one.id)).focused, isTrue);
+      expect(Focus.of(tester.element(card(one.id))).hasFocus, isTrue);
+      final surface = tester.widget<Container>(
+        find
+            .descendant(of: card(one.id), matching: find.byType(Container))
+            .first,
+      );
+      expect(
+        ((surface.decoration! as BoxDecoration).border! as Border).left.color,
+        const Color(0xff4D64AE),
+      );
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(field(one.id), findsOneWidget);

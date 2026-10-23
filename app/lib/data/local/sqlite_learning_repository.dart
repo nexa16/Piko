@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:uuid/uuid.dart';
 import '../learning_item.dart';
+import '../learning_reset.dart';
 import '../regular_review.dart';
 import '../retry_obligation.dart';
 import '../retry_answer.dart';
@@ -13,14 +14,74 @@ import '../../features/learning/learning_scheduler.dart';
 import '../../features/learning/retry_gap.dart';
 import 'piko_database.dart';
 import 'sqlite_statistics_repository.dart';
+import '../../features/learning/learning_parameters.dart';
 
 part 'sqlite_review_correction.dart';
 part 'sqlite_speed_completion.dart';
 
-final class SqliteLearningRepository implements RegularReviewWriter {
+final class SqliteLearningRepository
+    implements RegularReviewWriter, LearningResetRepository {
   SqliteLearningRepository(this.database);
   final PikoDatabase database;
   final _scheduler = LearningScheduler();
+
+  @override
+  Future<void> resetLearning({
+    required String entryId,
+    required Set<LearningDirection> directions,
+  }) {
+    final selected = Set<LearningDirection>.of(directions);
+    if (selected.isEmpty) throw ArgumentError.value(directions, 'directions');
+    return database.transaction(() async {
+      final entry = await (database.select(
+        database.vocabularyEntries,
+      )..where((row) => row.id.equals(entryId))).getSingleOrNull();
+      if (entry == null) throw RegularReviewFailure.itemNotFound;
+      final items =
+          await (database.select(database.learningItems)..where(
+                (row) =>
+                    row.entryId.equals(entryId) &
+                    row.direction.isIn(selected.map((d) => d.name)),
+              ))
+              .get();
+      if (items.length != selected.length) {
+        throw RegularReviewFailure.itemNotFound;
+      }
+      final at = database.clock.now().toUtc();
+      for (final item in items) {
+        _record(item).card;
+        final card = _scheduler.initialCard(itemId: item.id, at: at);
+        await (database.update(
+          database.learningItems,
+        )..where((row) => row.id.equals(item.id))).write(
+          LearningItemsCompanion(
+            cardJson: Value(LearningCardCodec.encode(card)),
+            formatVersion: const Value(LearningCardCodec.version),
+            generation: Value(item.generation + 1),
+            reviewRevision: Value(item.reviewRevision + 1),
+            speedCompleted: const Value(false),
+          ),
+        );
+        await (database.delete(
+          database.retryObligations,
+        )..where((row) => row.itemId.equals(item.id))).go();
+        final scope = await _scopeState(
+          entry.collectionId,
+          LearningDirection.values.byName(item.direction),
+        );
+        await database
+            .into(database.scopeAnswerOrdinals)
+            .insertOnConflictUpdate(
+              ScopeAnswerOrdinalsCompanion.insert(
+                collectionId: entry.collectionId,
+                direction: item.direction,
+                ordinal: scope.ordinal,
+                revision: scope.revision + 1,
+              ),
+            );
+      }
+    });
+  }
 
   /// Resolves an actual Collection UUID; names never establish review scope.
   Future<CollectionReviewGateway> forCollection({
@@ -284,6 +345,19 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     final items = await _scopedItems(scope);
     final ordinal = await _scopeState(scope.collectionId, scope.direction);
     final result = <ReviewDueMembership>[];
+    // Search reprojects both learning directions. Fetch retry rows in bounded
+    // batches rather than issuing one query for every word (usually no retry).
+    // Keep origin/generation validation in _retryRecord for every actual round.
+    final retries = <int, StoredRetryObligation>{};
+    for (var start = 0; start < items.length; start += 500) {
+      final ids = items.skip(start).take(500).map((item) => item.id).toList();
+      final rows = await (database.select(
+        database.retryObligations,
+      )..where((row) => row.itemId.isIn(ids))).get();
+      for (final row in rows) {
+        retries[row.itemId] = row;
+      }
+    }
     DateTime? nextChangeAt;
     void consider(DateTime candidate) {
       if (candidate.isAfter(at) &&
@@ -293,7 +367,10 @@ final class SqliteLearningRepository implements RegularReviewWriter {
     }
 
     for (final item in items) {
-      final round = await _retryFor(item);
+      final stored = retries[item.id];
+      final round = stored == null || stored.generation != item.generation
+          ? null
+          : await _retryRecord(stored, item);
       final activeRound = round != null && at.isBefore(round.expiresAt)
           ? round
           : null;
@@ -413,7 +490,9 @@ final class SqliteLearningRepository implements RegularReviewWriter {
             expiresAt: round.expiresAt,
             errorCount: round.errorCount,
             dueOrdinal: round.dueOrdinal,
-            waitEligibleAt: at.add(const Duration(seconds: 10)),
+            waitEligibleAt: at.add(
+              const Duration(seconds: LearningParameters.retryWaitSeconds),
+            ),
           );
           next.validate();
           await (database.update(
@@ -828,6 +907,10 @@ final class CollectionReviewGateway
 
   /// Immutable visible membership; counters remain Collection/direction-scoped.
   final Set<String>? entryIds;
+
+  Future<void> reverseSpeedCompletion({
+    required SpeedCompletionResult expected,
+  }) => _repository._reverseSpeedCompletion(this, expected);
 
   @override
   Future<SpeedCompletionResult> completeSpeedItem({

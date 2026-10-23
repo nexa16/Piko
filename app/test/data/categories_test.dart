@@ -413,6 +413,7 @@ void main() {
               // The v10 fixture predates the additive successful-Speed marker.
               if (table.key == 'learning_items') row.remove('speed_completed');
               if (table.key == 'collections') {
+                row.remove('level'); // Absent in the frozen legacy schema.
                 row.remove('automatic_hint_default');
                 row.remove('hint_default_offer_handled');
                 row.remove('target_language_name');row.remove('native_language_name');

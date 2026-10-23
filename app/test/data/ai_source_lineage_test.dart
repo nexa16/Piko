@@ -109,6 +109,8 @@ void main() {
       );
       await db.close();
       final raw = sqlite.sqlite3.open(file.path);
+      raw.execute('DROP TABLE vocabulary_trash');
+      raw.execute('ALTER TABLE collections DROP COLUMN level');
       raw.execute(
         'ALTER TABLE category_group_preferences DROP COLUMN acquisition_source',
       );
@@ -134,7 +136,7 @@ void main() {
         (await db.customSelect('PRAGMA user_version').getSingle()).read<int>(
           'user_version',
         ),
-        22,
+        db.schemaVersion,
       );
       for (final table in tables) {
         final after =
@@ -146,6 +148,7 @@ void main() {
                 .map(
                   (r) =>
                       Map<String, Object?>.from(r.data)
+                        ..remove('level')
                         ..remove('acquisition_source'),
                 )
                 .toList();

@@ -89,6 +89,41 @@ class AuthGateway implements AiAuthGateway {
 }
 
 void main() {
+  test('late explicit reactivation cannot overtake a newer withdrawal', () async {
+    final v=MemoryVault()..value=session().serialized,g=AuthGateway();
+    final c=AiConnectionController(configuration:config,vault:v,gateway:g,enabled:true);
+    await c.stopPilotLocally();
+    v.held=Completer<String?>();
+    final resume=c.resumeExistingPilot();
+    final rejection=expectLater(resume,throwsA(AiFailure.accessDenied));
+    final stop=c.stopPilotLocally();
+    final held=v.held!;v.held=null;held.complete(v.value);
+    await rejection;await stop;
+    expect(c.pilotStopped,isTrue);expect(g.connections,0);
+    expect(jsonDecode(v.value!)['pikoPilotWithdrawn'],isTrue);
+    c.dispose();
+  });
+  test(
+    'explicit reactivation reuses retained identity without granting consent',
+    () async {
+      final v = MemoryVault()..value = session().serialized, g = AuthGateway();
+      final c = AiConnectionController(
+        configuration: config,
+        vault: v,
+        gateway: g,
+        enabled: true,
+      );
+      await c.stopPilotLocally();
+      expect(c.pilotStopped, isTrue);
+      await expectLater(c.accessToken(), throwsA(AiFailure.accessDenied));
+      await c.resumeExistingPilot();
+      expect(g.connections, 1);
+      expect(g.supplied, isNotNull);
+      expect(c.deviceAccessId, userId);
+      expect(c.pilotStopped, isFalse);
+      c.dispose();
+    },
+  );
   test(
     'withdrawal denial survives restart/disconnect and only deletion can refresh its retained session',
     () async {

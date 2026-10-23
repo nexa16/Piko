@@ -4,10 +4,49 @@ import 'package:drift/drift.dart';
 import '../collections_repository.dart';
 import 'piko_database.dart';
 
-final class SqliteCollectionsRepository implements CollectionsRepository {
+final class SqliteCollectionsRepository
+    implements CollectionsRepository, CollectionLevelRepository {
   SqliteCollectionsRepository(this.database, {this.interfaceLanguage});
   final String Function()? interfaceLanguage;
   final PikoDatabase database;
+
+  @override
+  Future<CollectionRecord> createWithLevel({
+    required String name,
+    required VocabularyLanguage targetLanguage,
+    required VocabularyLanguage nativeLanguage,
+    required String level,
+  }) => database.transaction(() async {
+    if (!CollectionRecord.levels.contains(level)) {
+      throw CollectionValidation.invalidLevel;
+    }
+    final created = await create(
+      name: name,
+      targetLanguage: targetLanguage,
+      nativeLanguage: nativeLanguage,
+    );
+    return setLevel(id: created.id, level: level);
+  });
+
+  @override
+  Future<CollectionRecord> setLevel({
+    required String id,
+    required String level,
+  }) => database.transaction(() async {
+    if (!CollectionRecord.levels.contains(level)) {
+      throw CollectionValidation.invalidLevel;
+    }
+    final count =
+        await (database.update(database.collections)
+              ..where((row) => row.id.equals(id)))
+            .write(CollectionsCompanion(level: Value(level)));
+    if (count != 1) throw CollectionValidation.collectionNotFound;
+    return _record(
+      await (database.select(
+        database.collections,
+      )..where((row) => row.id.equals(id))).getSingle(),
+    );
+  });
 
   @override
   Future<void> delete(String id) => database.transaction(() async {
@@ -57,6 +96,7 @@ final class SqliteCollectionsRepository implements CollectionsRepository {
   CollectionRecord _record(Collection row) => CollectionRecord(
     id: row.id,
     name: row.name,
+    level: row.level,
     targetLanguage: VocabularyLanguage.stored(
       row.targetLanguage,
       row.targetLanguageName,

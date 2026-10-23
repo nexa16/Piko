@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../ai/ai_contract.dart';
 import '../categories_repository.dart';
+import '../collections_repository.dart';
 import '../vocabulary_content.dart';
 import '../vocabulary_normalization.dart';
 import '../vocabulary_repository.dart';
@@ -57,6 +58,19 @@ final class SqliteAiService implements AiContentService {
           groups.add(AiGroup(d, await cats.values(d.id)));
         }
         return AiSnapshot(
+          collection: CollectionRecord(
+            id: c.id,
+            name: c.name,
+            targetLanguage: VocabularyLanguage.stored(
+              c.targetLanguage,
+              c.targetLanguageName,
+            ),
+            nativeLanguage: VocabularyLanguage.stored(
+              c.nativeLanguage,
+              c.nativeLanguageName,
+            ),
+            level: c.level,
+          ),
           collectionId: collectionId,
           targetLanguage: c.targetLanguageName ?? c.targetLanguage,
           nativeLanguage: c.nativeLanguageName ?? c.nativeLanguage,
@@ -98,7 +112,9 @@ final class SqliteAiService implements AiContentService {
       }
       targets = selected;
     }
-    if (action == AiAction.generate && goal.trim().isEmpty) {
+    if (action == AiAction.generate &&
+        !comprehensiveLevel &&
+        goal.trim().isEmpty) {
       throw AiFailure.dependency;
     }
     return AiRequest(
@@ -118,7 +134,8 @@ final class SqliteAiService implements AiContentService {
   Future<bool> applicable(AiRequest request, {AiEntry? currentDraft}) async {
     final fresh = await snapshot(request.snapshot.collectionId);
     if (request.action != AiAction.hints) {
-      return fresh.contentKey == request.snapshot.contentKey;
+      return fresh.contentKey ==
+          (request.fullContentKey ?? request.snapshot.contentKey);
     }
     final anchor = request.anchor!;
     final saved = fresh.entries
@@ -147,6 +164,7 @@ final class SqliteAiService implements AiContentService {
       throw AiFailure.consumed;
     }
     if (!plan.complete && !allowPartial) throw AiFailure.dependency;
+    plan.request.options?.validate(plan.request, plan.edits);
     final candidates = {
       ...plan.groups.map((e) => e.id),
       ...plan.values.map((e) => e.id),

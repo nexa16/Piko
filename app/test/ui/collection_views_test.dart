@@ -10,6 +10,8 @@ import 'package:piko/features/collections/collection_query_binding.dart';
 import 'package:piko/features/collections/collection_view_preferences.dart';
 import 'package:piko/features/collections/collection_view_scope.dart';
 import 'package:piko/features/vocabulary/collection_vocabulary.dart';
+import 'package:piko/features/vocabulary/vocabulary_selection.dart';
+import 'package:piko/features/vocabulary/compact_vocabulary_pair.dart';
 import 'package:piko/main.dart';
 import 'collection_inline_edit_test.dart' show LiveVocabulary, owner, one, two;
 import 'collection_query_detail_test.dart' show ProjectionService, projection;
@@ -34,7 +36,72 @@ CollectionQuerySnapshot grouped() => CollectionQuerySnapshot(
   directions: projection().directions,
 );
 
+void registerRound10GroupTests({String locale = 'en', double scale = 1}) {
+  testWidgets(
+    '$locale collapsed group selection shares UUID state and preserves outside selections',
+    (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final scope = CollectionViewScope();
+      await scope.saveView(const CollectionViewPreferences(grouping: 'topic'));
+      final repository = LiveVocabulary();
+      final selection = VocabularySelection()..toggle(two.id);
+      final binding = CollectionQueryBinding(
+        collectionId: owner.id,
+        service: ProjectionService(grouped()),
+        scope: scope,
+        invalidations: const Stream<void>.empty(),
+      );
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        binding.dispose();
+        scope.dispose();
+        selection.dispose();
+        await repository.close();
+      });
+      await tester.pumpWidget(
+        PikoApp(
+          locale: Locale(locale),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CollectionVocabulary(
+                collection: owner,
+                repository: repository,
+                queryBinding: binding,
+                selection: selection,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final foodControl = find.byKey(
+        const ValueKey('collection-group-selection-food'),
+      );
+      final travelControl = find.byKey(
+        const ValueKey('collection-group-selection-travel'),
+      );
+      expect(find.byType(CompactVocabularyPair), findsNothing);
+      await tester.tap(foodControl);
+      await tester.pumpAndSettle();
+      expect(selection.ids, {one.id, two.id});
+      expect(tester.widget<Checkbox>(foodControl).value, isTrue);
+      expect(tester.widget<Checkbox>(travelControl).value, isTrue);
+      expect(scope.expandedGroups, isEmpty);
+      await tester.tap(foodControl);
+      await tester.pumpAndSettle();
+      expect(selection.ids, {two.id});
+      scope.expandGroups(['food'], true);
+      await tester.pumpAndSettle();
+      expect(find.byType(CompactVocabularyPair), findsOneWidget);
+      final compact = find.byKey(ValueKey('vocabulary-food/${one.id}'));
+      expect(tester.getSize(compact).height, lessThan(85));
+    },
+  );
+}
+
 void main() {
+  registerRound10GroupTests();
   test(
     'Unicode lexical sorting is stable, original order explicit, unknown dates last in both directions',
     () {

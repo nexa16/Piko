@@ -50,6 +50,10 @@ import '../speed/speed_setup_dialog.dart'
     show SpeedSessionFactory, SelectedSpeedSessionFactory;
 import '../categories/category_management.dart';
 import '../categories/category_settings_page.dart';
+import '../../data/learning_reset.dart';
+import '../../data/vocabulary_deletion.dart';
+import '../vocabulary/vocabulary_trash_page.dart';
+import 'collection_level_control.dart';
 import '../settings/preferred_direction_controller.dart';
 
 class CollectionLoadFailure extends StatelessWidget {
@@ -87,6 +91,8 @@ class CollectionDetail extends StatefulWidget {
     this.selectedSpeedSessionFactory,
     this.selectedReviewSessionFactory,
     this.categoriesRepository,
+    this.learningReset,
+    this.vocabularyTrash,
     this.directionBinding,
     this.settingsOnly = false,
     super.key,
@@ -114,6 +120,8 @@ class CollectionDetail extends StatefulWidget {
   final SelectedSpeedSessionFactory? selectedSpeedSessionFactory;
   final SelectedReviewSessionFactory? selectedReviewSessionFactory;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
+  final VocabularyTrashService? vocabularyTrash;
   final ValueListenable<PreferredDirectionController?>? directionBinding;
   @override
   State<CollectionDetail> createState() => _CollectionDetailState();
@@ -255,6 +263,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   bool _openingReview = false;
   bool _openingSpeed = false;
   int? _speedCompletedCount;
+  int _speedTotalRetries = 0;
   bool get _genuinelyEmpty =>
       widget.queryBinding?.ready == true &&
       widget.queryBinding!.snapshot!.allEntries.isEmpty;
@@ -634,6 +643,8 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
           aiBuilder: widget.aiBuilder,
           categoriesRepository: widget.categoriesRepository,
           categoryManagementBuilder: widget.categoryManagementBuilder,
+          learningReset: widget.learningReset,
+          vocabularyTrash: widget.vocabularyTrash,
           settingsOnly: true,
         ),
       );
@@ -707,6 +718,23 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             ),
             if (loadError != null)
               CollectionLoadFailure(onRetry: () => setState(_watch)),
+            if (widget.repository is CollectionLevelRepository)
+              PikoFormSection(
+                title: copy.text('catPreview.properties'),
+                children: [
+                  CollectionLevelControl(
+                    collection: record,
+                    repository: widget.repository as CollectionLevelRepository,
+                    enabled: ready && !_settingsBusy,
+                    onPendingWrites: widget.onPendingVocabularyWrites,
+                    onBusyChanged: (busy) {
+                      if (mounted && owner == _identity) {
+                        setState(() => _settingsBusy = busy);
+                      }
+                    },
+                  ),
+                ],
+              ),
             if (widget.vocabularyRepository is VocabularyContentRepository &&
                 widget.vocabularyRepository is CollectionHintPreferences)
               PikoFormSection(
@@ -730,38 +758,60 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 ],
               ),
             if (widget.categoriesRepository != null ||
-                widget.categoryManagementBuilder != null)
+                widget.categoryManagementBuilder != null ||
+                widget.vocabularyTrash != null)
               PikoFormSection(
                 title: copy.text('settingsPreview.management'),
                 children: [
-                  PikoNavigationRow(
-                    title: copy.text('catPreview.categories'),
-                    onTap: _settingsBusy || !ready
-                        ? null
-                        : () {
-                            if (!available()) return;
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (context) =>
-                                    widget.categoryManagementBuilder != null
-                                    ? CategoryManagementPage(
-                                        collectionId: record.id,
-                                        collectionName: record.name,
-                                        managementBuilder:
-                                            widget.categoryManagementBuilder,
-                                      )
-                                    : CategorySettingsPage(
-                                        collectionId: record.id,
-                                        collectionName: record.name,
-                                        repository:
-                                            widget.categoriesRepository!,
-                                        onPendingWrites:
-                                            widget.onPendingVocabularyWrites,
-                                      ),
-                              ),
-                            );
-                          },
-                  ),
+                  if (widget.categoriesRepository != null ||
+                      widget.categoryManagementBuilder != null)
+                    PikoNavigationRow(
+                      title: copy.text('catPreview.categories'),
+                      onTap: _settingsBusy || !ready
+                          ? null
+                          : () {
+                              if (!available()) return;
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      widget.categoryManagementBuilder != null
+                                      ? CategoryManagementPage(
+                                          collectionId: record.id,
+                                          collectionName: record.name,
+                                          managementBuilder:
+                                              widget.categoryManagementBuilder,
+                                        )
+                                      : CategorySettingsPage(
+                                          collectionId: record.id,
+                                          collectionName: record.name,
+                                          repository:
+                                              widget.categoriesRepository!,
+                                          onPendingWrites:
+                                              widget.onPendingVocabularyWrites,
+                                        ),
+                                ),
+                              );
+                            },
+                    ),
+                  if (widget.vocabularyTrash != null)
+                    PikoNavigationRow(
+                      key: const ValueKey('collection-trash'),
+                      title: copy.text('collection.trash'),
+                      onTap: available()
+                          ? () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => VocabularyTrashPage(
+                                    collection: record,
+                                    repository: widget.vocabularyTrash!,
+                                    onPendingWrites:
+                                        widget.onPendingVocabularyWrites,
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
+                    ),
                 ],
               ),
             if (widget.aiBuilder != null)
@@ -831,6 +881,82 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       !_openingEntry &&
       !_learningBusy &&
       _mutations?.isBusy != true;
+
+  Future<void> _deleteSelectedVocabulary() async {
+    final mutations = _mutations;
+    final ids = Set<String>.of(_selection.ids);
+    if (!_queryControlsAvailable ||
+        ids.isEmpty ||
+        mutations?.supportsBatch != true) {
+      return;
+    }
+    final identity = _identity;
+    final barrier = _writeBarrier;
+    bool current() =>
+        mounted && identity == _identity && identical(mutations, _mutations);
+    setState(() => _openingEntry = true);
+    try {
+      final confirmed = await showPikoDialog<bool>(
+        context,
+        builder: (dialogContext) {
+          final copy = PikoCopyScope.of(dialogContext);
+          return PikoDialog(
+            purpose: PikoDialogPurpose.confirmation,
+            title: copy.text('vocab.delete'),
+            onClose: () => Navigator.of(dialogContext).pop(),
+            body: Text(
+              copy.text('selection.deleteWarning', {'count': ids.length}),
+            ),
+            actions: [
+              PikoDialogAction(
+                label: copy.text('action.cancel'),
+                role: PikoDialogActionRole.safe,
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              PikoDialogAction(
+                label: copy.text('vocab.delete'),
+                role: PikoDialogActionRole.destructive,
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+              ),
+            ],
+          );
+        },
+      );
+      if (!mounted ||
+          !current() ||
+          confirmed != true ||
+          ModalRoute.of(context)?.isCurrent != true ||
+          !setEquals(ids, _selection.ids)) {
+        return;
+      }
+      setState(() => _deleting = true);
+      barrier.freeze();
+      await barrier.drain();
+      if (!current()) return;
+      final operation = mutations!.deleteMany(ids);
+      widget.onPendingVocabularyWrites?.call(operation);
+      await operation;
+      if (current()) _selection.clear();
+    } catch (_) {
+      if (mounted && current()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(PikoCopyScope.of(context).text('vocab.deleteFailed')),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      barrier.release();
+      if (current()) {
+        setState(() {
+          _openingEntry = false;
+          _deleting = false;
+        });
+      }
+    }
+  }
 
   void _closeFilters() {
     final owned = _filterDialog;
@@ -1406,6 +1532,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   if (_speedCompletedCount != null && ready)
                     SpeedCompletionNotice(
                       count: _speedCompletedCount!,
+                      totalRetries: _speedTotalRetries,
                       dismissFocusNode: _expandedNoticeFocus,
                       onDismiss: () =>
                           setState(() => _speedCompletedCount = null),
@@ -1500,6 +1627,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               vocabularyRepository:
                                   widget.vocabularyRepository!,
                               categoriesRepository: widget.categoriesRepository,
+                              learningReset: widget.learningReset,
                               enabled:
                                   ready &&
                                   _deleteRequest == null &&
@@ -1531,6 +1659,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                               clock: widget.reviewCountClock,
                               factory: widget.reviewSessionFactory!,
                               categoriesRepository: widget.categoriesRepository,
+                              learningReset: widget.learningReset,
                               vocabularyRepository:
                                   widget.vocabularyRepository!,
                               enabled:
@@ -1793,6 +1922,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                   queryBinding: widget.queryBinding,
                   preferredDirections: _directions,
                   categoriesRepository: widget.categoriesRepository,
+                  learningReset: widget.learningReset,
                   onPendingWrites: (work) {
                     // Capture this build's barrier/dependency callback so old
                     // child work is registered with its original storage owner.
@@ -1838,6 +1968,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                     bottom: 0,
                     child: VocabularySelectionPanel(
                       selection: _selection,
+                      onDelete: _mutations?.supportsBatch == true
+                          ? _deleteSelectedVocabulary
+                          : null,
                       matchingIds:
                           widget.queryBinding!.snapshot?.entries
                               .map((e) => e.id)
@@ -1907,6 +2040,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         factory: widget.selectedSpeedSessionFactory!,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
+        learningReset: widget.learningReset,
         enabled:
             ready &&
             _directionReady &&
@@ -1958,6 +2092,9 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         },
         onPendingWrites: registerForBuild,
         onSessionClosed: widget.queryBinding!.refresh,
+        onResult: (result) {
+          if (mounted) setState(() => _speedTotalRetries = result.totalRetries);
+        },
         onCompleted: (count) {
           if (mounted) {
             setState(() => _speedCompletedCount = count);
@@ -2053,6 +2190,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 factory: widget.reviewSessionFactory!,
                 vocabularyRepository: widget.vocabularyRepository!,
                 categoriesRepository: widget.categoriesRepository,
+                learningReset: widget.learningReset,
                 beforeLaunch: beforeLaunch,
                 onPendingWrites: widget.onPendingVocabularyWrites,
                 onBusyChanged: (busy) => onBusyChanged(false, busy),
@@ -2094,6 +2232,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         recheckCounts: !binding.ready,
         vocabularyRepository: widget.vocabularyRepository!,
         categoriesRepository: widget.categoriesRepository,
+        learningReset: widget.learningReset,
         beforeLaunch: beforeLaunch,
         onPendingWrites: widget.onPendingVocabularyWrites,
         onBusyChanged: (busy) => onBusyChanged(false, busy),
@@ -2168,10 +2307,16 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                 factory: widget.speedSessionFactory!,
                 vocabularyRepository: widget.vocabularyRepository!,
                 categoriesRepository: widget.categoriesRepository,
+                learningReset: widget.learningReset,
                 beforeLaunch: beforeLaunch,
                 onBusyChanged: (busy) => onBusyChanged(true, busy),
                 onPendingWrites: widget.onPendingVocabularyWrites,
                 onSessionClosed: binding.refresh,
+                onResult: (result) {
+                  if (mounted) {
+                    setState(() => _speedTotalRetries = result.totalRetries);
+                  }
+                },
                 onCompleted: (count) {
                   if (mounted) setState(() => _speedCompletedCount = count);
                 },
@@ -2367,6 +2512,7 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
             if (_speedCompletedCount != null && ready)
               SpeedCompletionNotice(
                 count: _speedCompletedCount!,
+                totalRetries: _speedTotalRetries,
                 showArtwork: false,
                 dismissFocusNode: _compactNoticeFocus,
                 onDismiss: () => setState(() => _speedCompletedCount = null),

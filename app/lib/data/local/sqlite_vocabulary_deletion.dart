@@ -1,5 +1,7 @@
 import 'sqlite_vocabulary_content.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import '../../core/clock.dart';
@@ -12,16 +14,83 @@ import 'piko_database.dart';
 import 'sqlite_categories_repository.dart';
 
 final class _Snapshot {
-  const _Snapshot(
+  _Snapshot(
     this.rowId,
     this.entry,
     this.learning,
     this.reviews,
     this.retries,
     this.assignments,
-    this.content,
-  );
+    this.content, {
+    String? deletionIdentity,
+  }) : deletionIdentity = deletionIdentity ?? const Uuid().v4();
+  final String deletionIdentity;
   final VocabularyContent content;
+  String encode() => jsonEncode({
+    'version': 2,
+    'deletionIdentity': deletionIdentity,
+    'rowId': rowId,
+    'entry': entry.toJson(),
+    'learning': learning.map((r) => r.toJson()).toList(),
+    'reviews': reviews.map((r) => r.toJson()).toList(),
+    'retries': retries.map((r) => r.toJson()).toList(),
+    'assignments': assignments.map((r) => r.toJson()).toList(),
+    'examples': content.examples
+        .map((p) => {'targetText': p.targetText, 'nativeText': p.nativeText})
+        .toList(),
+  });
+  static _Snapshot decode(String json) {
+    final value = jsonDecode(json) as Map<String, dynamic>;
+    final identity = identityOf(json);
+    final entry = VocabularyEntry.fromJson(
+      value['entry'] as Map<String, dynamic>,
+    );
+    return _Snapshot(
+      value['rowId'] as int,
+      entry,
+      (value['learning'] as List)
+          .map((r) => LearningItem.fromJson(r as Map<String, dynamic>))
+          .toList(),
+      (value['reviews'] as List)
+          .map((r) => RegularReview.fromJson(r as Map<String, dynamic>))
+          .toList(),
+      (value['retries'] as List)
+          .map((r) => StoredRetryObligation.fromJson(r as Map<String, dynamic>))
+          .toList(),
+      (value['assignments'] as List)
+          .map(
+            (r) => StoredCategoryAssignment.fromJson(r as Map<String, dynamic>),
+          )
+          .toList(),
+      VocabularyContent.fromStored(
+        examples: (value['examples'] as List)
+            .map(
+              (p) => ExamplePair(
+                targetText: p['targetText'] as String,
+                nativeText: p['nativeText'] as String,
+              ),
+            )
+            .toList(),
+        hintText: entry.hintText,
+        hintVisibility: entry.hintVisibility,
+      ),
+      deletionIdentity: identity,
+    );
+  }
+
+  static String identityOf(String json) {
+    final value = jsonDecode(json) as Map<String, dynamic>;
+    // Version1 had no persisted operation nonce. Its exact envelope provides a
+    // stable identity for recovery, while every new deletion is always version2.
+    if (value['version'] == 1) return 'legacy:$json';
+    if (value['version'] == 2 &&
+        value['deletionIdentity'] is String &&
+        (value['deletionIdentity'] as String).isNotEmpty) {
+      return value['deletionIdentity'] as String;
+    }
+    throw const FormatException('Unsupported trash snapshot identity');
+  }
+
   final int rowId;
   final VocabularyEntry entry;
   final List<LearningItem> learning;
@@ -30,7 +99,8 @@ final class _Snapshot {
   final List<StoredCategoryAssignment> assignments;
 }
 
-final class _Receipt implements VocabularyDeletionReceipt {
+final class _Receipt
+    implements VocabularyDeletionReceipt, VocabularyRecoveryWarnings {
   _Receipt({
     required this.issuer,
     required this.entry,
@@ -41,21 +111,28 @@ final class _Receipt implements VocabularyDeletionReceipt {
   @override
   final VocabularyRecord entry;
   @override
-  final DateTime expiresAt;
+  DateTime expiresAt;
   _Snapshot? snapshot;
   Future<VocabularyRecord>? pending;
   bool used = false, expired = false, forgotten = false;
+  @override
+  bool omittedCategories = false;
 }
 
-/// Temporary in-memory snapshots only; it does not own the database. Callers
-/// schedule expireUndo at receipt deadlines and forget/dispose on lifecycle end.
+/// Durable Collection-owned recovery with transient eight-second Undo handles.
+/// Forget/dispose releases the handles and leaves retained recovery rows intact.
 final class SqliteVocabularyDeletionService
-    implements VocabularyDeletionService {
+    implements
+        VocabularyDeletionService,
+        VocabularyBatchDeletionService,
+        VocabularyTrashService {
   SqliteVocabularyDeletionService(this.database, {PikoClock? clock})
     : clock = clock ?? database.clock;
   final PikoDatabase database;
   final PikoClock clock;
   static const undoDuration = Duration(seconds: 8);
+  static const trashDuration = Duration(hours: 24);
+  static const groupingGap = Duration(minutes: 2);
   final _issuer = Object();
   final Set<_Receipt> _active = {};
   bool _disposed = false;
@@ -125,9 +202,14 @@ final class SqliteVocabularyDeletionService
   }
 
   @override
-  Future<VocabularyDeletionReceipt> delete(String id) async {
+  Future<VocabularyDeletionReceipt> delete(String id) => _delete(id);
+
+  Future<VocabularyDeletionReceipt> _delete(
+    String id, {
+    bool sweep = true,
+  }) async {
     _ensureActive();
-    expireUndo();
+    if (sweep) expireUndo();
     final receipt = await database.transaction(() async {
       _ensureActive();
       final row = await database
@@ -206,6 +288,38 @@ final class SqliteVocabularyDeletionService
         List.unmodifiable(assignments),
         content,
       );
+      await _purgeExpiredTrash(deleteAt);
+      final trash = database.vocabularyTrash;
+      final priorRows =
+          await (database.selectOnly(trash)
+                ..addColumns([trash.groupId, trash.deletedAt])
+                ..where(trash.collectionId.equals(entry.collectionId)))
+              .get();
+      ({String groupId, DateTime deletedAt})? prior;
+      for (final row in priorRows) {
+        final at = DateTime.parse(row.read(trash.deletedAt)!);
+        if (prior == null || at.isAfter(prior.deletedAt)) {
+          prior = (groupId: row.read(trash.groupId)!, deletedAt: at);
+        }
+      }
+      final groupId =
+          prior != null &&
+              !deleteAt.isBefore(prior.deletedAt) &&
+              deleteAt.difference(prior.deletedAt) <= groupingGap
+          ? prior.groupId
+          : const Uuid().v4();
+      await database
+          .into(database.vocabularyTrash)
+          .insert(
+            VocabularyTrashCompanion.insert(
+              entryId: id,
+              collectionId: entry.collectionId,
+              groupId: groupId,
+              deletedAt: deleteAt.toIso8601String(),
+              expiresAt: deleteAt.add(trashDuration).toIso8601String(),
+              snapshotJson: snapshot.encode(),
+            ),
+          );
       return _Receipt(
         issuer: _issuer,
         entry: VocabularyRecord(
@@ -233,6 +347,51 @@ final class SqliteVocabularyDeletionService
   }
 
   @override
+  Future<List<VocabularyDeletionReceipt>> deleteMany({
+    required String collectionId,
+    required Set<String> ids,
+  }) async {
+    _ensureActive();
+    final selected = Set<String>.of(ids);
+    if (selected.isEmpty) return const [];
+    final receipts = <_Receipt>[];
+    try {
+      await database.transaction(() async {
+        final owned = await (database.select(
+          database.vocabularyEntries,
+        )..where((row) => row.collectionId.equals(collectionId))).get();
+        if (!owned.map((row) => row.id).toSet().containsAll(selected)) {
+          throw VocabularyValidation.entryNotFound;
+        }
+        for (final row in owned.where((row) => selected.contains(row.id))) {
+          receipts.add(await _delete(row.id, sweep: false) as _Receipt);
+        }
+        // All selected words receive a complete recovery window after the
+        // batch finishes; ordinary single-entry deadlines are unchanged.
+        final deadline = clock.now().toUtc().add(undoDuration);
+        for (final receipt in receipts) {
+          receipt.expiresAt = deadline;
+        }
+        if (receipts.isNotEmpty) {
+          final first =
+              await (database.select(database.vocabularyTrash)
+                    ..where((r) => r.entryId.equals(receipts.first.entry.id)))
+                  .getSingle();
+          await (database.update(database.vocabularyTrash)
+                ..where((r) => r.entryId.isIn(selected)))
+              .write(VocabularyTrashCompanion(groupId: Value(first.groupId)));
+        }
+      });
+      return List.unmodifiable(receipts);
+    } catch (_) {
+      for (final receipt in receipts) {
+        forget(receipt);
+      }
+      rethrow;
+    }
+  }
+
+  @override
   Future<VocabularyRecord> restore(VocabularyDeletionReceipt receipt) {
     _ensureActive();
     final issued = _issued(receipt);
@@ -257,6 +416,9 @@ final class SqliteVocabularyDeletionService
       await database.transaction(() async {
         _ensureActive();
         if (receipt.forgotten) throw VocabularyUndoFailure.invalidReceipt;
+        if (receipt.expired || receipt.snapshot == null) {
+          throw VocabularyUndoFailure.expired;
+        }
         final now = clock.now().toUtc();
         if (!now.isBefore(receipt.expiresAt)) {
           throw VocabularyUndoFailure.expired;
@@ -268,6 +430,15 @@ final class SqliteVocabularyDeletionService
                 .getSingleOrNull() ==
             null) {
           throw VocabularyUndoFailure.collectionNotFound;
+        }
+        final retained = await (database.select(
+          database.vocabularyTrash,
+        )..where((row) => row.entryId.equals(entry.id))).getSingleOrNull();
+        if (retained == null ||
+            !now.isBefore(DateTime.parse(retained.expiresAt)) ||
+            _Snapshot.identityOf(retained.snapshotJson) !=
+                snapshot.deletionIdentity) {
+          throw VocabularyUndoFailure.expired;
         }
         final existing = await database
             .customSelect(
@@ -354,6 +525,18 @@ final class SqliteVocabularyDeletionService
             assignments
                 .putIfAbsent(assignment.dimensionId, () => <String>{})
                 .add(assignment.valueId);
+          } else {
+            receipt.omittedCategories = true;
+          }
+        }
+        for (final group in assignments.keys.toList()) {
+          final dimension = await SqliteCategoriesRepository(
+            database,
+          ).dimensionById(group);
+          if (dimension?.mode == CategoryMode.single &&
+              assignments[group]!.length > 1) {
+            assignments.remove(group);
+            receipt.omittedCategories = true;
           }
         }
         try {
@@ -366,6 +549,9 @@ final class SqliteVocabularyDeletionService
           }
           rethrow;
         }
+        await (database.delete(
+          database.vocabularyTrash,
+        )..where((row) => row.entryId.equals(entry.id))).go();
       });
       receipt.used = true;
       receipt.snapshot = null;
@@ -400,6 +586,168 @@ final class SqliteVocabularyDeletionService
         }
       }
     }
+  }
+
+  @override
+  Future<void> purgeExpiredTrash() => _purgeExpiredTrash(clock.now().toUtc());
+
+  Future<void> _purgeExpiredTrash(DateTime now) =>
+      database.transaction(() async {
+        final expired = (await database.select(database.vocabularyTrash).get())
+            .where((row) => !now.isBefore(DateTime.parse(row.expiresAt)))
+            .map((row) => row.entryId)
+            .toSet();
+        if (expired.isEmpty) return;
+        await (database.delete(
+          database.vocabularyTrash,
+        )..where((r) => r.entryId.isIn(expired))).go();
+        for (final receipt
+            in _active.where((r) => expired.contains(r.entry.id)).toList()) {
+          receipt.expired = true;
+          receipt.snapshot = null;
+          _active.remove(receipt);
+        }
+      });
+
+  @override
+  Future<void> clearTrash(String collectionId) async {
+    final handles = <_Receipt>[];
+    await database.transaction(() async {
+      _ensureActive();
+      await (database.delete(
+        database.vocabularyTrash,
+      )..where((r) => r.collectionId.equals(collectionId))).go();
+      handles.addAll(
+        _active.where((r) => r.entry.collectionId == collectionId),
+      );
+    });
+    _retireHandles(handles);
+  }
+
+  void _retireHandles(Iterable<_Receipt> handles) {
+    for (final receipt in handles) {
+      receipt.expired = true;
+      receipt.snapshot = null;
+      _active.remove(receipt);
+    }
+  }
+
+  VocabularyRecord _trashRecord(_Snapshot snapshot) {
+    final entry = snapshot.entry;
+    return VocabularyRecord(
+      id: entry.id,
+      collectionId: entry.collectionId,
+      targetText: entry.targetText,
+      nativeText: entry.nativeText,
+      content: snapshot.content,
+      active: entry.active,
+      addedAt: entry.addedAt == null ? null : DateTime.parse(entry.addedAt!),
+    );
+  }
+
+  @override
+  Future<List<VocabularyTrashGroup>> trashGroups({
+    required String collectionId,
+  }) async {
+    _ensureActive();
+    await purgeExpiredTrash();
+    return database.transaction(() async {
+      final rows = await (database.select(
+        database.vocabularyTrash,
+      )..where((r) => r.collectionId.equals(collectionId))).get();
+      rows.sort((a, b) => _trashOrder(b, a));
+      final grouped = <String, List<VocabularyTrashData>>{};
+      for (final row in rows) {
+        grouped.putIfAbsent(row.groupId, () => []).add(row);
+      }
+      return List.unmodifiable(
+        grouped.entries.map(
+          (group) => VocabularyTrashGroup(
+            id: group.key,
+            collectionId: collectionId,
+            deletedAt: DateTime.parse(group.value.first.deletedAt),
+            expiresAt: group.value
+                .map((r) => DateTime.parse(r.expiresAt))
+                .reduce((a, b) => a.isBefore(b) ? a : b),
+            entries: List.unmodifiable(
+              group.value.map(
+                (row) => _trashRecord(_Snapshot.decode(row.snapshotJson)),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<VocabularyTrashRestoreResult> restoreTrashEntry(String entryId) =>
+      _restoreTrash(entryId: entryId);
+
+  @override
+  Future<VocabularyTrashRestoreResult> restoreTrashGroup(String groupId) =>
+      _restoreTrash(groupId: groupId);
+
+  Future<VocabularyTrashRestoreResult> _restoreTrash({
+    String? entryId,
+    String? groupId,
+  }) async {
+    _ensureActive();
+    await purgeExpiredTrash();
+    final restoredIdentities = <String>{};
+    final result = await database.transaction(() async {
+      final rows =
+          await (database.select(database.vocabularyTrash)..where(
+                (r) => entryId != null
+                    ? r.entryId.equals(entryId)
+                    : r.groupId.equals(groupId!),
+              ))
+              .get();
+      rows.sort(_trashOrder);
+      if (entryId != null && rows.isEmpty) throw VocabularyUndoFailure.expired;
+      final restored = <String>{}, omitted = <String>{};
+      final conflicts = <String, VocabularyUndoFailure>{};
+      for (final row in rows) {
+        final snapshot = _Snapshot.decode(row.snapshotJson);
+        final receipt = _Receipt(
+          issuer: _issuer,
+          entry: _trashRecord(snapshot),
+          expiresAt: DateTime.parse(row.expiresAt),
+          snapshot: snapshot,
+        );
+        try {
+          await restore(receipt);
+          restored.add(row.entryId);
+          restoredIdentities.add(snapshot.deletionIdentity);
+          if (receipt.omittedCategories) omitted.add(row.entryId);
+        } on VocabularyUndoFailure catch (failure) {
+          conflicts[row.entryId] = failure;
+        }
+      }
+      return VocabularyTrashRestoreResult(
+        restoredIds: restored,
+        conflicts: conflicts,
+        omittedCategoryEntryIds: omitted,
+      );
+    });
+    // Retire original Undo handles only after the whole group commits. A later
+    // storage failure must leave those handles usable for the rolled-back rows.
+    _retireHandles(
+      _active
+          .where(
+            (receipt) =>
+                restoredIdentities.contains(receipt.snapshot?.deletionIdentity),
+          )
+          .toList(),
+    );
+    return result;
+  }
+
+  int _trashOrder(VocabularyTrashData a, VocabularyTrashData b) {
+    final time = DateTime.parse(
+      a.deletedAt,
+    ).compareTo(DateTime.parse(b.deletedAt));
+    return time == 0 ? a.entryId.compareTo(b.entryId) : time;
   }
 
   RetryObligation _retryRecord(StoredRetryObligation row) =>

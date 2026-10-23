@@ -1,5 +1,6 @@
 import 'package:fsrs/fsrs.dart' as fsrs;
 import '../../data/learning_item.dart';
+import 'learning_parameters.dart';
 
 /// Regular FSRS review ratings supported by the first release.
 enum LearningRating { again, hard, good }
@@ -21,7 +22,7 @@ final class LearningReviewTransition {
 /// Offline scheduling through the pinned library, without storage or wall-clock use.
 final class LearningScheduler {
   final _scheduler = fsrs.Scheduler(
-    desiredRetention: 0.9,
+    desiredRetention: LearningParameters.desiredRetention,
     learningSteps: const [],
     relearningSteps: const [],
     enableFuzzing: false,

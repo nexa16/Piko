@@ -72,7 +72,7 @@ void main() {
       },
     );
 
-    for (final rating in ['incorrect', 'correct', 'hard']) {
+    for (final rating in ['incorrect', 'correct']) {
       launch.testWidgets(
         '$language correction explicitly names previous $rating grade',
         (tester) async {

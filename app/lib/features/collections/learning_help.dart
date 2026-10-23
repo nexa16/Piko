@@ -73,7 +73,6 @@ class LearningHelpDialog extends StatelessWidget {
             'intro',
             'recall',
             'correct',
-            'hard',
             'incorrect',
             'honest',
           ])

@@ -695,6 +695,7 @@ final class EntrySessionController extends ChangeNotifier {
     final deleted = _deletions[id];
     if (deleted == null) throw VocabularyUndoFailure.invalidReceipt;
     final result = Completer<VocabularyRecord>();
+    lastUndoOmittedCategories = false;
     _restoringId = id;
     _restoring = result.future;
     deleted.error = null;
@@ -703,6 +704,9 @@ final class EntrySessionController extends ChangeNotifier {
     return result.future;
   }
 
+  /// A successful recovery may omit definitions that no longer exist.
+  bool lastUndoOmittedCategories = false;
+
   Future<void> _undoDeletion(
     String id,
     _SessionDeletion deleted,
@@ -710,11 +714,17 @@ final class EntrySessionController extends ChangeNotifier {
   ) async {
     try {
       final entry = await _deletionService!.restore(deleted.receipt);
+      final warnings = deleted.receipt;
+      lastUndoOmittedCategories =
+          warnings is VocabularyRecoveryWarnings &&
+          (warnings as VocabularyRecoveryWarnings).omittedCategories;
       if (entry.id != id || entry.collectionId != collectionId) {
         throw StateError('Undo returned a different entry identity.');
       }
       final repository = _repository;
-      var assignments = deleted.assignments;
+      var assignments = lastUndoOmittedCategories
+          ? const <String, Set<String>>{}
+          : deleted.assignments;
       if (repository is CategorizedVocabularyRepository) {
         try {
           assignments = _freezeEntryAssignments(

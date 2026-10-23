@@ -1,3 +1,4 @@
+import '../../data/learning_reset.dart';
 import '../../data/categories_repository.dart';
 import 'dart:async';
 
@@ -25,12 +26,14 @@ class SpeedLaunch extends StatefulWidget {
     required this.factory,
     required this.vocabularyRepository,
     this.categoriesRepository,
+    this.learningReset,
     required this.beforeLaunch,
     required this.onBusyChanged,
     this.snapshotLoader,
     this.onPendingWrites,
     this.onSessionClosed,
     this.onCompleted,
+    this.onResult,
     this.enabled = true,
     this.countsUnknown = false,
     this.recheckCounts = false,
@@ -47,12 +50,14 @@ class SpeedLaunch extends StatefulWidget {
   final SpeedSessionFactory factory;
   final VocabularyRepository vocabularyRepository;
   final CategoriesRepository? categoriesRepository;
+  final LearningResetRepository? learningReset;
   final Future<void> Function() beforeLaunch;
   final ValueChanged<bool> onBusyChanged;
   final Future<CollectionQuerySnapshot> Function()? snapshotLoader;
   final ValueChanged<Future<void>>? onPendingWrites;
   final VoidCallback? onSessionClosed;
   final ValueChanged<int>? onCompleted;
+  final ValueChanged<SpeedSessionResult>? onResult;
   final bool enabled;
   final bool countsUnknown, recheckCounts;
   final Set<LearningDirection> allowedDirections;
@@ -317,6 +322,7 @@ class SpeedLaunchState extends State<SpeedLaunch> {
             session: session,
             vocabularyRepository: repository,
             categoriesRepository: widget.categoriesRepository,
+            learningReset: widget.learningReset,
             onPendingWrites: widget.onPendingWrites,
           ),
         ),
@@ -324,7 +330,10 @@ class SpeedLaunchState extends State<SpeedLaunch> {
       prepared = null;
       final result = await closed;
       if (current()) {
-        if (result != null) widget.onCompleted?.call(result.completedCount);
+        if (result != null) {
+          widget.onCompleted?.call(result.completedCount);
+          widget.onResult?.call(result);
+        }
         widget.onSessionClosed?.call();
       }
     } catch (error) {

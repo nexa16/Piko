@@ -409,9 +409,17 @@ const copyCatalog = <String, Object?>{
 "de": "Geräte-Zugriffs-ID: {id}",
 "en": "Device access ID: {id}",
 },
+"ai.accessSettings": <String, Object?>{
+"de": "KI-Zugriff und Datenschutz",
+"en": "AI access and privacy",
+},
 "ai.action": <String, Object?>{
 "de": "Aktion",
 "en": "Action",
+},
+"ai.action.comprehensive": <String, Object?>{
+"de": "Wortschatz von A1 bis zum Zielniveau aufbauen",
+"en": "Build vocabulary from A1 to target level",
 },
 "ai.action.gaps": <String, Object?>{
 "de": "Lücken im Bestand finden",
@@ -437,6 +445,10 @@ const copyCatalog = <String, Object?>{
 "de": "Vorschläge für neue Kategoriewerte erlauben",
 "en": "Allow proposals for new category values",
 },
+"ai.anotherPortion": <String, Object?>{
+"de": "Weiterer Abschnitt dieses Niveaus",
+"en": "Another portion at this level",
+},
 "ai.applied": <String, Object?>{
 "de": "Änderungen übernommen",
 "en": "Changes adopted",
@@ -444,6 +456,46 @@ const copyCatalog = <String, Object?>{
 "ai.apply": <String, Object?>{
 "de": "Ausgewählte Änderungen übernehmen",
 "en": "Adopt selected changes",
+},
+"ai.categoryMode": <String, Object?>{
+"de": "Ziel der Kategorieprüfung",
+"en": "Category review goal",
+},
+"ai.categoryMode.improve": <String, Object?>{
+"de": "Prüfen und verbessern",
+"en": "Review and improve",
+},
+"ai.categoryMode.missing": <String, Object?>{
+"de": "Fehlende ergänzen",
+"en": "Fill missing",
+},
+"ai.categoryMode.reclassify": <String, Object?>{
+"de": "Alle neu einordnen",
+"en": "Reclassify all",
+},
+"ai.check.categories": <String, Object?>{
+"de": "Kategorien",
+"en": "Categories",
+},
+"ai.check.examples": <String, Object?>{
+"de": "Beispiele",
+"en": "Examples",
+},
+"ai.check.hints": <String, Object?>{
+"de": "Hinweise",
+"en": "Hints",
+},
+"ai.check.structure": <String, Object?>{
+"de": "Struktur und Konsistenz",
+"en": "Structure and consistency",
+},
+"ai.check.suitability": <String, Object?>{
+"de": "Geeignete Vokabeleinträge",
+"en": "Suitable vocabulary entries",
+},
+"ai.check.translations": <String, Object?>{
+"de": "Übersetzung und Schreibweise",
+"en": "Translation and spelling",
 },
 "ai.comprehensive": <String, Object?>{
 "de": "Umfassender Niveauwortschatz",
@@ -481,6 +533,10 @@ const copyCatalog = <String, Object?>{
 "de": "Aktuell",
 "en": "Current",
 },
+"ai.currentStage": <String, Object?>{
+"de": "Niveau dieses Abschnitts",
+"en": "Current portion level",
+},
 "ai.definitionDependencies": <String, Object?>{
 "de": "Bestätige neue Definitionen einzeln. Eine ausgewählte Zuordnung benötigt ihre Gruppe und ihren Wert.",
 "en": "Approve new definitions separately. A selected assignment requires its group and value.",
@@ -498,8 +554,8 @@ const copyCatalog = <String, Object?>{
 "en": "Disconnect AI access",
 },
 "ai.error.accessDenied": <String, Object?>{
-"de": "Dieses Gerät hat keinen freigegebenen AI-Zugriff. Lokales Bearbeiten und Lernen bleiben verfügbar.",
-"en": "This device has no approved AI access. Local editing and learning remain available.",
+"de": "Der KI-Zugriff ist nicht freigegeben oder wurde beendet. Prüfe unter KI-Zugriff die Einladung und verbinde die bestehende Kennung nach Freigabe erneut. Bearbeiten und Lernen funktionieren weiterhin.",
+"en": "AI access is not approved or was withdrawn. Open AI access to check the invitation and reconnect the existing identity after approval. Manual editing and learning still work.",
 },
 "ai.error.collision": <String, Object?>{
 "de": "Die ausgewählten Änderungen würden doppelte Wort-/Hinweisidentitäten erzeugen. Nichts wurde gespeichert. Passe die Auswahl an oder bearbeite die Karten.",
@@ -510,8 +566,8 @@ const copyCatalog = <String, Object?>{
 "en": "These proposals are already being applied or have been adopted.",
 },
 "ai.error.contextLimit": <String, Object?>{
-"de": "Der vollständige benötigte Kontext passt nicht in diesen Auftrag. Nichts wurde stillschweigend ausgelassen oder gespeichert.",
-"en": "The complete required context does not fit this request. Nothing was silently omitted or saved.",
+"de": "Dieser Auftrag enthält zu viel Vokabelkontext. Verwende ausdrücklich kleinere Abschnitte oder filtere die Sammlungsprüfung. Deine Eingabe bleibt erhalten; es wurden keine Vorschläge gespeichert.",
+"en": "This request contains too much vocabulary context. Use explicit smaller portions, or filter a Collection review. Your input is kept; no proposals were saved.",
 },
 "ai.error.dependency": <String, Object?>{
 "de": "Prüfe ausgewählte Definitionen, Kategorieregeln und die Bestätigung unvollständiger Ergebnisse. Nichts wurde gespeichert.",
@@ -521,17 +577,21 @@ const copyCatalog = <String, Object?>{
 "de": "AI ist in diesem Build deaktiviert.",
 "en": "AI is disabled in this build.",
 },
+"ai.error.expired": <String, Object?>{
+"de": "Der Testzugriff ist abgelaufen. Prüfe die KI-Zugriffsdetails; es erfolgt keine automatische Verlängerung oder Wiederholung.",
+"en": "The test access has expired. Check AI access details; no automatic renewal or retry will run.",
+},
 "ai.error.invalidResponse": <String, Object?>{
-"de": "Die Antwort konnte nicht validiert werden. Nichts wurde übernommen.",
-"en": "The response could not be validated. Nothing was applied.",
+"de": "Die Antwort war unvollständig oder enthielt keine gültigen Vorschläge. Nichts wurde übernommen. Deine Eingabe bleibt erhalten; starte bei Bedarf ausdrücklich einen neuen Versuch.",
+"en": "The response was incomplete or did not contain valid proposals. Nothing was applied. Keep your input and retry explicitly if needed.",
 },
 "ai.error.limit": <String, Object?>{
-"de": "Das freigegebene Dienst- oder Vorgangslimit wurde erreicht. Es erfolgt kein automatischer Wiederholungsversuch.",
-"en": "The admitted service or operation limit was reached. No automatic retry will run.",
+"de": "Ein Auftrags-, Zeit- oder gemeinsames Budgetlimit wurde erreicht. Prüfe die Zugriffsdetails und versuche es später ausdrücklich erneut; es erfolgt keine automatische Wiederholung.",
+"en": "A request, rate or shared budget limit was reached. Check access details and try again explicitly later; no automatic retry will run.",
 },
 "ai.error.network": <String, Object?>{
-"de": "Keine Verbindung. Deine Eingabe bleibt erhalten; ein neuer Versuch startet nur ausdrücklich.",
-"en": "No connection. Keep your input and retry explicitly when ready.",
+"de": "Die Verbindung ist fehlgeschlagen. Deine Eingabe bleibt erhalten. Ein gesendeter Auftrag kann noch laufen; prüfe dies vor einem weiteren kostenpflichtigen Versuch.",
+"en": "The connection failed. Your input is kept. A sent request may still be running; check before starting another paid attempt.",
 },
 "ai.error.stale": <String, Object?>{
 "de": "Der benötigte Inhalt hat sich geändert. Diese Vorschläge können nicht mehr übernommen werden; starte bei Bedarf einen neuen ausdrücklichen Auftrag.",
@@ -585,6 +645,38 @@ const copyCatalog = <String, Object?>{
 "de": "Thema, Niveau oder Lernkontext (bei Lücken/Prüfung optional)",
 "en": "Topic, level or learning context (optional for gaps/review)",
 },
+"ai.goal.everyday": <String, Object?>{
+"de": "Alltag",
+"en": "Everyday communication",
+},
+"ai.goal.general": <String, Object?>{
+"de": "Allgemein, kein bestimmtes Ziel",
+"en": "General, no specific goal",
+},
+"ai.goal.social": <String, Object?>{
+"de": "Gespräche mit Freunden",
+"en": "Social conversation",
+},
+"ai.goal.study": <String, Object?>{
+"de": "Schule, Studium und Prüfungen",
+"en": "School, study and exams",
+},
+"ai.goal.travel": <String, Object?>{
+"de": "Reisen",
+"en": "Travel",
+},
+"ai.goal.work": <String, Object?>{
+"de": "Arbeit und Beruf",
+"en": "Work and business",
+},
+"ai.goals": <String, Object?>{
+"de": "Lernziele (optional)",
+"en": "Learning goals (optional)",
+},
+"ai.groupExample": <String, Object?>{
+"de": "Eine Gruppe ist etwa Thema oder Wortart.",
+"en": "A group is an axis such as Topic or Word type.",
+},
 "ai.hintScope": <String, Object?>{
 "de": "Wähle die Karten für Hinweise. Alle direkt verwandten Bedeutungen bleiben Vergleichskontext.",
 "en": "Choose which related cards need Hints. All directly related meanings remain comparison context.",
@@ -621,6 +713,18 @@ const copyCatalog = <String, Object?>{
 "de": "Neuer Kategoriewert",
 "en": "New category value",
 },
+"ai.nextContext": <String, Object?>{
+"de": "Nächster Kontextabschnitt",
+"en": "Next context portion",
+},
+"ai.nextLevel": <String, Object?>{
+"de": "Nächstes Niveau",
+"en": "Next level",
+},
+"ai.nextStep": <String, Object?>{
+"de": "Nächster Prüfschritt",
+"en": "Next review step",
+},
 "ai.noHint": <String, Object?>{
 "de": "Kein Hinweis",
 "en": "No Hint",
@@ -652,6 +756,10 @@ const copyCatalog = <String, Object?>{
 "ai.partialConsent": <String, Object?>{
 "de": "Ausgewählte Vorschläge dieses ausdrücklich unvollständigen Ergebnisses übernehmen",
 "en": "Adopt selected proposals from this explicitly partial result",
+},
+"ai.partialContext": <String, Object?>{
+"de": "Nur {count} von {total} vorhandenen Vokabeln werden als Kontext gesendet. Die Abdeckung ist unvollständig. Vor dem Speichern werden Duplikate mit der gesamten Sammlung geprüft. Starte ausdrücklich, um diesen kostenpflichtigen Abschnitt anzufordern.",
+"en": "Only {count} of {total} existing items will be sent as context. This is partial coverage. Duplicates are checked against the full collection before saving. Start explicitly to request this paid portion.",
 },
 "ai.pilotAgree": <String, Object?>{
 "de": "Privatem Test und Datenauswertung zustimmen",
@@ -688,6 +796,10 @@ const copyCatalog = <String, Object?>{
 "ai.proposed": <String, Object?>{
 "de": "Vorgeschlagen",
 "en": "Proposed",
+},
+"ai.reconnect": <String, Object?>{
+"de": "Bestehenden Testzugriff erneut verbinden",
+"en": "Reconnect existing test access",
 },
 "ai.refine": <String, Object?>{
 "de": "Aktuelle Antwort verfeinern",
@@ -733,9 +845,29 @@ const copyCatalog = <String, Object?>{
 "de": "Wird erstellt …",
 "en": "Generating…",
 },
+"ai.reviewCount": <String, Object?>{
+"de": "Zu prüfende Vokabeln",
+"en": "Vocabulary to review",
+},
+"ai.reviewProgress": <String, Object?>{
+"de": "Geprüft: {processed} · nächste Anfrage: bis zu {next} · verbleibend: {remaining}",
+"en": "Processed: {processed} · next request: up to {next} · remaining: {remaining}",
+},
 "ai.reviewReminder": <String, Object?>{
 "de": "Prüfe Bedeutungen, Beispiele und Abdeckung. Eine gültige Struktur bestätigt weder Sprachqualität noch Vollständigkeit. Nichts wird automatisch ausgewählt.",
 "en": "Check meanings, examples and coverage yourself. Format validation does not verify language quality or completeness. Nothing is selected automatically.",
+},
+"ai.reviewStep": <String, Object?>{
+"de": "Dieser Prüfschritt",
+"en": "This review step",
+},
+"ai.smallerContext": <String, Object?>{
+"de": "Einen kleineren Kontextabschnitt verwenden",
+"en": "Use a smaller context portion",
+},
+"ai.smallerStep": <String, Object?>{
+"de": "In kleineren Schritten prüfen",
+"en": "Review in smaller steps",
 },
 "ai.stage": <String, Object?>{
 "de": "Ausgewählte Hinweise mit dieser Karte speichern",
@@ -749,9 +881,17 @@ const copyCatalog = <String, Object?>{
 "de": "Warten beenden; bisherige Antwort behalten",
 "en": "Stop waiting; keep previous result",
 },
+"ai.targetLevel": <String, Object?>{
+"de": "Zielniveau",
+"en": "Target level",
+},
 "ai.title": <String, Object?>{
 "de": "AI-Vokabeln",
 "en": "AI vocabulary",
+},
+"ai.topicExamples": <String, Object?>{
+"de": "Zum Beispiel: Essen bestellen, über Sport sprechen oder ein Geschäftsgespräch.",
+"en": "For example: ordering food, talking about sport, or a business meeting.",
 },
 "ai.unavailableClassification": <String, Object?>{
 "de": "Nicht verfügbare Zuordnung",
@@ -760,6 +900,10 @@ const copyCatalog = <String, Object?>{
 "ai.useReplacement": <String, Object?>{
 "de": "Diese Antwort verwenden",
 "en": "Use this preview",
+},
+"ai.valueExample": <String, Object?>{
+"de": "Ein Wert gehört zu einer Gruppe, etwa Reisen unter Thema.",
+"en": "A value belongs to a group, such as Travel in Topic.",
 },
 "ai.withdrawPending": <String, Object?>{
 "de": "AI-Nutzung ist lokal gestoppt. Die Löschung am Server ist noch nicht bestätigt. Wiederhole diese Aktion mit Verbindung oder nutze den Einladungskontakt.",
@@ -1041,6 +1185,10 @@ const copyCatalog = <String, Object?>{
 "de": "{target} · {native}",
 "en": "{target} · {native}",
 },
+"collection.level": <String, Object?>{
+"de": "Niveau",
+"en": "Level",
+},
 "collection.loadFailed": <String, Object?>{
 "de": "Sammlungen konnten nicht geladen werden. Bitte versuche es erneut.",
 "en": "Couldn't load collections. Please try again.",
@@ -1116,6 +1264,10 @@ const copyCatalog = <String, Object?>{
 "collection.title": <String, Object?>{
 "de": "Sammlung",
 "en": "Collection",
+},
+"collection.trash": <String, Object?>{
+"de": "Papierkorb",
+"en": "Trash",
 },
 "collection.vocabulary": <String, Object?>{
 "de": "Vokabeln",
@@ -2413,6 +2565,10 @@ const copyCatalog = <String, Object?>{
 "de": "Lernrichtung wählen",
 "en": "Choose review direction",
 },
+"learn.skip": <String, Object?>{
+"de": "Überspringen",
+"en": "Skip",
+},
 "learn.speedProgress": <String, Object?>{
 "de": "{completed} / {total} abgeschlossen",
 "en": "{completed} / {total} completed",
@@ -2432,6 +2588,10 @@ const copyCatalog = <String, Object?>{
 "learn.summaryEncouragement": <String, Object?>{
 "de": "Gut gemacht! Jede Wiederholung zählt.",
 "en": "Well done! Every review counts.",
+},
+"learn.totalRetries": <String, Object?>{
+"de": "Benötigte Wiederholungen insgesamt: {count}",
+"en": "Total retries needed: {count}",
 },
 "learn.type": <String, Object?>{
 "de": "Eingabe",
@@ -2486,8 +2646,8 @@ const copyCatalog = <String, Object?>{
 "en": "What happens after a mistake?",
 },
 "learnHelp.ratings": <String, Object?>{
-"de": "Richtig, Schwer + Richtig und Falsch geben der Wiederholungsplanung unterschiedliche Informationen über deine Erinnerung.",
-"en": "Correct, Hard + Correct and Incorrect give the scheduler different information about your recall.",
+"de": "Richtig und Falsch geben der Wiederholungsplanung unterschiedliche Informationen über deine Erinnerung.",
+"en": "Correct and Incorrect give the scheduler different information about your recall.",
 },
 "learnHelp.recall": <String, Object?>{
 "de": "Versuche, dich an die Übersetzung zu erinnern, bevor du die Antwort aufdeckst. Beurteile dann, wie es dir ging:",
@@ -3077,6 +3237,14 @@ const copyCatalog = <String, Object?>{
 "de": "{count} ausgewählt",
 "en": "{count} selected",
 },
+"selection.deleteWarning": <String, Object?>{
+"de": "{count} ausgewählte Vokabeln löschen?",
+"en": "Delete {count} selected vocabulary entries?",
+},
+"selection.group": <String, Object?>{
+"de": "Gruppe {name} auswählen",
+"en": "Select group {name}",
+},
 "selection.hidden": <String, Object?>{
 "de": "{count} durch Filter oder Suche ausgeblendet",
 "en": "{count} hidden by filters or search",
@@ -3505,6 +3673,10 @@ const copyCatalog = <String, Object?>{
 "de": "Wiederholung abgeschlossen",
 "en": "Review complete",
 },
+"summary.totalRetries": <String, Object?>{
+"de": "Benötigte Wiederholungen insgesamt",
+"en": "Total retries needed",
+},
 "template.difficulty": <String, Object?>{
 "de": "Schwierigkeit",
 "en": "Difficulty",
@@ -3520,6 +3692,58 @@ const copyCatalog = <String, Object?>{
 "template.topic": <String, Object?>{
 "de": "Thema",
 "en": "Topic",
+},
+"trash.categoryWarning": <String, Object?>{
+"de": "Bei {count} Vokabeln konnten Kategorien nicht wiederhergestellt werden.",
+"en": "Categories could not be restored for {count} vocabulary items.",
+},
+"trash.clear": <String, Object?>{
+"de": "Papierkorb leeren",
+"en": "Empty Trash",
+},
+"trash.clearFailed": <String, Object?>{
+"de": "Der Papierkorb konnte nicht geleert werden.",
+"en": "Could not empty Trash.",
+},
+"trash.clearHelp": <String, Object?>{
+"de": "Dies kann nicht rückgängig gemacht werden.",
+"en": "This cannot be undone.",
+},
+"trash.clearTitle": <String, Object?>{
+"de": "Papierkorb endgültig leeren?",
+"en": "Permanently empty Trash?",
+},
+"trash.deletedAt": <String, Object?>{
+"de": "Gelöscht am {date}",
+"en": "Deleted {date}",
+},
+"trash.empty": <String, Object?>{
+"de": "Der Papierkorb ist leer.",
+"en": "Trash is empty.",
+},
+"trash.expiresAt": <String, Object?>{
+"de": "Aufbewahrt bis {date}",
+"en": "Kept until {date}",
+},
+"trash.restore": <String, Object?>{
+"de": "Wiederherstellen",
+"en": "Restore",
+},
+"trash.restoreFailed": <String, Object?>{
+"de": "Vokabeln konnten nicht wiederhergestellt werden.",
+"en": "Could not restore vocabulary.",
+},
+"trash.restoreGroup": <String, Object?>{
+"de": "Gruppe wiederherstellen",
+"en": "Restore group",
+},
+"trash.restoreResult": <String, Object?>{
+"de": "Ergebnis der Wiederherstellung",
+"en": "Restore result",
+},
+"trash.restoreSummary": <String, Object?>{
+"de": "{restored} wiederhergestellt · {conflicts} Konflikte",
+"en": "{restored} restored · {conflicts} conflicts",
 },
 "view.collapseAll": <String, Object?>{
 "de": "Alle einklappen",
@@ -3640,6 +3864,14 @@ const copyCatalog = <String, Object?>{
 "vocab.delete": <String, Object?>{
 "de": "Vokabel löschen",
 "en": "Delete vocabulary",
+},
+"vocab.deleteConfirmHelp": <String, Object?>{
+"de": "Diese Vokabel wird in den Papierkorb verschoben.",
+"en": "This vocabulary will move to Trash.",
+},
+"vocab.deleteConfirmTitle": <String, Object?>{
+"de": "Vokabel löschen?",
+"en": "Delete vocabulary?",
 },
 "vocab.deleteFailed": <String, Object?>{
 "de": "Diese Vokabel konnte nicht gelöscht werden. Bitte versuche es erneut.",
@@ -3788,6 +4020,22 @@ const copyCatalog = <String, Object?>{
 "vocab.removeExample": <String, Object?>{
 "de": "Beispiel {number} entfernen",
 "en": "Remove example {number}",
+},
+"vocab.resetLearning": <String, Object?>{
+"de": "Lernfortschritt zurücksetzen",
+"en": "Reset learning progress",
+},
+"vocab.resetLearningConfirm": <String, Object?>{
+"de": "Lernfortschritt zurücksetzen?",
+"en": "Reset learning progress?",
+},
+"vocab.resetLearningDone": <String, Object?>{
+"de": "Lernfortschritt zurückgesetzt.",
+"en": "Learning progress reset.",
+},
+"vocab.resetLearningHelp": <String, Object?>{
+"de": "Wähle die Richtungen zum Zurücksetzen. Die Statistik bleibt unverändert.",
+"en": "Choose the directions to reset. Statistics stay unchanged.",
 },
 "vocab.revealHint": <String, Object?>{
 "de": "Hinweis anzeigen",

@@ -2,6 +2,8 @@
 
 Collection import and export use `format: "piko-vocabulary"`, `schemaVersion: 5` and exactly one Collection. Import changes vocabulary in an existing destination; it does not create a Collection, replace its languages or restore imported learning. Export, the in-app template and import share this current contract. Older versions are rejected with a version error.
 
+Collection export includes its saved A1–C2 `level` as informational metadata. Import preserves the destination Collection's level. Deleted vocabulary in Trash and its recovery snapshots are excluded from both Collection export and the full export report; export is not a backup of Trash.
+
 ## Language fields
 
 Each Collection's `targetLanguage` and `nativeLanguage` is an object:

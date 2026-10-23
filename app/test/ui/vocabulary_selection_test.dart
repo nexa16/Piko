@@ -35,6 +35,7 @@ class SelectionHarness {
     String locale = 'en',
     double width = 392,
     double scale = 1,
+    bool nativeViewport = false,
   }) async {
     await fixture.initialize();
     await SqliteSettingsRepository(db).write('locale', locale);
@@ -65,9 +66,11 @@ class SelectionHarness {
       },
     );
     before = await json.exportCollection(fixture.owner.id);
-    tester.view.physicalSize = Size(width, 900);
-    tester.view.devicePixelRatio = 1;
-    tester.platformDispatcher.textScaleFactorTestValue = scale;
+    if (!nativeViewport) {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+    }
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox());
       await tester.pump();

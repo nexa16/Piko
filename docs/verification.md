@@ -1,89 +1,47 @@
-# Documentation verification
+# Verification coverage
 
-The [manifest](build-manifest.json) identifies the historical gallery's normal APK, committed application source, configuration and original captures. This page separates current verification from those historical baselines; older captures are not relabeled as a newer candidate.
+This page records source-bound checks for development build **16**, ordinary `main.dart` application source **`e1e6230fff4694bc64e25ccfec2261cc2e0a9d12`**. Its release-mode APK SHA-256 is **`35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318`**. Later documentation-only commits do not change that application source. The [manifest](build-manifest.json) owns artifact and capture metadata; [developer setup](development.md#android-verification) owns the safe execution procedure. This is a development artifact, not a store release.
 
-## Current development verification
+## Host and source checks
 
-The current app checkpoint is `4eef86b` (development build15), with backend correction `8dcc9cc`. Ordinary builds keep AI disabled; a separately configured private build exercises the managed provider. These are development candidates, not a store release.
+The integrated full Flutter run recorded **1,427 passes and 22 failures**. Repairs were followed by **40 passing failed/affected checks**, then **nine passing final AI admission/filter checks**. The Value-append follow-up passed **17 focused data checks**. These are a full run plus focused repairs and follow-ups, not a completely passing full rerun at the frozen source.
 
-The full host run at `0ab8a74` recorded 1,390 passes and five failures. Explicit fixture repairs were followed by 14 passing affected tests and seven passing selection checks; the later progress/summary wrapping change passed 44 affected tests. This is a full run plus focused repairs, not a fully passing full rerun. Shared Node checks passed 110 tests; the backend passed 49 tests. Analysis and generated-source/documentation checks passed at their recorded checkpoints.
+Backend protocol checks passed **51 tests** and shared generation checks passed **22 tests**. The last recorded application analysis before packaging reported no issues. These results do not establish native behavior or fresh-machine setup.
 
-Actual Android checks cover EN/DE progress and summary wrapping, the shared add-method chooser, the empty Collection's first-save transition, native JSON clipboard input and genuine document-provider write failures/retries. Normal in-place updates and restoration preserve all 17 application tables, identities, learning, settings and a separate sentinel on an isolated synthetic installation. The existing protected Play-image database could not be inspected; preservation there is not inferred.
+## Synthetic Android checks
 
-The focused `count_refresh_android_test.dart` entry runs three native scenarios using production header/launch widgets with isolated read barriers: retained geometry/counts after delayed or failed refresh, rejection of obsolete scope results and one authoritative eligibility read after rapid taps. All three and runner teardown passed; the 13 original header tests also passed. A first attempt to reuse the entire host geometry suite on Android failed because its fixed viewport assumptions did not represent native insets. The focused entry uses actual Android dimensions and does not relax the behavioral assertions.
-
-Private managed-provider Android checks exercise generation, prompt refinement, selective adoption, review correction, related-card Hints and category additions, followed by real learning and reopen. Offline and service-budget failures preserve raw input and saved data; withdrawal revokes the synthetic identity and deletes its live analysis payloads while retaining accounting. Language quality was reviewed only for the small synthetic EN/DE sample. One generation response was correctly rejected before a request-specific server schema correction; a gap response explicitly remained partial. Neither schema validity nor this sample establishes general linguistic quality or complete coverage. Independent verification of every provider-managed internal copy/backup remains a limitation.
-
-The following sections retain earlier source-bound baselines and gallery evidence. They do not replace the current checkpoint above.
-
-## Language identity and current JSON interchange
-
-The current application offers 128 catalog choices and immutable custom language names, current-only Collection JSON schema 5 and target/native/Hint tuple uniqueness. Storage schema 20 preserves existing content and learning while installing the new comparison keys; collision preflight aborts without modifying the source database.
-
-The integrated host suite passes **1,299 tests** at `17af23b`. The only later application change wraps an unchanged validation statement in braces; **27 affected import/data tests pass** at normal-APK source `9af2f3b`, and analysis reports no issues. Canonical generator and documentation tests pass **28/28**. This is a complete passing host run plus a bounded style-only follow-up, not a claim that all tests were rerun after that style change.
-
-Changed-surface Android verification passes **nine English states** at `353e3ca` and **nine German states at 320dp/200%** at `17af23b`, with **64 measured form-row instances** (16dp content inset, at least 48dp height). These include language search/custom selection and parent raw-draft preservation, both Collection import entrances, invalid input, analysis, confirmation/cancel/Apply and retained learning. The real Android keyboard and native Back are observed; current Collection JSON is saved and reopened through the actual system document UI with exact byte equality in both languages. Every capture is inspected. Some captures retain a scrolled body; at 320dp/200%, the inherited final-resort wrapping can split long words and more scrolling is needed. This is focused changed-surface coverage, not another whole-app audit or a complete accessibility matrix.
-
-The normal `main.dart` development APK uses **0.1.0+10**, source `9af2f3b`, the existing certificate, min SDK24/target36 and ARM32/ARM64/x86_64. It installs in place and cold-starts; Home, Settings and native Android Back pass without fatal/plugin startup errors. The actual existing schema19 database upgrades to20 with all rowids, identities, content, complete learning, settings and sentinel preserved; only the intended custom-name columns and comparison keys change. The exact normal APK is restored after same-version debug inspection, and its installed SHA256 matches the preserved candidate. No uninstall, data clearing or destructive downgrade is used. Phone acceptance and publication remain separate owner gates. The screenshot gallery below retains its older documented build; no historical image is relabeled as this candidate.
-
-## Settings and input alignment baseline
-
-The current source adds shared grouped Settings/forms, global-to-Collection Settings navigation, focused category management and saved-word dialogs, while retaining the manual entry session and its saved history. The gallery and manifest below still identify the earlier ordinary-product capture build; instrumented audit images are not substituted for those product captures.
-
-The complete host suite passes **1,288 tests** and analysis reports no issues. Shared generator tests pass **22/22**, documentation checker tests **6/6**, and generated adapters are current. An isolated extra-parent-padding fixture is rejected by the independent geometry assertion; normal application source is not modified for that check.
-
-The revised Android audit records **48 English states** at normal size and **22 German states at 320dp/200% text**. It measures **165 form-row instances** against the shared inset/target/icon-alignment contract. Both Settings entrances, category Properties Save/reopen and Value validation/create/rename/delete, saved vocabulary/category child return, Delete/Undo, manual confirmation/history/revisit/discard, list tools, transfer errors/export, learning answer editing and statistics navigation are exercised with isolated data. Labels pass; German target checks pass. A normal-size JSON target warning is caused by partial scroll clipping; after reveal its actual target measures 153.12 × 48dp. The separate numbers/A–J Android supplement passes wrong-input, keyboard, exit/restart, completion and Long-term preservation checks. Protected production files remain unchanged in all three runs.
-
-Final product code is frozen at `044d20b`; audit-only source checkpoints are `cc8d8bc` for English and `7e62174` for German and games. Their application, assets, Android and canonical copy/design inputs are identical. Important normal-size and targeted enlarged images are visually inspected. Long German words at 200% can use the accepted final-resort character wrapping; no accessibility font reduction is applied.
-
-The normal `main.dart` release-mode local development candidate uses build9 and the unchanged signing certificate. Direct in-place installation, cold launch and the real Settings/Android-Back path pass. Protected database/sentinel hashes remain exact, and the restored installed APK matches the candidate checksum. No uninstall or data reset was used.
-
-This is broad app-family coverage, not every native failure/restart/device combination. The Speed setup and inner JSON-form rollout remain identified follow-ups under their existing contracts. A standalone Activity Chevron still inherits the platform default icon color; shared default-icon mapping remains a separate follow-up. Physical-phone acceptance, TalkBack and native transport combinations remain separate. The published-capture coverage percentages and observations below are historical and are not claimed for the changed source.
-
-## Published-capture baseline
-
-The selected release-mode development APK uses `main.dart` / `MainActivity`, build 8 and the existing Android debug certificate. Package, SDK, signing and ARM/ARM64/x86_64 support were inspected. The installed `base.apk` has the same SHA-256 as the preserved candidate.
-
-It was installed in place and cold-started on a separate Android 16/API-36/x86_64 task emulator. The pre-existing emulator was untouched. After normal navigation and discarded drafts, all 17 production tables were exactly equal, foreign keys clean and the retained sentinel unchanged. Inspection temporarily used a compatible same-version/same-certificate debug artifact, followed by restoration and cold launch of the exact selected release APK. No uninstall, data clearing or destructive downgrade was used.
-
-The retained synthetic French/German Collection contains three words imported through the native file picker and one manually confirmed word, followed by four confirmed Long-term answers in the earlier ordinary-product session. Those intentional historical fixture writes are separate from the new candidate's unchanged-database comparison. No database injection was used.
-
-| Flow | Directly observed on this ordinary APK |
+| Entry and source | Observed result and scope |
 | --- | --- |
-| Home/statistics | Retained Activity/streak, recorded/partial/unavailable daily states, Monday-first calendar and disabled future-month navigation. |
-| Collection | Four retained words, truthful no-work presentation and compact header with independent zero-availability Review/Speed controls. |
-| Entry | Real Android keyboard input of `livre` / `Buch`, manual examples/Hint controls, explicit discard and return without saving. |
-| Categories | Topic group with default-off session carry-over and explicit-save explanation; Filters explains permanent order independently of Apply. |
-| Selected Speed | One reviewed word, fixed direction, hidden/inactive counts, cancellation retaining selection and explicit clear. No session was started in this capture sequence. |
-| Settings | Four cards with immediate preferences and the full-export action. |
+| Combined `round10_android_test.dart`, `e01d70e` | **54 scenarios plus teardown pass (55 total)**. Search/selection, learning/correction/reset, editor controls, category order/grouping, Trash/recovery and AI form contracts share one serialized lane. |
+| Affected `round10_ai_android_test.dart`, frozen `e1e6230` | **11 scenarios plus teardown pass (12 total)**. Final AI admission/form/filter and Collection-level scope. |
 
-All ten published images are original full English captures at normal text size, including system UI. Some states are intentionally scrolled. The manifest records their exact candidate identity and metadata. No fresh gallery image or ordinary-product replay is claimed for every learning, import/export or minigame scenario.
+The fixtures use actual Android viewport dimensions in English at normal text scale and German at 200%. Real SQLite checks cover recovery, reset, reopen, migration, expiry, Undo and stale-state guards. Protected ordinary database and sentinel files remain unchanged across the synthetic runs. This is focused changed-surface coverage, not a whole-app device or accessibility matrix.
 
-## Published-capture Android coverage
+AI fixtures use fake providers. The lossless 700-vocabulary transport fixture reduces **284,803 bytes to 127,701 bytes** through reversible identifier compaction, with no lexical truncation. No fresh paid 700-vocabulary provider request or general linguistic-quality result is claimed.
 
-Checked-in fixtures use isolated synthetic stores and protect production files. Evidence remains tied to its actual revision; instrumented images are not published as ordinary-product screenshots.
+### Search latency
 
-| Area | Observed coverage |
+Measured input-to-matching-render times, including query and actual Collection rendering, were:
+
+| Vocabulary count | Three observed times |
 | --- | --- |
-| Anchoring/editing | Real IME, draft/caret/focus, explicit navigation and structural transitions; English and targeted German at 320dp/200% text with reduced motion. |
-| Statistics/learning | Atomic answers/completions, correction/replay, retained Long-term state after Speed and local 04:00 day changes. Host coverage includes DST, populated migration and reopen cases. |
-| Categories/header/poses | Permanent order, accessible actions, cancel/apply independence, session carry-over, compact counts and single-pose precedence, loading/error and no-work distinctions. |
-| Speed | Hidden active selections and reviewed words; numbers/A–J alternation, wrong taps, keyboard actions, exit/restart and no final minigame in EN/DE enlarged layouts. |
-| Full export | Actual native file cancel/save offline in EN and DE/200%, independent report contents and protected-data preservation. |
-| Final UX audit | At the selected application source, 38 English states and ten German Settings/category states at 320dp/200%/reduced motion pass offline; protected production files unchanged. Labels pass. The revealed JSON button measures 153.12 × 48dp and passes its target check. |
+| 600 | 377 / 738 / 826 ms |
+| 5,000 | 1,869 / 1,724 / 1,822 ms |
 
-The first final Android invocation stopped in read-only preflight because the installed release APK did not allow private-file inspection. After compatible debug replacement, both final runs pass. No destructive fallback was attempted. TalkBack and physical-phone acceptance remain untested.
+The provisional **200 ms** target is unmet. Separate SQL query measurements do not represent these end-to-end times and do not establish full list responsiveness.
 
-## Published-capture host and source checks
+## Ordinary build 16
 
-The full final Flutter run passes **1,280 tests**. `flutter analyze` reports no issues. Generated shared adapters are current; all **28** shared-generator/documentation-checker tests pass. An earlier preliminary run was deliberately interrupted to correct a stale Settings test fixture while retaining the full-export assertions; the subsequent complete run passes. A first Node invocation hit the Windows sandbox's filesystem restriction; the permitted frozen-source rerun passes.
+The exact ordinary release-mode APK installs in place and cold-opens. The existing database migrates to schema **23** with all content and learning history preserved: **16 existing tables remain exactly equal**. The previously absent `statistics_origins` singleton is initialized once by the existing Home bootstrap; this expected initialization does not rewrite review history. Existing Collections receive the A1 default, and the retained sentinel is unchanged.
 
-Handwritten production coverage is **15,128 / 16,218 instrumented executable lines (93.28%)**. All 138 handwritten Dart files are inventoried, including four declaration-only files without executable method bodies or LCOV records. Two generated files are excluded. Import reachability found no whole-file removal candidate; this is not proof that every public symbol is used. Pinned jscpd4.0.5 reports 504 / 34,324 detector lines duplicated (1.47%). Dart coverage excludes native platform behavior.
+Observed ordinary-app interactions include Compact-row long-press selection, saved-editor Delete cancellation, learning-reset cancellation, heading save status, Collection Settings → Trash and group recovery. Long-term and selected Speed rounds complete with retry totals; completed rounds expose no Previous Review. Trash recovery survives cold restart. Settings group reordering and new-Value append order persist.
 
-The earlier integrated historical Node suite remains **109 pass / one inherited failure**: an unchanged mockup Speed warning-color test reads obsolete color paths. No completely passing historical Node suite is claimed.
+After these ordinary interactions, read-only SQLite inspection confirms all three vocabulary entries and their assignments remain identical. Five of six learning directions are unchanged; the exercised direction has exactly the expected Long-term review and Speed-completion marker, with one regular review, one Speed receipt and two statistics events. Trash is empty after recovery, the sentinel is unchanged, and integrity and foreign-key checks pass. The exact ordinary release APK is restored and cold-opens; its installed SHA-256 matches the manifest. Refreshed full captures come from this ordinary APK. These observations are separate from synthetic fixture results.
 
-The documentation validator checks source links, anchors, image checksums and metadata. Original captures are visually inspected. The earlier wide/narrow documentation render check predates this bounded text/gallery update; no fresh complete rendering run is claimed here.
+## Managed backend boundary
+
+The approved version-5 backend is live with the exact reviewed function files and JWT verification enabled. An unauthenticated request returns **401**; existing service limits remain unchanged. This verifies the deployment/authentication boundary, not a new paid provider result or independent deletion of every provider-managed internal copy or backup. Ordinary builds keep AI disabled.
 
 ## Limits
 
-Physical-phone install/update coverage remains unverified; owner manual functional testing is optional. There is no complete TalkBack, OS/keyboard/locale or fresh-machine matrix, and no release/store readiness claim. Source-bound checks do not imply that every scenario was replayed in the historical ordinary-product gallery. The historical Recents duplication cause, an older instrumented discard-dialog transient and the complete historical preview palette matrix remain unresolved.
+Physical-phone and TalkBack coverage remain unverified. There is no complete OS, keyboard, locale or fresh-machine matrix. The configured private-AI APK is built and checksum-verified; the native AI tests use fake providers, and no fresh paid provider attempt is inferred. Earlier published-gallery observations, line coverage and duplication percentages are historical and are not carried forward as measurements of this source. No release/store readiness is implied.

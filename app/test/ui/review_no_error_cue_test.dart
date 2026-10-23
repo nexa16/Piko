@@ -63,13 +63,23 @@ void main() {
           );
           expect(
             tester
-                .widget<Semantics>(find.byKey(const ValueKey('review-counters')))
-                .properties.label,
-            copy.text('learn.progress', {
-              'completed': 0,
-              'total': 1,
-              'correct': 0,
-            }),
+                .widget<Semantics>(
+                  find.byKey(const ValueKey('review-counters')),
+                )
+                .properties
+                .label,
+            '${copy.text('learn.progress', {'completed': 0, 'total': 1, 'correct': 0})} · ${copy.text('learn.totalRetries', {'count': 0})}',
+          );
+          // This launch has accepted no answers: the permitted temporary total
+          // is zero and must not reveal the two historical retry errors.
+          expect(h.sessions.single.progress.totalRetries, 0);
+          expect(
+            tester
+                .widget<Text>(
+                  find.byKey(const ValueKey('review-total-retries')),
+                )
+                .data,
+            copy.text('learn.totalRetries', {'count': 0}),
           );
           await grading.reveal(tester);
           expect(text(target, tester), ['Mistakes 3', 'Fehler 3']);

@@ -57,6 +57,10 @@ void main() {
           );
           await tester.tap(find.text('Open'));
           await tester.pumpAndSettle();
+          expect(
+            tester.widget<Dialog>(find.byType(Dialog)).backgroundColor,
+            const Color(0xffE8EFFA),
+          );
           expect(find.byTooltip(copy.text('common.close')), findsNothing);
           final cancel = find.widgetWithText(TextButton, safe);
           final remove = find.widgetWithText(TextButton, danger);

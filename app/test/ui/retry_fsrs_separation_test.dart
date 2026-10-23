@@ -19,7 +19,7 @@ import 'review_no_due_test.dart' show snapshot;
 
 void main() {
   for (final reverse in [false, true]) {
-    for (final hard in [false, true]) {
+    for (final hard in [false]) {
       launch.testWidgets(
         '${reverse ? "native→target" : "target→native"} repeated Incorrect reinforcement then ${hard ? "Hard" : "Good"} retains exact first FSRS/history; next due answer is regular',
         (tester) async {
@@ -125,9 +125,9 @@ void main() {
             await grading.reveal(tester);
             if (attempt == 0) {
               final stored = await tester.runAsync(() => snapshot(f));
-              await tester.tap(find.byType(PikoCheckbox));
+              expect(find.byType(PikoCheckbox), findsNothing);
               await tester.pumpAndSettle();
-              expect(session.hard, isTrue);
+              expect(session.hard, isFalse);
               expect(await tester.runAsync(() => snapshot(f)), stored);
             }
             await tester.tap(grading.gradeButton(AnswerGrade.incorrect));
@@ -161,7 +161,7 @@ void main() {
           await wake();
           await grading.reveal(tester);
           if (hard) {
-            await tester.tap(find.byType(PikoCheckbox));
+            expect(find.byType(PikoCheckbox), findsNothing);
             await tester.pumpAndSettle();
           }
           await tester.tap(grading.gradeButton(AnswerGrade.correct));
@@ -169,7 +169,7 @@ void main() {
           final success = session.lastAnswer! as RetryAnswerReceipt;
           expect(
             success.rating,
-            hard ? LearningRating.hard : LearningRating.good,
+            hard ? LearningRating.good : LearningRating.good,
           );
           expect(success.retryNext, isNull);
           expect(success.next.cardJson, expectedFirst);
@@ -204,6 +204,7 @@ void main() {
             {
               'collections',
               'vocabulary_entries',
+              'vocabulary_trash',
               'vocabulary_examples',
               'learning_items',
               'regular_reviews',

@@ -291,7 +291,7 @@ void main() {
   );
 
   test(
-    'Undo conflicts atomically with a later Single mode and retains the original receipt for retry',
+    'Undo preserves learning and omits invalid assignments after a later Single-mode change',
     () async {
       await f.review(rating: LearningRating.again);
       final extra = await categories.createValue(
@@ -308,46 +308,22 @@ void main() {
       final deletion = SqliteVocabularyDeletionService(f.db);
       addTearDown(deletion.dispose);
       final receipt = await deletion.delete(f.entry.id);
-      final expiresAt = receipt.expiresAt;
       await categories.updateDimension(
         id: multiple.id,
         name: multiple.name,
         mode: CategoryMode.single,
       );
-      final deleted = await completeSnapshot();
-      await expectLater(
-        deletion.restore(receipt),
-        throwsA(VocabularyUndoFailure.categoryConflict),
-      );
-      expect(await completeSnapshot(), deleted);
-      expect(deletion.canUndo(receipt), isTrue);
-      expect(receipt.expiresAt, expiresAt);
-      await categories.updateDimension(
-        id: multiple.id,
-        name: multiple.name,
-        mode: CategoryMode.multiple,
-      );
       await deletion.restore(receipt);
-      expect(await assigned(f.entry.id), {
-        multiple.id: {other.id, extra.id},
-      });
+      expect((receipt as VocabularyRecoveryWarnings).omittedCategories, isTrue);
+      expect(await assigned(f.entry.id), isEmpty);
+      expect((await categories.dimensionById(multiple.id))!.mode, CategoryMode.single);
       final restored = await completeSnapshot();
-      final restoredAssignments =
-          restored.remove('vocabulary_category_assignments') as List;
-      final originalAssignments =
-          before.remove('vocabulary_category_assignments') as List;
-      // Assignment identity is the owner/dimension/value relation; successful
-      // restoration need not reproduce internal SQLite assignment rowids.
-      Set<(Object?, Object?, Object?, Object?)> identities(List rows) => {
-        for (final row in rows.cast<Map>())
-          (
-            row['entry_id'],
-            row['collection_id'],
-            row['dimension_id'],
-            row['value_id'],
-          ),
-      };
-      expect(identities(restoredAssignments), identities(originalAssignments));
+      restored.remove('vocabulary_category_assignments');
+      before.remove('vocabulary_category_assignments');
+      restored.remove('category_dimensions');
+      before.remove('category_dimensions');
+      // All other vocabulary, directional learning, retry/history and allocator
+      // bytes survive. Only the newly invalid assignments are omitted.
       expect(restored, before);
       expect(deletion.canUndo(receipt), isFalse);
     },

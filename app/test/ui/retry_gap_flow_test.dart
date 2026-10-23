@@ -57,15 +57,15 @@ void main() {
       final retired = session.current!;
       await grading.reveal(tester);
       expect(text(card, tester), ['One', 'Eins']);
-      await tester.tap(find.byType(PikoCheckbox));
+      expect(find.byType(PikoCheckbox), findsNothing);
       await tester.pumpAndSettle();
-      expect(session.hard, isTrue);
+      expect(session.hard, isFalse);
       await tester.tap(grading.gradeButton(AnswerGrade.correct));
       await h.finish(tester);
       expect(session.lastAnswer, isA<RetryAnswerReceipt>());
       expect(
         (session.lastAnswer! as RetryAnswerReceipt).rating,
-        LearningRating.hard,
+        LearningRating.good,
       );
       expect(session.acceptedReviews, hasLength(21));
       expect(session.currentIsRetry, isFalse);

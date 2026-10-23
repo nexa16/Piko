@@ -29,6 +29,7 @@ final class SqliteCategoryDefaults {
       for (final value in spec.$3) {
         await cats.createValue(
           dimensionId: group.id,
+          preserveAutomaticOrder: true,
           name: value.startsWith(RegExp('[ABC]'))
               ? value
               : copy.text('category.default.$value'),

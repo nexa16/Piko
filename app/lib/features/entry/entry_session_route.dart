@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/collections_repository.dart';
 import '../../data/vocabulary_deletion.dart';
 import '../../data/categories_repository.dart';
+import '../../data/learning_reset.dart';
 import 'entry_session_controller.dart';
 import 'entry_session_screen.dart';
 import '../interchange/vocabulary_json_page.dart' show VocabularyJsonReturn;
@@ -19,6 +20,7 @@ final class EntrySessionResources {
     this.onPendingWrites,
     this.categoriesRepository,
     this.aiCoordinator,
+    this.learningReset,
   });
   final EntrySessionController session;
   final VocabularyDeletionService deletionService;
@@ -26,6 +28,7 @@ final class EntrySessionResources {
   final ValueChanged<Future<void>>? onPendingWrites;
   final CategoriesRepository? categoriesRepository;
   final AiEntrySessionCoordinator? aiCoordinator;
+  final LearningResetRepository? learningReset;
 
   void dispose() {
     aiCoordinator?.dispose();
@@ -68,6 +71,7 @@ class _EntrySessionRouteState extends State<EntrySessionRoute> {
     collection: widget.collection,
     session: resources.session,
     aiCoordinator: resources.aiCoordinator,
+    learningReset: resources.learningReset,
     categoriesRepository: resources.categoriesRepository,
     onOpenInterchange: resources.interchangeBuilder == null
         ? null

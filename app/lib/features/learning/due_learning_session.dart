@@ -10,6 +10,7 @@ import '../../data/review_correction.dart';
 import 'learning_scheduler.dart';
 import 'regular_grading_coordinator.dart';
 import 'learning_session_progress.dart';
+import 'learning_parameters.dart';
 
 /// Owns captured regular membership and its actual scope-bound reinforcement.
 final class DueLearningSession extends ChangeNotifier implements HardSelection {
@@ -130,6 +131,9 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   late final GradingCoordinator<LearningAnswerReceipt> _grading;
   final Map<String, RetryObligation> _rounds = {};
   final Map<int, LearningItemRecord> _capturedItems = {};
+  final Set<int> _answeredRegular = {};
+  final Map<int, int> _deferredUntil = {};
+  int _presentations = 0;
   final Set<String> _excludedEntries = {};
   bool endedByExclusion = false;
 
@@ -160,10 +164,6 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
         generation: round.generation,
       )),
     );
-    while (_index < members.length &&
-        _excludedEntries.contains(members[_index].entryId)) {
-      _index++;
-    }
     if (hadWork &&
         regularItemsExhausted &&
         _rounds.isEmpty &&
@@ -238,7 +238,6 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   bool get currentIsRetry => _currentRetry != null;
   bool get hasPendingRetryWork => _rounds.isNotEmpty;
   final List<RegularReviewReceipt> _receipts = [];
-  int _index = 0;
   int _notificationDepth = 0;
   bool _stopped = false, _disposed = false;
   Future<LearningAnswerReceipt?>? _pending;
@@ -247,7 +246,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   bool get isSubmitting => _pending != null;
   bool get isCorrecting => _correction != null;
   // Exhausting regular membership does not imply retries or learning are complete.
-  bool get regularItemsExhausted => _index == members.length;
+  bool get regularItemsExhausted => unreviewedMembers.isEmpty;
   @override
   GradingCardHandle? get current =>
       _stopped ? null : _correction?.current ?? _grading.current;
@@ -284,7 +283,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       List.unmodifiable(_receipts);
   List<LearningItemRecord> get unreviewedMembers => List.unmodifiable(
     members
-        .skip(_index)
+        .where((item) => !_answeredRegular.contains(item.id))
         .where((item) => !_excludedEntries.contains(item.entryId)),
   );
 
@@ -303,17 +302,10 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
   }
 
   @override
-  bool canSetHard(GradingCardHandle handle) =>
-      !_stopped &&
-      !_disposed &&
-      !isSubmitting &&
-      (_correction?.canSetHard(handle) ?? _grading.canSetHard(handle));
+  bool canSetHard(GradingCardHandle handle) => false;
 
   @override
-  bool setHard(GradingCardHandle handle, bool selected) =>
-      canSetHard(handle) &&
-      (_correction?.setHard(handle, selected) ??
-          _grading.setHard(handle, selected));
+  bool setHard(GradingCardHandle handle, bool selected) => false;
 
   LearningRating? get previousRating {
     final answer = _correctionExpected;
@@ -360,14 +352,6 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
       correction.removeListener(_changed);
       correction.dispose();
       return false;
-    }
-    final priorRating = switch (expected) {
-      RegularReviewReceipt() => expected.event.rating,
-      RetryAnswerReceipt() => expected.rating,
-      _ => LearningRating.good,
-    };
-    if (priorRating == LearningRating.hard) {
-      correction.setHard(correctionHandle, true);
     }
     _correctionExpected = expected;
     _correctionWaits = waits;
@@ -425,20 +409,72 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
             final order = a.dueOrdinal.compareTo(b.dueOrdinal);
             return order != 0 ? order : a.itemId.compareTo(b.itemId);
           });
-    if (eligible.isNotEmpty && _source is RetryReviewSource) {
-      final round = eligible.first;
-      final item = items
-          .where(
-            (item) =>
-                item.id == round.itemId && item.generation == round.generation,
-          )
-          .firstOrNull;
-      if (item == null) throw RetryFailure.staleState;
-      _currentRetry = round;
-      _grading.activate(item);
-    } else if (!regularItemsExhausted) {
-      _grading.activate(members[_index]);
+    final candidates = <({LearningItemRecord item, RetryObligation? retry})>[];
+    if (_source is RetryReviewSource) {
+      for (final round in eligible) {
+        final item = items
+            .where(
+              (item) =>
+                  item.id == round.itemId &&
+                  item.generation == round.generation,
+            )
+            .firstOrNull;
+        if (item == null) throw RetryFailure.staleState;
+        candidates.add((item: item, retry: round));
+      }
     }
+    candidates.addAll(
+      unreviewedMembers.map((item) => (item: item, retry: null)),
+    );
+    if (candidates.isEmpty) return;
+    final available = candidates
+        .where(
+          (candidate) =>
+              (_deferredUntil[candidate.item.id] ?? 0) <= _presentations,
+        )
+        .toList();
+    final selected = available.isNotEmpty
+        ? available.first
+        : (candidates..sort(
+                (a, b) => (_deferredUntil[a.item.id] ?? 0).compareTo(
+                  _deferredUntil[b.item.id] ?? 0,
+                ),
+              ))
+              .first;
+    _currentRetry = selected.retry;
+    _grading.activate(selected.item);
+    _presentations++;
+  }
+
+  /// Presentation-only deferral: no storage call, ordinal or grade.
+  bool skip(GradingCardHandle handle) {
+    if (_stopped ||
+        _disposed ||
+        isSubmitting ||
+        isCorrecting ||
+        !_presentationActive ||
+        !(_presentationGuard?.call() ?? true) ||
+        !identical(_grading.current, handle)) {
+      return false;
+    }
+    final otherIds = <int>{
+      for (final item in unreviewedMembers)
+        if (item.id != handle.item.id) item.id,
+      for (final round in _rounds.values)
+        if (round.itemId != handle.item.id &&
+            _scopeState != null &&
+            round.eligibleAt(_scopeState!, _clock.now().toUtc()))
+          round.itemId,
+    };
+    _deferredUntil[handle.item.id] =
+        _presentations +
+        min(LearningParameters.skipOtherQuestions, otherIds.length);
+    _grading.retireUnanswered(handle);
+    _currentRetry = null;
+    _select(_capturedItems.values.toList(), _clock.now().toUtc());
+    _changed();
+    _scheduleWake();
+    return true;
   }
 
   Future<void> _refreshAndSelect(DateTime at) async {
@@ -718,6 +754,7 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
           throw StateError('Correction returned an unrelated answer');
         }
         final correctedProgress = progressChange.prior.accepting(replacement);
+        _capturedItems[replacement.next.id] = replacement.next;
         _lastAnswer = replacement;
         _progress = correctedProgress;
         _lastProgressChange = SessionProgressChange(
@@ -826,8 +863,9 @@ final class DueLearningSession extends ChangeNotifier implements HardSelection {
           next: _progress,
         );
         if (receipt is RegularReviewReceipt) {
+          _capturedItems[receipt.next.id] = receipt.next;
           _receipts.add(receipt);
-          _index++;
+          _answeredRegular.add(receipt.prior.id);
           _scopeState = receipt.scopeNext;
           if (receipt.retryNext case final round?) _rounds[round.id] = round;
         } else if (receipt is RetryAnswerReceipt) {

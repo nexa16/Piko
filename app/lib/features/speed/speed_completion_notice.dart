@@ -14,8 +14,10 @@ class SpeedCompletionNotice extends StatelessWidget {
     required this.onDismiss,
     this.showArtwork = true,
     this.dismissFocusNode,
+    this.totalRetries = 0,
   }) : assert(count > 0);
   final int count;
+  final int totalRetries;
   final VoidCallback onDismiss;
   final bool showArtwork;
   final FocusNode? dismissFocusNode;
@@ -29,10 +31,16 @@ class SpeedCompletionNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              count == 1
-                  ? copy.text('speed.completionNoticeOne')
-                  : copy.text('speed.completionNotice', {'count': count}),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count == 1
+                      ? copy.text('speed.completionNoticeOne')
+                      : copy.text('speed.completionNotice', {'count': count}),
+                ),
+                Text(copy.text('learn.totalRetries', {'count': totalRetries})),
+              ],
             ),
           ),
           if (showArtwork) ...[

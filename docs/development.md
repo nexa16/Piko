@@ -98,12 +98,23 @@ Do not continue if installation fails. Do not clear storage, uninstall, force a 
 Start the installed test activity, obtain and forward its VM service, then attach from `app/`:
 
 ```powershell
-flutter drive --use-existing-app=<forwarded-vm-service-url> --driver=test_driver/attach_only.dart -d <device-id>
+flutter drive --no-pub --target <integration-target> --use-existing-app=<forwarded-vm-service-url> --driver=test_driver/attach_only.dart -d <device-id> --keep-app-running --no-dds
 ```
 
 Use the fixture's isolated storage and preservation protocol. Keep a private before/after inventory and a pre-existing sentinel. Restore a compatible normal APK through direct in-place installation and verify its cold launch and retained sentinel. A new empty database is not preservation evidence. Never run integration fixtures on a personal device without explicit approval.
 
-Relevant fixtures include `count_refresh_android_test.dart` for production header/launch widgets under delayed, failed and obsolete reads using actual native dimensions and isolated in-memory fixtures; `round5_android_test.dart` for editor/content/activity learning integration, `retry_expiry_android_test.dart` for isolated retry expiry, `offline_vocabulary_android_test.dart` for repository persistence and `piko_icon_android_test.dart` for packaged SVG rendering. Older inline-edit fixtures retain earlier interaction assumptions; inspect the selected contract before using them as acceptance. Fixture captures must not be published as ordinary-product screenshots.
+The checked-in PowerShell runner automates the build/direct-install/attach sequence. From the repository root, after preparing the protected baseline:
+
+```powershell
+./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round10_android_test.dart
+./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round10_ai_android_test.dart
+```
+
+The runner requires an already installed, debuggable app with readable `piko.sqlite` and `release-final-sentinel.txt` baseline files. It refuses missing files, symlinks, unreadable fingerprints and SQLite WAL/SHM/journal sidecars rather than accepting an empty baseline or checkpointing protected data. It builds for the device ABI using the installed version code, installs directly, starts a paused process and attaches only to its authenticated VM service. Installation, launch, attach or preservation failures stop the run without an uninstall fallback. It checks the protected hashes before and after execution and retains the installed test app; restoring and reopening the compatible ordinary APK remains a separate step. Do not create or replace a baseline merely to make this guard pass on a device containing data to preserve.
+
+`round10_android_test.dart` combines the synthetic search/selection, learning/reset, Trash/recovery, editor, category order/grouping and AI form contracts in one serialized lane, with SQL and rendered-search measurements kept separate. `round10_ai_android_test.dart` is the focused affected AI admission/form and Collection-level fixture. Both use synthetic repositories or isolated databases rather than the ordinary application database, real accounts or external providers; their presence does not establish a passing run.
+
+Other fixtures include `count_refresh_android_test.dart` for production header/launch widgets under delayed, failed and obsolete reads using actual native dimensions and isolated in-memory fixtures; `round5_android_test.dart` for editor/content/activity learning integration, `retry_expiry_android_test.dart` for isolated retry expiry, `offline_vocabulary_android_test.dart` for repository persistence and `piko_icon_android_test.dart` for packaged SVG rendering. Older inline-edit fixtures retain earlier interaction assumptions; inspect the selected contract before using them as acceptance. Fixture captures must not be published as ordinary-product screenshots.
 
 ### Termination durability exception
 

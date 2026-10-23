@@ -47,6 +47,18 @@ void main() {
               : {'Essen', 'Wohnen', 'Zeit'},
         );
         expect((await cats.values(groups[2].id)).length, 4);
+        expect(
+          (await cats.values(groups[2].id)).map((v) => v.name),
+          locale == 'en'
+              ? ['Adjective', 'Fixed expression', 'Noun', 'Verb']
+              : ['Adjektiv', 'Feste Wendung', 'Nomen', 'Verb'],
+        );
+        expect(
+          (await db.select(db.categoryGroupPreferences).get()).every(
+            (p) => !p.customValueOrder,
+          ),
+          true,
+        );
         expect((await cats.values(groups[3].id)).length, 2);
         await cats.deleteDimension(groups[1].id);
         await collections.rename(id: c.id, name: 'Renamed');

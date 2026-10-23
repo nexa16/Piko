@@ -10,6 +10,51 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
   SqliteCategoriesRepository(this.database);
   final PikoDatabase database;
 
+  @override
+  Future<List<CategoryDimensionRecord>> reorderDimensions({
+    required String collectionId,
+    required List<String> orderedIds,
+    List<String>? expectedOrder,
+  }) {
+    final requested = List<String>.of(orderedIds),
+        expected = expectedOrder == null
+            ? null
+            : List<String>.of(expectedOrder);
+    return _write(() async {
+      if (await (database.select(
+            database.collections,
+          )..where((row) => row.id.equals(collectionId))).getSingleOrNull() ==
+          null) {
+        throw CategoryValidation.collectionNotFound;
+      }
+      final current = await dimensions(collectionId);
+      final ids = current.map((g) => g.id).toList();
+      if (expected != null &&
+          (expected.length != ids.length ||
+              Iterable<int>.generate(
+                ids.length,
+              ).any((i) => expected[i] != ids[i]))) {
+        throw CategoryValidation.staleOrder;
+      }
+      if (requested.length != ids.length ||
+          requested.toSet().length != ids.length ||
+          !requested.toSet().containsAll(ids)) {
+        throw CategoryValidation.invalidOwnership;
+      }
+      if (Iterable<int>.generate(
+        ids.length,
+      ).every((i) => requested[i] == ids[i])) {
+        return current;
+      }
+      for (var i = 0; i < requested.length; i++) {
+        await (database.update(database.categoryDimensions)
+              ..where((row) => row.id.equals(requested[i])))
+            .write(CategoryDimensionsCompanion(position: Value(i)));
+      }
+      return dimensions(collectionId);
+    });
+  }
+
   String _name(String name) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw CategoryValidation.requiredName;
@@ -84,15 +129,6 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
           database.categoryGroupPreferences,
         },
       );
-  SimpleSelectStatement<$CategoryValuesTable, StoredCategoryValue> _values(
-    String dimensionId,
-  ) => database.select(database.categoryValues)
-    ..where((row) => row.dimensionId.equals(dimensionId))
-    ..orderBy([
-      (row) => OrderingTerm(expression: row.position),
-      (row) => OrderingTerm(expression: row.id),
-    ]);
-
   @override
   Future<List<CategoryDimensionRecord>> dimensions(String collectionId) async =>
       (await _dimensions(
@@ -331,6 +367,8 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
     required String dimensionId,
     required String name,
     String? id,
+    // Only initial starter-catalog assembly retains automatic alphabetical order.
+    bool preserveAutomaticOrder = false,
   }) async {
     final trimmed = _name(name), identity = _id(id);
     return _write(() async {
@@ -338,8 +376,31 @@ final class SqliteCategoriesRepository implements CategoriesRepository {
         throw CategoryValidation.dimensionNotFound;
       }
       await _availableId(identity);
-      final existing = await _values(dimensionId).get();
-      final position = existing.isEmpty ? 0 : existing.last.position + 1;
+      final existing = await values(dimensionId);
+      var position = existing.isEmpty
+          ? 0
+          : existing
+                    .map((value) => value.position)
+                    .reduce((a, b) => a > b ? a : b) +
+                1;
+      if (existing.isNotEmpty && !preserveAutomaticOrder) {
+        final preference =
+            await (database.select(database.categoryGroupPreferences)
+                  ..where((row) => row.dimensionId.equals(dimensionId)))
+                .getSingleOrNull();
+        if (preference?.customValueOrder != true) {
+          await _rankValues(existing.map((value) => value.id).toList());
+          position = existing.length;
+          await database
+              .into(database.categoryGroupPreferences)
+              .insertOnConflictUpdate(
+                CategoryGroupPreferencesCompanion.insert(
+                  dimensionId: dimensionId,
+                  customValueOrder: const Value(true),
+                ),
+              );
+        }
+      }
       await database
           .into(database.categoryValues)
           .insert(

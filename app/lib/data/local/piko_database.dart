@@ -19,6 +19,13 @@ class AppSettings extends Table {
 }
 
 class Collections extends Table {
+  TextColumn get level => text()
+      .withDefault(const Constant('A1'))
+      .check(
+        const CustomExpression<bool>(
+          "level IN ('A1','A2','B1','B2','C1','C2')",
+        ),
+      )();
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get targetLanguage => text()();
@@ -79,6 +86,18 @@ class VocabularyEntries extends Table {
     'CHECK(length(trim(native_text)) > 0)',
     'UNIQUE(collection_id, target_key, native_key, hint_key)',
   ];
+}
+
+class VocabularyTrash extends Table {
+  TextColumn get entryId => text()();
+  TextColumn get collectionId =>
+      text().references(Collections, #id, onDelete: KeyAction.cascade)();
+  TextColumn get groupId => text()();
+  TextColumn get deletedAt => text()();
+  TextColumn get expiresAt => text()();
+  TextColumn get snapshotJson => text()();
+  @override
+  Set<Column<Object>> get primaryKey => {entryId};
 }
 
 class VocabularyExamples extends Table {
@@ -295,6 +314,7 @@ class VocabularyOrderSequence extends Table {
     AppSettings,
     Collections,
     VocabularyEntries,
+    VocabularyTrash,
     VocabularyExamples,
     LearningItems,
     RegularReviews,
@@ -322,7 +342,7 @@ class PikoDatabase extends _$PikoDatabase {
   final _scheduler = LearningScheduler();
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -477,10 +497,24 @@ class PikoDatabase extends _$PikoDatabase {
             categoryGroupPreferences.acquisitionSource,
           );
         }
+        if (from < 23) {
+          if (from >= 2) await m.addColumn(collections, collections.level);
+          await m.createTable(vocabularyTrash);
+        }
       });
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      final now = clock.now().toUtc();
+      final expired = (await select(vocabularyTrash).get())
+          .where((row) => !now.isBefore(DateTime.parse(row.expiresAt)))
+          .map((row) => row.entryId)
+          .toList();
+      if (expired.isNotEmpty) {
+        await (delete(
+          vocabularyTrash,
+        )..where((row) => row.entryId.isIn(expired))).go();
+      }
     },
   );
 

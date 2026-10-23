@@ -6,6 +6,10 @@ import 'package:piko/features/vocabulary/collection_vocabulary_mutations.dart';
 import 'package:piko/main.dart';
 import 'package:piko/ui/components/piko_button.dart';
 import 'package:piko/ui/components/piko_icon.dart';
+import 'package:piko/ui/components/piko_dialog.dart';
+import 'package:piko/shared/catalogs.dart';
+import 'package:piko/data/categories_repository.dart';
+import 'package:piko/data/local/sqlite_categories_repository.dart';
 import '../support/collection_deletion_fixture.dart';
 
 Finder card(String id) => find.byKey(ValueKey('vocabulary-$id'));
@@ -56,10 +60,13 @@ Future<void> mount(
   double scale = 1,
   double keyboard = 0,
   bool reduced = false,
+  bool nativeViewport = false,
 }) async {
-  tester.view.physicalSize = Size(width, 1000);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
+  if (!nativeViewport) {
+    tester.view.physicalSize = Size(width, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
@@ -105,7 +112,97 @@ Future<void> swipeDelete(
   await tester.pump();
 }
 
+void registerRound10EditorTests({
+  bool nativeViewport = false,
+  String locale = 'en',
+  double scale = 1,
+}) {
+  testWidgets(
+    '$locale editor Delete Cancel preserves invalid raw draft and title status',
+    (tester) async {
+      final f = CollectionDeletionFixture();
+      await tester.runAsync(f.initialize);
+      await mount(
+        tester,
+        f,
+        locale: locale,
+        scale: scale,
+        nativeViewport: nativeViewport,
+      );
+      final id = f.entries.first.id;
+      await tester.tap(card(id));
+      await tester.pumpAndSettle();
+      await tester.enterText(field(id), '  ');
+      await tester.pumpAndSettle();
+      final controller = tester.widget<TextField>(field(id)).controller!;
+      controller.selection = const TextSelection(
+        baseOffset: 0,
+        extentOffset: 1,
+      );
+      final remove = find.byKey(ValueKey('inline-delete-$id'));
+      await tester.ensureVisible(remove);
+      await tester.pumpAndSettle();
+      await tester.tap(remove);
+      await tester.pumpAndSettle();
+      expect(f.deletion.deletes, 0);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PikoDialog).last,
+          matching: button(PikoCopy(locale).text('action.cancel')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(field(id)).controller, same(controller));
+      expect(controller.text, '  ');
+      expect(
+        controller.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 1),
+      );
+      expect(f.deletion.deletes, 0);
+      expect(find.text(PikoCopy(locale).text('entry.unsaved')), findsOneWidget);
+    },
+  );
+}
+
 void main() {
+  registerRound10EditorTests();
+  testWidgets('Collection Undo explains omitted deleted categories', (
+    tester,
+  ) async {
+    final f = CollectionDeletionFixture();
+    await tester.runAsync(f.initialize);
+    final categories = SqliteCategoriesRepository(f.db);
+    final entry = f.entries.first;
+    final group = (await tester.runAsync(
+      () => categories.createDimension(
+        collectionId: f.owner.id,
+        name: 'Topic',
+        mode: CategoryMode.multiple,
+      ),
+    ))!;
+    final value = (await tester.runAsync(
+      () => categories.createValue(dimensionId: group.id, name: 'Food'),
+    ))!;
+    await tester.runAsync(
+      () => categories.replaceAssignments(
+        entryId: entry.id,
+        assignments: {
+          group.id: {value.id},
+        },
+      ),
+    );
+    await mount(tester, f);
+    await swipeDelete(tester, entry.id);
+    await flush(tester, f);
+    await tester.runAsync(() => categories.deleteDimension(group.id));
+    await tester.tap(button('Undo'));
+    await flush(tester, f);
+    expect(card(entry.id), findsOneWidget);
+    expect(
+      find.text(PikoCopy('en').text('trash.categoryWarning', {'count': 1})),
+      findsOneWidget,
+    );
+  });
   testWidgets(
     'Undo above a raw editor uses the documented short-list scroll-bound fallback',
     (tester) async {
@@ -253,7 +350,14 @@ void main() {
       await tester.ensureVisible(delete);
       await tester.pumpAndSettle();
       await tester.tap(delete);
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PikoDialog).last,
+          matching: button('Delete vocabulary'),
+        ),
+      );
+      await tester.pumpAndSettle();
       expect(f.deletion.deletes, 0);
       expect(tester.widget<TextField>(field(id)).enabled, isFalse);
       gate.complete();
