@@ -1,6 +1,6 @@
 # Product screenshots
 
-Original full captures of ordinary build **16**, identified by the [build manifest](build-manifest.json), including system UI. All use English, normal text size and an Android API-36 emulator with synthetic English/German content. Captures span October 22–23, 2026; Home and list states precede the later learning session. The editor, category Properties/Values and Speed setup are intentionally scrolled. No crop, redaction or UI reconstruction is applied. [Verification coverage](verification.md) separates these observations from synthetic test results and device gaps.
+Original full captures of ordinary build **17**, identified by the [build manifest](build-manifest.json), including system UI. All four were captured on October 23, 2026 with English copy, normal text size and an Android API-36 emulator. The retained synthetic English/German Collection contains three vocabulary entries and existing learning statistics. Captures follow the schema-23 to schema-24 update through normal product navigation. The language editor is staged and was cancelled after capture. No crop, redaction or UI reconstruction is applied. [Verification coverage](verification.md) distinguishes ordinary-product observations, instrumented Android fixtures and remaining device gaps.
 
 - [Collections](#collections)
 - [Vocabulary editors and recovery](#editors)
@@ -15,103 +15,47 @@ Original full captures of ordinary build **16**, identified by the [build manife
 <a id="collections"></a>
 ## Collections
 
-### Home Activity before learning, with one synthetic three-word English/German Collection
+### Home Activity with retained learning statistics
 
-<img src="images/r10-home.png" width="360" alt="Home Activity before learning, with one synthetic three-word English/German Collection">
+<img src="images/r11-home.png" width="360" alt="Home Activity with one synthetic Collection and retained learning statistics">
 
-[Full image](images/r10-home.png) · [Metadata: `r10-home`](build-manifest.json) · [Related task](features.md#statistics)
+[Full image](images/r11-home.png) · [Metadata: `r11-home`](build-manifest.json) · [Related task](features.md#statistics)
 
-### Collection with flat Compact bilingual rows and separate Review and Speed actions
+### Stacked bilingual Compact cards
 
-<img src="images/r10-collection.png" width="360" alt="Collection with flat Compact bilingual rows and separate Review and Speed actions">
+<img src="images/r11-collection.png" width="360" alt="Collection with stacked bilingual Compact cards and separate Review and Speed actions">
 
-[Full image](images/r10-collection.png) · [Metadata: `r10-collection`](build-manifest.json) · [Related task](features.md#collections)
+[Full image](images/r11-collection.png) · [Metadata: `r11-collection`](build-manifest.json) · [Related task](features.md#collections)
 
 <a id="editors"></a>
 ## Vocabulary editors and recovery
 
-### Scrolled saved vocabulary editor with heading save status, Active, Reset and Delete controls
-
-<img src="images/r10-editor.png" width="360" alt="Scrolled saved vocabulary editor with heading save status, Active, Reset and Delete controls">
-
-[Full image](images/r10-editor.png) · [Metadata: `r10-editor`](build-manifest.json) · [Related task](features.md#edit-vocabulary)
-
-### Delete confirmation over the saved editor, explaining that vocabulary moves to Trash
-
-<img src="images/r10-delete-confirm.png" width="360" alt="Delete confirmation over the saved editor, explaining that vocabulary moves to Trash">
-
-[Full image](images/r10-delete-confirm.png) · [Metadata: `r10-delete-confirm`](build-manifest.json) · [Related task](features.md#edit-vocabulary)
-
-### Learning-reset confirmation with both directions selected and statistics-preservation explanation
-
-<img src="images/r10-reset-confirm.png" width="360" alt="Learning-reset confirmation with both directions selected and statistics-preservation explanation">
-
-[Full image](images/r10-reset-confirm.png) · [Metadata: `r10-reset-confirm`](build-manifest.json) · [Related task](features.md#edit-vocabulary)
-
-### Expanded Trash operation with individual Restore, Restore group and Empty Trash controls
-
-<img src="images/r10-trash.png" width="360" alt="Expanded Trash operation with individual Restore, Restore group and Empty Trash controls">
-
-[Full image](images/r10-trash.png) · [Metadata: `r10-trash`](build-manifest.json) · [Related task](features.md#edit-vocabulary)
+See the [feature guide](features.md#edit-vocabulary) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
 
 <a id="categories"></a>
 ## Categories
 
-### Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus
-
-<img src="images/r10-category-values.png" width="360" alt="Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus">
-
-[Full image](images/r10-category-values.png) · [Metadata: `r10-category-values`](build-manifest.json) · [Related task](features.md#categories)
+See the [feature guide](features.md#categories) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
 
 <a id="selection"></a>
 ## Selection
 
-### One selected Compact row with selection count, Select all, Clear selection and Delete vocabulary
-
-<img src="images/r10-selection.png" width="360" alt="One selected Compact row with selection count, Select all, Clear selection and Delete vocabulary">
-
-[Full image](images/r10-selection.png) · [Metadata: `r10-selection`](build-manifest.json) · [Related task](features.md#selection)
+See the [feature guide](features.md#selection) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
 
 <a id="learning"></a>
 ## Long-term learning
 
-### Long-term German-to-English question with progress, total retries and Skip
-
-<img src="images/r10-learning.png" width="360" alt="Long-term German-to-English question with progress, total retries and Skip">
-
-[Full image](images/r10-learning.png) · [Metadata: `r10-learning`](build-manifest.json) · [Related task](features.md#long-term)
-
-### Review completion showing one completed word, one first-try correct answer and zero retries
-
-<img src="images/r10-review-summary.png" width="360" alt="Review completion showing one completed word, one first-try correct answer and zero retries">
-
-[Full image](images/r10-review-summary.png) · [Metadata: `r10-review-summary`](build-manifest.json) · [Related task](features.md#long-term)
+See the [feature guide](features.md#long-term) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
 
 <a id="speed"></a>
 ## Speed learning
 
-### Selected Speed setup for one active reviewed word with hidden and inactive counts
-
-<img src="images/r10-selected-speed.png" width="360" alt="Selected Speed setup for one active reviewed word with hidden and inactive counts">
-
-[Full image](images/r10-selected-speed.png) · [Metadata: `r10-selected-speed`](build-manifest.json) · [Related task](features.md#selection)
-
-### German-to-English Speed question with progress and total retries
-
-<img src="images/r10-speed.png" width="360" alt="German-to-English Speed question with progress and total retries">
-
-[Full image](images/r10-speed.png) · [Metadata: `r10-speed`](build-manifest.json) · [Related task](features.md#speed)
-
-### Collection Speed-completion notice showing one completed word and zero retries
-
-<img src="images/r10-speed-summary.png" width="360" alt="Collection Speed-completion notice showing one completed word and zero retries">
-
-[Full image](images/r10-speed-summary.png) · [Metadata: `r10-speed-summary`](build-manifest.json) · [Related task](features.md#speed)
+See the [feature guide](features.md#speed) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
 
 <a id="statistics"></a>
 ## Statistics
 
-See the [feature guide](features.md#statistics) and [verification coverage](verification.md). No selected-build gallery capture is included for this flow.
+The [Home Activity capture](#collections) shows retained learning statistics. See the [feature guide](features.md#statistics) and [verification coverage](verification.md) for behavior and tested scope.
 
 <a id="transfer"></a>
 ## JSON transfer
@@ -121,8 +65,14 @@ See the [feature guide](features.md#transfer) and [verification coverage](verifi
 <a id="settings"></a>
 ## Settings
 
-### Collection Settings with A1 level, learning preference, Categories, Trash and transfer entrances
+### Collection Settings and language-change entrance
 
-<img src="images/r10-collection-settings.png" width="360" alt="Collection Settings with A1 level, learning preference, Categories, Trash and transfer entrances">
+<img src="images/r11-collection-settings.png" width="360" alt="Collection Settings with level, staged language change and existing management controls">
 
-[Full image](images/r10-collection-settings.png) · [Metadata: `r10-collection-settings`](build-manifest.json) · [Related task](features.md#collections)
+[Full image](images/r11-collection-settings.png) · [Metadata: `r11-collection-settings`](build-manifest.json) · [Related task](features.md#collections)
+
+### Staged language editor
+
+<img src="images/r11-languages.png" width="360" alt="Staged Collection language editor with preservation notice and Apply">
+
+[Full image](images/r11-languages.png) · [Metadata: `r11-languages`](build-manifest.json) · [Related task](features.md#collections)

@@ -108,11 +108,23 @@ The checked-in PowerShell runner automates the build/direct-install/attach seque
 ```powershell
 ./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round10_android_test.dart
 ./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round10_ai_android_test.dart
+./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round11_acceptance_android_test.dart -Define @('PIKO_CATALOGUE_RUN=<unique-run-id>', 'PIKO_CATALOGUE_COMMIT=<full-source-commit>')
+./app/tool/run_android_acceptance.ps1 -Flutter flutter -Adb adb -Device <device-id> -Target integration_test/round11_feedback_android_test.dart -Define @('PIKO_CATALOGUE_RUN=<another-unique-run-id>', 'PIKO_CATALOGUE_COMMIT=<full-source-commit>')
 ```
 
 The runner requires an already installed, debuggable app with readable `piko.sqlite` and `release-final-sentinel.txt` baseline files. It refuses missing files, symlinks, unreadable fingerprints and SQLite WAL/SHM/journal sidecars rather than accepting an empty baseline or checkpointing protected data. It builds for the device ABI using the installed version code, installs directly, starts a paused process and attaches only to its authenticated VM service. Installation, launch, attach or preservation failures stop the run without an uninstall fallback. It checks the protected hashes before and after execution and retains the installed test app; restoring and reopening the compatible ordinary APK remains a separate step. Do not create or replace a baseline merely to make this guard pass on a device containing data to preserve.
 
 `round10_android_test.dart` combines the synthetic search/selection, learning/reset, Trash/recovery, editor, category order/grouping and AI form contracts in one serialized lane, with SQL and rendered-search measurements kept separate. `round10_ai_android_test.dart` is the focused affected AI admission/form and Collection-level fixture. Both use synthetic repositories or isolated databases rather than the ordinary application database, real accounts or external providers; their presence does not establish a passing run.
+
+`round11_acceptance_android_test.dart` combines the feedback fixture with job persistence/control, AI form and learning-route tests in one serialized lane. `round11_feedback_android_test.dart` isolates cards, selection, native keyboard interaction, Undo and language-pair preservation in a unique file-backed synthetic database. Supply the fixture's required `PIKO_CATALOGUE_*` provenance/run defines through the runner's `Define` argument; each run needs a new run ID. Read its configuration before execution. Use explicit locale/viewport/font settings for alternate-state checks and restore the original device settings afterward. The [coverage record](verification.md#synthetic-android-checks) distinguishes passed scenarios from an earlier fixture failure.
+
+After restoring the ordinary candidate on an explicitly selected emulator, verify launcher/component/background task reuse from the repository root:
+
+```powershell
+./app/tool/check_android_task_reuse.ps1 -Adb adb -Device <emulator-device-id>
+```
+
+The probe requires exactly one Piko task with the same identity after all four entry paths. It does not remove tasks, alter app data or install a package. Cleanup of obsolete empty tasks is guarded in the application on API 29 and later; the probe is not evidence for every supported OS version.
 
 Other fixtures include `count_refresh_android_test.dart` for production header/launch widgets under delayed, failed and obsolete reads using actual native dimensions and isolated in-memory fixtures; `round5_android_test.dart` for editor/content/activity learning integration, `retry_expiry_android_test.dart` for isolated retry expiry, `offline_vocabulary_android_test.dart` for repository persistence and `piko_icon_android_test.dart` for packaged SVG rendering. Older inline-edit fixtures retain earlier interaction assumptions; inspect the selected contract before using them as acceptance. Fixture captures must not be published as ordinary-product screenshots.
 

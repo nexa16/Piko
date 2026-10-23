@@ -1,47 +1,53 @@
 # Verification coverage
 
-This page records source-bound checks for development build **16**, ordinary `main.dart` application source **`e1e6230fff4694bc64e25ccfec2261cc2e0a9d12`**. Its release-mode APK SHA-256 is **`35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318`**. Later documentation-only commits do not change that application source. The [manifest](build-manifest.json) owns artifact and capture metadata; [developer setup](development.md#android-verification) owns the safe execution procedure. This is a development artifact, not a store release.
+This page records source-bound checks for development build **17**, ordinary `main.dart` application source **`951018dcdf494754526f2fc7d8e9540e6bc31900`**. Its release-mode APK SHA-256 is **`36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3`**. Later documentation/test-only commits do not change that application source. The [manifest](build-manifest.json) owns artifact and capture metadata; [developer setup](development.md#android-verification) owns the safe execution procedure. This is a development artifact, not a store release.
 
 ## Host and source checks
 
-The integrated full Flutter run recorded **1,427 passes and 22 failures**. Repairs were followed by **40 passing failed/affected checks**, then **nine passing final AI admission/filter checks**. The Value-append follow-up passed **17 focused data checks**. These are a full run plus focused repairs and follow-ups, not a completely passing full rerun at the frozen source.
+The integrated full Flutter run recorded **1,493 passing tests and one failure**. The remaining failure was a Windows host test incorrectly expecting an Android platform-channel subscription. After making its Android condition explicit, **10 focused clock/settings tests passed**. These results are a full run plus focused repair, not a completely passing full rerun at the frozen source. Earlier migration-fixture and layout repairs were included in the integrated run.
 
-Backend protocol checks passed **51 tests** and shared generation checks passed **22 tests**. The last recorded application analysis before packaging reported no issues. These results do not establish native behavior or fresh-machine setup.
+Backend protocol, worker and database checks passed **77 tests**, using provider doubles and a local PostgreSQL-compatible fixture with a minimal queue implementation. Shared-generation checks passed **22 tests**, and generated catalogs matched their sources. The last recorded application analysis reported no issues. The Dart-produced review-manifest digest also matched the backend implementation. These results do not establish hosted queue/scheduler operation, native behavior or fresh-machine setup.
 
 ## Synthetic Android checks
 
 | Entry and source | Observed result and scope |
 | --- | --- |
-| Combined `round10_android_test.dart`, `e01d70e` | **54 scenarios plus teardown pass (55 total)**. Search/selection, learning/correction/reset, editor controls, category order/grouping, Trash/recovery and AI form contracts share one serialized lane. |
-| Affected `round10_ai_android_test.dart`, frozen `e1e6230` | **11 scenarios plus teardown pass (12 total)**. Final AI admission/form/filter and Collection-level scope. |
+| Combined `round11_acceptance_android_test.dart`, application source `18dced1` | **22 scenarios plus teardown passed** for job persistence/control, AI forms and learning routes. The separate feedback scenario initially failed a fixture tap; it is not counted as passing in this run. |
+| `round11_feedback_android_test.dart`, same Dart application source | After correcting fixture gestures, **one complete scenario plus teardown passed** in English at normal scale: cards, selection, actual keyboard interaction, Undo and language-pair preservation. |
+| `round11_feedback_android_test.dart`, frozen `951018d` | **One complete scenario plus teardown passed** in German at a 320-logical-pixel width and 200% system font scale. Original emulator display settings were restored afterward. |
+| `round11_ai_access_android_test.dart`, same frozen application source | **Two scenarios plus teardown passed**, EN/DE: actual managed client/connection controller with in-memory HTTP, retained identity, explicit consent updates the stale access label, return to form and one explicit generation. No socket or paid provider request. |
 
-The fixtures use actual Android viewport dimensions in English at normal text scale and German at 200%. Real SQLite checks cover recovery, reset, reopen, migration, expiry, Undo and stale-state guards. Protected ordinary database and sentinel files remain unchanged across the synthetic runs. This is focused changed-surface coverage, not a whole-app device or accessibility matrix.
+The emulator runs on Android API 36. Synthetic fixtures use isolated databases and provider doubles. Protected ordinary database and sentinel files remain unchanged across the fixture runs. The feedback scenario checks exact restoration of seven content/learning tables after Undo under filtering, sorting and grouping; language-pair metadata changes preserve learning data. Real keyboard checks cover raw invalid drafts, close/correction behavior and outside-tap focus handling. Inspected captures supplement the interaction assertions.
 
-AI fixtures use fake providers. The lossless 700-vocabulary transport fixture reduces **284,803 bytes to 127,701 bytes** through reversible identifier compaction, with no lexical truncation. No fresh paid 700-vocabulary provider request or general linguistic-quality result is claimed.
+These are focused changed-surface checks. The historical keyboard/dialog transient was not reproduced; passing the named current flows does not establish its historical cause. Selection/layout evidence covers the tested English and German states, not a whole-app visual or accessibility matrix.
+
+Host/backend fixtures exercise a 700-entry review scope, batch-boundary planning, restart/retry, stale generations, cancellation, reservations and idempotent adoption. An additional five-test controller run passes the combined filtered-700 fixture: 600 exact matches including 200 inactive entries, 24 upload chunks, excluded vocabulary absent, frozen options and GET-only restart. Distant related entries remain in the payload; backend fixtures separately check cross-shard planning. This is controlled local protocol evidence, not a paid end-to-end linguistic review. No fresh paid 700-entry provider request or general linguistic-quality result is claimed.
 
 ### Search latency
 
-Measured input-to-matching-render times, including query and actual Collection rendering, were:
+Historical input-to-matching-render measurements, including query and actual Collection rendering, were:
 
 | Vocabulary count | Three observed times |
 | --- | --- |
 | 600 | 377 / 738 / 826 ms |
 | 5,000 | 1,869 / 1,724 / 1,822 ms |
 
-The provisional **200 ms** target is unmet. Separate SQL query measurements do not represent these end-to-end times and do not establish full list responsiveness.
+These are retained measurements from the preceding application source, not new build-17 benchmarks. The provisional **200 ms** target was unmet; the existing speed was accepted without a new optimization task. Separate SQL query measurements do not represent these end-to-end times.
 
-## Ordinary build 16
+## Ordinary build 17
 
-The exact ordinary release-mode APK installs in place and cold-opens. The existing database migrates to schema **23** with all content and learning history preserved: **16 existing tables remain exactly equal**. The previously absent `statistics_origins` singleton is initialized once by the existing Home bootstrap; this expected initialization does not rewrite review history. Existing Collections receive the A1 default, and the retained sentinel is unchanged.
+The exact ordinary release-mode APK installs in place and cold-opens. Its schema **23 → 24** migration preserves all **18 existing tables exactly**, including content and learning state. The two new operational tables start empty. Database integrity passes, there are no foreign-key violations, and the retained sentinel remains unchanged. This observation uses the retained populated database; a fresh empty fixture is not substituted for upgrade evidence.
 
-Observed ordinary-app interactions include Compact-row long-press selection, saved-editor Delete cancellation, learning-reset cancellation, heading save status, Collection Settings → Trash and group recovery. Long-term and selected Speed rounds complete with retry totals; completed rounds expose no Previous Review. Trash recovery survives cold restart. Settings group reordering and new-Value append order persist.
+The final ordinary candidate also exercises launcher entry, direct component entry, background return and repeated launcher entry. Each path retains exactly one Piko task with the same identity. An obsolete empty task left by the earlier launcher behavior was removed by the final candidate's narrowly guarded cleanup. That cleanup runs on API 29 and later; API 24–28 retain the preventive task configuration, but cleanup on those versions is not claimed verified. The checked-in task-reuse probe observes navigation and task identity without deleting tasks or data.
 
-After these ordinary interactions, read-only SQLite inspection confirms all three vocabulary entries and their assignments remain identical. Five of six learning directions are unchanged; the exercised direction has exactly the expected Long-term review and Speed-completion marker, with one regular review, one Speed receipt and two statistics events. Trash is empty after recovery, the sentinel is unchanged, and integrity and foreign-key checks pass. The exact ordinary release APK is restored and cold-opens; its installed SHA-256 matches the manifest. Refreshed full captures come from this ordinary APK. These observations are separate from synthetic fixture results.
+Ordinary-product captures and their source/configuration are identified separately in the manifest. Synthetic fixture captures are not product screenshots.
 
 ## Managed backend boundary
 
-The approved version-5 backend is live with the exact reviewed function files and JWT verification enabled. An unauthenticated request returns **401**; existing service limits remain unchanged. This verifies the deployment/authentication boundary, not a new paid provider result or independent deletion of every provider-managed internal copy or backup. Ordinary builds keep AI disabled.
+The previously approved version-5 backend remains the live service. The new persistent full-review jobs, queue and scheduled worker are implemented and tested locally but **have not been deployed or activated**. The client checks the server's supported capability before creating a local job or content lock; an unavailable legacy service cannot silently fall back to paid generation.
+
+The private-AI development APK is built separately; its SHA-256 is **`9c30c2fb0ee5be099ece89b1c2f8b7668cdb68b6d89d20ce256bb946551257c3`**. Ordinary builds keep AI disabled. Neither APK packaging nor local doubles prove production model access, actual pricing/limits, hosted queue concurrency, scheduler availability or provider-managed deletion. Those remain activation-checkpoint conditions.
 
 ## Limits
 
-Physical-phone and TalkBack coverage remain unverified. There is no complete OS, keyboard, locale or fresh-machine matrix. The configured private-AI APK is built and checksum-verified; the native AI tests use fake providers, and no fresh paid provider attempt is inferred. Earlier published-gallery observations, line coverage and duplication percentages are historical and are not carried forward as measurements of this source. No release/store readiness is implied.
+Physical-phone and TalkBack coverage remain unverified. There is no complete OS, keyboard, locale or fresh-machine matrix. No fresh paid provider attempt, productive full-review activation or release/store readiness is inferred. Earlier published-gallery observations, line coverage and duplication percentages are historical and are not carried forward as measurements of this source.

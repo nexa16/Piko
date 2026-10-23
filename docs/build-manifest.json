@@ -1,38 +1,38 @@
 {
   "schemaVersion": 1,
   "build": {
-    "id": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
+    "id": "sha256:36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
     "repository": "https://github.com/nexa16/Piko",
     "packageId": "io.github.nexa16.piko",
     "entryPoint": "app/lib/main.dart",
     "activity": ".MainActivity",
     "versionName": "0.1.0",
-    "versionCode": 16,
+    "versionCode": 17,
     "minSdk": 24,
     "targetSdk": 36,
-    "artifact": "piko-ai-off-e1e6230-build16.apk",
-    "apkSha256": "35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
+    "artifact": "piko-ai-off-951018d-build17.apk",
+    "apkSha256": "36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
     "mode": "release",
     "flavor": "default",
     "signing": {
       "classification": "Android debug certificate; development artifact",
       "certificateSha256": "0e170fc0a27efc6a03525c90597bf66a957b683005238064a90958f60fee7bfb"
     },
-    "sourceCommit": "e1e6230fff4694bc64e25ccfec2261cc2e0a9d12",
-    "sourceCondition": "Frozen committed ordinary application source; main.dart entry point, AI disabled, no harness or application-ID override. Later documentation-only commits do not change the application source.",
+    "sourceCommit": "951018dcdf494754526f2fc7d8e9540e6bc31900",
+    "sourceCondition": "Frozen committed ordinary application source; main.dart entry point, AI disabled, no harness or application-ID override. Later documentation/test-only commits do not change the application source.",
     "applicationTrees": {
-      "app/lib": "b6934c65f4764f9a25220e25e4525ee3184a410a",
+      "app/lib": "9551069010b4f014e4b21e032a6079df72de8b35",
       "app/assets": "685c12b6e388794d8c883fe9a47ccc7e1afff42c",
-      "shared": "6dc6ce8b878a050f6887973142c40ed838fbcc38"
+      "shared": "855ad5f55876f903a3ece368b0d46e681ba8a40e"
     },
     "configuration": [
       {
         "path": "app/pubspec.yaml",
-        "sha256": "cdf59f658ae1116aa02a4caefd1c754cccae660f4e4da09123df366c00d99265"
+        "sha256": "6d82e076211239268f035862ccde91a83f0778dd44095fd3a9a9020a02c63e5e"
       },
       {
         "path": "app/pubspec.lock",
-        "sha256": "bc3784c6f9cf792d6064253e9f90820409954527d097f4c384fd02812bbfa85d"
+        "sha256": "27ab891292a04002a426f7c9feca855a56dc0ca0222a2fdd3a2c0ce4b0cf20dc"
       },
       {
         "path": "app/android/app/build.gradle.kts",
@@ -43,7 +43,7 @@
         "sha256": "d2c47d11fdca717db62390041e9c7ed00a5fd29725d9f97cf7b1525812b78163"
       }
     ],
-    "builtOn": "2026-10-22T20:06:23.934Z",
+    "builtOn": "2026-10-23T12:48:19.0228276Z",
     "builtOnPrecision": "UTC filesystem last-write timestamp of the preserved APK, not a build-start or capture timestamp",
     "timeZone": "Europe/Vienna",
     "toolchain": {
@@ -61,9 +61,9 @@
       "arm64-v8a",
       "x86_64"
     ],
-    "artifactBytes": 72705305,
+    "artifactBytes": 73032965,
     "configurationHashBasis": "SHA-256 of the frozen source Git blob bytes",
-    "buildNumberOverride": 16,
+    "buildNumberOverride": 17,
     "configurationDefines": {
       "PIKO_AI_ENABLED": false
     }
@@ -77,9 +77,9 @@
     "verification": "docs/verification.md"
   },
   "fixture": {
-    "id": "piko-documentation-en-de-r10",
-    "content": "Synthetic English/German Collection Round 10 Synthetic with three vocabulary entries. Earlier Home/list/editor captures precede learning; later captures include one Long-term review, selected Speed practice and a Practice category with Zulu then Alpha.",
-    "entryPoint": "Synthetic schema-22 fixture installed privately, then migrated to schema 23 by the ordinary build. Published captures use normal product navigation, including editor confirmation cancellation and Trash recovery; no instrumented UI is shown.",
+    "id": "piko-documentation-en-de-r11",
+    "content": "Retained synthetic English/German Collection Round 10 Synthetic with three vocabulary entries and existing learning statistics.",
+    "entryPoint": "Existing schema-23 fixture preserved through the ordinary build update to schema 24. All 18 existing tables matched exactly after migration. Captures use normal main.dart product navigation; the staged language editor was cancelled without applying changes.",
     "privacy": "Synthetic vocabulary only; no personal accounts or research data. Original captures and fixture preparation evidence are retained privately."
   },
   "verification": {
@@ -89,30 +89,70 @@
     "unverified": [
       "Physical-phone install/update and TalkBack",
       "Complete OS, locale, keyboard and scale matrix; clean-machine setup",
-      "Fresh paid large-context AI provider behavior; ordinary builds keep AI disabled",
+      "Hosted durable-review queue/scheduler and fresh paid provider behavior; ordinary builds keep AI disabled",
       "Full ordinary-product minigame, error and recovery matrix beyond recorded checks"
     ]
   },
   "screenshots": [
     {
-      "id": "r10-home",
-      "sha256": "7e7ab5aa002781f7673271fb88371067647ac8d6970fce55a1dd3fb4880f38ca",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:07:17.502Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
+      "id": "r11-home",
+      "path": "docs/images/r11-home.png",
+      "sha256": "e04b78a5e5dbe9fda6d27f63f2e65fa5fa89c718b4251a4d5c0233361735e22e",
+      "buildId": "sha256:36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
+      "capturedAt": "2026-10-23T12:50:44.670966Z",
       "pixelSize": [
         1080,
         2400
       ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "locale": "en",
+      "device": {
+        "kind": "emulator",
+        "model": "sdk_gphone64_x86_64",
+        "os": "Android 16",
+        "api": 36,
+        "abi": "x86_64",
+        "densityDpi": 420,
+        "timeZone": "GMT"
+      },
       "classification": "ordinary-product-emulator",
-      "state": "Home Activity before learning, with one synthetic three-word English/German Collection",
+      "state": "Home Activity with one synthetic Collection and retained learning statistics",
       "task": "docs/features.md#statistics",
-      "path": "docs/images/r10-home.png",
-      "locale": "en",
+      "fixture": "piko-documentation-en-de-r11",
+      "alt": "Home Activity with one synthetic Collection and retained learning statistics",
       "displayedLanguagePair": [
         "en",
         "de"
       ],
+      "capturedAtPrecision": "UTC capture timestamp recorded with the original full screenshot",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "r11-collection",
+      "path": "docs/images/r11-collection.png",
+      "sha256": "15e72233974284ab964d13c9a5b39c8ce5fc7e55f25ef9528e9ba7e5e492a7fc",
+      "buildId": "sha256:36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
+      "capturedAt": "2026-10-23T12:58:42.576352Z",
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "locale": "en",
       "device": {
         "kind": "emulator",
         "model": "sdk_gphone64_x86_64",
@@ -122,39 +162,39 @@
         "densityDpi": 420,
         "timeZone": "GMT"
       },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Home Activity before learning, with one synthetic three-word English/German Collection",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-collection",
-      "sha256": "3454cd893dd2e3559a7e1d143fa1b3e8f36b3d6b247d7852d35524ed6c8b7260",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:11:14.278Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
       "classification": "ordinary-product-emulator",
-      "state": "Collection with flat Compact bilingual rows and separate Review and Speed actions",
+      "state": "Collection with stacked bilingual Compact cards and separate Review and Speed actions",
       "task": "docs/features.md#collections",
-      "path": "docs/images/r10-collection.png",
-      "locale": "en",
+      "fixture": "piko-documentation-en-de-r11",
+      "alt": "Collection with stacked bilingual Compact cards and separate Review and Speed actions",
       "displayedLanguagePair": [
         "en",
         "de"
       ],
+      "capturedAtPrecision": "UTC capture timestamp recorded with the original full screenshot",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "r11-collection-settings",
+      "path": "docs/images/r11-collection-settings.png",
+      "sha256": "520c70e794b95081f95c20d5b489ce271dcd74b44996fa86405a119b86fc8955",
+      "buildId": "sha256:36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
+      "capturedAt": "2026-10-23T12:59:01.659770Z",
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "locale": "en",
       "device": {
         "kind": "emulator",
         "model": "sdk_gphone64_x86_64",
@@ -164,501 +204,39 @@
         "densityDpi": 420,
         "timeZone": "GMT"
       },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Collection with flat Compact bilingual rows and separate Review and Speed actions",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-editor",
-      "sha256": "5ac80f051fbb6713f3e5ebfca9e4384154c90311a80f107c48e9b263c13acc6b",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:12:08.336Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
       "classification": "ordinary-product-emulator",
-      "state": "Scrolled saved vocabulary editor with heading save status, Active, Reset and Delete controls",
-      "task": "docs/features.md#edit-vocabulary",
-      "path": "docs/images/r10-editor.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Scrolled saved vocabulary editor with heading save status, Active, Reset and Delete controls",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-delete-confirm",
-      "sha256": "bc30cc5965f4d9d97f0c3485e353395cd07d5c5fec74242d057d019cd1a65d85",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:12:27.971Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Delete confirmation over the saved editor, explaining that vocabulary moves to Trash",
-      "task": "docs/features.md#edit-vocabulary",
-      "path": "docs/images/r10-delete-confirm.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Delete confirmation over the saved editor, explaining that vocabulary moves to Trash",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-reset-confirm",
-      "sha256": "5589d83c749d085646b5b414b91119df778df68f21d76f149145fb14e016a297",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:12:44.035Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Learning-reset confirmation with both directions selected and statistics-preservation explanation",
-      "task": "docs/features.md#edit-vocabulary",
-      "path": "docs/images/r10-reset-confirm.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Learning-reset confirmation with both directions selected and statistics-preservation explanation",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-trash",
-      "sha256": "70f501e2bc8e1c6b826fa1ddb69ebdaf0cf30eea3b40d8a8e636621d385bc51d",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:17:34.136Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Expanded Trash operation with individual Restore, Restore group and Empty Trash controls",
-      "task": "docs/features.md#edit-vocabulary",
-      "path": "docs/images/r10-trash.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Expanded Trash operation with individual Restore, Restore group and Empty Trash controls",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-category-values",
-      "sha256": "d6936bbb02cd32656d1f7c4bcd3071c5302c511e706f0e53209bfaaddcfd6cae",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:12:29.622Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus",
-      "task": "docs/features.md#categories",
-      "path": "docs/images/r10-category-values.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-selection",
-      "sha256": "04bb1f75659bde1a120884f7c5c8b7b4aa282c3e89913d72f6539c14d64abf63",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:11:48.624Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "One selected Compact row with selection count, Select all, Clear selection and Delete vocabulary",
-      "task": "docs/features.md#selection",
-      "path": "docs/images/r10-selection.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "One selected Compact row with selection count, Select all, Clear selection and Delete vocabulary",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-learning",
-      "sha256": "1f02858f229e86fd171b7db486982ad01894cf6bcb0e15580b66da5005386ea9",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:08:21.262Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Long-term German-to-English question with progress, total retries and Skip",
-      "task": "docs/features.md#long-term",
-      "path": "docs/images/r10-learning.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Long-term German-to-English question with progress, total retries and Skip",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-review-summary",
-      "sha256": "16441a99416e1f933edfc5dda1a5fcc3111787f6b1d6454107cfa3272cb06af7",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:08:53.284Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Review completion showing one completed word, one first-try correct answer and zero retries",
-      "task": "docs/features.md#long-term",
-      "path": "docs/images/r10-review-summary.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Review completion showing one completed word, one first-try correct answer and zero retries",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-selected-speed",
-      "sha256": "95f8a0d8f5a7f3ca241750385712e30c39dbff734f709d2dcf787a3a55ddb4ae",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:09:25.189Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Selected Speed setup for one active reviewed word with hidden and inactive counts",
-      "task": "docs/features.md#selection",
-      "path": "docs/images/r10-selected-speed.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Selected Speed setup for one active reviewed word with hidden and inactive counts",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-speed",
-      "sha256": "0531a5124dc14712fbf5de8e2e0ed5d6f9643ad55868a617738813e423a3c380",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:10:00.391Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "German-to-English Speed question with progress and total retries",
-      "task": "docs/features.md#speed",
-      "path": "docs/images/r10-speed.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "German-to-English Speed question with progress and total retries",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-speed-summary",
-      "sha256": "c7c0ce04417dec289f1ed1c0a4a96155d0be6f4d8e3a8bbc6bd99db945bc9e48",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-23T05:10:09.910Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Collection Speed-completion notice showing one completed word and zero retries",
-      "task": "docs/features.md#speed",
-      "path": "docs/images/r10-speed-summary.png",
-      "locale": "en",
-      "displayedLanguagePair": [
-        "en",
-        "de"
-      ],
-      "device": {
-        "kind": "emulator",
-        "model": "sdk_gphone64_x86_64",
-        "os": "Android 16",
-        "api": 36,
-        "abi": "x86_64",
-        "densityDpi": 420,
-        "timeZone": "GMT"
-      },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
-      ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Collection Speed-completion notice showing one completed word and zero retries",
-      "processing": {
-        "crop": null,
-        "redaction": null,
-        "includesSystemUi": true
-      }
-    },
-    {
-      "id": "r10-collection-settings",
-      "sha256": "de4f9eeea3a5ed2e3030fc6d6b95e4e8db3b15e983650b0a8f2f0135d35cfcd8",
-      "buildId": "sha256:35b38f6403450171528e08a06075c159b86d7920f3e09ea72e3b82375fcf7318",
-      "capturedAt": "2026-10-22T20:13:13.885Z",
-      "capturedAtPrecision": "UTC last-write timestamp of the original capture file",
-      "pixelSize": [
-        1080,
-        2400
-      ],
-      "classification": "ordinary-product-emulator",
-      "state": "Collection Settings with A1 level, learning preference, Categories, Trash and transfer entrances",
+      "state": "Collection Settings with level, staged language change and existing management controls",
       "task": "docs/features.md#collections",
-      "path": "docs/images/r10-collection-settings.png",
-      "locale": "en",
+      "fixture": "piko-documentation-en-de-r11",
+      "alt": "Collection Settings with level, staged language change and existing management controls",
       "displayedLanguagePair": [
         "en",
         "de"
       ],
+      "capturedAtPrecision": "UTC capture timestamp recorded with the original full screenshot",
+      "processing": {
+        "crop": null,
+        "redaction": null,
+        "includesSystemUi": true
+      }
+    },
+    {
+      "id": "r11-languages",
+      "path": "docs/images/r11-languages.png",
+      "sha256": "8e55f494bdc590ab3b4707351c4619f52383d2cef2f48028a1d1d68650ff79cd",
+      "buildId": "sha256:36f6b20e9d965c69c9b769049ab6aa49b20da71fd5e0d4f7e54731f7e6cb32f3",
+      "capturedAt": "2026-10-23T12:59:19.615295Z",
+      "pixelSize": [
+        1080,
+        2400
+      ],
+      "logicalSize": [
+        411.42857142857144,
+        914.2857142857143
+      ],
+      "textScale": 1,
+      "orientation": "portrait",
+      "locale": "en",
       "device": {
         "kind": "emulator",
         "model": "sdk_gphone64_x86_64",
@@ -668,14 +246,16 @@
         "densityDpi": 420,
         "timeZone": "GMT"
       },
-      "logicalSize": [
-        411.42857142857144,
-        914.2857142857143
+      "classification": "ordinary-product-emulator",
+      "state": "Staged Collection language editor with preservation notice and Apply",
+      "task": "docs/features.md#collections",
+      "fixture": "piko-documentation-en-de-r11",
+      "alt": "Staged Collection language editor with preservation notice and Apply",
+      "displayedLanguagePair": [
+        "en",
+        "de"
       ],
-      "textScale": 1,
-      "orientation": "portrait",
-      "fixture": "piko-documentation-en-de-r10",
-      "alt": "Collection Settings with A1 level, learning preference, Categories, Trash and transfer entrances",
+      "capturedAtPrecision": "UTC capture timestamp recorded with the original full screenshot",
       "processing": {
         "crop": null,
         "redaction": null,
