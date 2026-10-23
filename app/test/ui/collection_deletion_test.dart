@@ -106,9 +106,17 @@ Future<void> swipeDelete(
   String label = 'Delete vocabulary',
 ]) async {
   await tester.ensureVisible(card(id));
-  await tester.drag(card(id), const Offset(-150, 0));
+  final viewport = tester.getRect(find.byType(Scrollable).first);
+  // Compact cards now retain complete wrapped text and may exceed a viewport.
+  // A user swipes the visible portion, not the off-screen full-card center.
+  final visibleCard = tester.getRect(card(id)).intersect(viewport);
+  expect(visibleCard.isEmpty, isFalse);
+  await tester.dragFrom(visibleCard.center, const Offset(-150, 0));
   await tester.pumpAndSettle();
-  await tester.tap(find.descendant(of: row(id), matching: button(label)));
+  final action = find.descendant(of: row(id), matching: button(label));
+  final visibleAction = tester.getRect(action).intersect(viewport);
+  expect(visibleAction.isEmpty, isFalse);
+  await tester.tapAt(visibleAction.center);
   await tester.pump();
 }
 

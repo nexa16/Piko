@@ -292,7 +292,14 @@ class _CollectionVocabularyState extends State<CollectionVocabulary> {
           duration: const Duration(days: 1),
           padding: EdgeInsets.zero,
           content: AnimatedBuilder(
-            animation: mutations,
+            // The floating feedback lives outside this State's build subtree.
+            // A query refresh or write barrier can disable Undo independently
+            // of a mutation; rebuild it when those gates settle as well.
+            animation: Listenable.merge([
+              mutations,
+              widget.queryBinding,
+              widget.writeBarrier,
+            ]),
             builder: (context, _) => DefaultTextStyle.merge(
               style: TextStyle(color: pikoDesign.color('ink')),
               child: undoBar(offer),
