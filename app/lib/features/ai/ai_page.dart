@@ -19,6 +19,9 @@ import '../../data/collection_query.dart';
 import '../../data/collections_repository.dart';
 import '../collections/filter_selection_dialog.dart';
 import '../../ui/components/piko_dialog.dart';
+import '../../data/ai/ai_review_job.dart';
+import '../../platform/ai_credential_vault.dart';
+import 'ai_review_job_controller.dart';
 
 final class AiAdopted {
   const AiAdopted(this.adoption);
@@ -44,6 +47,8 @@ class AiPage extends StatefulWidget {
     this.anchor,
     this.stageOnly = false,
     this.initialAction = AiAction.generate,
+    this.initialComprehensive = false,
+    this.installationIdentity,
     this.categoriesRepository,
   });
   final AiContentService service;
@@ -53,6 +58,8 @@ class AiPage extends StatefulWidget {
   final AiEntry? anchor;
   final bool stageOnly;
   final AiAction initialAction;
+  final bool initialComprehensive;
+  final Future<String> Function()? installationIdentity;
   final CategoriesRepository? categoriesRepository;
   @override
   State<AiPage> createState() => _AiPageState();
@@ -95,11 +102,13 @@ class _AiPageState extends State<AiPage> {
   bool portionResolved = false;
   int? reviewSize;
   int? contextSize;
+  AiReviewJobController? reviewJob;
   int contextOffset = 0;
   List<String> contextInventoryIds = [];
   @override
   void initState() {
     super.initState();
+    comprehensive = widget.initialComprehensive;
     if (widget.anchor != null && widget.service.enabled) _loadRelated();
     if (widget.service.enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
@@ -115,6 +124,20 @@ class _AiPageState extends State<AiPage> {
         level = data.collection?.level ?? 'A1';
         targetLevel = level;
       });
+      if (widget.service is AiReviewJobsSupport &&
+          widget.provider is AiReviewJobProvider) {
+        final identity =
+            await (widget.installationIdentity?.call() ??
+                const AndroidAiCredentialVault().installationId());
+        if (!mounted) return;
+        reviewJob = AiReviewJobController(
+          collectionId: widget.collectionId,
+          installationId: identity,
+          store: (widget.service as AiReviewJobsSupport).reviewJobs,
+          provider: widget.provider as AiReviewJobProvider,
+        )..addListener(_jobChanged);
+        await reviewJob!.load();
+      }
       final c = connection;
       if (c != null) {
         await c.loadLocal();
@@ -158,11 +181,29 @@ class _AiPageState extends State<AiPage> {
               },
             ),
             if (connection != null)
-              AiConnectionControl(connection: connection!, consent: consent),
+              AiConnectionControl(
+                connection: connection!,
+                consent: consent,
+                approvedAccess: pilotReady,
+              ),
             if (widget.provider case final AiPilotAccess pilot)
               AiPilotControl(
                 provider: pilot,
                 enabled: consent,
+                onWithdrawalConfirmed: () async {
+                  final local = reviewJob?.job;
+                  if (local != null && !local.status.terminal) {
+                    await reviewJob!.store.saveReviewStatus(
+                      local,
+                      AiJobStatus({
+                        ...local.status.data,
+                        'state': 'cancelled',
+                        'generation': local.status.generation + 1,
+                      }),
+                    );
+                    if (mounted) await reviewJob!.load();
+                  }
+                },
                 onReady: (v) {
                   if (mounted) {
                     setState(() => pilotReady = v);
@@ -184,6 +225,122 @@ class _AiPageState extends State<AiPage> {
       ),
     ),
   );
+
+  void _jobChanged() {
+    if (!mounted) return;
+    final received = reviewJob?.plan;
+    if (received != null &&
+        controller.plan?.request.id != received.request.id) {
+      action = AiAction.review;
+      controller.useCompletedReview(received);
+    }
+    setState(() {});
+  }
+
+  Future<void> _chooseGoals() async {
+    final staged = Set<String>.of(goals);
+    final chosen = await showPikoDialog<Set<String>>(
+      context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, refresh) => PikoDialog(
+          title: _text('ai.goals'),
+          purpose: PikoDialogPurpose.selection,
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final g in [
+                'everyday',
+                'travel',
+                'social',
+                'work',
+                'study',
+                'general',
+              ])
+                PikoFormFieldRow(
+                  child: PikoCheckbox(
+                    label: _text('ai.goal.$g'),
+                    value: staged.contains(g),
+                    onChanged: (v) =>
+                        refresh(() => v ? staged.add(g) : staged.remove(g)),
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            PikoDialogAction(
+              label: _text('action.cancel'),
+              role: PikoDialogActionRole.safe,
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            PikoDialogAction(
+              label: _text('r2.apply'),
+              onPressed: () => Navigator.of(dialogContext).pop(staged),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (chosen != null && mounted) {
+      _invalidate();
+      setState(() {
+        goals
+          ..clear()
+          ..addAll(chosen);
+      });
+    }
+  }
+
+  Future<int?> _reviewCost() async {
+    final previous = reviewJob?.job?.maxCostCents;
+    final input = TextEditingController(
+      text: previous == null ? '' : (previous / 100).toStringAsFixed(2),
+    );
+    try {
+      return await showPikoDialog<int>(
+        context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, refresh) {
+            final raw = input.text.trim().replaceAll(',', '.');
+            final valid = RegExp(r'^\d{1,4}(\.\d{1,2})?$').hasMatch(raw);
+            final cents = valid
+                ? ((double.tryParse(raw) ?? 0) * 100).round()
+                : 0;
+            return PikoDialog(
+              title: _text('ai.reviewCostTitle'),
+              purpose: PikoDialogPurpose.confirmation,
+              body: PikoField(
+                label: _text('ai.reviewCostLabel'),
+                child: TextField(
+                  key: const ValueKey('ai-review-cost'),
+                  controller: input,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (_) => refresh(() {}),
+                  decoration: pikoInputDecoration(),
+                ),
+              ),
+              actions: [
+                PikoDialogAction(
+                  label: _text('action.cancel'),
+                  role: PikoDialogActionRole.safe,
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+                PikoDialogAction(
+                  label: _text('r2.apply'),
+                  onPressed: cents > 0
+                      ? () => Navigator.of(dialogContext).pop(cents)
+                      : null,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      input.dispose();
+    }
+  }
 
   AiOptions get options => AiOptions(
     level: level,
@@ -363,24 +520,18 @@ class _AiPageState extends State<AiPage> {
       if (action == AiAction.generate && !comprehensive)
         PikoFormFieldRow(child: Text(_text('ai.topicExamples'))),
       if (action != AiAction.hints) ...[
-        PikoFormFieldRow(child: Text(_text('ai.goals'))),
-        for (final g in [
-          'everyday',
-          'travel',
-          'social',
-          'work',
-          'study',
-          'general',
-        ])
-          PikoFormFieldRow(
-            child: PikoCheckbox(
-              label: _text('ai.goal.$g'),
-              value: goals.contains(g),
-              onChanged: busy
-                  ? null
-                  : (v) => changed(() => v ? goals.add(g) : goals.remove(g)),
-            ),
+        PikoFormFieldRow(
+          child: Text(
+            goals.isEmpty
+                ? _text('ai.goalsNone')
+                : goals.map((g) => _text('ai.goal.$g')).join(', '),
           ),
+        ),
+        PikoButton(
+          key: const ValueKey('ai-goals-choose'),
+          label: _text('ai.goalsChoose'),
+          onPressed: busy ? null : _chooseGoals,
+        ),
       ],
       if (action == AiAction.review) ...[
         PikoFormFieldRow(
@@ -494,6 +645,8 @@ class _AiPageState extends State<AiPage> {
 
   @override
   void dispose() {
+    reviewJob?.removeListener(_jobChanged);
+    reviewJob?.dispose();
     controller.removeListener(_changed);
     controller.dispose();
     goal.dispose();
@@ -503,8 +656,117 @@ class _AiPageState extends State<AiPage> {
   }
 
   String _text(String key) => PikoCopyScope.of(context).text(key);
+  Widget _errorDetails(AiServiceError? detail) => ExpansionTile(
+    title: Text(_text('ai.diagnostics')),
+    children: [
+      if (detail?.code != null) SelectableText(detail!.code!),
+      if (detail?.limit != null) SelectableText(detail!.limit!),
+      if (detail?.limitMaximum != null &&
+          detail?.limitRemaining != null &&
+          {'cents', 'requests', 'concurrent'}.contains(detail?.limitUnit))
+        Text(
+          PikoCopyScope.of(context).text('ai.limitAvailable', {
+            'remaining': detail!.limitRemaining!,
+            'maximum': detail.limitMaximum!,
+            'unit': _text('ai.limitUnit.${detail.limitUnit}'),
+          }),
+        ),
+      if (detail?.retryAt != null)
+        Text(
+          PikoCopyScope.of(
+            context,
+          ).text('ai.retryAt', {'time': detail!.retryAt!.toLocal().toString()}),
+        )
+      else
+        Text(_text('ai.limitUnknown')),
+    ],
+  );
+  List<Widget> _jobPanel() {
+    final c = reviewJob, job = reviewJob?.job;
+    if (c == null || job == null) return [];
+    final statusError = AiServiceError.read(job.status.data['error']);
+    return [
+      PikoFormSection(
+        title: PikoCopyScope.of(context).text('ai.jobStatus', {
+          'state': _text('ai.jobState.${job.status.state.name}'),
+        }),
+        children: [
+          Text(
+            PikoCopyScope.of(context).text('ai.jobProgress', {
+              'processed': job.status.processed,
+              'total': job.status.total,
+            }),
+          ),
+          if (!job.status.terminal) const LinearProgressIndicator(),
+          if (job.cancelPending) Text(_text('ai.jobCancelPending')),
+          if (c.error != null) Text(_text('ai.error.${c.error!.name}')),
+          if (c.error != null) _errorDetails(c.details),
+          if (statusError != null) ...[
+            if ({
+              'jobBudget',
+              'sharedBudget',
+              'day',
+              'rate',
+              'parallel',
+              'provider',
+            }.contains(statusError.limit))
+              Text(_text('ai.limitType.${statusError.limit}')),
+            _errorDetails(statusError),
+          ],
+          PikoButton(
+            label: _text('ai.jobRefresh'),
+            onPressed: c.busy ? null : c.refresh,
+          ),
+          if (!job.cancelPending &&
+              {
+                AiJobState.paused,
+                AiJobState.preparing,
+              }.contains(job.status.state))
+            PikoButton(
+              label: _text('ai.jobResume'),
+              onPressed: c.busy ? null : c.resume,
+            ),
+          if (!job.status.terminal)
+            PikoButton(
+              label: _text('ai.jobCancel'),
+              onPressed: c.busy ? null : c.cancel,
+            ),
+          if (job.status.state == AiJobState.completed &&
+              job.result?['conflicts'] is List &&
+              (job.result!['conflicts']! as List).isNotEmpty) ...[
+            Text(_text('ai.jobConflicts')),
+            for (final raw in job.result!['conflicts']! as List)
+              if (raw is Map && raw['alternatives'] is List)
+                ExpansionTile(
+                  title: Text(
+                    raw['entryId'] is String
+                        ? '${job.manifest.request.snapshot.entries.where((e) => e.record.id == raw['entryId']).firstOrNull?.record.targetText ?? ''}: '
+                              '${_text('ai.field.${raw['field']}')}'
+                        : '${_text('ai.check.categories')}: ${raw['name'] ?? ''}',
+                  ),
+                  children: [
+                    for (final alternative in raw['alternatives'] as List)
+                      if (alternative is Map)
+                        Padding(
+                          padding: EdgeInsets.all(
+                            pikoDesign.dimension('spacing.2'),
+                          ),
+                          child: SelectableText(
+                            '${_value(alternative['value'], field: raw['field'] as String?)}\n'
+                            '${alternative['reason'] ?? ''}',
+                          ),
+                        ),
+                  ],
+                ),
+          ],
+        ],
+      ),
+    ];
+  }
+
   bool _staging = false;
-  bool get busy => controller.applying || _staging;
+  bool get busy =>
+      controller.applying || _staging || (reviewJob?.busy ?? false);
   AiConnectionController? get connection {
     final p = widget.provider;
     return p is ManagedAiProvider && p.access is AiConnectionController
@@ -515,6 +777,18 @@ class _AiPageState extends State<AiPage> {
   Future<void> _start() async {
     if (!ready || busy || ModalRoute.of(context)?.isCurrent == false) return;
     FocusManager.instance.primaryFocus?.unfocus();
+    if (action == AiAction.review && reviewJob != null) {
+      final cents = await _reviewCost();
+      if (cents == null || !mounted) return;
+      controller.cancel();
+      await reviewJob!.start(
+        maxCostCents: cents,
+        options: options,
+        allowGroups: allowGroups,
+        allowValues: allowValues,
+      );
+      return;
+    }
     await controller.start(
       action: action,
       goal: goal.text,
@@ -706,6 +980,10 @@ class _AiPageState extends State<AiPage> {
           'changes': plan.edits.where((e) => e.applicable).length,
         }),
       ),
+      if (plan.complete &&
+          plan.cards.isEmpty &&
+          !plan.edits.any((e) => e.applicable))
+        Text(_text('ai.noSuggestions')),
       Text(
         PikoCopyScope.of(context).text('ai.coverage', {
           'processed': plan.processedIds.length,
@@ -950,8 +1228,17 @@ class _AiPageState extends State<AiPage> {
               ),
               PikoFormSection(
                 title: _text('ai.request'),
-                children: _requestFields(),
+                children: [
+                  AbsorbPointer(
+                    absorbing: reviewJob?.ownsUnfinished ?? false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _requestFields(),
+                    ),
+                  ),
+                ],
               ),
+              ..._jobPanel(),
               PikoButton(
                 label: _text('ai.accessSettings'),
                 variant: PikoButtonVariant.ghost,
@@ -962,8 +1249,15 @@ class _AiPageState extends State<AiPage> {
                   _text('ai.error.${controller.error!.name}'),
                   key: const ValueKey('ai-error'),
                 ),
+              if (controller.error != null) _errorDetails(controller.details),
+              if (controller.error != null && controller.canRecover)
+                PikoButton(
+                  label: _text('ai.jobRefresh'),
+                  onPressed: controller.recover,
+                ),
               if (controller.error == AiFailure.contextLimit &&
-                  action != AiAction.hints)
+                  action != AiAction.hints &&
+                  action != AiAction.review)
                 PikoButton(
                   label: _text(
                     action == AiAction.review
@@ -1033,6 +1327,7 @@ class _AiPageState extends State<AiPage> {
                 ),
                 onPressed:
                     busy ||
+                        (reviewJob?.ownsUnfinished ?? false) ||
                         controller.plan != null ||
                         controller.requesting ||
                         !ready ||
@@ -1049,6 +1344,7 @@ class _AiPageState extends State<AiPage> {
                     ? null
                     : _start,
               ),
+              if (controller.requesting) const LinearProgressIndicator(),
               if (controller.requesting)
                 PikoButton(
                   key: const ValueKey('ai-stop-waiting'),

@@ -33,9 +33,13 @@ class FakeProvider implements AiProvider {
   void close() {}
 }
 
-Future<void> tapVisible(WidgetTester t, Finder f) async {
+Future<void> tapVisible(WidgetTester t, Finder f, {bool settle = true}) async {
   FocusManager.instance.primaryFocus?.unfocus();
-  await t.pumpAndSettle();
+  if (settle) {
+    await t.pumpAndSettle();
+  } else {
+    await t.pump(const Duration(milliseconds: 300));
+  }
   if (t.binding is LiveTestWidgetsFlutterBinding) {
     final deadline = DateTime.now().add(const Duration(seconds: 10));
     DateTime? stable;
@@ -59,10 +63,18 @@ Future<void> tapVisible(WidgetTester t, Finder f) async {
     );
   }
   await Scrollable.ensureVisible(t.element(f), alignment: .5);
-  await t.pumpAndSettle();
+  if (settle) {
+    await t.pumpAndSettle();
+  } else {
+    await t.pump(const Duration(milliseconds: 300));
+  }
   expect(f.hitTestable(), findsOneWidget);
   await t.tap(f, warnIfMissed: true);
-  await t.pumpAndSettle();
+  if (settle) {
+    await t.pumpAndSettle();
+  } else {
+    await t.pump(const Duration(milliseconds: 300));
+  }
 }
 
 void main({bool nativeViewport = false}) {

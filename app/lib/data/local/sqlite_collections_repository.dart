@@ -5,10 +5,44 @@ import '../collections_repository.dart';
 import 'piko_database.dart';
 
 final class SqliteCollectionsRepository
-    implements CollectionsRepository, CollectionLevelRepository {
+    implements
+        CollectionsRepository,
+        CollectionLevelRepository,
+        CollectionLanguageRepository {
   SqliteCollectionsRepository(this.database, {this.interfaceLanguage});
   final String Function()? interfaceLanguage;
   final PikoDatabase database;
+
+  @override
+  Future<CollectionRecord> setLanguages({
+    required String id,
+    required VocabularyLanguage targetLanguage,
+    required VocabularyLanguage nativeLanguage,
+  }) => database.transaction(() async {
+    if (targetLanguage.matches(nativeLanguage)) {
+      throw CollectionValidation.sameLanguage;
+    }
+    // Revalidate stored identities/custom names without reclassifying them.
+    VocabularyLanguage.stored(targetLanguage.code, targetLanguage.customName);
+    VocabularyLanguage.stored(nativeLanguage.code, nativeLanguage.customName);
+    final count =
+        await (database.update(
+          database.collections,
+        )..where((r) => r.id.equals(id))).write(
+          CollectionsCompanion(
+            targetLanguage: Value(targetLanguage.code),
+            nativeLanguage: Value(nativeLanguage.code),
+            targetLanguageName: Value(targetLanguage.customName),
+            nativeLanguageName: Value(nativeLanguage.customName),
+          ),
+        );
+    if (count != 1) throw CollectionValidation.collectionNotFound;
+    return _record(
+      await (database.select(
+        database.collections,
+      )..where((r) => r.id.equals(id))).getSingle(),
+    );
+  });
 
   @override
   Future<CollectionRecord> createWithLevel({

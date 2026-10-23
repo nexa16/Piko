@@ -37,6 +37,15 @@ abstract interface class CollectionLevelRepository {
   });
 }
 
+/// A metadata-only operation. It never swaps stored text or learning directions.
+abstract interface class CollectionLanguageRepository {
+  Future<CollectionRecord> setLanguages({
+    required String id,
+    required VocabularyLanguage targetLanguage,
+    required VocabularyLanguage nativeLanguage,
+  });
+}
+
 abstract interface class CollectionsRepository {
   /// Permanently removes only this Collection and its dependent vocabulary/progress.
   Future<void> delete(String id);
