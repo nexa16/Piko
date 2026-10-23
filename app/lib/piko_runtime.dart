@@ -6,6 +6,7 @@ import 'data/ai/managed_ai_provider.dart';
 import 'data/local/sqlite_ai_service.dart';
 import 'features/ai/ai_page.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -139,6 +140,17 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   StreamSubscription<void>? _reviewClockChanges;
   Future<void> _languageDependencies = Future<void>.value();
   Future<void> _reconcileInstallation() async {
+    if (!Platform.isAndroid) {
+      final row = await database
+          .customSelect(
+            'SELECT COUNT(*) AS total FROM ai_review_jobs WHERE lock_enabled=1',
+          )
+          .getSingle();
+      if (row.read<int>('total') != 0) {
+        throw StateError('Cannot reconcile AI review installation identity');
+      }
+      return;
+    }
     try {
       final id = await const AndroidAiCredentialVault().installationId();
       await database.reconcileAiInstallation(id);

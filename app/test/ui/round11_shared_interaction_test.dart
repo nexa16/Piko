@@ -17,7 +17,10 @@ void main() {
     await tester.pumpWidget(
       PikoApp(
         home: Scaffold(
-          body: PikoCheckbox(label: 'Choice', value: true, onChanged: (_) {}),
+          body: PikoDialog(
+            title: 'Choose',
+            body: PikoCheckbox(label: 'Choice', value: true, onChanged: (_) {}),
+          ),
         ),
       ),
     );
