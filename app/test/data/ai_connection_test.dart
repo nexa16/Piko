@@ -97,7 +97,7 @@ void main() {
       gateway: g,
       enabled: true,
     );
-    addTearDown(c.close);
+    addTearDown(c.dispose);
     await expectLater(c.existingAccessToken(), throwsA(AiFailure.accessDenied));
     expect(g.connections, 0);
     expect(v.writes, 0);
