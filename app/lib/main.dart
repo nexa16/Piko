@@ -67,8 +67,21 @@ class _PikoAppState extends State<PikoApp> {
       child: Builder(
         builder: (context) => MaterialApp(
           navigatorObservers: [_pageObserver],
-          builder: (context, child) =>
-              PikoPageNavigation(observer: _pageObserver, child: child!),
+          builder: (context, child) => Actions(
+            // Flutter's native-touch default deliberately keeps focus. Piko's
+            // form contract dismisses on an outside tap without intercepting
+            // the pointer, so another control still acts on its first tap.
+            actions: <Type, Action<Intent>>{
+              EditableTextTapOutsideIntent:
+                  CallbackAction<EditableTextTapOutsideIntent>(
+                    onInvoke: (intent) {
+                      intent.focusNode.unfocus();
+                      return null;
+                    },
+                  ),
+            },
+            child: PikoPageNavigation(observer: _pageObserver, child: child!),
+          ),
           locale: selected,
           supportedLocales: PikoApp.supportedLocales,
           localizationsDelegates: GlobalMaterialLocalizations.delegates,

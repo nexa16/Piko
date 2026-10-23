@@ -35,8 +35,9 @@ void main() {
       final directory = Directory(
         '${support.path}/round11-feedback-${config.runId}',
       );
-      if (await directory.exists())
+      if (await directory.exists()) {
         throw StateError('Unique feedback run ID required');
+      }
       await directory.create();
       final db = native.ReviewFixtureDatabase(
         File('${directory.path}/fixture.sqlite'),

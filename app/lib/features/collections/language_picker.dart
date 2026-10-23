@@ -127,7 +127,7 @@ class _LanguagePickerDialogState extends State<LanguagePickerDialog> {
               PikoFormGroup(
                 children: [
                   for (final language in matches)
-                    PikoNavigationRow(
+                    PikoFormRow(
                       key: ValueKey('language-${language.code}'),
                       title: language.label(copy.locale),
                       onTap: () => Navigator.of(context).pop(language),

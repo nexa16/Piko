@@ -3,6 +3,9 @@ import 'collection_compact_action.dart';
 import '../../ui/components/piko_collapsing_header.dart';
 import 'collection_view_controls.dart';
 import 'collection_hint_settings.dart';
+import 'collection_languages_control.dart';
+import '../ai/ai_page.dart';
+import '../../data/ai/ai_contract.dart';
 import '../../ui/components/piko_form.dart';
 import '../interchange/vocabulary_json_page.dart';
 import 'package:flutter/material.dart';
@@ -779,6 +782,19 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                       }
                     },
                   ),
+                  if (widget.repository is CollectionLanguageRepository)
+                    CollectionLanguagesControl(
+                      collection: record,
+                      repository:
+                          widget.repository as CollectionLanguageRepository,
+                      enabled: ready && !_settingsBusy,
+                      onPendingWrites: widget.onPendingVocabularyWrites,
+                      onBusyChanged: (busy) {
+                        if (mounted && owner == _identity) {
+                          setState(() => _settingsBusy = busy);
+                        }
+                      },
+                    ),
                 ],
               ),
             if (widget.vocabularyRepository is VocabularyContentRepository &&
@@ -864,10 +880,22 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               PikoFormSection(
                 title: copy.text('ai.title'),
                 children: [
-                  PikoNavigationRow(
-                    title: copy.text('ai.preview'),
-                    onTap: available() ? _openAi : null,
-                  ),
+                  for (final entry in const [
+                    ('ai.action.generate', AiAction.generate, false),
+                    ('ai.action.comprehensive', AiAction.generate, true),
+                    ('ai.action.gaps', AiAction.gaps, false),
+                    ('ai.action.review', AiAction.review, false),
+                  ])
+                    PikoNavigationRow(
+                      key: ValueKey('collection-${entry.$1}'),
+                      title: copy.text(entry.$1),
+                      onTap: available()
+                          ? () => _openAi(
+                              action: entry.$2,
+                              comprehensive: entry.$3,
+                            )
+                          : null,
+                    ),
                 ],
               ),
             if (widget.interchangeBuilder != null)
@@ -1257,7 +1285,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
-  Future<void> _openAi() async {
+  Future<void> _openAi({
+    AiAction action = AiAction.generate,
+    bool comprehensive = false,
+  }) async {
     final record = _currentCollection, builder = widget.aiBuilder;
     if (record == null || builder == null || _openingEntry || _learningBusy) {
       return;
@@ -1275,7 +1306,24 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       }
       await Navigator.of(context).push<Object?>(
         MaterialPageRoute<Object?>(
-          builder: (context) => builder(context, record),
+          builder: (context) {
+            final page = builder(context, record);
+            return page is AiPage
+                ? AiPage(
+                    service: page.service,
+                    provider: page.provider,
+                    collectionId: page.collectionId,
+                    collectionName: page.collectionName,
+                    registerPending: page.registerPending,
+                    anchor: page.anchor,
+                    stageOnly: page.stageOnly,
+                    categoriesRepository: page.categoriesRepository,
+                    installationIdentity: page.installationIdentity,
+                    initialAction: action,
+                    initialComprehensive: comprehensive,
+                  )
+                : page;
+          },
         ),
       );
     } finally {

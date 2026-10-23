@@ -153,78 +153,88 @@ class PikoDialog extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: d.dimension('components.dialogs.maxWidth'),
           ),
-          child: _DialogContents(
-            purpose: purpose,
-            body: body,
-            bodyOwnsScroll: bodyOwnsScroll,
-            actions: actions,
-            header: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (onBack != null) ...[
-                  SizedBox.square(
-                    dimension: d.dimension('controls.largeHeight'),
-                    child: PikoIconButton(
-                      icon: const PikoIcon(PikoIconName.arrowLeft),
-                      semanticLabel: PikoCopyScope.of(
-                        context,
-                      ).text('common.back'),
-                      onPressed: dismissible ? onBack : null,
-                    ),
-                  ),
-                  SizedBox(width: d.dimension('spacing.2')),
-                ],
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: ((target - lineHeight) / 2).clamp(
-                        0,
-                        double.infinity,
-                      ),
-                    ),
-                    child: Semantics(
-                      namesRoute: true,
-                      header: true,
-                      label: title,
-                      child: DefaultTextStyle(
-                        style: Theme.of(context).textTheme.titleMedium!,
-                        child:
-                            titleContent ??
-                            ExcludeSemantics(child: Text(title)),
-                      ),
-                    ),
-                  ),
-                ),
-                if (purpose != PikoDialogPurpose.confirmation) ...[
-                  SizedBox(width: d.dimension('spacing.3')),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: ((lineHeight - target) / 2).clamp(
-                        0,
-                        double.infinity,
-                      ),
-                    ),
-                    child: SizedBox.square(
+          child: ListTileTheme(
+            data: ListTileTheme.of(context).copyWith(
+              tileColor: d.color('surface'),
+              selectedTileColor: d.color('surface'),
+              minTileHeight: d.dimension('controls.largeHeight'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(d.dimension('radii.card')),
+              ),
+            ),
+            child: _DialogContents(
+              purpose: purpose,
+              body: body,
+              bodyOwnsScroll: bodyOwnsScroll,
+              actions: actions,
+              header: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (onBack != null) ...[
+                    SizedBox.square(
                       dimension: d.dimension('controls.largeHeight'),
                       child: PikoIconButton(
-                        icon: const PikoIcon(PikoIconName.x),
-                        semanticLabel:
-                            closeLabel ??
-                            PikoCopyScope.of(context).text('common.close'),
-                        onPressed: !dismissible
-                            ? null
-                            : onClose ??
-                                  () {
-                                    if (ModalRoute.of(context)?.isCurrent ==
-                                        true) {
-                                      Navigator.of(context).pop();
-                                    }
-                                  },
+                        icon: const PikoIcon(PikoIconName.arrowLeft),
+                        semanticLabel: PikoCopyScope.of(
+                          context,
+                        ).text('common.back'),
+                        onPressed: dismissible ? onBack : null,
+                      ),
+                    ),
+                    SizedBox(width: d.dimension('spacing.2')),
+                  ],
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: ((target - lineHeight) / 2).clamp(
+                          0,
+                          double.infinity,
+                        ),
+                      ),
+                      child: Semantics(
+                        namesRoute: true,
+                        header: true,
+                        label: title,
+                        child: DefaultTextStyle(
+                          style: Theme.of(context).textTheme.titleMedium!,
+                          child:
+                              titleContent ??
+                              ExcludeSemantics(child: Text(title)),
+                        ),
                       ),
                     ),
                   ),
+                  if (purpose != PikoDialogPurpose.confirmation) ...[
+                    SizedBox(width: d.dimension('spacing.3')),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: ((lineHeight - target) / 2).clamp(
+                          0,
+                          double.infinity,
+                        ),
+                      ),
+                      child: SizedBox.square(
+                        dimension: d.dimension('controls.largeHeight'),
+                        child: PikoIconButton(
+                          icon: const PikoIcon(PikoIconName.x),
+                          semanticLabel:
+                              closeLabel ??
+                              PikoCopyScope.of(context).text('common.close'),
+                          onPressed: !dismissible
+                              ? null
+                              : onClose ??
+                                    () {
+                                      if (ModalRoute.of(context)?.isCurrent ==
+                                          true) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

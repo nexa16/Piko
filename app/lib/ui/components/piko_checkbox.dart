@@ -70,6 +70,7 @@ class _PikoCheckboxState extends State<PikoCheckbox> {
                 onTap: enabled ? toggle : null,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
+                    color: d.color('surface'),
                     borderRadius: BorderRadius.circular(
                       d.dimension('components.buttons.radius'),
                     ),

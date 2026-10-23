@@ -575,7 +575,7 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
     Widget action(
       String key,
       VoidCallback callback, {
-      PikoButtonVariant variant = PikoButtonVariant.neutral,
+      PikoButtonVariant variant = PikoButtonVariant.surface,
     }) => PikoButton(
       label: copy.text(key),
       onPressed: transfer.busy || returning
@@ -726,15 +726,16 @@ class _VocabularyJsonPageState extends State<VocabularyJsonPage> {
           SizedBox(height: d.dimension('spacing.2')),
           Text(copy.text('r2.jsonMetadata')),
           SizedBox(height: gap),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: action(
-              'json.analyze',
-              () => launch(analyze),
-              variant: PikoButtonVariant.primary,
+          if (input.text.trim().isNotEmpty)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: action(
+                'json.analyze',
+                () => launch(analyze),
+                variant: PikoButtonVariant.primary,
+              ),
             ),
-          ),
-          if (analyzed)
+          if (analyzed && input.text.trim().isNotEmpty)
             PikoFormSection(
               title: copy.text('r2.jsonGroups'),
               children: [
