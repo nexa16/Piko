@@ -11,11 +11,13 @@ class AiPilotControl extends StatefulWidget {
     required this.provider,
     required this.onReady,
     required this.onWithdraw,
+    this.onWithdrawalConfirmed,
     this.enabled = true,
   });
   final AiPilotAccess provider;
   final ValueChanged<bool> onReady;
   final VoidCallback onWithdraw;
+  final Future<void> Function()? onWithdrawalConfirmed;
   final bool enabled;
   @override
   State<AiPilotControl> createState() => _AiPilotControlState();
@@ -38,6 +40,14 @@ class _AiPilotControlState extends State<AiPilotControl> {
         operation,
         operation == 'consent' ? {'version': notice!['version']} : const {},
       );
+      if (operation == 'withdraw' &&
+          result['withdrawn'] == true &&
+          result['livePayloadsDeleted'] == true &&
+          result['backupExpiryDays'] is int &&
+          (result['backupExpiryDays']! as int) >= 0 &&
+          (result['backupExpiryDays']! as int) <= 7) {
+        await widget.onWithdrawalConfirmed?.call();
+      }
       if (!mounted) return;
       if (operation == 'withdraw') {
         final days = result['backupExpiryDays'];

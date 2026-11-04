@@ -405,9 +405,17 @@ const copyCatalog = <String, Object?>{
 "en": "Speed",
 "note": "Internal mode remains speed. Public label is open; edit here to try Learn new / Intensive learning.",
 },
+"ai.accessConfirmed": <String, Object?>{
+"de": "KI-Zugriff und aktuelle Zustimmung bestätigt.",
+"en": "AI access and current consent confirmed.",
+},
 "ai.accessId": <String, Object?>{
 "de": "Geräte-Zugriffs-ID: {id}",
 "en": "Device access ID: {id}",
+},
+"ai.accessNotConfirmed": <String, Object?>{
+"de": "Zugriffsidentität verbunden. Aktuellen Einladungs- und Zustimmungsstatus prüfen.",
+"en": "Access identity connected. Check the current invitation and consent status.",
 },
 "ai.accessSettings": <String, Object?>{
 "de": "KI-Zugriff und Datenschutz",
@@ -434,8 +442,12 @@ const copyCatalog = <String, Object?>{
 "en": "Distinguish related meanings",
 },
 "ai.action.review": <String, Object?>{
-"de": "Collection prüfen",
-"en": "Review Collection",
+"de": "Vokabeln prüfen",
+"en": "Review vocabulary",
+},
+"ai.allScope": <String, Object?>{
+"de": "Alle {count} Vokabeln",
+"en": "All {count} vocabulary items",
 },
 "ai.allowGroups": <String, Object?>{
 "de": "Vorschläge für neue Kategoriegruppen erlauben",
@@ -541,6 +553,10 @@ const copyCatalog = <String, Object?>{
 "de": "Bestätige neue Definitionen einzeln. Eine ausgewählte Zuordnung benötigt ihre Gruppe und ihren Wert.",
 "en": "Approve new definitions separately. A selected assignment requires its group and value.",
 },
+"ai.diagnostics": <String, Object?>{
+"de": "Dienstdetails",
+"en": "Service details",
+},
 "ai.discard": <String, Object?>{
 "de": "Vorschläge verwerfen / Warten beenden",
 "en": "Discard proposals / stop waiting",
@@ -641,6 +657,10 @@ const copyCatalog = <String, Object?>{
 "de": "Fremdwort",
 "en": "Target word",
 },
+"ai.filteredScope": <String, Object?>{
+"de": "{count} gefilterte Vokabeln",
+"en": "{count} filtered vocabulary items",
+},
 "ai.goal": <String, Object?>{
 "de": "Thema, Niveau oder Lernkontext (bei Lücken/Prüfung optional)",
 "en": "Topic, level or learning context (optional for gaps/review)",
@@ -673,6 +693,14 @@ const copyCatalog = <String, Object?>{
 "de": "Lernziele (optional)",
 "en": "Learning goals (optional)",
 },
+"ai.goalsChoose": <String, Object?>{
+"de": "Lernziele auswählen",
+"en": "Choose learning goals",
+},
+"ai.goalsNone": <String, Object?>{
+"de": "Keine Lernziele ausgewählt",
+"en": "No learning goals selected",
+},
 "ai.groupExample": <String, Object?>{
 "de": "Eine Gruppe ist etwa Thema oder Wortart.",
 "en": "A group is an axis such as Topic or Word type.",
@@ -689,9 +717,125 @@ const copyCatalog = <String, Object?>{
 "de": "Dieses Gerät hat eine Zugriffsidentität. Der Piko-Dienst muss den AI-Zugriff zusätzlich freigeben.",
 "en": "This device has an access identity. The Piko service must separately approve its AI access.",
 },
+"ai.jobAlternative": <String, Object?>{
+"de": "Alternative {number}",
+"en": "Alternative {number}",
+},
+"ai.jobCancel": <String, Object?>{
+"de": "Prüfung abbrechen",
+"en": "Cancel review",
+},
+"ai.jobCancelPending": <String, Object?>{
+"de": "Abbruch vorgemerkt. Inhalte bleiben bis zur Bestätigung gesperrt.",
+"en": "Cancellation pending. Content remains locked until confirmed.",
+},
+"ai.jobConflicts": <String, Object?>{
+"de": "Widersprüchliche Vorschläge benötigen eine Entscheidung.",
+"en": "Conflicting suggestions require a decision.",
+},
+"ai.jobProgress": <String, Object?>{
+"de": "{processed} von {total} geprüft",
+"en": "{processed} of {total} reviewed",
+},
+"ai.jobRefresh": <String, Object?>{
+"de": "Status prüfen",
+"en": "Check status",
+},
+"ai.jobResume": <String, Object?>{
+"de": "Prüfung fortsetzen",
+"en": "Resume review",
+},
+"ai.jobState.cancelled": <String, Object?>{
+"de": "Abgebrochen",
+"en": "Cancelled",
+},
+"ai.jobState.cancelling": <String, Object?>{
+"de": "Abbruch angefordert",
+"en": "Cancelling",
+},
+"ai.jobState.completed": <String, Object?>{
+"de": "Abgeschlossen",
+"en": "Completed",
+},
+"ai.jobState.detached": <String, Object?>{
+"de": "Von dieser Installation getrennt",
+"en": "Disconnected from this installation",
+},
+"ai.jobState.expired": <String, Object?>{
+"de": "Abgelaufen",
+"en": "Expired",
+},
+"ai.jobState.failed": <String, Object?>{
+"de": "Fehlgeschlagen",
+"en": "Failed",
+},
+"ai.jobState.paused": <String, Object?>{
+"de": "Pausiert",
+"en": "Paused",
+},
+"ai.jobState.preparing": <String, Object?>{
+"de": "Vorbereitung",
+"en": "Preparing",
+},
+"ai.jobState.running": <String, Object?>{
+"de": "Läuft",
+"en": "Running",
+},
+"ai.jobState.unknown": <String, Object?>{
+"de": "Ausgang unbekannt",
+"en": "Outcome unknown",
+},
+"ai.jobStatus": <String, Object?>{
+"de": "Prüfung: {state}",
+"en": "Review: {state}",
+},
 "ai.keepPrevious": <String, Object?>{
 "de": "Bisherige Antwort behalten",
 "en": "Keep previous result",
+},
+"ai.limitAvailable": <String, Object?>{
+"de": "{remaining} von {maximum} {unit} verfügbar",
+"en": "{remaining} of {maximum} {unit} available",
+},
+"ai.limitType.day": <String, Object?>{
+"de": "Tageslimit",
+"en": "Daily limit",
+},
+"ai.limitType.jobBudget": <String, Object?>{
+"de": "Prüfbudget",
+"en": "Review budget",
+},
+"ai.limitType.parallel": <String, Object?>{
+"de": "Gleichzeitige Anfragen",
+"en": "Concurrent requests",
+},
+"ai.limitType.provider": <String, Object?>{
+"de": "Anbieterlimit",
+"en": "Provider limit",
+},
+"ai.limitType.rate": <String, Object?>{
+"de": "Anfragehäufigkeit",
+"en": "Request frequency",
+},
+"ai.limitType.sharedBudget": <String, Object?>{
+"de": "Gemeinsames Testbudget",
+"en": "Shared pilot budget",
+},
+"ai.limitUnit.cents": <String, Object?>{
+"de": "Cent",
+"en": "cents",
+},
+"ai.limitUnit.concurrent": <String, Object?>{
+"de": "gleichzeitige Anfragen",
+"en": "concurrent requests",
+},
+"ai.limitUnit.requests": <String, Object?>{
+"de": "Anfragen",
+"en": "requests",
+},
+"ai.limitUnknown": <String, Object?>{
+"de": "Limit oder erneuter Zeitpunkt nicht verfügbar.",
+"en": "Limit or retry time unavailable.",
 },
 "ai.missingSource": <String, Object?>{
 "de": "Für einige neue Karten ist kein passender AI-Quellenwert verfügbar. Ihre Quelle bleibt ohne Zuordnung, solange du keinen passenden vorgeschlagenen Wert bestätigst.",
@@ -728,6 +872,10 @@ const copyCatalog = <String, Object?>{
 "ai.noHint": <String, Object?>{
 "de": "Kein Hinweis",
 "en": "No Hint",
+},
+"ai.noSuggestions": <String, Object?>{
+"de": "Prüfung ohne Änderungsvorschläge abgeschlossen.",
+"en": "Review completed without suggested changes.",
 },
 "ai.notConnected": <String, Object?>{
 "de": "Keine AI-Zugriffsidentität ist verbunden.",
@@ -844,6 +992,18 @@ const copyCatalog = <String, Object?>{
 "ai.requesting": <String, Object?>{
 "de": "Wird erstellt …",
 "en": "Generating…",
+},
+"ai.retryAt": <String, Object?>{
+"de": "Erneut versuchen ab {time}",
+"en": "Try again after {time}",
+},
+"ai.reviewCostLabel": <String, Object?>{
+"de": "Maximaler EUR-Betrag (für diese Prüfung bestätigen)",
+"en": "Maximum EUR (confirm for this review)",
+},
+"ai.reviewCostTitle": <String, Object?>{
+"de": "Kostenlimit der Prüfung",
+"en": "Review cost limit",
 },
 "ai.reviewCount": <String, Object?>{
 "de": "Zu prüfende Vokabeln",
@@ -1173,6 +1333,10 @@ const copyCatalog = <String, Object?>{
 "de": "Sammlung wird gelöscht…",
 "en": "Deleting collection…",
 },
+"collection.editLanguages": <String, Object?>{
+"de": "Sprachen ändern",
+"en": "Change languages",
+},
 "collection.empty": <String, Object?>{
 "de": "Noch keine Vokabeln. Füge deine erste Vokabel hinzu.",
 "en": "No vocabulary yet. Add your first word.",
@@ -1184,6 +1348,10 @@ const copyCatalog = <String, Object?>{
 "collection.languagePair": <String, Object?>{
 "de": "{target} · {native}",
 "en": "{target} · {native}",
+},
+"collection.languagesPreserved": <String, Object?>{
+"de": "Vorhandene Vokabeln und Lernfortschritte bleiben unverändert. Es wird nichts automatisch übersetzt.",
+"en": "Existing vocabulary and learning progress stay unchanged. Nothing is translated automatically.",
 },
 "collection.level": <String, Object?>{
 "de": "Niveau",
@@ -1252,6 +1420,10 @@ const copyCatalog = <String, Object?>{
 "collection.saveFailed": <String, Object?>{
 "de": "Die Sammlung konnte nicht gespeichert werden. Bitte versuche es erneut.",
 "en": "Couldn't save the collection. Please try again.",
+},
+"collection.scrollToTop": <String, Object?>{
+"de": "Zum Anfang scrollen",
+"en": "Scroll to top",
 },
 "collection.search": <String, Object?>{
 "de": "In beiden Sprachen suchen…",
@@ -3913,6 +4085,10 @@ const copyCatalog = <String, Object?>{
 "de": "{count} Beispielpaare",
 "en": "{count} example pairs",
 },
+"vocab.fewerExamples": <String, Object?>{
+"de": "Weniger Beispiele",
+"en": "Show fewer examples",
+},
 "vocab.hint": <String, Object?>{
 "de": "Hinweis",
 "en": "Hint",
@@ -4012,6 +4188,10 @@ const copyCatalog = <String, Object?>{
 "vocab.makeHintDefault": <String, Object?>{
 "de": "Diese Sichtbarkeit für neue Vokabeln verwenden",
 "en": "Use this visibility for new vocabulary",
+},
+"vocab.moreExamples": <String, Object?>{
+"de": "{count} weitere Beispiele",
+"en": "{count} more examples",
 },
 "vocab.oneExample": <String, Object?>{
 "de": "{count} Beispielsatzpaar",

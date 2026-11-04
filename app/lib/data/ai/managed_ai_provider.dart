@@ -1,11 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'ai_contract.dart';
 import 'ai_wire.dart';
+import 'ai_review_job.dart';
 
 abstract interface class AiAccess {
   Future<String?> accessToken();
+}
+
+abstract interface class ExistingAiAccess {
+  Future<String?> existingAccessToken();
 }
 
 abstract interface class AiPilotLocalStop {
@@ -22,7 +28,11 @@ final class UnavailableAiAccess implements AiAccess {
 /// One explicit POST followed only by status GETs for that paid attempt. No
 /// replay, fallback model, background restart or automatic paid retry exists.
 final class ManagedAiProvider
-    implements AiProvider, CancelableAiProvider, AiPilotAccess {
+    implements
+        AiProvider,
+        CancelableAiProvider,
+        AiPilotAccess,
+        AiReviewJobProvider {
   ManagedAiProvider({
     required this.endpoint,
     required this.access,
@@ -48,6 +58,92 @@ final class ManagedAiProvider
   int _revision = 0;
   String? _activeId;
   HttpClientRequest? _outgoing;
+  AiWire? _recoverable;
+  String? _recoverableId;
+  String? _recoverableDigest;
+  bool get canRecover => _recoverable != null;
+
+  /// Reads an already admitted attempt only. This method never sends a POST.
+  Future<Map<String, Object?>> recoverResult() async {
+    final wire = _recoverable;
+    if (!enabled) throw AiFailure.disabled;
+    if (wire == null || _busy || _closed || endpoint == null) {
+      throw AiFailure.unavailable;
+    }
+    final owner = ++_revision;
+    _busy = true;
+    try {
+      final result = await _http(
+        'GET',
+        endpoint!.replace(queryParameters: {'requestId': _recoverableId!}),
+        null,
+        _recoverableDigest,
+        owner,
+        Stopwatch()..start(),
+      );
+      if (result.$1 == 202) throw AiFailure.timeout;
+      return wire.result(result.$2);
+    } finally {
+      if (owner == _revision) _busy = false;
+    }
+  }
+
+  @override
+  Future<Map<String, Object?>> reviewJob(
+    String action,
+    Map<String, Object?> data,
+  ) async {
+    if (!enabled) throw AiFailure.disabled;
+    final uri = endpoint;
+    if (_closed ||
+        _busy ||
+        uri == null ||
+        uri.scheme != 'https' ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      throw AiFailure.unavailable;
+    }
+    final read =
+        action == 'status' || action == 'result' || action == 'capabilities';
+    final body = read ? null : utf8.encode(jsonEncode(data));
+    if (body != null && body.length > maxInputBytes) {
+      throw AiFailure.contextLimit;
+    }
+    final owner = ++_revision;
+    _busy = true;
+    try {
+      return (await _http(
+        read ? 'GET' : 'POST',
+        uri.replace(
+          queryParameters: {
+            'job': action,
+            if (read && action != 'capabilities')
+              'jobId': data['jobId']! as String,
+            if (read && action != 'capabilities')
+              'installationId': data['installationId']! as String,
+            if (read && data['part'] != null) 'part': '${data['part']}',
+          },
+        ),
+        body,
+        null,
+        owner,
+        Stopwatch()..start(),
+      )).$2;
+    } on SocketException {
+      throw AiFailure.network;
+    } on TimeoutException {
+      throw AiFailure.timeout;
+    } on HttpException {
+      throw AiFailure.network;
+    } finally {
+      if (owner == _revision) {
+        _busy = false;
+        _outgoing = null;
+      }
+    }
+  }
+
   void _current(int owner) {
     if (_closed || owner != _revision) throw AiFailure.stale;
   }
@@ -73,6 +169,9 @@ final class ManagedAiProvider
         await (uri.queryParameters['pilot'] == 'withdraw' &&
                     access is AiPilotLocalStop
                 ? (access as AiPilotLocalStop).withdrawalAccessToken()
+                : uri.queryParameters.containsKey('job') &&
+                      access is ExistingAiAccess
+                ? (access as ExistingAiAccess).existingAccessToken()
                 : access.accessToken())
             .timeout(
               const Duration(seconds: 30),
@@ -105,16 +204,6 @@ final class ManagedAiProvider
       }
       final response = await request.close().timeout(_remaining(clock));
       _current(owner);
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        throw AiFailure.accessDenied;
-      }
-      if (response.statusCode == 429) throw AiFailure.limit;
-      if (response.statusCode == 413) throw AiFailure.contextLimit;
-      if (response.statusCode == 410) throw AiFailure.expired;
-      if (response.statusCode == 422) throw AiFailure.invalidResponse;
-      if (response.statusCode != 200 && response.statusCode != 202) {
-        throw AiFailure.unavailable;
-      }
       final bytes = <int>[];
       await for (final part in response.timeout(_remaining(clock))) {
         _current(owner);
@@ -125,6 +214,46 @@ final class ManagedAiProvider
         bytes.addAll(part);
       }
       _current(owner);
+      if (response.statusCode != 200 && response.statusCode != 202) {
+        final failure = switch (response.statusCode) {
+          401 || 403 => AiFailure.accessDenied,
+          429 => AiFailure.limit,
+          413 => AiFailure.contextLimit,
+          410 => AiFailure.expired,
+          422 => AiFailure.invalidResponse,
+          _ => AiFailure.unavailable,
+        };
+        Map<String, Object?> detail = const {};
+        try {
+          detail = aiObject(jsonDecode(utf8.decode(bytes)));
+        } catch (_) {}
+        String? safe(Object? s) =>
+            s is String && RegExp(r'^[a-zA-Z0-9_.:-]{1,80}$').hasMatch(s)
+            ? s
+            : null;
+        final code = safe(detail['code']),
+            limit = safe(detail['limitType']) ?? safe(detail['limit']);
+        final retry = detail['retryAt'] is String
+            ? DateTime.tryParse(detail['retryAt']! as String)
+            : null;
+        if (!uri.queryParameters.containsKey('pilot') &&
+            (code != null || limit != null || retry != null)) {
+          throw AiServiceError(
+            failure,
+            code: code,
+            limit: limit,
+            retryAt: retry,
+            limitMaximum: detail['limitMaximum'] is num
+                ? detail['limitMaximum'] as num
+                : null,
+            limitRemaining: detail['limitRemaining'] is num
+                ? detail['limitRemaining'] as num
+                : null,
+            limitUnit: safe(detail['limitUnit']),
+          );
+        }
+        throw failure;
+      }
       try {
         return (response.statusCode, aiObject(jsonDecode(utf8.decode(bytes))));
       } on FormatException {
@@ -201,7 +330,10 @@ final class ManagedAiProvider
       throw AiFailure.unavailable;
     }
     final wire = AiWire(request);
+    _recoverable = wire;
+    _recoverableId = request.id;
     final body = utf8.encode(jsonEncode(wire.body));
+    _recoverableDigest = sha256.convert(body).toString();
     if (body.length > maxInputBytes) throw AiFailure.contextLimit;
     final owner = ++_revision, clock = Stopwatch()..start();
     _busy = true;
@@ -222,6 +354,7 @@ final class ManagedAiProvider
         final next = pending['requestDigest'] as String;
         if (digest != null && digest != next) throw AiFailure.invalidResponse;
         digest = next;
+        _recoverableDigest = digest;
         _current(owner);
         final left = waitTimeout - clock.elapsed;
         if (left <= pollInterval) throw AiFailure.timeout;

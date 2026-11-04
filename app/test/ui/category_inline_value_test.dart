@@ -90,9 +90,10 @@ void main() {
             () => f.repository.values(f.dimension.id),
           ))!;
           expect(stored, hasLength(3));
-          expect(stored.first.name, 'Created value');
-          expect(stored.first.dimensionId, f.dimension.id);
-          expect(checked(tester, stored.first), isFalse);
+          expect(stored.map((v) => v.id).take(2), f.values.map((v) => v.id));
+          expect(stored.last.name, 'Created value');
+          expect(stored.last.dimensionId, f.dimension.id);
+          expect(checked(tester, stored.last), isFalse);
           expect(checked(tester, f.values.first), isTrue);
           expect(checked(tester, f.values.last), isTrue);
           expect(
@@ -110,7 +111,7 @@ void main() {
             (await tester.runAsync(() => f.repository.values(f.dimension.id)))!,
             hasLength(3),
           );
-          expect(checked(tester, stored.first), isFalse);
+          expect(checked(tester, stored.last), isFalse);
           expect(checked(tester, f.values.last), isTrue);
         } finally {
           await f.cleanup(tester);
@@ -153,8 +154,8 @@ void main() {
         final stored = (await tester.runAsync(
           () => f.repository.values(f.dimension.id),
         ))!;
-        expect(stored.first.name, 'Retained name');
-        expect(checked(tester, stored.first), isFalse);
+        expect(stored.last.name, 'Retained name');
+        expect(checked(tester, stored.last), isFalse);
       } finally {
         await f.cleanup(tester);
       }
@@ -223,8 +224,8 @@ void main() {
         final stored = (await tester.runAsync(
           () => f.repository.values(f.dimension.id),
         ))!;
-        expect(stored.first.name, 'Pending value');
-        expect(checked(tester, stored.first), isFalse);
+        expect(stored.last.name, 'Pending value');
+        expect(checked(tester, stored.last), isFalse);
         expect(find.byType(PikoDialog), findsOneWidget);
       } finally {
         if (held != null && !held.gate.isCompleted) held.gate.complete();

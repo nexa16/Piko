@@ -16,7 +16,7 @@ void main() {
         return null;
       });
       try {
-        final stream = deviceClockChanges().listen((_) {});
+        final stream = deviceClockChanges(android: true).listen((_) {});
         await Future<void>.delayed(Duration.zero);
         expect(calls, ['listen']);
         await stream.cancel().timeout(const Duration(seconds: 2));

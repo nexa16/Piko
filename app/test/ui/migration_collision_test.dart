@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/main.dart';
 import 'package:piko/piko_runtime.dart';
@@ -27,13 +28,29 @@ void main() {
       '$locale migration collision explains preserved data and retry without an empty home',
       (tester) async {
         final settings = CollisionSettings();
+        final collision = find.text(
+          PikoCopy(locale).text('storage.migrationCollision'),
+        );
+        Future<void> waitForCollision() async {
+          for (var i = 0; i < 50 && collision.evaluate().isEmpty; i++) {
+            await tester.runAsync(
+              () => Future<void>.delayed(const Duration(milliseconds: 20)),
+            );
+            await tester.pump();
+          }
+          expect(collision, findsOneWidget);
+        }
+
         await tester.pumpWidget(
           PikoApp(
             locale: Locale(locale),
-            home: PikoRuntime(settingsRepositoryFactory: (_) => settings),
+            home: PikoRuntime(
+              databaseFactory: () => PikoDatabase(NativeDatabase.memory()),
+              settingsRepositoryFactory: (_) => settings,
+            ),
           ),
         );
-        await tester.pumpAndSettle();
+        await waitForCollision();
         expect(
           find.text(PikoCopy(locale).text('storage.migrationCollision')),
           findsOneWidget,
@@ -44,7 +61,7 @@ void main() {
         );
         final reads = settings.reads;
         await tester.tap(find.text(PikoCopy(locale).text('action.retry')));
-        await tester.pumpAndSettle();
+        await waitForCollision();
         expect(settings.reads, greaterThan(reads));
         expect(
           find.text(PikoCopy(locale).text('storage.migrationCollision')),

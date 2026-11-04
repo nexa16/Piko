@@ -18,6 +18,7 @@ import 'package:piko/data/local/sqlite_vocabulary_json_service.dart';
 import 'package:piko/features/learning/learning_scheduler.dart';
 import 'regular_reviews_test.dart' show Fixture;
 import 'statistics_test.dart' show stored;
+import '../support/freeze_pre24.dart';
 
 Future<VocabularyRecord> meaning(
   SqliteVocabularyRepository repo,
@@ -444,6 +445,8 @@ void main() {
         final snapshot = await stored(db);
         await db.close();
         final raw = sqlite.sqlite3.open(file.path);
+        freezePre24(raw);
+        raw.execute('DROP TABLE vocabulary_trash');
         raw.execute(
           'ALTER TABLE category_group_preferences DROP COLUMN acquisition_source',
         );

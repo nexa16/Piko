@@ -15,6 +15,7 @@ enum PikoButtonVariant {
   dangerOutline,
   dangerFilled,
   neutral,
+  surface,
   gradeIncorrect,
   gradeCorrect,
 }
@@ -94,6 +95,8 @@ class PikoButton extends StatelessWidget {
         ? d.color('reviewSecondary')
         : grade || variant == PikoButtonVariant.dangerFilled
         ? d.color(danger ? 'danger' : 'success')
+        : variant == PikoButtonVariant.surface
+        ? d.color('surface')
         : primary
         ? d.color(
             primaryStyle == 'flat'

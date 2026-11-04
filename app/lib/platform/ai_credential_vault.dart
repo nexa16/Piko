@@ -15,6 +15,16 @@ final class AndroidAiCredentialVault implements AiCredentialVault {
   });
   final String namespace;
   final MethodChannel channel;
+
+  /// A no-backup installation identity, deliberately separate from credentials.
+  Future<String> installationId() async {
+    final id = await channel.invokeMethod<String>('installationId');
+    if (id == null || !RegExp(r'^[a-f0-9-]{36}$').hasMatch(id)) {
+      throw StateError('Installation identity unavailable');
+    }
+    return id;
+  }
+
   @override
   Future<String?> read() =>
       channel.invokeMethod<String>('read', {'namespace': namespace});

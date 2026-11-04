@@ -6,8 +6,10 @@ import 'data/ai/managed_ai_provider.dart';
 import 'data/local/sqlite_ai_service.dart';
 import 'features/ai/ai_page.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'data/local/sqlite_full_export_service.dart';
 import 'data/collections_repository.dart';
 import 'data/local/database_connection.dart';
@@ -134,8 +136,49 @@ class _PikoRuntimeState extends State<PikoRuntime> {
   );
   final _directionBinding = ValueNotifier<PreferredDirectionController?>(null);
   bool _directionStarted = false;
+  late final _clockChanges = deviceClockChanges();
+  StreamSubscription<void>? _reviewClockChanges;
   Future<void> _languageDependencies = Future<void>.value();
+  Future<void> _reconcileInstallation() async {
+    if (!Platform.isAndroid) {
+      final row = await database
+          .customSelect(
+            'SELECT COUNT(*) AS total FROM ai_review_jobs WHERE lock_enabled=1',
+          )
+          .getSingle();
+      if (row.read<int>('total') != 0) {
+        throw StateError('Cannot reconcile AI review installation identity');
+      }
+      return;
+    }
+    try {
+      final id = await const AndroidAiCredentialVault().installationId();
+      await database.reconcileAiInstallation(id);
+    } on MissingPluginException {
+      // Non-Android hosts can still use a database without live control state.
+      // An inaccessible installation identity must never unlock an existing job.
+      final row = await database
+          .customSelect(
+            'SELECT COUNT(*) AS total FROM ai_review_jobs WHERE lock_enabled=1',
+          )
+          .getSingle();
+      if (row.read<int>('total') != 0) {
+        throw StateError('Cannot reconcile AI review installation identity');
+      }
+    }
+  }
+
   bool _bootstrapped = false;
+  void _retryLanguage(AppLanguageController binding) {
+    if (!mounted || !identical(_language, binding) || binding.pending) return;
+    // A failed installation check is retryable, but the retry must become the
+    // dependency retained by subsequent locale bindings as well.
+    _languageDependencies = _languageDependencies
+        .then<void>((_) {}, onError: (Object _, StackTrace _) {})
+        .then((_) => _reconcileInstallation());
+    binding.load(after: _languageDependencies);
+  }
+
   late final _collectionScopes = CollectionViewScopes(
     repository: settings,
     registerPending: trackWrites,
@@ -162,6 +205,9 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       _directionStarted = true;
       scheduleMicrotask(() {
         if (!mounted) return;
+        _reviewClockChanges = _clockChanges.listen((_) {
+          trackWrites(database.expireReviewLocks());
+        });
         _directionBinding.value = _direction;
         _direction.load();
         setState(() {
@@ -169,7 +215,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
             repository: SqliteStatisticsRepository(database),
             clock: database.clock,
             calendar: database.learningDayCalendar,
-            clockChanges: deviceClockChanges(),
+            clockChanges: _clockChanges,
             onPendingWrites: trackWrites,
           );
         });
@@ -183,6 +229,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
     _languageDependencies = Future.wait<void>([
       _languageDependencies,
       if (previous != null) previous.awaitPending,
+      _reconcileInstallation(),
     ]);
     final after = _languageDependencies;
     previous?.removeListener(_languageChanged);
@@ -405,6 +452,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
       aiAccess.dispose();
     }
     _statistics?.dispose();
+    unawaited(_reviewClockChanges?.cancel());
     trash.dispose();
     for (final binding in _collectionBindings.values) {
       binding.dispose();
@@ -443,11 +491,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
                   label: copy.text('action.retry'),
                   onPressed: binding.pending
                       ? null
-                      : () {
-                          if (mounted && identical(_language, binding)) {
-                            binding.load();
-                          }
-                        },
+                      : () => _retryLanguage(binding),
                 ),
             ],
           ),
@@ -508,13 +552,7 @@ class _PikoRuntimeState extends State<PikoRuntime> {
         if (binding.error != null)
           PikoButton(
             label: copy.text('action.retry'),
-            onPressed: () {
-              if (mounted &&
-                  identical(_language, binding) &&
-                  !binding.pending) {
-                binding.load();
-              }
-            },
+            onPressed: () => _retryLanguage(binding),
           ),
       ],
     );

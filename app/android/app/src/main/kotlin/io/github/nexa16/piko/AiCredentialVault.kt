@@ -8,6 +8,8 @@ import android.util.Base64
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.security.KeyStore
+import java.io.File
+import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -26,6 +28,19 @@ class AiCredentialVault(private val context: Context, messenger: BinaryMessenger
                 require(name == "session" || (debug && Regex("test-[a-z0-9-]{1,64}").matches(name)))
                 val alias = "piko.ai.access.$name"
                 when (call.method) {
+                    "installationId" -> {
+                        val file = File(context.noBackupFilesDir, "piko-installation-id")
+                        synchronized(AiCredentialVault::class.java) {
+                            if (!file.exists()) {
+                                val temporary = File(context.noBackupFilesDir, "piko-installation-id.tmp")
+                                temporary.writeText(UUID.randomUUID().toString(), Charsets.UTF_8)
+                                check(temporary.renameTo(file))
+                            }
+                            val id = file.readText(Charsets.UTF_8)
+                            require(Regex("^[a-f0-9-]{36}$").matches(id))
+                            result.success(id)
+                        }
+                    }
                     "read" -> {
                         val stored = preferences.getString(name, null)
                         if (stored == null) result.success(null) else {

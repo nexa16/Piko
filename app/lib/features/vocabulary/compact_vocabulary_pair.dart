@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../ui/piko_theme.dart';
 
-/// The flat two-language role shared by Compact lists and trash previews.
+/// Compact list language text wraps completely; recovery previews stay bounded.
 class CompactVocabularyPair extends StatelessWidget {
   const CompactVocabularyPair({
     required this.first,
@@ -23,8 +23,8 @@ class CompactVocabularyPair extends StatelessWidget {
     Widget text(String value, {bool secondary = false}) {
       final label = Text(
         value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        maxLines: _preview ? 1 : null,
+        overflow: _preview ? TextOverflow.ellipsis : TextOverflow.visible,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
           color: secondary ? pikoDesign.color('muted') : null,
         ),
@@ -34,12 +34,18 @@ class CompactVocabularyPair extends StatelessWidget {
       return _preview ? Tooltip(message: value, child: label) : label;
     }
 
-    return Row(
-      children: [
-        Expanded(child: text(first)),
-        SizedBox(width: pikoDesign.dimension('spacing.3')),
-        Expanded(child: text(second, secondary: true)),
-      ],
+    if (_preview) {
+      return Row(
+        children: [
+          Expanded(child: text(first)),
+          SizedBox(width: pikoDesign.dimension('spacing.3')),
+          Expanded(child: text(second, secondary: true)),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [text(first), text(second, secondary: true)],
     );
   }
 }

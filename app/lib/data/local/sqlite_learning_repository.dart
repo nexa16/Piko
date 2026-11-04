@@ -37,6 +37,7 @@ final class SqliteLearningRepository
         database.vocabularyEntries,
       )..where((row) => row.id.equals(entryId))).getSingleOrNull();
       if (entry == null) throw RegularReviewFailure.itemNotFound;
+      await database.requireCollectionWritable(entry.collectionId);
       final items =
           await (database.select(database.learningItems)..where(
                 (row) =>

@@ -1,3 +1,4 @@
+import '../support/runtime_ready.dart';
 import 'dart:async';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -119,6 +120,7 @@ void main() {
         PikoApp(home: PikoRuntime(databaseFactory: () => db)),
       );
       await tester.pumpAndSettle();
+      await waitForRuntimeHome(tester, db);
       await tester.tap(
         find
             .descendant(
@@ -281,6 +283,7 @@ void main() {
         PikoApp(home: PikoRuntime(databaseFactory: () => db)),
       );
       await tester.pumpAndSettle();
+      await waitForRuntimeHome(tester, db);
       final register = tester
           .widget<CollectionsHome>(find.byType(CollectionsHome))
           .onPendingVocabularyWrites!;

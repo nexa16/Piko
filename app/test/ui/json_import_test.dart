@@ -103,6 +103,32 @@ Future<void> confirmJson(WidgetTester tester, String language) async {
 
 void main() {
   testWidgets(
+    'progressive import hides future actions and invalidates edited preview',
+    (tester) async {
+      final service = ImportService();
+      final copy = PikoCopy('en');
+      await mountJson(tester, service, JsonTestPlatform());
+      expect(find.text(copy.text('json.analyze')), findsNothing);
+      expect(find.text(copy.text('json.apply')), findsNothing);
+      await tester.enterText(input, 'first JSON');
+      await tester.pumpAndSettle();
+      await pressJson(tester, 'json.analyze');
+      expect(service.analyses, 1);
+      expect(find.text(copy.text('json.apply')), findsOneWidget);
+      await tester.ensureVisible(input);
+      await tester.pumpAndSettle();
+      await tester.enterText(input, 'changed JSON');
+      await tester.pumpAndSettle();
+      expect(find.text(copy.text('json.apply')), findsNothing);
+      expect(service.applies, 0);
+      await tester.enterText(input, ' ');
+      await tester.pumpAndSettle();
+      expect(find.text(copy.text('json.analyze')), findsNothing);
+      expect(find.text(copy.text('json.apply')), findsNothing);
+    },
+  );
+
+  testWidgets(
     'successful import stays explicit until Return sends the owning-Collection intent',
     (tester) async {
       final service = ImportService();
@@ -115,7 +141,10 @@ void main() {
       );
       await tester.enterText(input, 'source JSON');
       await pressJson(tester, 'json.analyze');
-      expect(find.text(PikoCopy('en').text('json.activityHelp')),findsOneWidget);
+      expect(
+        find.text(PikoCopy('en').text('json.activityHelp')),
+        findsOneWidget,
+      );
       final check = tester.widget<PikoButton>(
         find.widgetWithText(PikoButton, PikoCopy('en').text('json.analyze')),
       );
@@ -325,6 +354,7 @@ void main() {
           JsonTestPlatform(),
           language: language,
         );
+        await tester.enterText(input, 'source JSON');
         await pressJson(tester, 'json.analyze', language: language);
         final native = find.byKey(const ValueKey('json-group-nativeText'));
         await tester.ensureVisible(native);
@@ -388,7 +418,8 @@ void main() {
     (tester) async {
       final service = ImportService();
       await mountJson(tester, service, JsonTestPlatform());
-      await pressJson(tester,'json.analyze');
+      await tester.enterText(input, 'source JSON');
+      await pressJson(tester, 'json.analyze');
       for (final group in VocabularyJsonGroup.values) {
         final tile = find.byKey(ValueKey('json-group-${group.name}'));
         await tester.ensureVisible(tile);
@@ -421,6 +452,7 @@ void main() {
       final service = ImportService()
         ..analyzeGate = Completer<VocabularyJsonPreview>();
       await mountJson(tester, service, JsonTestPlatform());
+      await tester.enterText(input, 'source JSON');
       await pressJson(tester, 'json.analyze');
       await tester.enterText(input, 'newer source');
       service.analyzeGate!.complete(TestPreview());
@@ -479,6 +511,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.enterText(input, 'source JSON');
       await pressJson(tester, 'json.analyze');
       await pressJson(tester, 'json.apply');
       await confirmJson(tester, 'en');
@@ -544,8 +577,8 @@ void main() {
           'schemaVersion': 5,
           'collections': [
             {
-              'targetLanguage': {'kind':'catalog','id':'fr'},
-              'nativeLanguage': {'kind':'catalog','id':'de'},
+              'targetLanguage': {'kind': 'catalog', 'id': 'fr'},
+              'nativeLanguage': {'kind': 'catalog', 'id': 'de'},
               'entries': [
                 {
                   'id': original.id,

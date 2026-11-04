@@ -1,3 +1,4 @@
+import '../support/runtime_ready.dart';
 import 'dart:async';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -620,6 +621,7 @@ void main() {
         PikoApp(home: PikoRuntime(databaseFactory: () => db)),
       );
       await tester.pumpAndSettle();
+      await waitForRuntimeHome(tester, db);
       final home = tester.widget<CollectionsHome>(find.byType(CollectionsHome));
       final repository = RenameRepository(collections)
         ..gate = Completer<void>();

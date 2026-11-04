@@ -1,6 +1,6 @@
 # Using Piko
 
-Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) preserves the earlier documented build and its source identity; its control arrangements can predate the grouped Settings and editing surfaces described here.
+Piko stores vocabulary on the device and offers self-assessed Long-term and Speed learning. This guide describes current implemented behavior. The [build manifest](build-manifest.json) identifies the current documented APK and its product captures. [Verification coverage](verification.md) distinguishes observed product flows from source and test evidence. The [gallery](screenshots.md) shows selected states from the exact documented ordinary build.
 
 ## Contents
 
@@ -21,11 +21,11 @@ Piko stores vocabulary on the device and offers self-assessed Long-term and Spee
 <a id="collections"></a>
 ## Collections
 
-From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, choose a level from A1 to C2, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. Each language field opens a searchable directory with 128 choices: 120 base languages, six curated varieties and two Mandarin script options alongside generic Mandarin. Custom is available in the same picker. A custom name matching a catalog label in the current interface language after case/whitespace/punctuation normalization selects that catalog identity; otherwise the exact name is retained. Existing Collection languages and custom names remain fixed. Interface language is a separate setting.
+From Home, choose **New** or **Create first collection**. Select the target language you are learning and the native language used for translations, choose a level from A1 to C2, enter a Collection name, then choose **Create collection**. The languages must differ and the name cannot be empty. Each language field opens a searchable directory with 128 choices: 120 base languages, six curated varieties and two Mandarin script options alongside generic Mandarin. Custom is available in the same picker. A custom name matching a catalog label in the current interface language after case/whitespace/punctuation normalization selects that catalog identity; otherwise the exact name is retained. Use Collection Settings → Change languages to stage another pair and confirm with Apply. Existing words, field assignments, examples, Hints, categories and both directions of learning remain unchanged; nothing is translated automatically. Later AI checks use the current languages. Interface language is a separate setting.
 
 Open a Collection from **My collections**. Its heading shows the language pair and vocabulary count. The information icon beside this metadata opens **How learning works**, including an expandable technical explanation. Closing help returns to the Collection.
 
-Scrolling down keeps the Collection title, total entry count, Back/menu and separate compact Review and Speed actions available. Each action counts eligible word directions in the current search/filter scope, or the selected scope during selection mode; a word available in both directions counts twice. Zero stays visible and disabled; loading and errors remain distinct. One eligible direction starts directly (Speed still opens its setup); two directions offer a choice. Dismissing the choice/setup retains the list and selection. Return to the top to see the expanded direction cards and rename control. The compact header has no mascot. In an exceptionally short viewport, the header scrolls normally to keep content reachable.
+Scrolling down keeps the Collection title, total entry count, Back/menu and separate compact Review and Speed actions available. Each action counts eligible word directions in the current search/filter scope, or the selected scope during selection mode; a word available in both directions counts twice. Zero stays visible and disabled; loading and errors remain distinct. One eligible direction starts directly (Speed still opens its setup); two directions offer a choice. Dismissing the choice/setup retains the list and selection. Return to the top to see the expanded direction cards and rename control. The expanded title uses 26 logical pixels and the learning actions transition continuously into the compact header. A separate Scroll to top action appears after one viewport of scrolling and stays clear of other actions. The compact header has no mascot. In an exceptionally short viewport, the header scrolls normally to keep content reachable.
 
 Reading Piko appears beside the first available Review action, including when Speed is also available. Sleeping Piko accompanies the no-work message only when the current scope has no Review, new Speed words or pending repetition. Speed-only, empty, unmatched, loading and failed states show no contextual pose. These illustrations do not change learning data or indicate permanent mastery.
 
@@ -33,9 +33,9 @@ Use the heading's rename control to change its name; save or cancel that edit ex
 
 The app stores changes locally. There is no account, cloud synchronization or app-wide backup/restore flow in this build. Uninstalling the app or clearing its storage can remove local data. See [transfer](#transfer) for Collection JSON exchange and the separate all-Collection report.
 
-<img src="images/r10-collection.png" width="320" alt="Collection with flat Compact bilingual rows and separate Review and Speed actions">
+<img src="images/r11-collection.png" width="320" alt="Collection with stacked Compact bilingual cards and separate Review and Speed actions">
 
-Ordinary product emulator capture · [Full image](images/r10-collection.png) · [Capture metadata: `r10-collection`](build-manifest.json)
+Ordinary product emulator capture · [Full image](images/r11-collection.png) · [Capture metadata: `r11-collection`](build-manifest.json)
 
 [Technical ownership](technical.md#runtime) · [Home and Collection images](screenshots.md#collections)
 
@@ -51,7 +51,7 @@ The entry session retains previously confirmed words for revisiting and editing.
 
 The same target/native pair can have separate entries with different Hints. Each meaning has its own UUID and starts with fresh learning. A complete pair plus Hint must be unique within its Collection: comparison normalizes Unicode, lowercases and collapses runs of Unicode whitespace, while preserving punctuation and accents. An absent or whitespace-only Hint is the same empty key. Change the pair or Hint to resolve a duplicate. Editing the Hint on an existing entry preserves its learning. Empty required fields and incomplete example pairs need correction before saving.
 
-[Editor image](screenshots.md#editors) · [Identity and validation](technical.md#vocabulary)
+[Editor coverage](screenshots.md#editors) · [Identity and validation](technical.md#vocabulary)
 
 <a id="edit-vocabulary"></a>
 ## Edit and delete vocabulary
@@ -66,7 +66,7 @@ Use **Reset learning progress** above Delete to choose one or both translation d
 
 Trash groups words by deletion operation. Expand a group to restore an individual word or its valid group members. Recovery retains identity, content, order, activity, complete directional learning and still-valid repetitions. Duplicate or identity conflicts remain in Trash and are reported; category definitions that no longer exist are omitted with an explanation. Recorded statistics are never added again by recovery. **Empty Trash** requires confirmation and permanently removes its retained recovery copies. Expired copies are purged when the app opens or accesses recovery; the retention period does not restart when reopening Trash. Collection deletion also removes that Collection's Trash and remains a separate irreversible operation.
 
-[Editor image](screenshots.md#editors) · [Persistence and guarded writes](technical.md#storage)
+[Editor coverage](screenshots.md#editors) · [Persistence and guarded writes](technical.md#storage)
 
 <a id="optional-content"></a>
 ## Examples, hints and activity
@@ -95,11 +95,8 @@ Categories feed the list's filters and grouping. If none exist, the category/fil
 
 In category group Properties, each group has **Carry over from previous word**, initially off. Save the group to apply it. During manual entry, the next new draft copies that group's values from the last successfully confirmed word in the same session. You can change or clear them. Failed confirmations, browsing or editing older cards do not replace the next draft's values. A new session starts empty. The preference stays on this device and is not part of Collection JSON.
 
-<img src="images/r10-category-values.png" width="320" alt="Scrolled Practice category group with appended Values Zulu then Alpha and ordering menus">
 
-Ordinary product emulator capture · [Full image](images/r10-category-values.png) · [Capture metadata: `r10-category-values`](build-manifest.json)
-
-[Category image](screenshots.md#categories) · [Category ownership](technical.md#queries)
+[Category reference](screenshots.md#categories) · [Category ownership](technical.md#queries)
 
 <a id="list-controls"></a>
 ## Search, filter, group and sort
@@ -116,7 +113,7 @@ Tapping outside search dismisses its keyboard. While a query is running, previou
 | Sort | Choose Original order, target/native A–Z or Z–A, or newest/oldest. Apply the choice. Older words without a recorded added date remain undated rather than receiving invented dates. |
 | View | Change **Layout** between Compact and Detailed, and change **Language order** independently of the learning direction. |
 
-View opens Layout and Language order as staged child dialogs: Back returns without applying, Apply saves and returns, and Close exits. Controls expose their current state and independent reset actions. Search and filters combine; changing Group or Sort does not clear them. An empty result is not deletion: clear search/filter restrictions to locate saved words again. View preferences are retained per Collection; temporary selection is separate. Compact uses flat side-by-side language rows, with full text available in the editor, and omits category tags, review dates and supplementary status. Detailed retains its richer content and learning status.
+View opens Layout and Language order as staged child dialogs: Back returns without applying, Apply saves and returns, and Close exits. Controls expose their current state and independent reset actions. Search and filters combine; changing Group or Sort does not clear them. An empty result is not deletion: clear search/filter restrictions to locate saved words again. View preferences are retained per Collection; temporary selection is separate. Compact places the two languages on separate lines, wraps the complete text and keeps an edit pencil on the right. It omits category tags and review dates. Detailed shows its first example pair and an explicit control for the remaining examples, retaining its richer content and learning status.
 
 Collection Detail's learning launch availability uses the matching eligible vocabulary and configured direction, so filtering/searching can change the offered actions and counts. The Home review badge counts due word directions; completing one direction can leave the opposite direction due. A grouped duplicate is still one saved word.
 
@@ -125,7 +122,7 @@ Collection Detail's learning launch availability uses the matching eligible voca
 <a id="selection"></a>
 ## Temporary selection
 
-Hold a collapsed vocabulary card to start selection, then tap cards to toggle them. **Select all** includes the current search/filter matches, including words inside collapsed groups. A grouped word is selected once by identity even when displayed in several places. Each group heading also has a tri-state checkbox: it selects the current search/filter matches in that group, including collapsed children. A partially selected group becomes fully selected; selecting an already fully selected group clears only those members. Selection outside that group stays intact.
+Hold a vocabulary card or group heading to enter selection and select its matching words, then tap cards to toggle them. Selection indicators appear only in selection mode: square group controls on the left, round word controls on the right and at the top right of Detailed cards. A minus marks computed partial group selection. **Select all** includes the current search/filter matches, including words inside collapsed groups. A grouped word is selected once by identity even when displayed in several places. Each group heading also has a tri-state checkbox: it selects the current search/filter matches in that group, including collapsed children. A partially selected group becomes fully selected; selecting an already fully selected group clears only those members. Selection outside that group stays intact.
 
 The vocabulary list uses the full viewport. A compact selection bar overlays its bottom only while words are selected; measured end spacing keeps the last card reachable. The count and actions share one line when they fit; otherwise the count occupies its own row above the actions. Controls wrap or scroll at large text sizes, with safe-area clearance at the bottom. With selection mode active at zero, its controls remain in the list without reserved overlay space.
 
@@ -135,11 +132,8 @@ Choose **Delete vocabulary** in the selection bar to delete the selected words, 
 
 While selection mode is active, use **Review** or **Speed** in the Collection header to learn the selected active words, including words hidden by later filters. Long-term includes only work eligible now; Speed also includes previously learned words. The selection counts words once; learning counts each eligible direction. A known-zero mode stays visible and disabled. Setup reports included, hidden, inactive and unavailable words. Cancel retains selection and scroll position; entering the round clears the temporary selection. Selection has no bulk edit or export operation and does not change Active/Inactive or saved filters.
 
-<img src="images/r10-selected-speed.png" width="320" alt="Selected Speed setup for one active reviewed word with hidden and inactive counts">
 
-Ordinary product emulator capture · [Full image](images/r10-selected-speed.png) · [Capture metadata: `r10-selected-speed`](build-manifest.json)
-
-[Selection image](screenshots.md#selection) · [Selection ownership](technical.md#queries)
+[Selection reference](screenshots.md#selection) · [Selection ownership](technical.md#queries)
 
 <a id="long-term"></a>
 ## Long-term learning
@@ -213,9 +207,9 @@ This is a report, not a restore file: the Collection importer rejects it. Saving
 ### Check and apply an import
 
 1. Use **Choose JSON file**, **Paste from clipboard**, or edit **Paste or edit JSON**. **Copy example JSON** supplies synthetic structure for the Collection's language pair.
-2. Choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing.
+2. Once input is present, choose **Check JSON**. Review the new/updated/unchanged/error counts and row/path errors. Checking alone saves nothing; content-group choices appear after this first check.
 3. Choose which content groups to import: target text, native text, category assignments, examples, hint and Activity. Recheck after changing groups.
-4. Fix errors and check again. When valid, choose **Import vocabulary** and confirm the batch.
+4. Fix errors and check again. Editing JSON or groups invalidates the previous preview. Only currently validated input offers **Import vocabulary**, followed by explicit batch confirmation.
 
 Files must be valid UTF-8 JSON within 1,000,000 bytes, use the Piko vocabulary format, contain exactly one Collection and match the destination language pair. Only current schema version 5 is accepted. Both language fields contain explicit catalog/custom identity objects; custom names match across installations after the same bounded normalization, while destination labels remain unchanged. See [manual conversion examples](json-format.md) for older files. Existing IDs update selected content; absent selected groups leave existing content unchanged. New vocabulary requires both words. Conflicting identities, invalid categories or duplicate final word-pair/Hint tuples block the batch. The check uses effective content after selected groups, omissions and clears are resolved.
 
@@ -231,6 +225,8 @@ From Home, open the Settings gear. **General** contains App language, **Learning
 
 **Learning direction** selects Target → Native, Native → Target, or Both directions separately. It affects eligible launch choices; it does not merge the two directions' progress. **Show examples on questions** changes question-side presentation while preserving stored examples.
 
+Tapping outside a text field closes the keyboard without deleting the text. Switching fields and pressing another action still work on the first tap. Direct language choices commit without a navigation chevron; Custom retains its next-page navigation.
+
 Settings report loading/saving failures. If a preference cannot be saved, the app restores its previous choice and offers retry. Return using Back. Account/sync controls and a developer-settings interface are not available.
 
 [Settings image](screenshots.md#settings) · [Preference ownership](technical.md#runtime)
@@ -239,15 +235,19 @@ Settings report loading/saving failures. If a preference cannot be saved, the ap
 
 AI is hidden in ordinary builds. An explicitly enabled private-test build can propose topic/level vocabulary, inventory gaps, related Hints and saved-Collection corrections. Access must also be configured and approved by the service. Manual editing and learning remain available without it.
 
-When valid access or consent is missing, AI opens its access-and-privacy dialog. Existing valid consent does not require repeating it on every visit; **AI access and privacy** remains available. Choose topic generation, **Build vocabulary from A1 to target level**, inventory gaps or Collection review. Choose a level, initially the Collection's level, and optional learning goals. Topic text appears for topic generation only.
+When valid access or consent is missing, AI opens its access-and-privacy dialog. Existing valid consent does not require repeating it on every visit; **AI access and privacy** remains available. Choose topic generation, **Build vocabulary from A1 to target level**, inventory gaps or Collection review. Collection Settings also offers each AI action directly with the corresponding task preselected. Choose a level, initially the Collection's level, and optional learning goals in a staged choice dialog; Apply updates the summary. Topic text appears for topic generation only.
 
-Collection review starts with all six checks enabled: translations/spelling, examples, Hints, suitability, structure/consistency and categories. Choose the checks to request. Category review offers **Fill missing**, which preserves existing assignments, **Review and improve**, or **Reclassify all**. Review's own Filters starts unfiltered on each visit and includes matching active and inactive words in its count without listing them. Its staged category choices are independent of the vocabulary list's filters; applying or clearing them does not change that list. New category groups and Values have separate proposal permissions.
+**Review vocabulary** starts with all six checks enabled: translations/spelling, examples, Hints, suitability, structure/consistency and categories. Choose the checks to request. Category review offers **Fill missing**, which preserves existing assignments, **Review and improve**, or **Reclassify all**. Review's own Filters starts unfiltered on each visit and includes matching active and inactive words in its count without listing them. Its staged category choices are independent of the vocabulary list's filters; applying or clearing them does not change that list. New category groups and Values have separate proposal permissions.
+
+Full review requires a compatible, separately activated service. The app checks compatibility without creating a job or locking content; the currently deployed legacy service does not enable this new workflow. On a compatible service, one confirmed start freezes the displayed filtered scope, or every word including inactive words when unfiltered. Enter or confirm a maximum cost for that job. Detail batches and a separate consistency phase cover that frozen scope; excluded words are not sent. Progress counts actual reviewed words, with consistency and failures reported separately.
+
+Confirmed server work can continue with the app closed; reopening reads the existing job. A real pause needs explicit Resume. Content changes to that Collection are locked while work is pending, but learning and grading remain available. Offline Cancel stays pending until acknowledged. The fixed job deadline is at most seven days and can end earlier with access or pilot expiry; resuming never extends it. Suggestions become available only after every required step completes, then need explicit selection and adoption. Unknown provider outcomes are not automatically retried. A valid report does not promise linguistic completeness.
 
 Preview the target/native meanings, optional Hints, bilingual examples and category changes; select each proposal you want. New category definitions need separate selection. Nothing is selected or saved automatically. Saved Source labels and learning state remain protected. A new meaning receives a fresh card rather than reusing another meaning's progress.
 
-A1-to-target generation starts at A1. Resolve each portion by explicitly adopting chosen vocabulary or discarding it before requesting another portion or advancing to the next level. No portion or level certifies complete coverage. An incomplete generation can request another portion, which may incur costs. Earlier proposals remain visible and count toward the shared technical capacity. You can instead explicitly accept a partial result; its quantity does not certify complete topic or level coverage. Changing the underlying inventory invalidates the preview. Oversized context offers an explicit smaller-step request with its limited scope shown. Resolve the current context portion before explicitly requesting the next; the remaining inventory keeps its original membership as changes are adopted. These context portions are separate from requesting more generated vocabulary. The app never silently drops words or retries a paid request. Errors distinguish context size, network, access, quota/rate, timeout, invalid response and service availability while preserving inputs and usable choices. Stopping a follow-up keeps the previous usable result and selections; an already submitted request may still incur costs.
+A1-to-target generation starts at A1. Resolve each portion by explicitly adopting chosen vocabulary or discarding it before requesting another portion or advancing to the next level. No portion or level certifies complete coverage. An incomplete generation can request another portion, which may incur costs. Earlier proposals remain visible and count toward the shared technical capacity. You can instead explicitly accept a partial result; its quantity does not certify complete topic or level coverage. Changing the underlying inventory invalidates the preview. Oversized context offers an explicit smaller-step request with its limited scope shown. Resolve the current context portion before explicitly requesting the next; the remaining inventory keeps its original membership as changes are adopted. These context portions are separate from requesting more generated vocabulary. These explicitly smaller context portions apply to generation/gaps; full review uses its separately bounded whole-scope job. The app never silently drops words or retries a paid request. Errors distinguish context size, network, access, quota/rate, timeout, invalid response and service availability while preserving inputs and usable choices. Stopping a follow-up keeps the previous usable result and selections; an already submitted request may still incur costs.
 
-Use **Regenerate original task** to request a fresh answer, or enter a follow-up such as more/fewer words, a different focus or spelling corrections. The original result stays available while the replacement is generated. Review the replacement and choose **Use this preview** or **Keep previous result**. Using a replacement clears all proposal selections; it never edits saved vocabulary automatically. Every admitted follow-up may incur costs.
+Generation and gap previews offer **Regenerate original task** to request a fresh answer, or enter a follow-up such as more/fewer words, a different focus or spelling corrections. The original result stays available while the replacement is generated. Review the replacement and choose **Use this preview** or **Keep previous result**. Using a replacement clears all proposal selections; it never edits saved vocabulary automatically. Every admitted follow-up may incur costs.
 
 Related Hints compare direct same-target or same-native meanings, including inactive cards. Selecting fewer target cards retains the full direct comparison group. For a new draft, approved Hints stay staged until Add-next or Done successfully saves that draft and the selected related changes together. Cancel or a failed save applies none of them. A saved card's normal edits finish before the Hint request.
 

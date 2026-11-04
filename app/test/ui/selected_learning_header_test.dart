@@ -28,6 +28,15 @@ void main() {
         [LearningCardCodec.encode(card), item.id],
       );
       detail.queryBinding!.scope.setSearch('nothing matches');
+      for (var i = 0; i < 20 && !detail.queryBinding!.ready; i++) {
+        await tester.runAsync(() => h.db.customSelect('SELECT 1').get());
+        await tester.pumpAndSettle();
+      }
+      expect(detail.queryBinding!.ready, isTrue);
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
       await tester.pumpAndSettle();
       final selection = h.selection(tester);
       final before = await completeSnapshot(h.db);

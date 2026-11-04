@@ -11,9 +11,10 @@ class AiConnectionControl extends StatefulWidget {
     required this.connection,
     required this.consent,
     this.enabled = true,
+    this.approvedAccess = false,
   });
   final AiConnectionController connection;
-  final bool consent, enabled;
+  final bool consent, enabled, approvedAccess;
   @override
   State<AiConnectionControl> createState() => _AiConnectionControlState();
 }
@@ -66,7 +67,9 @@ class _AiConnectionControlState extends State<AiConnectionControl> {
                     ? 'ai.connecting'
                     : c.deviceAccessId == null
                     ? 'ai.notConnected'
-                    : 'ai.identityReady',
+                    : widget.approvedAccess
+                    ? 'ai.accessConfirmed'
+                    : 'ai.accessNotConfirmed',
               ),
             ),
           ),

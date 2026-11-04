@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'dart:async';
 import '../../core/clock.dart';
 import '../../core/learning_day.dart';
 import 'statistics_tables.dart';
@@ -9,6 +10,12 @@ import '../preferred_direction.dart';
 import '../vocabulary_normalization.dart';
 
 part 'piko_database.g.dart';
+
+final class CollectionReviewLocked implements Exception {
+  const CollectionReviewLocked();
+  @override
+  String toString() => 'PIKO_COLLECTION_REVIEW_LOCKED';
+}
 
 class AppSettings extends Table {
   TextColumn get key => text()();
@@ -340,9 +347,13 @@ class PikoDatabase extends _$PikoDatabase {
   final PikoClock clock;
   final LearningDayCalendar learningDayCalendar;
   final _scheduler = LearningScheduler();
+  Timer? _reviewExpiryTimer;
+  Future<void>? _reviewExpiryWork;
+  Duration _reviewExpiryCheckInterval = const Duration(minutes: 1);
+  bool _closing = false;
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -351,6 +362,7 @@ class PikoDatabase extends _$PikoDatabase {
       await _initializeLearningSequence();
       await _initializeVocabularyOrder();
       await _initializePreferredDirection(PreferredDirection.targetToNative);
+      await _createAiJobState();
     },
     onUpgrade: (m, from, to) async {
       await transaction(() async {
@@ -501,6 +513,7 @@ class PikoDatabase extends _$PikoDatabase {
           if (from >= 2) await m.addColumn(collections, collections.level);
           await m.createTable(vocabularyTrash);
         }
+        if (from < 24) await _createAiJobState();
       });
     },
     beforeOpen: (_) async {
@@ -517,6 +530,151 @@ class PikoDatabase extends _$PikoDatabase {
       }
     },
   );
+
+  /// Durable operational state is private and deliberately absent from JSON
+  /// interchange. Triggers enforce admission even for indirect/raw writers.
+  Future<void> _createAiJobState() async {
+    await customStatement('''CREATE TABLE ai_review_jobs (
+      job_id TEXT PRIMARY KEY, collection_id TEXT NOT NULL,
+      installation_id TEXT NOT NULL, digest TEXT NOT NULL,
+      state TEXT NOT NULL, generation INTEGER NOT NULL DEFAULT 0,
+      expires_at TEXT NOT NULL, lock_enabled INTEGER NOT NULL DEFAULT 1,
+      cancel_pending INTEGER NOT NULL DEFAULT 0,
+      payload_json TEXT NOT NULL, status_json TEXT NOT NULL DEFAULT '{}',
+      result_json TEXT,
+      FOREIGN KEY(collection_id) REFERENCES collections(id) ON DELETE CASCADE
+    )''');
+    await customStatement(
+      'CREATE UNIQUE INDEX ai_review_one_lock ON '
+      'ai_review_jobs(collection_id) WHERE lock_enabled = 1',
+    );
+    await customStatement('''CREATE TABLE ai_adoption_receipts (
+      request_id TEXT PRIMARY KEY, selection_key TEXT NOT NULL,
+      collection_id TEXT NOT NULL, adopted_at TEXT NOT NULL, outcome_json TEXT
+    )''');
+    final scopes = <String, String>{
+      'collections': 'ROW.id',
+      'vocabulary_entries': 'ROW.collection_id',
+      'category_dimensions': 'ROW.collection_id',
+      'category_values':
+          '(SELECT collection_id FROM category_dimensions WHERE id = ROW.dimension_id)',
+      'category_group_preferences':
+          '(SELECT collection_id FROM category_dimensions WHERE id = ROW.dimension_id)',
+      'vocabulary_category_assignments': 'ROW.collection_id',
+      'vocabulary_examples':
+          '(SELECT collection_id FROM vocabulary_entries WHERE id = ROW.entry_id)',
+    };
+    for (final table in scopes.keys) {
+      for (final event in ['INSERT', 'UPDATE', 'DELETE']) {
+        // Inserting a new Collection cannot affect any existing job.
+        if (table == 'collections' && event == 'INSERT') continue;
+        final rows = event == 'UPDATE'
+            ? ['OLD', 'NEW']
+            : [event == 'DELETE' ? 'OLD' : 'NEW'];
+        final checks = rows
+            .map(
+              (row) =>
+                  'EXISTS (SELECT 1 FROM ai_review_jobs '
+                  'WHERE lock_enabled = 1 AND collection_id = ${scopes[table]!.replaceAll('ROW', row)})',
+            )
+            .join(' OR ');
+        await customStatement(
+          'CREATE TRIGGER ai_lock_${table}_${event.toLowerCase()} '
+          'BEFORE $event ON $table WHEN $checks BEGIN '
+          "SELECT RAISE(ABORT, 'PIKO_COLLECTION_REVIEW_LOCKED'); END",
+        );
+      }
+    }
+  }
+
+  Future<void> requireCollectionWritable(String collectionId) async {
+    await expireReviewLocks();
+    final locked = await customSelect(
+      'SELECT job_id FROM ai_review_jobs '
+      'WHERE collection_id = ? AND lock_enabled = 1 LIMIT 1',
+      variables: [Variable(collectionId)],
+    ).getSingleOrNull();
+    if (locked != null) throw const CollectionReviewLocked();
+  }
+
+  /// A reached fixed deadline is usable offline. Device-clock changes remain
+  /// a limitation of this local safeguard; the server independently fences work.
+  Future<void> expireReviewLocks() => transaction(() async {
+    final now = clock.now().toUtc();
+    final rows = await customSelect(
+      'SELECT job_id,expires_at FROM ai_review_jobs WHERE lock_enabled=1',
+    ).get();
+    for (final row in rows) {
+      if (!now.isBefore(DateTime.parse(row.read<String>('expires_at')))) {
+        await customStatement(
+          "UPDATE ai_review_jobs SET lock_enabled=0,state='expired' WHERE job_id=? AND lock_enabled=1",
+          [row.read<String>('job_id')],
+        );
+      }
+    }
+  });
+
+  Future<void> watchReviewExpiry({Duration? maximumCheckInterval}) async {
+    if (maximumCheckInterval != null) {
+      _reviewExpiryCheckInterval = maximumCheckInterval;
+    }
+    _reviewExpiryTimer?.cancel();
+    if (_closing) return;
+    final rows = await customSelect(
+      'SELECT expires_at FROM ai_review_jobs WHERE lock_enabled=1',
+    ).get();
+    if (_closing || rows.isEmpty) return;
+    final deadlines =
+        rows.map((r) => DateTime.parse(r.read<String>('expires_at'))).toList()
+          ..sort();
+    var delay = deadlines.first.difference(clock.now().toUtc());
+    if (delay > _reviewExpiryCheckInterval) delay = _reviewExpiryCheckInterval;
+    if (delay <= Duration.zero) delay = const Duration(milliseconds: 1);
+    _reviewExpiryTimer = Timer(delay, () {
+      _reviewExpiryWork = (() async {
+        try {
+          await expireReviewLocks();
+          if (!_closing) await watchReviewExpiry();
+        } catch (_) {
+          /* Fail closed; foreground admission still surfaces failures. */
+        }
+      })();
+    });
+  }
+
+  @override
+  Future<void> close() async {
+    if(_closing) return;
+    _closing = true;
+    _reviewExpiryTimer?.cancel();
+    await _reviewExpiryWork;
+    await super.close();
+  }
+
+  /// Call before mounting app routes. No-backup identity distinguishes an OS
+  /// restore from ordinary restart; copied jobs have no new-install authority.
+  Future<void> reconcileAiInstallation(
+    String installationId,
+  ) => transaction(() async {
+    await customStatement(
+      "UPDATE ai_review_jobs SET lock_enabled=0, state='detached' "
+      'WHERE installation_id<>?',
+      [installationId],
+    );
+    final now = clock.now().toUtc();
+    final rows = await customSelect(
+      'SELECT job_id,expires_at FROM ai_review_jobs WHERE lock_enabled=1',
+    ).get();
+    for (final row in rows) {
+      if (!now.isBefore(DateTime.parse(row.read<String>('expires_at')))) {
+        await customStatement(
+          "UPDATE ai_review_jobs SET lock_enabled=0, state='expired' WHERE job_id=?",
+          [row.read<String>('job_id')],
+        );
+      }
+    }
+    await watchReviewExpiry();
+  });
 
   /// Called inside group creation or the upgrade transaction, never while rendering.
   Future<void> assignCategoryTagColor(String id, String collectionId) async {

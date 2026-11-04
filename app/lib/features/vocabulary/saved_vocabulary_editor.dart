@@ -258,6 +258,8 @@ class SavedVocabularyEditor extends StatelessWidget {
               ),
             ],
           ),
+        if (learningReset != null && onDelete != null)
+          SizedBox(height: pikoDesign.dimension('spacing.3')),
         if (onDelete != null)
           PikoFormGroup(
             children: [

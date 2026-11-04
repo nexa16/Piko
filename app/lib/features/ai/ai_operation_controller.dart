@@ -2,6 +2,8 @@ import 'package:uuid/uuid.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../data/ai/ai_contract.dart';
+import '../../data/ai/ai_review_job.dart';
+import '../../data/ai/managed_ai_provider.dart';
 
 /// One explicit request/review/apply owner. No typing listener, retry loop or
 /// background work can start an operation. An exit invalidates late replies.
@@ -18,6 +20,58 @@ final class AiOperationController extends ChangeNotifier {
   final void Function(Future<void>)? registerPending;
   AiPlan? plan, replacement;
   AiFailure? error;
+  AiServiceError? details;
+  AiRequest? _lastRequest;
+  AiFailure _failure(Object e) {
+    details = e is AiServiceError ? e : null;
+    return details?.failure ?? (e is AiFailure ? e : AiFailure.unavailable);
+  }
+
+  void useCompletedReview(AiPlan completed) {
+    if (disposed ||
+        !completed.complete ||
+        completed.request.action != AiAction.review) {
+      return;
+    }
+    plan = completed;
+    replacement = null;
+    error = null;
+    details = null;
+    requesting = false;
+    applied = false;
+    allowPartial = false;
+    selected.clear();
+    notifyListeners();
+  }
+
+  bool get canRecover =>
+      provider is ManagedAiProvider &&
+      (provider as ManagedAiProvider).canRecover &&
+      _lastRequest != null &&
+      !requesting &&
+      !applying;
+  Future<void> recover() async {
+    if (!canRecover) return;
+    final request = _lastRequest!, owner = ++_revision;
+    requesting = true;
+    error = null;
+    details = null;
+    notifyListeners();
+    try {
+      final raw = await (provider as ManagedAiProvider).recoverResult();
+      if (disposed || owner != _revision) return;
+      if (!await service.applicable(request)) throw AiFailure.stale;
+      plan = AiPlan.parse(request, raw);
+    } catch (e) {
+      if (!disposed && owner == _revision) error = _failure(e);
+    } finally {
+      if (!disposed && owner == _revision) {
+        requesting = false;
+        notifyListeners();
+      }
+    }
+  }
+
   bool requesting = false, applying = false, applied = false, disposed = false;
   final selected = <String>{};
   bool allowPartial = false;
@@ -63,6 +117,7 @@ final class AiOperationController extends ChangeNotifier {
         targets: targets,
       );
       final request = options?.bind(initial) ?? initial;
+      _lastRequest = request;
       if (disposed || owner != _revision) return;
       _requestId = request.id;
       _rootRequestId = request.id;
@@ -77,7 +132,7 @@ final class AiOperationController extends ChangeNotifier {
       if (!stillApplicable) error = AiFailure.stale;
     } catch (failure) {
       if (disposed || owner != _revision) return;
-      error = failure is AiFailure ? failure : AiFailure.unavailable;
+      error = _failure(failure);
     } finally {
       if (!disposed && owner == _revision) {
         requesting = false;
@@ -136,7 +191,7 @@ final class AiOperationController extends ChangeNotifier {
       allowPartial = false;
     } catch (failure) {
       if (!disposed && owner == _revision) {
-        error = failure is AiFailure ? failure : AiFailure.unavailable;
+        error = _failure(failure);
       }
     } finally {
       if (!disposed && owner == _revision) {
@@ -196,7 +251,7 @@ final class AiOperationController extends ChangeNotifier {
       replacement = candidate;
     } catch (failure) {
       if (!disposed && owner == _revision) {
-        error = failure is AiFailure ? failure : AiFailure.unavailable;
+        error = _failure(failure);
       }
     } finally {
       if (!disposed && owner == _revision) {
@@ -226,7 +281,7 @@ final class AiOperationController extends ChangeNotifier {
       error = null;
     } catch (failure) {
       if (!disposed && owner == _revision) {
-        error = failure is AiFailure ? failure : AiFailure.unavailable;
+        error = _failure(failure);
       }
     }
     if (!disposed && owner == _revision) notifyListeners();
@@ -318,7 +373,7 @@ final class AiOperationController extends ChangeNotifier {
       }
       return saved;
     } catch (failure) {
-      error = failure is AiFailure ? failure : AiFailure.unavailable;
+      error = _failure(failure);
       rethrow;
     } finally {
       applying = false;

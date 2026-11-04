@@ -182,7 +182,14 @@ void main() {
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-notice')));
         expect(p.calls, isEmpty);
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-consent')));
-        await tapVisible(t, find.byWidgetPredicate((w)=>w is PikoIconButton && w.semanticLabel==copy.text('common.close')));
+        await tapVisible(
+          t,
+          find.byWidgetPredicate(
+            (w) =>
+                w is PikoIconButton &&
+                w.semanticLabel == copy.text('common.close'),
+          ),
+        );
         await tapVisible(t, find.byKey(const ValueKey('ai-start')));
         expect(
           t.getTopLeft(find.byKey(const ValueKey('ai-feedback'))).dy,
@@ -209,8 +216,17 @@ void main() {
         );
         p.fail = false;
         p.delay = true;
-        await tapVisible(t, find.byKey(const ValueKey('ai-regenerate')));
-        await tapVisible(t, find.byKey(const ValueKey('ai-stop-waiting')));
+        await tapVisible(
+          t,
+          find.byKey(const ValueKey('ai-regenerate')),
+          settle: false,
+        );
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+        await tapVisible(
+          t,
+          find.byKey(const ValueKey('ai-stop-waiting')),
+          settle: false,
+        );
         p.pending!.complete(envelope(p.calls.last, cards: [card('late')]));
         await t.pumpAndSettle();
         expect(find.text('to learn — lernen'), findsOneWidget);
@@ -243,7 +259,12 @@ void main() {
         expect(t.takeException(), isNull);
         // A subsequent withdrawal removes service access, while the saved app data stays.
         final saved = await stored(f.db);
-        await tapVisible(t, find.byWidgetPredicate((w)=>w is PikoButton && w.label==copy.text('ai.accessSettings')));
+        await tapVisible(
+          t,
+          find.byWidgetPredicate(
+            (w) => w is PikoButton && w.label == copy.text('ai.accessSettings'),
+          ),
+        );
         await tapVisible(t, find.byKey(const ValueKey('ai-pilot-withdraw')));
         expect(p.withdrawn, true);
         expect(await stored(f.db), saved);

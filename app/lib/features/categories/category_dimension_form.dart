@@ -167,11 +167,11 @@ class _CategoryDimensionFormState extends State<CategoryDimensionForm> {
                               contentPadding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                  design.dimension('components.buttons.radius'),
+                                  design.dimension('radii.card'),
                                 ),
                               ),
                               selected: mode == choice,
-                              selectedTileColor: design.color('tint'),
+                              selectedTileColor: design.color('surface'),
                               title: Text(
                                 copy.text(
                                   choice == CategoryMode.single

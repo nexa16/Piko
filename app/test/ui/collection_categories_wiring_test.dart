@@ -73,7 +73,11 @@ class MenuFixture {
       await tester.tap(find.byKey(const ValueKey('collection-menu')));
     }
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Categories'));
+    final categories = find.text('Categories');
+    await tester.ensureVisible(categories);
+    await tester.pumpAndSettle();
+    expect(categories.hitTestable(), findsOneWidget);
+    await tester.tap(categories);
     await f.flush(tester);
   }
 

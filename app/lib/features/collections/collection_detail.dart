@@ -3,6 +3,9 @@ import 'collection_compact_action.dart';
 import '../../ui/components/piko_collapsing_header.dart';
 import 'collection_view_controls.dart';
 import 'collection_hint_settings.dart';
+import 'collection_languages_control.dart';
+import '../ai/ai_page.dart';
+import '../../data/ai/ai_contract.dart';
 import '../../ui/components/piko_form.dart';
 import '../interchange/vocabulary_json_page.dart';
 import 'package:flutter/material.dart';
@@ -182,6 +185,52 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   }
 
   bool _headerCompact = false;
+  bool _showScrollToTop = false;
+  ScrollPosition? _listScrollPosition;
+  bool _scrollVisibilityScheduled = false;
+  bool _nextScrollVisibility = false;
+
+  bool _observeListScroll(ScrollNotification notification) {
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+    final source = notification.context;
+    if (source != null) {
+      _listScrollPosition = Scrollable.maybeOf(source)?.position;
+    }
+    _nextScrollVisibility =
+        notification.metrics.viewportDimension > 0 &&
+        notification.metrics.pixels >= notification.metrics.viewportDimension;
+    if (!_scrollVisibilityScheduled &&
+        _showScrollToTop != _nextScrollVisibility) {
+      _scrollVisibilityScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollVisibilityScheduled = false;
+        if (mounted && _showScrollToTop != _nextScrollVisibility) {
+          setState(() => _showScrollToTop = _nextScrollVisibility);
+        }
+      });
+    }
+    return false;
+  }
+
+  void _scrollToTop() {
+    final position = _listScrollPosition;
+    if (position == null || !position.hasPixels) return;
+    _retainSelectionOffset = false;
+    _interactionAnchor.clear();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      position.jumpTo(position.minScrollExtent);
+    } else {
+      unawaited(
+        position.animateTo(
+          position.minScrollExtent,
+          duration: PikoTheme.motion(context),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    }
+  }
 
   void _headerChanged(bool compact) {
     if (_headerCompact == compact) return;
@@ -733,6 +782,19 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
                       }
                     },
                   ),
+                  if (widget.repository is CollectionLanguageRepository)
+                    CollectionLanguagesControl(
+                      collection: record,
+                      repository:
+                          widget.repository as CollectionLanguageRepository,
+                      enabled: ready && !_settingsBusy,
+                      onPendingWrites: widget.onPendingVocabularyWrites,
+                      onBusyChanged: (busy) {
+                        if (mounted && owner == _identity) {
+                          setState(() => _settingsBusy = busy);
+                        }
+                      },
+                    ),
                 ],
               ),
             if (widget.vocabularyRepository is VocabularyContentRepository &&
@@ -818,10 +880,22 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               PikoFormSection(
                 title: copy.text('ai.title'),
                 children: [
-                  PikoNavigationRow(
-                    title: copy.text('ai.preview'),
-                    onTap: available() ? _openAi : null,
-                  ),
+                  for (final entry in const [
+                    ('ai.action.generate', AiAction.generate, false),
+                    ('ai.action.comprehensive', AiAction.generate, true),
+                    ('ai.action.gaps', AiAction.gaps, false),
+                    ('ai.action.review', AiAction.review, false),
+                  ])
+                    PikoNavigationRow(
+                      key: ValueKey('collection-${entry.$1}'),
+                      title: copy.text(entry.$1),
+                      onTap: available()
+                          ? () => _openAi(
+                              action: entry.$2,
+                              comprehensive: entry.$3,
+                            )
+                          : null,
+                    ),
                 ],
               ),
             if (widget.interchangeBuilder != null)
@@ -1211,7 +1285,10 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
     }
   }
 
-  Future<void> _openAi() async {
+  Future<void> _openAi({
+    AiAction action = AiAction.generate,
+    bool comprehensive = false,
+  }) async {
     final record = _currentCollection, builder = widget.aiBuilder;
     if (record == null || builder == null || _openingEntry || _learningBusy) {
       return;
@@ -1229,7 +1306,24 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
       }
       await Navigator.of(context).push<Object?>(
         MaterialPageRoute<Object?>(
-          builder: (context) => builder(context, record),
+          builder: (context) {
+            final page = builder(context, record);
+            return page is AiPage
+                ? AiPage(
+                    service: page.service,
+                    provider: page.provider,
+                    collectionId: page.collectionId,
+                    collectionName: page.collectionName,
+                    registerPending: page.registerPending,
+                    anchor: page.anchor,
+                    stageOnly: page.stageOnly,
+                    categoriesRepository: page.categoriesRepository,
+                    installationIdentity: page.installationIdentity,
+                    initialAction: action,
+                    initialComprehensive: comprehensive,
+                  )
+                : page;
+          },
         ),
       );
     } finally {
@@ -1254,15 +1348,12 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
         return PikoDialog(
           title: copy.text('entry.chooseMethod'),
           purpose: PikoDialogPurpose.directChoice,
-          body: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          body: PikoFormGroup(
             children: [
               PikoNavigationRow(
                 title: copy.text('entry.methodManual'),
                 onTap: () => Navigator.of(context).pop('manual'),
               ),
-              SizedBox(height: pikoDesign.dimension('spacing.2')),
               if (widget.interchangeBuilder != null)
                 PikoNavigationRow(
                   title: copy.text('entry.methodJson'),
@@ -1331,6 +1422,11 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
   void didUpdateWidget(CollectionDetail oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.collectionId != widget.collectionId) _selection.clear();
+    if (oldWidget.collectionId != widget.collectionId) {
+      _showScrollToTop = false;
+      _nextScrollVisibility = false;
+      _listScrollPosition = null;
+    }
     if (oldWidget.categoriesRepository != widget.categoriesRepository ||
         oldWidget.categoryManagementBuilder !=
             widget.categoryManagementBuilder) {
@@ -1690,277 +1786,313 @@ class _CollectionDetailState extends State<CollectionDetail> with RouteAware {
               ),
             ),
           );
-          final page = PikoPage.slivers(
-            hasPinnedHeader: widget.queryBinding != null,
-            safeAreaBottom: widget.queryBinding == null,
-            key: ValueKey('collection-page-${widget.collectionId}'),
-            interactionAnchor: _interactionAnchor,
-            physics: CollectionScrollPhysics(
-              retainSelectionOffset: () => _retainSelectionOffset,
-              onUserScroll: () => _retainSelectionOffset = false,
-            ),
-            slivers: [
-              if (widget.queryBinding != null)
-                PikoCollapsingHeader(
-                  key: ValueKey('collection-header-${widget.collectionId}'),
-                  expanded: expandedHeader,
-                  compact: _compactHeading(
-                    record,
-                    ready,
-                    collectionFailed: snapshot.hasError,
-                    collectionMissing:
-                        !snapshot.hasError &&
-                        snapshot.connectionState == ConnectionState.active &&
-                        record == null,
-                  ),
-                  keepExpanded: _renaming,
-                  onCompactChanged: _headerChanged,
-                )
-              else
-                SliverToBoxAdapter(child: expandedHeader),
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (ready &&
-                        (widget.entrySessionFactory != null ||
-                            widget.vocabularyRepository != null))
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: pikoDesign.dimension(
-                            'components.sectionHeading.topMargin',
+          final page = NotificationListener<ScrollNotification>(
+            onNotification: _observeListScroll,
+            child: PikoPage.slivers(
+              hasPinnedHeader: widget.queryBinding != null,
+              safeAreaBottom: widget.queryBinding == null,
+              key: ValueKey('collection-page-${widget.collectionId}'),
+              interactionAnchor: _interactionAnchor,
+              physics: CollectionScrollPhysics(
+                retainSelectionOffset: () => _retainSelectionOffset,
+                onUserScroll: () => _retainSelectionOffset = false,
+              ),
+              slivers: [
+                if (widget.queryBinding != null)
+                  PikoCollapsingHeader(
+                    key: ValueKey('collection-header-${widget.collectionId}'),
+                    expanded: expandedHeader,
+                    compact: _compactHeading(
+                      record,
+                      ready,
+                      collectionFailed: snapshot.hasError,
+                      collectionMissing:
+                          !snapshot.hasError &&
+                          snapshot.connectionState == ConnectionState.active &&
+                          record == null,
+                    ),
+                    keepExpanded: _renaming,
+                    onCompactChanged: _headerChanged,
+                  )
+                else
+                  SliverToBoxAdapter(child: expandedHeader),
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (ready &&
+                          (widget.entrySessionFactory != null ||
+                              widget.vocabularyRepository != null))
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: pikoDesign.dimension(
+                              'components.sectionHeading.topMargin',
+                            ),
+                            bottom: pikoDesign.dimension(
+                              'components.sectionHeading.bottomMargin',
+                            ),
                           ),
-                          bottom: pikoDesign.dimension(
-                            'components.sectionHeading.bottomMargin',
-                          ),
-                        ),
-                        child: Builder(
-                          builder: (context) {
-                            final heading = Semantics(
-                              header: true,
-                              headingLevel: 2,
-                              child: Text(
-                                copy.text('collection.vocabulary'),
-                                style: TextStyle(
-                                  fontSize: pikoDesign.dimension(
-                                    'components.sectionHeading.size',
-                                  ),
-                                  fontWeight: pikoDesign.weight(
-                                    'components.sectionHeading.weight',
-                                  ),
-                                  color: pikoDesign.color('ink'),
-                                ),
-                              ),
-                            );
-                            if (widget.entrySessionFactory == null) {
-                              return Row(
-                                children: [
-                                  Expanded(child: heading),
-                                  if (widget.queryBinding != null)
-                                    CollectionListMenu(
-                                      binding: widget.queryBinding!,
-                                      enabled: _queryControlsAvailable,
+                          child: Builder(
+                            builder: (context) {
+                              final heading = Semantics(
+                                header: true,
+                                headingLevel: 2,
+                                child: Text(
+                                  copy.text('collection.vocabulary'),
+                                  style: TextStyle(
+                                    fontSize: pikoDesign.dimension(
+                                      'components.sectionHeading.size',
                                     ),
-                                ],
+                                    fontWeight: pikoDesign.weight(
+                                      'components.sectionHeading.weight',
+                                    ),
+                                    color: pikoDesign.color('ink'),
+                                  ),
+                                ),
                               );
-                            }
-                            if (_genuinelyEmpty) {
-                              final enabled =
-                                  _deleteRequest == null &&
-                                  _renameRequest == null &&
-                                  !_openingEntry &&
-                                  !_learningBusy &&
-                                  _mutations?.isBusy != true;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  heading,
-                                  SizedBox(
-                                    height: pikoDesign.dimension('spacing.2'),
-                                  ),
-                                  Text(copy.text('collection.empty')),
-                                  SizedBox(
-                                    height: pikoDesign.dimension('spacing.3'),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Tooltip(
+                              if (widget.entrySessionFactory == null) {
+                                return Row(
+                                  children: [
+                                    Expanded(child: heading),
+                                    if (widget.queryBinding != null)
+                                      CollectionListMenu(
+                                        binding: widget.queryBinding!,
+                                        enabled: _queryControlsAvailable,
+                                      ),
+                                  ],
+                                );
+                              }
+                              if (_genuinelyEmpty) {
+                                final enabled =
+                                    _deleteRequest == null &&
+                                    _renameRequest == null &&
+                                    !_openingEntry &&
+                                    !_learningBusy &&
+                                    _mutations?.isBusy != true;
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    heading,
+                                    SizedBox(
+                                      height: pikoDesign.dimension('spacing.2'),
+                                    ),
+                                    Text(copy.text('collection.empty')),
+                                    SizedBox(
+                                      height: pikoDesign.dimension('spacing.3'),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Tooltip(
+                                        message: copy.text('action.addEntry'),
+                                        excludeFromSemantics: true,
+                                        child: Semantics(
+                                          label: copy.text('action.addEntry'),
+                                          button: true,
+                                          enabled: enabled,
+                                          onTap: enabled ? _openEntry : null,
+                                          child: ExcludeSemantics(
+                                            child: PikoButton(
+                                              key: const ValueKey(
+                                                'collection-empty-add',
+                                              ),
+                                              label: copy.text(
+                                                'collection.addFirstWord',
+                                              ),
+                                              icon: const PikoIcon(
+                                                PikoIconName.plus,
+                                              ),
+                                              variant:
+                                                  PikoButtonVariant.primary,
+                                              onPressed: enabled
+                                                  ? _openEntry
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                              return PikoHeadingAction(
+                                heading: heading,
+                                gap: pikoDesign.dimension(
+                                  'components.sectionHeading.gap',
+                                ),
+                                action: Wrap(
+                                  alignment: WrapAlignment.end,
+                                  children: [
+                                    if (widget.queryBinding != null)
+                                      CollectionListMenu(
+                                        binding: widget.queryBinding!,
+                                        enabled: _queryControlsAvailable,
+                                      ),
+                                    Tooltip(
                                       message: copy.text('action.addEntry'),
                                       excludeFromSemantics: true,
                                       child: Semantics(
                                         label: copy.text('action.addEntry'),
                                         button: true,
-                                        enabled: enabled,
-                                        onTap: enabled ? _openEntry : null,
+                                        enabled:
+                                            _deleteRequest == null &&
+                                            _renameRequest == null &&
+                                            !_openingEntry &&
+                                            !_learningBusy &&
+                                            _mutations?.isBusy != true,
+                                        onTap:
+                                            _deleteRequest != null ||
+                                                _renameRequest != null ||
+                                                _openingEntry ||
+                                                _learningBusy ||
+                                                _mutations?.isBusy == true
+                                            ? null
+                                            : _openEntry,
                                         child: ExcludeSemantics(
                                           child: PikoButton(
-                                            key: const ValueKey(
-                                              'collection-empty-add',
-                                            ),
                                             label: copy.text(
-                                              'collection.addFirstWord',
+                                              _genuinelyEmpty
+                                                  ? 'collection.addFirstWord'
+                                                  : 'action.new',
                                             ),
                                             icon: const PikoIcon(
                                               PikoIconName.plus,
                                             ),
-                                            variant: PikoButtonVariant.primary,
-                                            onPressed: enabled
-                                                ? _openEntry
-                                                : null,
+                                            variant: _genuinelyEmpty
+                                                ? PikoButtonVariant.primary
+                                                : PikoButtonVariant.ghost,
+                                            onPressed:
+                                                _deleteRequest != null ||
+                                                    _renameRequest != null ||
+                                                    _openingEntry ||
+                                                    _learningBusy ||
+                                                    _mutations?.isBusy == true
+                                                ? null
+                                                : _openEntry,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               );
-                            }
-                            return PikoHeadingAction(
-                              heading: heading,
-                              gap: pikoDesign.dimension(
-                                'components.sectionHeading.gap',
+                            },
+                          ),
+                        ),
+                      if (ready &&
+                          widget.queryBinding != null &&
+                          !_genuinelyEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: pikoDesign.dimension('spacing.3'),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              CollectionSearchField(
+                                scope: widget.queryBinding!.scope,
+                                enabled: _queryControlsAvailable,
                               ),
-                              action: Wrap(
-                                alignment: WrapAlignment.end,
-                                children: [
-                                  if (widget.queryBinding != null)
-                                    CollectionListMenu(
-                                      binding: widget.queryBinding!,
-                                      enabled: _queryControlsAvailable,
-                                    ),
-                                  Tooltip(
-                                    message: copy.text('action.addEntry'),
-                                    excludeFromSemantics: true,
-                                    child: Semantics(
-                                      label: copy.text('action.addEntry'),
-                                      button: true,
-                                      enabled:
-                                          _deleteRequest == null &&
-                                          _renameRequest == null &&
-                                          !_openingEntry &&
-                                          !_learningBusy &&
-                                          _mutations?.isBusy != true,
-                                      onTap:
-                                          _deleteRequest != null ||
-                                              _renameRequest != null ||
-                                              _openingEntry ||
-                                              _learningBusy ||
-                                              _mutations?.isBusy == true
-                                          ? null
-                                          : _openEntry,
-                                      child: ExcludeSemantics(
-                                        child: PikoButton(
-                                          label: copy.text(
-                                            _genuinelyEmpty
-                                                ? 'collection.addFirstWord'
-                                                : 'action.new',
-                                          ),
-                                          icon: const PikoIcon(
-                                            PikoIconName.plus,
-                                          ),
-                                          variant: _genuinelyEmpty
-                                              ? PikoButtonVariant.primary
-                                              : PikoButtonVariant.ghost,
-                                          onPressed:
-                                              _deleteRequest != null ||
-                                                  _renameRequest != null ||
-                                                  _openingEntry ||
-                                                  _learningBusy ||
-                                                  _mutations?.isBusy == true
-                                              ? null
-                                              : _openEntry,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              SizedBox(
+                                height: pikoDesign.dimension('spacing.2'),
                               ),
-                            );
-                          },
+                              CollectionViewControls(
+                                binding: widget.queryBinding!,
+                                enabled: _queryControlsAvailable,
+                                onFilters: _openFilters,
+                              ),
+                              CollectionListResults(
+                                binding: widget.queryBinding!,
+                                enabled: _queryControlsAvailable,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    if (ready &&
-                        widget.queryBinding != null &&
-                        !_genuinelyEmpty)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: pikoDesign.dimension('spacing.3'),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            CollectionSearchField(
-                              scope: widget.queryBinding!.scope,
-                              enabled: _queryControlsAvailable,
-                            ),
-                            SizedBox(height: pikoDesign.dimension('spacing.2')),
-                            CollectionViewControls(
-                              binding: widget.queryBinding!,
-                              enabled: _queryControlsAvailable,
-                              onFilters: _openFilters,
-                            ),
-                            CollectionListResults(
-                              binding: widget.queryBinding!,
-                              enabled: _queryControlsAvailable,
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (_lastReadyCollection != null &&
-                  widget.vocabularyRepository != null &&
-                  !(_genuinelyEmpty && widget.entrySessionFactory != null))
-                CollectionVocabulary(
-                  sliver: true,
-                  key: ValueKey('collection-vocabulary-${widget.collectionId}'),
-                  collection: _lastReadyCollection!,
-                  repository: widget.vocabularyRepository!,
-                  metadataError: snapshot.hasError ? snapshot.error : null,
-                  onRetryMetadata: () => setState(_watch),
-                  queryBinding: widget.queryBinding,
-                  preferredDirections: _directions,
-                  categoriesRepository: widget.categoriesRepository,
-                  learningReset: widget.learningReset,
-                  onPendingWrites: (work) {
-                    // Capture this build's barrier/dependency callback so old
-                    // child work is registered with its original storage owner.
-                    barrierForBuild.track(work);
-                    registerForBuild?.call(work);
-                  },
-                  writeBarrier: barrierForBuild,
-                  mutations: _mutations,
-                  selection: widget.queryBinding == null ? null : _selection,
-                ),
-              if (widget.queryBinding != null)
-                SliverToBoxAdapter(
-                  child: _selection.active && _selection.ids.isEmpty
-                      ? VocabularySelectionPanel(
-                          selection: _selection,
-                          matchingIds:
-                              widget.queryBinding!.snapshot?.entries
-                                  .map((e) => e.id)
-                                  .toList() ??
-                              const [],
-                          enabled: _queryControlsAvailable,
-                        )
-                      : SizedBox(
-                          key: const ValueKey('selection-end-clearance'),
-                          height: _selection.ids.isNotEmpty
-                              ? _selectionPanelHeight
-                              : MediaQuery.paddingOf(context).bottom,
-                        ),
-                ),
-            ],
+                if (_lastReadyCollection != null &&
+                    widget.vocabularyRepository != null &&
+                    !(_genuinelyEmpty && widget.entrySessionFactory != null))
+                  CollectionVocabulary(
+                    sliver: true,
+                    key: ValueKey(
+                      'collection-vocabulary-${widget.collectionId}',
+                    ),
+                    collection: _lastReadyCollection!,
+                    repository: widget.vocabularyRepository!,
+                    metadataError: snapshot.hasError ? snapshot.error : null,
+                    onRetryMetadata: () => setState(_watch),
+                    queryBinding: widget.queryBinding,
+                    preferredDirections: _directions,
+                    categoriesRepository: widget.categoriesRepository,
+                    learningReset: widget.learningReset,
+                    onPendingWrites: (work) {
+                      // Capture this build's barrier/dependency callback so old
+                      // child work is registered with its original storage owner.
+                      barrierForBuild.track(work);
+                      registerForBuild?.call(work);
+                    },
+                    writeBarrier: barrierForBuild,
+                    mutations: _mutations,
+                    selection: widget.queryBinding == null ? null : _selection,
+                  ),
+                if (widget.queryBinding != null)
+                  SliverToBoxAdapter(
+                    child: _selection.active && _selection.ids.isEmpty
+                        ? VocabularySelectionPanel(
+                            selection: _selection,
+                            matchingIds:
+                                widget.queryBinding!.snapshot?.entries
+                                    .map((e) => e.id)
+                                    .toList() ??
+                                const [],
+                            enabled: _queryControlsAvailable,
+                            onHeightChanged: (height) {
+                              if (mounted &&
+                                  (_selectionPanelHeight - height).abs() > .1) {
+                                setState(() => _selectionPanelHeight = height);
+                              }
+                            },
+                          )
+                        : SizedBox(
+                            key: const ValueKey('selection-end-clearance'),
+                            height: _selection.ids.isNotEmpty
+                                ? _selectionPanelHeight
+                                : MediaQuery.paddingOf(context).bottom,
+                          ),
+                  ),
+              ],
+            ),
           );
-          if (widget.queryBinding == null) return page;
           return Listener(
             onPointerDown: (_) => _retainSelectionOffset = false,
             onPointerSignal: (_) => _retainSelectionOffset = false,
             child: Stack(
               children: [
                 Positioned.fill(child: page),
+                if (_showScrollToTop &&
+                    MediaQuery.viewInsetsOf(context).bottom == 0)
+                  Positioned(
+                    right: pikoDesign.dimension('layout.mobilePadding'),
+                    bottom:
+                        (_selection.active
+                            ? _selectionPanelHeight
+                            : MediaQuery.paddingOf(context).bottom) +
+                        pikoDesign.dimension('spacing.4'),
+                    child: FloatingActionButton.small(
+                      key: const ValueKey('collection-scroll-to-top'),
+                      heroTag: null,
+                      tooltip: copy.text('collection.scrollToTop'),
+                      backgroundColor: pikoDesign.color('primary'),
+                      foregroundColor: pikoDesign.color('onPrimary'),
+                      onPressed: _scrollToTop,
+                      child: const RotatedBox(
+                        quarterTurns: 1,
+                        child: PikoIcon(PikoIconName.arrowLeft),
+                      ),
+                    ),
+                  ),
                 if (_selection.ids.isNotEmpty)
                   Positioned(
                     left: 0,

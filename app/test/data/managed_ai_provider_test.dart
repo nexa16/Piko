@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piko/data/ai/ai_contract.dart';
 import 'package:piko/data/ai/managed_ai_provider.dart';
+import 'package:piko/data/ai/ai_review_job.dart';
 
 class SyntheticAccess implements AiAccess {
   int calls = 0;
@@ -369,6 +370,75 @@ void main() {
       addTearDown(p.close);
       await expectLater(p.generate(r), throwsA(AiFailure.timeout));
       expect(posts, 1);
+    },
+  );
+  test(
+    'status recovery after timeout issues only GET and recovers the same result',
+    () async {
+      var posts = 0, gets = 0;
+      var complete = false;
+      final r = request(), hash = 'b' * 64;
+      final host = await server((http) async {
+        if (http.method == 'POST') {
+          posts++;
+        } else {
+          gets++;
+          expect(http.headers.value('X-Piko-Request-Digest'), hash);
+        }
+        await respond(
+          http,
+          complete ? 200 : 202,
+          complete
+              ? answer(r)
+              : {'requestId': r.id, 'state': 'pending', 'requestDigest': hash},
+        );
+      });
+      final p = ManagedAiProvider(
+        endpoint: host.uri,
+        access: SyntheticAccess(),
+        enabled: true,
+        client: host.client,
+        waitTimeout: const Duration(milliseconds: 150),
+        pollInterval: const Duration(milliseconds: 100),
+      );
+      addTearDown(p.close);
+      await expectLater(p.generate(r), throwsA(AiFailure.timeout));
+      complete = true;
+      expect(await p.recoverResult(), answer(r));
+      expect(posts, 1);
+      expect(gets, greaterThanOrEqualTo(1));
+    },
+  );
+  test(
+    'structured service limit exposes safe fields but never raw provider content',
+    () async {
+      final retry = DateTime.utc(2026, 10, 30);
+      final host = await server(
+        (http) => respond(http, 429, {
+          'code': 'daily_limit',
+          'limit': 'daily',
+          'retryAt': retry.toIso8601String(),
+          'message': 'synthetic private provider payload',
+          'providerKey': 'synthetic secret',
+        }),
+      );
+      final p = ManagedAiProvider(
+        endpoint: host.uri,
+        access: SyntheticAccess(),
+        enabled: true,
+        client: host.client,
+      );
+      addTearDown(p.close);
+      await expectLater(
+        p.generate(request()),
+        throwsA(
+          isA<AiServiceError>()
+              .having((e) => e.failure, 'failure', AiFailure.limit)
+              .having((e) => e.code, 'code', 'daily_limit')
+              .having((e) => e.limit, 'limit', 'daily')
+              .having((e) => e.retryAt, 'retryAt', retry),
+        ),
+      );
     },
   );
   test(

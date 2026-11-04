@@ -5,6 +5,13 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/piko-ai/index.ts"
 
+# Internal scheduler calls use a separate random secret checked by the worker.
+# Disabled until the reviewed deployment explicitly enables this function.
+[functions.piko-ai-review-worker]
+enabled = false
+verify_jwt = false
+entrypoint = "./functions/piko-ai-review-worker/index.ts"
+
 # Optional private AI access; ordinary local app flows never require Auth.
 [auth]
 enable_anonymous_sign_ins = true
